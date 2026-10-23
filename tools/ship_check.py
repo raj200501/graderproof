@@ -789,7 +789,9 @@ def task_indicators(adir: Path) -> tuple[list[dict[str, Any]], list[bool], list[
     for t in kept:
         vs = [v for v in by_task.get(str(t.get("task_hash")), []) if v.get("counted_in_headline")]
         fa.append(any(v.get("kind") == "violating" and v.get("grader_passed") is True for v in vs))
-        fr.append(any(v.get("kind") == "preserving" and v.get("grader_passed") is False for v in vs))
+        fr.append(
+            any(v.get("kind") == "preserving" and v.get("grader_passed") is False for v in vs)
+        )
     return kept, fa, fr
 
 
