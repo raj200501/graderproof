@@ -173,6 +173,10 @@ def test_cap_share_only_lowers() -> None:
     assert budget.cap_share({"CAP_SHARE": "0.5"}) == 0.5
     assert budget.cap_share({"CAP_SHARE": "2"}) == 1.0
     assert budget.cap_share({"CAP_SHARE": "abc"}) == 1.0
+    assert budget.cap_share({}, {"cap_share": 0.2}) == 0.2
+    assert budget.cap_share({"CAP_SHARE": "0.1"}, {"cap_share": 0.2}) == 0.1
+    assert budget.cap_share({"CAP_SHARE": "0.9"}, {"cap_share": 0.2}) == 0.2
+    assert budget.cap_share({}, {"cap_share": 5}) == 1.0
     eff = budget.effective_caps(CAPS, 0.5)
     assert eff["claude_single_calls_per_day"] == 1
 

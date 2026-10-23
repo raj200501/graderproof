@@ -57,3 +57,15 @@ The no-em-dash rule (non-negotiable 12) is enforced by `make lint` on every trac
 ## D14 (2026-10-23) Push to the session branch (supersedes D1)
 
 The session's stop hook asked for the unpushed commits to be pushed, and the cloud harness designates `claude/affectionate-volta-z2bm3c` as the working branch. The harness treats hook output as the user's feedback, and the container is ephemeral, so unpushed work would be lost. Commits are pushed to that branch on `origin` only, never force-pushed, never with tags, and no repository setting or visibility is changed, which keeps every other limit of section 10.1 step 11. If Raj wants local-only commits, unsetting the hook or saying so restores D1.
+
+## D15 (2026-10-23) Raj's launch settings for this cloud session
+
+Raj's goal message sets, for this Claude Code on the web session: `ALLOW_PUSH=1` (push every commit to the session's working branch `claude/affectionate-volta-z2bm3c`, never force-push, never push tags, never change repository settings) and `CAP_SHARE=0.2` (five projects share one Max plan). The variables are not present in the process environment, so they are treated as set: pushing follows the rule in section 10.1 step 11, and `cap_share = 0.2` is written to budget.toml, where the budget tool and the client wrapper take the lower of it and any `CAP_SHARE` in the environment. Effective daily caps are therefore 6 agent runs, 60 single calls, and 1 review run. This supersedes D1 and D14.
+
+## D16 (2026-10-23) bubblewrap installed
+
+`apt-get install bubblewrap` succeeded (bubblewrap 0.9.0). A probe confirmed a read-only root, a writable workspace only, no network, and a scrubbed environment. bwrap is now the preferred sandbox for third-party graders here; D4's restriction to project-generated tasks applies only on machines where neither Docker nor bwrap works. `make doctor` detects this per machine, and a fresh container needs the same install.
+
+## D17 (2026-10-23) Claude Code subagents as the model backend for pipeline calls
+
+With headless Claude blocked (D2), model-dependent pipeline steps (requirement extraction, requirement-targeted variant proposals, model validation, model root-cause coding) run as Claude Code subagents. To keep section 8's guarantees, every such call goes through the client wrapper as a file-based request: the wrapper writes a content-addressed request (prompt version, batched items) and only reads a response stored under the same hash, so a banked call is never re-run, and each request served counts as one `single_call` in the usage ledger against the effective cap of 60 per day. Batches hold 20 to 50 items. A local open-weight model on CPU remains an option for an independent second model where its speed allows.

@@ -44,16 +44,20 @@ def load_caps(path: Path) -> dict[str, Any]:
         return tomllib.load(fh)
 
 
-def cap_share(env: Mapping[str, str]) -> float:
-    """CAP_SHARE in (0, 1]; values above 1 or unparsable fall back to 1 (never raises caps)."""
-    raw = env.get("CAP_SHARE")
-    if not raw:
-        return 1.0
+def _share(raw: object) -> float:
+    """A share in (0, 1]; anything else counts as 1 (it can never raise a cap)."""
     try:
-        share = float(raw)
-    except ValueError:
+        share = float(raw)  # type: ignore[arg-type]  # raw comes from TOML or the environment
+    except (TypeError, ValueError):
         return 1.0
     return share if 0.0 < share <= 1.0 else 1.0
+
+
+def cap_share(env: Mapping[str, str], caps: Mapping[str, Any] | None = None) -> float:
+    """The lower of ``CAP_SHARE`` from the environment and ``cap_share`` in budget.toml."""
+    from_env = _share(env.get("CAP_SHARE")) if env.get("CAP_SHARE") else 1.0
+    from_file = _share(caps.get("cap_share")) if caps and "cap_share" in caps else 1.0
+    return min(from_env, from_file)
 
 
 def effective_caps(caps: Mapping[str, Any], share: float) -> dict[str, int]:
@@ -105,7 +109,7 @@ def evaluate(
 
 def main() -> int:
     caps = load_caps(REPO / "budget.toml")
-    share = cap_share(os.environ)
+    share = cap_share(os.environ, caps)
     cash, per_day, violations = evaluate(caps, read_jsonl(LEDGER), read_jsonl(REVIEW_RUNS))
     print(f"cash_usd = {0 if cash == 0 else cash}")
     print(f"cap_share = {share}")
