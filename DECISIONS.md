@@ -69,3 +69,18 @@ Raj's goal message sets, for this Claude Code on the web session: `ALLOW_PUSH=1`
 ## D17 (2026-10-23) Claude Code subagents as the model backend for pipeline calls
 
 With headless Claude blocked (D2), model-dependent pipeline steps (requirement extraction, requirement-targeted variant proposals, model validation, model root-cause coding) run as Claude Code subagents. To keep section 8's guarantees, every such call goes through the client wrapper as a file-based request: the wrapper writes a content-addressed request (prompt version, batched items) and only reads a response stored under the same hash, so a banked call is never re-run, and each request served counts as one `single_call` in the usage ledger against the effective cap of 60 per day. Batches hold 20 to 50 items. A local open-weight model on CPU remains an option for an independent second model where its speed allows.
+
+## D18 (2026-10-23) Benchmarks for E1/E2 and the Docker-free substitute (before any data collection)
+
+Chosen from the survey in docs/research/benchmarks_survey_2026-10-23.md. No E1/E2 data exists yet.
+
+1. **tau2-bench at tag v1.0.1** (tool use). Deterministic reward components only: airline (50 base tasks, DB plus substring communicate), telecom (114 base tasks, env assertions and actions), retail (the 74 base tasks without NL assertions). v1.0.1 is the version every released text trajectory was graded with, so E5 can re-grade them. The 40 retail tasks with NL assertions need an LLM judge and are excluded (reported).
+2. **BFCL V4, AST categories in Python** (function calling): simple_python, multiple, parallel, parallel_multiple, and the live_* Python categories, graded by `ast_checker` from bfcl-eval pinned to a commit. Public per-model outputs (HuanzhiMao/BFCL-Result, Apache-2.0) are an E5 candidate.
+3. **AgentDojo** user tasks (tool use) with their deterministic `utility()` checks, if its adapter is ready before the E1 preregistration is frozen; otherwise E1 runs on the other three.
+4. **Substitute for Terminal-Bench 2.0: HumanEval** (164 tasks, MIT) with its original unit-test grader. Terminal-Bench 2.0 cannot run here: there is no Docker daemon, all 89 tasks need prebuilt images, and Harbor has no container-free environment. HumanEval is the closest Docker-free coding benchmark whose grader is a test suite run against a reference solution, the setting graderproof's classical operators target. EvalPlus HumanEval+ may be run beside it as an exploratory comparison only.
+
+Each benchmark is pinned to a commit or release recorded in docs/DATA.md with its license and retrieval date. Third-party graders run only under bwrap (D16). Task-level findings for these benchmarks stay in `private/` (non-negotiable 14).
+
+## D19 (2026-10-23) Adapters convert to the toybench execution format
+
+Each public benchmark adapter converts tasks into toybench task directories (generated under `runs/`, reproducible from a pinned checkout) and reuses the toybench execution path, so caching, sandboxing, requirement checks, and variant operators are shared. A new task kind `data` covers benchmarks whose solution is data (a tool-call list or a function call): `support/run_solution.sh` turns the solution files into an outcome in the workspace (`.gp/state.json`, `.gp/trajectory.json`), and the grader is a driver that calls the benchmark's own grading code from the pinned checkout. For BFCL there is no separate reference solution; the reference is built from the first acceptable value of every required argument in `possible_answer`, which is grader data, so requirement extraction is told to rely on the question and function documentation only.

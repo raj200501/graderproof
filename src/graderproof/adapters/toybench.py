@@ -20,6 +20,14 @@ Kinds:
 * ``trajectory``: the solution is ``trajectory.json``, a list of tool calls executed
   against ``support/env.py``; the grader reads ``.gp/state.json`` and
   ``.gp/trajectory.json`` in the workspace.
+* ``data``: the solution files are data (for example a tool-call list or a function
+  call); ``support/run_solution.sh`` turns them into an outcome in the workspace
+  (optionally ``.gp/state.json`` and ``.gp/trajectory.json``). Public-benchmark
+  adapters use this kind with a grader that calls the benchmark's own grading code.
+
+Scripts receive ``GP_SOLUTION_DIR``, ``GP_SUPPORT_DIR``, ``GP_SOLUTION_STDOUT``
+(grader only), and the adapter's ``extra_env`` (for example the path of a pinned
+third-party checkout).
 
 Execution order in a fresh temporary directory: initial workspace, solution run,
 workspace snapshot, grader run, then function-call probes on a copy of the snapshot.
@@ -33,7 +41,7 @@ import sys
 import tempfile
 import tomllib
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -42,7 +50,7 @@ from graderproof.core import GraderRun, Task
 from graderproof.sandbox import Limits, Sandbox
 from graderproof.spec import Outcome, probe_key
 
-KINDS = ("script", "module", "trajectory")
+KINDS = ("script", "module", "trajectory", "data")
 MAX_FILE_BYTES = 1_000_000
 STATE_DIR = ".gp"
 
@@ -93,6 +101,7 @@ class ToybenchAdapter:
 
     name: str = "toybench"
     scratch: Path | None = None
+    extra_env: Mapping[str, str] = field(default_factory=dict)
 
     def load(self, root: Path) -> list[Task]:
         """Every task directory (containing task.toml) directly under ``root``, sorted."""
@@ -110,7 +119,8 @@ class ToybenchAdapter:
             raise ValueError(f"{d}: unknown kind {kind!r}")
         solution = meta.get("solution", {})
         grader = meta.get("grader", {})
-        entry = str(solution.get("entry", "trajectory.json" if kind == "trajectory" else ""))
+        default_entry = {"trajectory": "trajectory.json", "data": "run_solution.sh"}.get(kind, "")
+        entry = str(solution.get("entry", default_entry))
         g_entry = str(grader.get("entry", "grade.sh"))
         env = {
             "kind": kind,
@@ -118,6 +128,7 @@ class ToybenchAdapter:
             "solution_entry": entry,
             "module": str(solution.get("module", "")),
             "grader_entry": g_entry,
+            "third_party": bool(meta.get("third_party", False)),
             "grader_files": _read_tree(d / "grader"),
             "workspace_files": _read_tree(d / "workspace"),
             "support_files": _read_tree(d / "support"),
@@ -129,7 +140,10 @@ class ToybenchAdapter:
             environment=env,
             reference_solution=_read_tree(d / "solution"),
             grading_entrypoint=[*interpreter(g_entry)[:1], f"grader/{g_entry}"],
-            metadata={"trusted_local": True, **dict(meta.get("metadata", {}))},
+            metadata={
+                "trusted_local": not meta.get("third_party", False),
+                **dict(meta.get("metadata", {})),
+            },
         )
 
     def mutable_files(self, task: Task) -> dict[str, str]:
@@ -183,20 +197,29 @@ class ToybenchAdapter:
             _write_tree(sol, solution)
             if kind == "script":
                 argv = interpreter(str(sol / str(env["solution_entry"])))
+            elif kind == "data":
+                argv = ["bash", str(sup / str(env["solution_entry"]))]
             else:
                 argv = [sys.executable, "-m", "graderproof._runners", "trajectory"]
                 argv += [str(sup / "env.py"), str(sol / "trajectory.json"), str(ws / STATE_DIR)]
-            res = sandbox.run(argv, cwd=ws, writable=[ws], readonly=[sol, sup], limits=lim)
+            s_env = {"GP_SOLUTION_DIR": str(sol), "GP_SUPPORT_DIR": str(sup), **self.extra_env}
+            res = sandbox.run(
+                argv, cwd=ws, writable=[ws], readonly=[sol, sup], env=s_env, limits=lim
+            )
             stdout, stderr = res.stdout, res.stderr
             status, timed_out = res.exit_status, res.timed_out
-            if kind == "trajectory":
+            if kind in ("trajectory", "data"):
                 state, trajectory = _read_trajectory(ws / STATE_DIR)
         files = snapshot(ws)
         probe_ws = root / "probe_ws"
         shutil.copytree(ws, probe_ws)
         (out / "solution.stdout").write_text(stdout, encoding="utf-8")
         g_entry = str(env["grader_entry"])
-        g_env = {"GP_SOLUTION_STDOUT": str(out / "solution.stdout"), "GP_SUPPORT_DIR": str(sup)}
+        g_env = {
+            "GP_SOLUTION_STDOUT": str(out / "solution.stdout"),
+            "GP_SUPPORT_DIR": str(sup),
+            **self.extra_env,
+        }
         g = sandbox.run(
             interpreter(str(grd / g_entry)),
             cwd=ws,

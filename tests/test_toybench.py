@@ -148,3 +148,33 @@ def test_runners_in_process(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     probes.write_text(json.dumps([{"function": "f", "args": [3]}]))
     assert _runners.main(["probe", "mod_gp_test", str(probes), str(tmp_path / "r.json")]) == 0
     assert _runners.main(["bogus"]) == 2
+
+
+def test_data_kind_with_extra_env(tmp_path: Path) -> None:
+    d = tmp_path / "bench" / "calls"
+    for sub in ("solution", "grader", "support"):
+        (d / sub).mkdir(parents=True)
+    (d / "task.toml").write_text(
+        'id = "calls"\nkind = "data"\nthird_party = true\n[grader]\nentry = "grade.sh"\n'
+    )
+    (d / "instruction.md").write_text("Call add(2, 3).")
+    (d / "solution" / "trajectory.json").write_text('[{"tool": "add", "args": {"a": 2, "b": 3}}]\n')
+    (d / "support" / "run_solution.sh").write_text(
+        'mkdir -p .gp\ncp "$GP_SOLUTION_DIR/trajectory.json" .gp/trajectory.json\n'
+        'echo "{\\"tag\\": \\"$GP_TAG\\"}" > .gp/state.json\n'
+    )
+    (d / "grader" / "grade.sh").write_text(
+        'grep -q \'"a": 2\' .gp/trajectory.json && [ "$GP_TAG" = x ]\n'
+    )
+    adapter = ToybenchAdapter(extra_env={"GP_TAG": "x"})
+    task = adapter.load(tmp_path / "bench")[0]
+    assert task.metadata["trusted_local"] is False
+    assert adapter.mutable_files(task) == {"trajectory.json": "trajectory"}
+    ex = adapter.execute(task, task.reference_solution, LocalSandbox())
+    assert ex.grade.passed, ex.grade.stderr
+    assert ex.outcome.state == {"tag": "x"}
+    assert ex.outcome.trajectory[0]["tool"] == "add"
+    bad = adapter.execute(
+        task, {"trajectory.json": '[{"tool": "add", "args": {"a": 3}}]'}, LocalSandbox()
+    )
+    assert not bad.grade.passed
