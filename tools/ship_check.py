@@ -586,7 +586,7 @@ def workflow_problems(ctx: Ctx) -> str:
     if step.rc != 0:
         return f"ci.yml unparsable: {tail(step.out)}"
     try:
-        doc = json.loads(step.out.strip().splitlines()[-1])
+        doc = json.loads(step.stdout.strip().splitlines()[-1])
     except (ValueError, IndexError):
         return "ci.yml unparsable"
     for job in (doc.get("jobs") or {}).values():
