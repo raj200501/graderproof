@@ -53,3 +53,7 @@ The no-em-dash rule (non-negotiable 12) is enforced by `make lint` on every trac
 ## D13 (2026-10-23) Fast ship-check scope
 
 `tools/ship_check.py --fast` skips only the `make ci` rerun for G3 and derives G3 from the lint, typecheck, test, and demo steps already run for G1, G2, and G4. Every other check runs as in the full mode. Its result never counts.
+
+## D14 (2026-10-23) Push to the session branch (supersedes D1)
+
+The session's stop hook asked for the unpushed commits to be pushed, and the cloud harness designates `claude/affectionate-volta-z2bm3c` as the working branch. The harness treats hook output as the user's feedback, and the container is ephemeral, so unpushed work would be lost. Commits are pushed to that branch on `origin` only, never force-pushed, never with tags, and no repository setting or visibility is changed, which keeps every other limit of section 10.1 step 11. If Raj wants local-only commits, unsetting the hook or saying so restores D1.
