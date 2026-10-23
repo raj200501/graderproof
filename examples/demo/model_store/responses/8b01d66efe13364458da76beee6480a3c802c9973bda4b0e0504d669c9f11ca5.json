@@ -1,0 +1,99 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "8b01d66efe13364458da76beee6480a3c802c9973bda4b0e0504d669c9f11ca5",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "d04aef72469db264b306fa724da8f1b0bf430296caba3412cc76489134c8c819": {
+      "verdict": "violating",
+      "requirement": "Create hello.txt whose only line is 'Hello, graderproof!'",
+      "reason": "The line that writes hello.txt was replaced with a no-op, so hello.txt is never created."
+    },
+    "d20fc5388175a3aa1fab8271dac1f38d1384cbeada287d4f8d85e4f510101d00": {
+      "verdict": "violating",
+      "requirement": "stats.json must contain integer fields lines and words",
+      "reason": "The words computation was replaced with pass, so the later reference to words raises NameError and stats.json is never written."
+    },
+    "d3d1fe9681944d21d76b7979eeee5643ecbea60c4901de140734d3be95bbdfd2": {
+      "verdict": "violating",
+      "requirement": "Create hello.txt with the greeting and count.txt with its character count",
+      "reason": "The greeting assignment was replaced with a no-op, so under set -u the script fails on the unbound variable and neither file gets the correct content."
+    },
+    "d7dc7ad6b4de12af4020a3f1cef30ae06d2d953e381bd74a45ea7b233b2fc9d0": {
+      "verdict": "violating",
+      "requirement": "Look up order A17 with get_order",
+      "reason": "get_order is called with order_id 'A17-x' instead of 'A17', so the wrong order is looked up."
+    },
+    "daabb78b32d30bd50f28b3a0bedd9a4b0d7535b441709dd04c07e1b56de0a0a9": {
+      "verdict": "violating",
+      "requirement": "Return 'buzz' when n is divisible by 5 only",
+      "reason": "The buzz check uses n % 6, so classify(5) returns '5' and classify(6) returns 'fizz' or similar incorrect results for multiples of 5."
+    },
+    "e25fbb2de76cf68871e73f788e6f215cf530305f65d29fec948e2c9be6379401": {
+      "verdict": "violating",
+      "requirement": "Create hello.txt",
+      "reason": "The greeting is written to hello.txt.wrong, so hello.txt is never created."
+    },
+    "e280d5d257aa3778c8fcd8b3866cacb09656568f8f7ed1da0cbd65b7ca951563": {
+      "verdict": "violating",
+      "requirement": "Send the customer a receipt for order A17 with send_receipt",
+      "reason": "send_receipt is called with order_id 'A17-x' instead of 'A17', so the receipt is for the wrong order."
+    },
+    "e5e8b10c5388c66ef1831c074de50ce945e6f9ccb9143314ee3e60c24c8961ec": {
+      "verdict": "violating",
+      "requirement": "Return 'fizzbuzz' only when n is divisible by both 3 and 5",
+      "reason": "The check n // 15 == 0 is true for every n below 15, so classify(7) returns 'fizzbuzz' and classify(15) no longer does."
+    },
+    "e7b79c2f1e23e620dbc29cb4ba2e2002731fb1c0e7d294f49ffd2f720d33ef6c": {
+      "verdict": "violating",
+      "requirement": "lines must be the number of lines in input.txt",
+      "reason": "text.count('') returns len(text)+1 rather than the number of newline-terminated lines, so the lines value is wrong."
+    },
+    "e8b82f72cefef7579e2688220f792e1687875f0d9a4638130b3c4f9a71b6560b": {
+      "verdict": "preserving",
+      "requirement": "",
+      "reason": "The wrapper runs the original logic unchanged and only drops the trailing newline of stats.json, which is still a valid JSON object with integer lines and words and the task does not require a trailing newline."
+    },
+    "e9198bb3130ab31a8eacc07bb6c4fadb993b07da254b0ff235f6f702fc459f29": {
+      "verdict": "violating",
+      "requirement": "Confirm the refund amount with confirm_with_user before issuing any refund",
+      "reason": "refund is called before confirm_with_user, which breaks the required ordering."
+    },
+    "f015883ee6e50c0bcbe31f2695c7c0b7ca969a1822c87f5a28ba4ba9ce262d7b": {
+      "verdict": "violating",
+      "requirement": "Return 'fizzbuzz' if n is divisible by both 3 and 5",
+      "reason": "The fizzbuzz check uses n % 16, so classify(15) returns 'fizz' and classify(16) returns 'fizzbuzz'."
+    },
+    "f4ce938c120cc3d7b28590f6481333166bb93b48f197dc281c71ad8d6ed0d535": {
+      "verdict": "violating",
+      "requirement": "Return 'fizz' if n is divisible by 3 only",
+      "reason": "The fizz branch returns None instead of the string 'fizz'."
+    },
+    "f7a15f95e02c2e4f70fca8c4768ce3069c9fd872de12545ee0b437b2634ef2db": {
+      "verdict": "violating",
+      "requirement": "stats.json must contain integer fields lines and words",
+      "reason": "The lines computation was replaced with pass, so the later reference to lines raises NameError and stats.json is never written."
+    },
+    "f8c4eb1d6311babd5f90b43889ecb1f4e16d1f9f8ed86c18e71d559575027f13": {
+      "verdict": "violating",
+      "requirement": "Return 'buzz' if n is divisible by 5 only",
+      "reason": "The check n // 5 == 0 is true only for n below 5, so classify(5) returns '5' and classify(1) returns 'buzz'."
+    },
+    "fb153ed21ee1efd39782d90bc411fb2c6f2105b80443f425c5a09f79a6b9c735": {
+      "verdict": "violating",
+      "requirement": "Write stats.json",
+      "reason": "The output is written to stats.json.bak, so stats.json is never created."
+    },
+    "fec8dd178216e03da3e0b4ef434ea12230530ff3edf09000ea2c639d586fbedf": {
+      "verdict": "preserving",
+      "requirement": "",
+      "reason": "The wrapper runs the original logic unchanged and only re-indents stats.json, which remains a valid JSON object with the correct integer lines and words fields."
+    },
+    "ff634a93783bb20a62dc6aa859effad588dd877cc373c9e613f6446119424049": {
+      "verdict": "violating",
+      "requirement": "Return 'fizz' if n is divisible by 3 only",
+      "reason": "The fizz branch returns an empty string instead of 'fizz'."
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

@@ -34,8 +34,8 @@ typecheck: ## mypy --strict on the package, tools, and tests
 
 ci: lint typecheck test demo ## everything CI runs
 
-demo: ## offline demo from recorded fixtures, compared with its golden output
-	@$(PY) tools/stub.py demo G4
+demo: ## offline demo from recorded fixtures (output must equal tests/golden/demo_output.txt)
+	@GRADERPROOF_NO_MODEL_CALLS=1 $(RUN) graderproof demo --check tests/golden/demo_output.txt
 
 prereg-verify: ## preregistration chain and ordering
 	@$(PY) tools/stub.py prereg-verify G11

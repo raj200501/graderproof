@@ -1,0 +1,160 @@
+{
+  "created_utc": "2026-10-23T02:11:02Z",
+  "hash": "88e9e48d3c3f58952bb07a410480377905f11aaedc080e5ee67fb6f028040488",
+  "instructions": "You turn a task's text into atomic, machine-checkable requirements. For each item you\nget the task text, the task kind, the reference solution (it satisfies the task), the\ninitial workspace, and what the reference produced (files, stdout, exit status, tool\ncalls, final state). You are not shown how the task is graded and must not guess.\n\nWrite one requirement per distinct obligation in the task text (outputs, their\ncontent, required steps, ordering constraints, prohibited actions, policies). Each\nrequirement has an \"id\" (R1, R2, ...), \"text\" (the obligation in plain words, quoting\nthe task where possible), and \"checks\": a list of typed checks that pass on the\nreference outcome and fail when the obligation is broken. Allowed check types and\nfields: file_exists {path}; file_absent {path}; file_equals {path, text, normalize:\nnone|strip|trailing_ws}; file_contains {path, text}; file_regex {path, pattern};\nfile_json {path, pointer, equals, lenient}; file_lines {path, count};\nstdout_contains {text}; stdout_regex {pattern}; stdout_json {pointer, equals,\nlenient}; exit_code {code}; call {probe: {function, args, kwargs}, equals} or\n{probe, matches_reference: true}; same_as_reference {target: stdout|state|file:<path>,\nnormalize}; trajectory_includes {tool, args}; trajectory_excludes {tool, args};\ntrajectory_before {first: {tool, args}, then: {tool, args}}; state_equals {pointer,\nequals}.\n\nBe exactly as strict as the task text. If the text demands an exact format, check it\nexactly; if it only asks for content, check content (use \"normalize\" or \"lenient\" so\nthat harmless formatting does not fail the check). For function tasks, add call\nprobes on the examples in the text and on a few further valid inputs, using\nmatches_reference for inputs whose expected output the text does not state. Return\nfor each item: {\"requirements\": [ ... ]}.\n",
+  "items": [
+    {
+      "id": "demo:classify",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "demo:greeting",
+      "initial_workspace": {},
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "count.txt": "19\n",
+          "hello.txt": "Hello, graderproof!\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting=\"Hello, graderproof!\"\necho \"$greeting\" > hello.txt\necho \"${#greeting}\" > count.txt\n"
+      },
+      "task_text": "Create `hello.txt` whose only line is `Hello, graderproof!`. Create `count.txt` containing the number of characters in that greeting (not counting the newline).\n"
+    },
+    {
+      "id": "demo:refund",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "messages": [
+            "Refund 40 for order A17?"
+          ],
+          "orders": {
+            "A17": {
+              "refunded": 40,
+              "status": "refunded",
+              "total": 40
+            }
+          },
+          "receipts": [
+            "A17"
+          ]
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "order_id": "A17"
+            },
+            "result": {
+              "refunded": 0,
+              "status": "paid",
+              "total": 40
+            },
+            "tool": "get_order"
+          },
+          {
+            "args": {
+              "message": "Refund 40 for order A17?"
+            },
+            "result": "confirmed",
+            "tool": "confirm_with_user"
+          },
+          {
+            "args": {
+              "amount": 40,
+              "order_id": "A17"
+            },
+            "result": {
+              "order_id": "A17",
+              "refunded": 40
+            },
+            "tool": "refund"
+          },
+          {
+            "args": {
+              "order_id": "A17"
+            },
+            "result": "sent",
+            "tool": "send_receipt"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+      },
+      "task_text": "A customer asks for a refund of order `A17`. Follow the support policy:\n\n1. Look up the order with `get_order`.\n2. Before issuing any refund, confirm the refund amount with the customer using `confirm_with_user`.\n3. Issue a full refund of the order total with `refund`.\n4. Then send the customer a receipt with `send_receipt`.\n"
+    },
+    {
+      "id": "demo:status-json",
+      "initial_workspace": {
+        "data.txt": "a\nb\nc\nd\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "data.txt": "a\nb\nc\nd\n"
+        },
+        "state": null,
+        "stdout": "{\"status\": \"ok\", \"items\": 4}\n",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+      },
+      "task_text": "Print a JSON object to standard output with two fields: `\"status\"` set to the string `\"ok\"`, and `\"items\"` set to the number of lines in `data.txt`.\n"
+    },
+    {
+      "id": "demo:word-stats",
+      "initial_workspace": {
+        "input.txt": "the quick brown fox\njumps over\nthe lazy dog\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "input.txt": "the quick brown fox\njumps over\nthe lazy dog\n",
+          "stats.json": "{\"lines\": 3, \"words\": 9}\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+      },
+      "task_text": "Read `input.txt` in the working directory. Write `stats.json` containing a JSON object with two integer fields: `lines`, the number of lines in `input.txt`, and `words`, the number of whitespace-separated words in it.\n"
+    }
+  ],
+  "prompt_version": "requirements/v1",
+  "purpose": "requirements",
+  "response_schema": {
+    "required": [
+      "requirements"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

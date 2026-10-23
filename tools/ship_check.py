@@ -773,7 +773,9 @@ def g6_validation_integrity(ctx: Ctx) -> Result:
 def task_indicators(adir: Path) -> tuple[list[dict[str, Any]], list[bool], list[bool]] | str:
     """Per-task false-accept and false-reject indicators recomputed from variants.
 
-    Flaky tasks are excluded from both rates (they are reported separately).
+    Flaky tasks are excluded from both rates (they are reported separately). A variant
+    counts only with ``counted_in_headline`` and a stable verdict (``grader_passed`` is
+    ``true`` or ``false``; ``null`` means the grader was unstable on it).
     """
     tasks = read_jsonl(adir / "tasks.jsonl")
     variants = read_jsonl(adir / "variants.jsonl")
@@ -786,8 +788,8 @@ def task_indicators(adir: Path) -> tuple[list[dict[str, Any]], list[bool], list[
     fa, fr = [], []
     for t in kept:
         vs = [v for v in by_task.get(str(t.get("task_hash")), []) if v.get("counted_in_headline")]
-        fa.append(any(v.get("kind") == "violating" and v.get("grader_passed") for v in vs))
-        fr.append(any(v.get("kind") == "preserving" and not v.get("grader_passed") for v in vs))
+        fa.append(any(v.get("kind") == "violating" and v.get("grader_passed") is True for v in vs))
+        fr.append(any(v.get("kind") == "preserving" and v.get("grader_passed") is False for v in vs))
     return kept, fa, fr
 
 

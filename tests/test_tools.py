@@ -422,7 +422,10 @@ def test_task_indicators_exclude_flaky_and_uncounted(tmp_path: Path) -> None:
     adir.mkdir()
     rows = [{"task_hash": "a", "flaky": False}, {"task_hash": "b", "flaky": True}]
     (adir / "tasks.jsonl").write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+    unstable = {"task_hash": "a", "counted_in_headline": True, "grader_passed": None}
     vs = [
+        {**unstable, "kind": "preserving"},
+        {**unstable, "kind": "violating"},
         {
             "task_hash": "a",
             "kind": "preserving",

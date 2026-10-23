@@ -1,0 +1,308 @@
+{
+  "created_utc": "2026-10-23T02:12:34Z",
+  "hash": "2528f5bd0c83a3f14351e76cdba2b1453e3179af72f1a004ab7ff109b8320f0c",
+  "instructions": "You review modified solutions to software tasks. For each item you get the task text,\nthe original reference solution (which satisfies the task), and a modified solution\n(as a unified diff plus the full changed files). Decide whether the modified solution\nstill satisfies every requirement that the task text states or clearly implies.\n\nAnswer \"violating\" if it breaks at least one requirement (name it), \"preserving\" if it\nsatisfies all of them, or \"unsure\" if you cannot tell. Judge only against the task\ntext: a change in formatting, naming, ordering, or implementation is \"preserving\"\nunless the task text requires the exact form that changed. A change that makes the\nsolution crash, produce a different result, skip a required step, write to the wrong\nplace, or omit required output is \"violating\". You are not told how the task is\ngraded and must not guess; do not reward or penalize anything for how a checker might\nreact.\nReturn for each item: {\"verdict\": \"violating\"|\"preserving\"|\"unsure\",\n\"requirement\": \"<the broken requirement, or empty>\", \"reason\": \"<one sentence>\"}.\n",
+  "items": [
+    {
+      "id": "0426909c89eaa25493096b029115643df5cddb57e3bcdaf90ee4fd479a19d626",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,21 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n-  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n-  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n-  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"A17\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund\",\n+    \"args\": {\n+      \"order_id\": \"A17\",\n+      \"amount\": 40\n+    }\n+  },\n+  {\n+    \"tool\": \"send_receipt\",\n+    \"args\": {\n+      \"order_id\": \"A17\"\n+    }\n+  }\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"A17\"\n    }\n  },\n  {\n    \"tool\": \"refund\",\n    \"args\": {\n      \"order_id\": \"A17\",\n      \"amount\": 40\n    }\n  },\n  {\n    \"tool\": \"send_receipt\",\n    \"args\": {\n      \"order_id\": \"A17\"\n    }\n  }\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+      },
+      "task_text": "A customer asks for a refund of order `A17`. Follow the support policy:\n\n1. Look up the order with `get_order`.\n2. Before issuing any refund, confirm the refund amount with the customer using `confirm_with_user`.\n3. Issue a full refund of the order total with `refund`.\n4. Then send the customer a receipt with `send_receipt`.\n"
+    },
+    {
+      "id": "064d0c6aa0e9277a053b017f76932e7585d65b8a836636fc40e339e598bf5cb2",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -1,6 +1,6 @@\n def classify(n):\n     if n % 15 == 0:\n-        return \"fizzbuzz\"\n+        pass\n     if n % 3 == 0:\n         return \"fizz\"\n     if n % 5 == 0:\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        pass\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "080a710d630ab5ec07df7bc1a9c8409d88ffb2ef21012f3b508957624e06bec3",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -4,5 +4,5 @@\n     if n % 3 == 0:\n         return \"fizz\"\n     if n % 5 == 0:\n-        return \"buzz\"\n+        return None\n     return str(n)\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return None\n    return str(n)\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "0ba29059c46cd531fc06b2fb519cc391a02bad7a6ac53fea0c7f0f4c74a67489",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,27 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n-  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n-  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n-  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"A17\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_with_user\",\n+    \"args\": {\n+      \"message\": \"Refund 40 for order A17?\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_receipt\",\n+    \"args\": {\n+      \"order_id\": \"A17\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund\",\n+    \"args\": {\n+      \"order_id\": \"A17\",\n+      \"amount\": 40\n+    }\n+  }\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"A17\"\n    }\n  },\n  {\n    \"tool\": \"confirm_with_user\",\n    \"args\": {\n      \"message\": \"Refund 40 for order A17?\"\n    }\n  },\n  {\n    \"tool\": \"send_receipt\",\n    \"args\": {\n      \"order_id\": \"A17\"\n    }\n  },\n  {\n    \"tool\": \"refund\",\n    \"args\": {\n      \"order_id\": \"A17\",\n      \"amount\": 40\n    }\n  }\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+      },
+      "task_text": "A customer asks for a refund of order `A17`. Follow the support policy:\n\n1. Look up the order with `get_order`.\n2. Before issuing any refund, confirm the refund amount with the customer using `confirm_with_user`.\n3. Issue a full refund of the order total with `refund`.\n4. Then send the customer a receipt with `send_receipt`.\n"
+    },
+    {
+      "id": "0d60f6b3f48edd95aec8b6b88056f906ec8272853dae3dcbe0d5bd4b89cfdee1",
+      "modified_diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,7 @@\n+import json\n+from pathlib import Path\n+\n+text = Path(\"input.txt\").read_text()\n+lines = text.count(\"\\n\")\n+words = len(text.split())\n+Path(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,74 @@\n+\"\"\"graderproof output transform (spec-preserving variant).\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+OP = 'out-json-key-order'\n+TARGETS = ['stats.json']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def reorder(obj):\n+    if isinstance(obj, dict):\n+        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n+    if isinstance(obj, list):\n+        return [reorder(x) for x in obj]\n+    return obj\n+\n+\n+def floatify(obj):\n+    if isinstance(obj, bool):\n+        return obj\n+    if isinstance(obj, int):\n+        return float(obj)\n+    if isinstance(obj, dict):\n+        return {k: floatify(v) for k, v in obj.items()}\n+    if isinstance(obj, list):\n+        return [floatify(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    if OP == \"out-trailing-newline\":\n+        return toggle_newline(text)\n+    if OP == \"out-trailing-spaces\":\n+        return trailing_spaces(text)\n+    if OP == \"out-json-key-order\":\n+        return rewrite_json(text, reorder, 2)\n+    if OP == \"out-json-indent\":\n+        return rewrite_json(text, lambda o: o, 4)\n+    if OP == \"out-json-float\":\n+        return rewrite_json(text, floatify, 2)\n+    return text\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    if OP.startswith(\"out-\"):\n+        for name in TARGETS:\n+            path = pathlib.Path(name)\n+            if path.is_file():\n+                path.write_text(transform_file(path.read_text()))\n+    elif OP == \"stdout-json-key-order\" and out.strip():\n+        out = rewrite_json(out, reorder, None)\n+    elif OP == \"stdout-code-fence\" and out.strip():\n+        out = \"```json\\n\" + out.rstrip(\"\\n\") + \"\\n```\\n\"\n+    elif OP == \"stdout-trailing-newline\" and out:\n+        out = toggle_newline(out)\n+    sys.stdout.write(out)\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,12 @@\n-import json\n-from pathlib import Path\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n \n-text = Path(\"input.txt\").read_text()\n-lines = text.count(\"\\n\")\n-words = len(text.split())\n-Path(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+      "modified_files": {
+        "_gp_orig_solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n",
+        "_gp_transform.py": "\"\"\"graderproof output transform (spec-preserving variant).\"\"\"\nimport json\nimport pathlib\nimport sys\n\nOP = 'out-json-key-order'\nTARGETS = ['stats.json']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef reorder(obj):\n    if isinstance(obj, dict):\n        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n    if isinstance(obj, list):\n        return [reorder(x) for x in obj]\n    return obj\n\n\ndef floatify(obj):\n    if isinstance(obj, bool):\n        return obj\n    if isinstance(obj, int):\n        return float(obj)\n    if isinstance(obj, dict):\n        return {k: floatify(v) for k, v in obj.items()}\n    if isinstance(obj, list):\n        return [floatify(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    if OP == \"out-trailing-newline\":\n        return toggle_newline(text)\n    if OP == \"out-trailing-spaces\":\n        return trailing_spaces(text)\n    if OP == \"out-json-key-order\":\n        return rewrite_json(text, reorder, 2)\n    if OP == \"out-json-indent\":\n        return rewrite_json(text, lambda o: o, 4)\n    if OP == \"out-json-float\":\n        return rewrite_json(text, floatify, 2)\n    return text\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    if OP.startswith(\"out-\"):\n        for name in TARGETS:\n            path = pathlib.Path(name)\n            if path.is_file():\n                path.write_text(transform_file(path.read_text()))\n    elif OP == \"stdout-json-key-order\" and out.strip():\n        out = rewrite_json(out, reorder, None)\n    elif OP == \"stdout-code-fence\" and out.strip():\n        out = \"```json\\n\" + out.rstrip(\"\\n\") + \"\\n```\\n\"\n    elif OP == \"stdout-trailing-newline\" and out:\n        out = toggle_newline(out)\n    sys.stdout.write(out)\n\n\nmain()\n",
+        "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\n\nhere = pathlib.Path(__file__).resolve().parent\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+      },
+      "reference_solution": {
+        "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+      },
+      "task_text": "Read `input.txt` in the working directory. Write `stats.json` containing a JSON object with two integer fields: `lines`, the number of lines in `input.txt`, and `words`, the number of whitespace-separated words in it.\n"
+    },
+    {
+      "id": "0ee504529ff66e522b7a11e31cb6b6ea7752ffda4e3e4e66548850b73f0a4f8e",
+      "modified_diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,7 @@\n+import json\n+from pathlib import Path\n+\n+text = Path(\"input.txt\").read_text()\n+lines = text.count(\"\\n\")\n+words = len(text.split())\n+Path(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,74 @@\n+\"\"\"graderproof output transform (spec-preserving variant).\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+OP = 'out-json-float'\n+TARGETS = ['stats.json']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def reorder(obj):\n+    if isinstance(obj, dict):\n+        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n+    if isinstance(obj, list):\n+        return [reorder(x) for x in obj]\n+    return obj\n+\n+\n+def floatify(obj):\n+    if isinstance(obj, bool):\n+        return obj\n+    if isinstance(obj, int):\n+        return float(obj)\n+    if isinstance(obj, dict):\n+        return {k: floatify(v) for k, v in obj.items()}\n+    if isinstance(obj, list):\n+        return [floatify(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    if OP == \"out-trailing-newline\":\n+        return toggle_newline(text)\n+    if OP == \"out-trailing-spaces\":\n+        return trailing_spaces(text)\n+    if OP == \"out-json-key-order\":\n+        return rewrite_json(text, reorder, 2)\n+    if OP == \"out-json-indent\":\n+        return rewrite_json(text, lambda o: o, 4)\n+    if OP == \"out-json-float\":\n+        return rewrite_json(text, floatify, 2)\n+    return text\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    if OP.startswith(\"out-\"):\n+        for name in TARGETS:\n+            path = pathlib.Path(name)\n+            if path.is_file():\n+                path.write_text(transform_file(path.read_text()))\n+    elif OP == \"stdout-json-key-order\" and out.strip():\n+        out = rewrite_json(out, reorder, None)\n+    elif OP == \"stdout-code-fence\" and out.strip():\n+        out = \"```json\\n\" + out.rstrip(\"\\n\") + \"\\n```\\n\"\n+    elif OP == \"stdout-trailing-newline\" and out:\n+        out = toggle_newline(out)\n+    sys.stdout.write(out)\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,12 @@\n-import json\n-from pathlib import Path\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n \n-text = Path(\"input.txt\").read_text()\n-lines = text.count(\"\\n\")\n-words = len(text.split())\n-Path(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+      "modified_files": {
+        "_gp_orig_solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n",
+        "_gp_transform.py": "\"\"\"graderproof output transform (spec-preserving variant).\"\"\"\nimport json\nimport pathlib\nimport sys\n\nOP = 'out-json-float'\nTARGETS = ['stats.json']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef reorder(obj):\n    if isinstance(obj, dict):\n        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n    if isinstance(obj, list):\n        return [reorder(x) for x in obj]\n    return obj\n\n\ndef floatify(obj):\n    if isinstance(obj, bool):\n        return obj\n    if isinstance(obj, int):\n        return float(obj)\n    if isinstance(obj, dict):\n        return {k: floatify(v) for k, v in obj.items()}\n    if isinstance(obj, list):\n        return [floatify(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    if OP == \"out-trailing-newline\":\n        return toggle_newline(text)\n    if OP == \"out-trailing-spaces\":\n        return trailing_spaces(text)\n    if OP == \"out-json-key-order\":\n        return rewrite_json(text, reorder, 2)\n    if OP == \"out-json-indent\":\n        return rewrite_json(text, lambda o: o, 4)\n    if OP == \"out-json-float\":\n        return rewrite_json(text, floatify, 2)\n    return text\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    if OP.startswith(\"out-\"):\n        for name in TARGETS:\n            path = pathlib.Path(name)\n            if path.is_file():\n                path.write_text(transform_file(path.read_text()))\n    elif OP == \"stdout-json-key-order\" and out.strip():\n        out = rewrite_json(out, reorder, None)\n    elif OP == \"stdout-code-fence\" and out.strip():\n        out = \"```json\\n\" + out.rstrip(\"\\n\") + \"\\n```\\n\"\n    elif OP == \"stdout-trailing-newline\" and out:\n        out = toggle_newline(out)\n    sys.stdout.write(out)\n\n\nmain()\n",
+        "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\n\nhere = pathlib.Path(__file__).resolve().parent\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+      },
+      "reference_solution": {
+        "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+      },
+      "task_text": "Read `input.txt` in the working directory. Write `stats.json` containing a JSON object with two integer fields: `lines`, the number of lines in `input.txt`, and `words`, the number of whitespace-separated words in it.\n"
+    },
+    {
+      "id": "138ae95ba76c30ada7183a5a16e22075de579cbe54a9f63ac51b2e65db2b1655",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -1,7 +1,7 @@\n def classify(n):\n     if n % 15 == 0:\n         return \"fizzbuzz\"\n-    if n % 3 == 0:\n+    if n % 3 != 0:\n         return \"fizz\"\n     if n % 5 == 0:\n         return \"buzz\"\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 != 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "150fbd67646a29150fed04e434cc01c9d0ed1d5a0edf9678352fc0a3438ee4b6",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,4 +2,4 @@\n set -euo pipefail\n greeting=\"Hello, graderproof!\"\n echo \"$greeting\" > hello.txt\n-echo \"${#greeting}\" > count.txt\n+:\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting=\"Hello, graderproof!\"\necho \"$greeting\" > hello.txt\n:\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting=\"Hello, graderproof!\"\necho \"$greeting\" > hello.txt\necho \"${#greeting}\" > count.txt\n"
+      },
+      "task_text": "Create `hello.txt` whose only line is `Hello, graderproof!`. Create `count.txt` containing the number of characters in that greeting (not counting the newline).\n"
+    },
+    {
+      "id": "15462f770826442566688533a8ab8e9d3ce5073cda83485205718330d28076dc",
+      "modified_diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,5 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+greeting=\"Hello, graderproof!\"\n+echo \"$greeting\" > hello.txt\n+echo \"${#greeting}\" > count.txt\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,74 @@\n+\"\"\"graderproof output transform (spec-preserving variant).\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+OP = 'out-trailing-newline'\n+TARGETS = ['count.txt', 'hello.txt']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def reorder(obj):\n+    if isinstance(obj, dict):\n+        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n+    if isinstance(obj, list):\n+        return [reorder(x) for x in obj]\n+    return obj\n+\n+\n+def floatify(obj):\n+    if isinstance(obj, bool):\n+        return obj\n+    if isinstance(obj, int):\n+        return float(obj)\n+    if isinstance(obj, dict):\n+        return {k: floatify(v) for k, v in obj.items()}\n+    if isinstance(obj, list):\n+        return [floatify(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    if OP == \"out-trailing-newline\":\n+        return toggle_newline(text)\n+    if OP == \"out-trailing-spaces\":\n+        return trailing_spaces(text)\n+    if OP == \"out-json-key-order\":\n+        return rewrite_json(text, reorder, 2)\n+    if OP == \"out-json-indent\":\n+        return rewrite_json(text, lambda o: o, 4)\n+    if OP == \"out-json-float\":\n+        return rewrite_json(text, floatify, 2)\n+    return text\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    if OP.startswith(\"out-\"):\n+        for name in TARGETS:\n+            path = pathlib.Path(name)\n+            if path.is_file():\n+                path.write_text(transform_file(path.read_text()))\n+    elif OP == \"stdout-json-key-order\" and out.strip():\n+        out = rewrite_json(out, reorder, None)\n+    elif OP == \"stdout-code-fence\" and out.strip():\n+        out = \"```json\\n\" + out.rstrip(\"\\n\") + \"\\n```\\n\"\n+    elif OP == \"stdout-trailing-newline\" and out:\n+        out = toggle_newline(out)\n+    sys.stdout.write(out)\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,5 +1,8 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-greeting=\"Hello, graderproof!\"\n-echo \"$greeting\" > hello.txt\n-echo \"${#greeting}\" > count.txt\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+      "modified_files": {
+        "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting=\"Hello, graderproof!\"\necho \"$greeting\" > hello.txt\necho \"${#greeting}\" > count.txt\n",
+        "_gp_transform.py": "\"\"\"graderproof output transform (spec-preserving variant).\"\"\"\nimport json\nimport pathlib\nimport sys\n\nOP = 'out-trailing-newline'\nTARGETS = ['count.txt', 'hello.txt']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef reorder(obj):\n    if isinstance(obj, dict):\n        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n    if isinstance(obj, list):\n        return [reorder(x) for x in obj]\n    return obj\n\n\ndef floatify(obj):\n    if isinstance(obj, bool):\n        return obj\n    if isinstance(obj, int):\n        return float(obj)\n    if isinstance(obj, dict):\n        return {k: floatify(v) for k, v in obj.items()}\n    if isinstance(obj, list):\n        return [floatify(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    if OP == \"out-trailing-newline\":\n        return toggle_newline(text)\n    if OP == \"out-trailing-spaces\":\n        return trailing_spaces(text)\n    if OP == \"out-json-key-order\":\n        return rewrite_json(text, reorder, 2)\n    if OP == \"out-json-indent\":\n        return rewrite_json(text, lambda o: o, 4)\n    if OP == \"out-json-float\":\n        return rewrite_json(text, floatify, 2)\n    return text\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    if OP.startswith(\"out-\"):\n        for name in TARGETS:\n            path = pathlib.Path(name)\n            if path.is_file():\n                path.write_text(transform_file(path.read_text()))\n    elif OP == \"stdout-json-key-order\" and out.strip():\n        out = rewrite_json(out, reorder, None)\n    elif OP == \"stdout-code-fence\" and out.strip():\n        out = \"```json\\n\" + out.rstrip(\"\\n\") + \"\\n```\\n\"\n    elif OP == \"stdout-trailing-newline\" and out:\n        out = toggle_newline(out)\n    sys.stdout.write(out)\n\n\nmain()\n",
+        "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting=\"Hello, graderproof!\"\necho \"$greeting\" > hello.txt\necho \"${#greeting}\" > count.txt\n"
+      },
+      "task_text": "Create `hello.txt` whose only line is `Hello, graderproof!`. Create `count.txt` containing the number of characters in that greeting (not counting the newline).\n"
+    },
+    {
+      "id": "19dacce4726dd2f34d9b7adfd77e794cc7d62daaa3b04c0559f97f0677a85518",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,21 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n-  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n-  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n-  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n+  {\n+    \"tool\": \"confirm_with_user\",\n+    \"args\": {\n+      \"message\": \"Refund 40 for order A17?\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund\",\n+    \"args\": {\n+      \"order_id\": \"A17\",\n+      \"amount\": 40\n+    }\n+  },\n+  {\n+    \"tool\": \"send_receipt\",\n+    \"args\": {\n+      \"order_id\": \"A17\"\n+    }\n+  }\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\n    \"tool\": \"confirm_with_user\",\n    \"args\": {\n      \"message\": \"Refund 40 for order A17?\"\n    }\n  },\n  {\n    \"tool\": \"refund\",\n    \"args\": {\n      \"order_id\": \"A17\",\n      \"amount\": 40\n    }\n  },\n  {\n    \"tool\": \"send_receipt\",\n    \"args\": {\n      \"order_id\": \"A17\"\n    }\n  }\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+      },
+      "task_text": "A customer asks for a refund of order `A17`. Follow the support policy:\n\n1. Look up the order with `get_order`.\n2. Before issuing any refund, confirm the refund amount with the customer using `confirm_with_user`.\n3. Issue a full refund of the order total with `refund`.\n4. Then send the customer a receipt with `send_receipt`.\n"
+    },
+    {
+      "id": "25da0f5899b91014a7ddba4f104f98d8a65698024b6f6e62ab9244fff100cf67",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -5,4 +5,4 @@\n         return \"fizz\"\n     if n % 5 == 0:\n         return \"buzz\"\n-    return str(n)\n+    return None\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return None\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "2cdcb4b5b3ca8f58c9299937a11ab1e31f9dad72ca884af591a9a3f915bcb706",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,4 +2,4 @@\n set -euo pipefail\n greeting=\"Hello, graderproof!\"\n echo \"$greeting\" > hello.txt\n-echo \"${#greeting}\" > count.txt\n+echo \"${#greeting}\" | head -n 1 > count.txt\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting=\"Hello, graderproof!\"\necho \"$greeting\" > hello.txt\necho \"${#greeting}\" | head -n 1 > count.txt\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting=\"Hello, graderproof!\"\necho \"$greeting\" > hello.txt\necho \"${#greeting}\" > count.txt\n"
+      },
+      "task_text": "Create `hello.txt` whose only line is `Hello, graderproof!`. Create `count.txt` containing the number of characters in that greeting (not counting the newline).\n"
+    },
+    {
+      "id": "3286f701653c5669fdec1333ec4f1da54c486540eb3906207ce33f0917f39d12",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -1,6 +1,6 @@\n def classify(n):\n     if n % 15 == 0:\n-        return \"fizzbuzz\"\n+        return None\n     if n % 3 == 0:\n         return \"fizz\"\n     if n % 5 == 0:\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return None\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "3306d6999fb3e0d2af9a440ee598263d2a484bb49bbe944f52f938261a827431",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -3,6 +3,6 @@\n         return \"fizzbuzz\"\n     if n % 3 == 0:\n         return \"fizz\"\n-    if n % 5 == 0:\n+    if not (n % 5 == 0):\n         return \"buzz\"\n     return str(n)\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if not (n % 5 == 0):\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "34f5e7337a8ca2822a418f774cebd8a542179036ff31c7f42d329e1089be358d",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -1,7 +1,7 @@\n def classify(n):\n     if n % 15 == 0:\n         return \"fizzbuzz\"\n-    if n % 3 == 0:\n+    if not (n % 3 == 0):\n         return \"fizz\"\n     if n % 5 == 0:\n         return \"buzz\"\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if not (n % 3 == 0):\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "35b5ec8609c7a066f7967d820a33f802d8379bb33adf977c4c838ae13f0e448f",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -1,8 +1,7 @@\n def classify(n):\n     if n % 15 == 0:\n         return \"fizzbuzz\"\n-    if n % 3 == 0:\n-        return \"fizz\"\n+    pass\n     if n % 5 == 0:\n         return \"buzz\"\n     return str(n)\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    pass\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "3b2403f3f6c59ebb689f094cf59856d78b90add3860844b319d5177c7ea88e4e",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,4 +4,4 @@\n text = Path(\"input.txt\").read_text()\n lines = text.count(\"\\n\")\n words = len(text.split())\n-Path(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n+Path(\"stats.json\").write_text(json.dumps({\"lines\": lines, '': words}) + \"\\n\")\n",
+      "modified_files": {
+        "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, '': words}) + \"\\n\")\n"
+      },
+      "reference_solution": {
+        "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+      },
+      "task_text": "Read `input.txt` in the working directory. Write `stats.json` containing a JSON object with two integer fields: `lines`, the number of lines in `input.txt`, and `words`, the number of whitespace-separated words in it.\n"
+    },
+    {
+      "id": "3d7df92a43581bde9eb0c1e70a0216aada955aeac666bfd33a2aa3c17aff22c0",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -1,5 +1,5 @@\n def classify(n):\n-    if n % 15 == 0:\n+    if n % 0 == 0:\n         return \"fizzbuzz\"\n     if n % 3 == 0:\n         return \"fizz\"\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    if n % 0 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "3db8cfe5155471df358f77c726a2af33a3719dc1ed93a6a382f0c23130e1c9f0",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,20 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n-  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n-  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n-  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"A17\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_with_user\",\n+    \"args\": {\n+      \"message\": \"Refund 40 for order A17?\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_receipt\",\n+    \"args\": {\n+      \"order_id\": \"A17\"\n+    }\n+  }\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"A17\"\n    }\n  },\n  {\n    \"tool\": \"confirm_with_user\",\n    \"args\": {\n      \"message\": \"Refund 40 for order A17?\"\n    }\n  },\n  {\n    \"tool\": \"send_receipt\",\n    \"args\": {\n      \"order_id\": \"A17\"\n    }\n  }\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+      },
+      "task_text": "A customer asks for a refund of order `A17`. Follow the support policy:\n\n1. Look up the order with `get_order`.\n2. Before issuing any refund, confirm the refund amount with the customer using `confirm_with_user`.\n3. Issue a full refund of the order total with `refund`.\n4. Then send the customer a receipt with `send_receipt`.\n"
+    },
+    {
+      "id": "3ec3e71f76dd6419074235aaf6213b5592e84f8379ded9c9742a4a39a1d077c1",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,27 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n-  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n-  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n-  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"A17\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_with_user\",\n+    \"args\": {\n+      \"message\": \"Refund 40 for order A17?\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund\",\n+    \"args\": {\n+      \"order_id\": \"A17-x\",\n+      \"amount\": 40\n+    }\n+  },\n+  {\n+    \"tool\": \"send_receipt\",\n+    \"args\": {\n+      \"order_id\": \"A17\"\n+    }\n+  }\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"A17\"\n    }\n  },\n  {\n    \"tool\": \"confirm_with_user\",\n    \"args\": {\n      \"message\": \"Refund 40 for order A17?\"\n    }\n  },\n  {\n    \"tool\": \"refund\",\n    \"args\": {\n      \"order_id\": \"A17-x\",\n      \"amount\": 40\n    }\n  },\n  {\n    \"tool\": \"send_receipt\",\n    \"args\": {\n      \"order_id\": \"A17\"\n    }\n  }\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+      },
+      "task_text": "A customer asks for a refund of order `A17`. Follow the support policy:\n\n1. Look up the order with `get_order`.\n2. Before issuing any refund, confirm the refund amount with the customer using `confirm_with_user`.\n3. Issue a full refund of the order total with `refund`.\n4. Then send the customer a receipt with `send_receipt`.\n"
+    },
+    {
+      "id": "3f05b9ab6439b72534b0e2b06cd450c17bd0dea0082a2dfcdcbed81638044f8f",
+      "modified_diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,4 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+n=$(wc -l < data.txt)\n+echo \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,74 @@\n+\"\"\"graderproof output transform (spec-preserving variant).\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+OP = 'stdout-json-key-order'\n+TARGETS = []\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def reorder(obj):\n+    if isinstance(obj, dict):\n+        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n+    if isinstance(obj, list):\n+        return [reorder(x) for x in obj]\n+    return obj\n+\n+\n+def floatify(obj):\n+    if isinstance(obj, bool):\n+        return obj\n+    if isinstance(obj, int):\n+        return float(obj)\n+    if isinstance(obj, dict):\n+        return {k: floatify(v) for k, v in obj.items()}\n+    if isinstance(obj, list):\n+        return [floatify(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    if OP == \"out-trailing-newline\":\n+        return toggle_newline(text)\n+    if OP == \"out-trailing-spaces\":\n+        return trailing_spaces(text)\n+    if OP == \"out-json-key-order\":\n+        return rewrite_json(text, reorder, 2)\n+    if OP == \"out-json-indent\":\n+        return rewrite_json(text, lambda o: o, 4)\n+    if OP == \"out-json-float\":\n+        return rewrite_json(text, floatify, 2)\n+    return text\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    if OP.startswith(\"out-\"):\n+        for name in TARGETS:\n+            path = pathlib.Path(name)\n+            if path.is_file():\n+                path.write_text(transform_file(path.read_text()))\n+    elif OP == \"stdout-json-key-order\" and out.strip():\n+        out = rewrite_json(out, reorder, None)\n+    elif OP == \"stdout-code-fence\" and out.strip():\n+        out = \"```json\\n\" + out.rstrip(\"\\n\") + \"\\n```\\n\"\n+    elif OP == \"stdout-trailing-newline\" and out:\n+        out = toggle_newline(out)\n+    sys.stdout.write(out)\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,8 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-n=$(wc -l < data.txt)\n-echo \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+      "modified_files": {
+        "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n",
+        "_gp_transform.py": "\"\"\"graderproof output transform (spec-preserving variant).\"\"\"\nimport json\nimport pathlib\nimport sys\n\nOP = 'stdout-json-key-order'\nTARGETS = []\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef reorder(obj):\n    if isinstance(obj, dict):\n        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n    if isinstance(obj, list):\n        return [reorder(x) for x in obj]\n    return obj\n\n\ndef floatify(obj):\n    if isinstance(obj, bool):\n        return obj\n    if isinstance(obj, int):\n        return float(obj)\n    if isinstance(obj, dict):\n        return {k: floatify(v) for k, v in obj.items()}\n    if isinstance(obj, list):\n        return [floatify(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    if OP == \"out-trailing-newline\":\n        return toggle_newline(text)\n    if OP == \"out-trailing-spaces\":\n        return trailing_spaces(text)\n    if OP == \"out-json-key-order\":\n        return rewrite_json(text, reorder, 2)\n    if OP == \"out-json-indent\":\n        return rewrite_json(text, lambda o: o, 4)\n    if OP == \"out-json-float\":\n        return rewrite_json(text, floatify, 2)\n    return text\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    if OP.startswith(\"out-\"):\n        for name in TARGETS:\n            path = pathlib.Path(name)\n            if path.is_file():\n                path.write_text(transform_file(path.read_text()))\n    elif OP == \"stdout-json-key-order\" and out.strip():\n        out = rewrite_json(out, reorder, None)\n    elif OP == \"stdout-code-fence\" and out.strip():\n        out = \"```json\\n\" + out.rstrip(\"\\n\") + \"\\n```\\n\"\n    elif OP == \"stdout-trailing-newline\" and out:\n        out = toggle_newline(out)\n    sys.stdout.write(out)\n\n\nmain()\n",
+        "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+      },
+      "task_text": "Print a JSON object to standard output with two fields: `\"status\"` set to the string `\"ok\"`, and `\"items\"` set to the number of lines in `data.txt`.\n"
+    },
+    {
+      "id": "3f494c09140fc4b82873e10e6ea35680e2dcbf05c3d0c079b7e1c16a6f4826c6",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -1,7 +1,7 @@\n def classify(n):\n     if n % 15 == 0:\n         return \"fizzbuzz\"\n-    if n % 3 == 0:\n+    if (n) // (3) == 0:\n         return \"fizz\"\n     if n % 5 == 0:\n         return \"buzz\"\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if (n) // (3) == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "3fc3fbedcf010cd5970eb803d1143e938617bd2d7ac2bbaa9a668f4e23e47f19",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,4 +4,4 @@\n text = Path(\"input.txt\").read_text()\n lines = text.count(\"\\n\")\n words = len(text.split())\n-Path(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n+pass\n",
+      "modified_files": {
+        "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\npass\n"
+      },
+      "reference_solution": {
+        "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+      },
+      "task_text": "Read `input.txt` in the working directory. Write `stats.json` containing a JSON object with two integer fields: `lines`, the number of lines in `input.txt`, and `words`, the number of whitespace-separated words in it.\n"
+    },
+    {
+      "id": "4105fce6f80cf0a3ac7e4d5309de7d9406add5fb5c36ce43be0b2c5b3b7341df",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -1,6 +1,5 @@\n def classify(n):\n-    if n % 15 == 0:\n-        return \"fizzbuzz\"\n+    pass\n     if n % 3 == 0:\n         return \"fizz\"\n     if n % 5 == 0:\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    pass\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "5182d41a03c62c962b04fa02b2df725c0ca7227e934346efd1d90ff0f1aac7d3",
+      "modified_diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,4 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+n=$(wc -l < data.txt)\n+echo \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,74 @@\n+\"\"\"graderproof output transform (spec-preserving variant).\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+OP = 'stdout-code-fence'\n+TARGETS = []\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def reorder(obj):\n+    if isinstance(obj, dict):\n+        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n+    if isinstance(obj, list):\n+        return [reorder(x) for x in obj]\n+    return obj\n+\n+\n+def floatify(obj):\n+    if isinstance(obj, bool):\n+        return obj\n+    if isinstance(obj, int):\n+        return float(obj)\n+    if isinstance(obj, dict):\n+        return {k: floatify(v) for k, v in obj.items()}\n+    if isinstance(obj, list):\n+        return [floatify(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    if OP == \"out-trailing-newline\":\n+        return toggle_newline(text)\n+    if OP == \"out-trailing-spaces\":\n+        return trailing_spaces(text)\n+    if OP == \"out-json-key-order\":\n+        return rewrite_json(text, reorder, 2)\n+    if OP == \"out-json-indent\":\n+        return rewrite_json(text, lambda o: o, 4)\n+    if OP == \"out-json-float\":\n+        return rewrite_json(text, floatify, 2)\n+    return text\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    if OP.startswith(\"out-\"):\n+        for name in TARGETS:\n+            path = pathlib.Path(name)\n+            if path.is_file():\n+                path.write_text(transform_file(path.read_text()))\n+    elif OP == \"stdout-json-key-order\" and out.strip():\n+        out = rewrite_json(out, reorder, None)\n+    elif OP == \"stdout-code-fence\" and out.strip():\n+        out = \"```json\\n\" + out.rstrip(\"\\n\") + \"\\n```\\n\"\n+    elif OP == \"stdout-trailing-newline\" and out:\n+        out = toggle_newline(out)\n+    sys.stdout.write(out)\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,8 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-n=$(wc -l < data.txt)\n-echo \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+      "modified_files": {
+        "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n",
+        "_gp_transform.py": "\"\"\"graderproof output transform (spec-preserving variant).\"\"\"\nimport json\nimport pathlib\nimport sys\n\nOP = 'stdout-code-fence'\nTARGETS = []\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef reorder(obj):\n    if isinstance(obj, dict):\n        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n    if isinstance(obj, list):\n        return [reorder(x) for x in obj]\n    return obj\n\n\ndef floatify(obj):\n    if isinstance(obj, bool):\n        return obj\n    if isinstance(obj, int):\n        return float(obj)\n    if isinstance(obj, dict):\n        return {k: floatify(v) for k, v in obj.items()}\n    if isinstance(obj, list):\n        return [floatify(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    if OP == \"out-trailing-newline\":\n        return toggle_newline(text)\n    if OP == \"out-trailing-spaces\":\n        return trailing_spaces(text)\n    if OP == \"out-json-key-order\":\n        return rewrite_json(text, reorder, 2)\n    if OP == \"out-json-indent\":\n        return rewrite_json(text, lambda o: o, 4)\n    if OP == \"out-json-float\":\n        return rewrite_json(text, floatify, 2)\n    return text\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    if OP.startswith(\"out-\"):\n        for name in TARGETS:\n            path = pathlib.Path(name)\n            if path.is_file():\n                path.write_text(transform_file(path.read_text()))\n    elif OP == \"stdout-json-key-order\" and out.strip():\n        out = rewrite_json(out, reorder, None)\n    elif OP == \"stdout-code-fence\" and out.strip():\n        out = \"```json\\n\" + out.rstrip(\"\\n\") + \"\\n```\\n\"\n    elif OP == \"stdout-trailing-newline\" and out:\n        out = toggle_newline(out)\n    sys.stdout.write(out)\n\n\nmain()\n",
+        "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+      },
+      "task_text": "Print a JSON object to standard output with two fields: `\"status\"` set to the string `\"ok\"`, and `\"items\"` set to the number of lines in `data.txt`.\n"
+    }
+  ],
+  "prompt_version": "review/v1",
+  "purpose": "review",
+  "response_schema": {
+    "enums": {
+      "verdict": [
+        "violating",
+        "preserving",
+        "unsure"
+      ]
+    },
+    "required": [
+      "verdict",
+      "reason"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

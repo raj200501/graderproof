@@ -1,0 +1,1 @@
+Read `input.txt` in the working directory. Write `stats.json` containing a JSON object with two integer fields: `lines`, the number of lines in `input.txt`, and `words`, the number of whitespace-separated words in it.
