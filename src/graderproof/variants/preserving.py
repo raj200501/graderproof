@@ -8,6 +8,8 @@
 * Equivalent shell commands: ``echo`` written as ``printf``.
 * Harmless ordering for tool trajectories: swapping adjacent independent calls and
   adding a read-only lookup.
+* Harmless timing for script tasks: starting a few seconds later, well inside the
+  task's time limit.
 
 The label is a hypothesis. A format change can violate a task whose text demands an
 exact format; validation decides.
@@ -34,123 +36,10 @@ from graderproof.variants.violating import (
     shares_values,
     shell_command_lines,
 )
+from graderproof.variants.wrap import wrap_entry
 
 P = VariantKind.PRESERVING
 READONLY_RE = re.compile(r"^(get|list|find|search|lookup|read|view|show)_", re.I)
-TRANSFORM = "_gp_transform.py"
-
-TRANSFORM_SRC = '''"""graderproof output transform (spec-preserving variant)."""
-import json
-import pathlib
-import sys
-
-OP = {op!r}
-TARGETS = {targets!r}
-
-
-def toggle_newline(text):
-    return text[:-1] if text.endswith("\\n") else text + "\\n"
-
-
-def trailing_spaces(text):
-    return "\\n".join(line + "  " if line else line for line in text.split("\\n"))
-
-
-def reorder(obj):
-    if isinstance(obj, dict):
-        return {{k: reorder(obj[k]) for k in reversed(list(obj))}}
-    if isinstance(obj, list):
-        return [reorder(x) for x in obj]
-    return obj
-
-
-def floatify(obj):
-    if isinstance(obj, bool):
-        return obj
-    if isinstance(obj, int):
-        return float(obj)
-    if isinstance(obj, dict):
-        return {{k: floatify(v) for k, v in obj.items()}}
-    if isinstance(obj, list):
-        return [floatify(x) for x in obj]
-    return obj
-
-
-def rewrite_json(text, fn, indent):
-    end = "\\n" if text.endswith("\\n") else ""
-    return json.dumps(fn(json.loads(text)), indent=indent) + end
-
-
-def transform_file(text):
-    if OP == "out-trailing-newline":
-        return toggle_newline(text)
-    if OP == "out-trailing-spaces":
-        return trailing_spaces(text)
-    if OP == "out-json-key-order":
-        return rewrite_json(text, reorder, 2)
-    if OP == "out-json-indent":
-        return rewrite_json(text, lambda o: o, 4)
-    if OP == "out-json-float":
-        return rewrite_json(text, floatify, 2)
-    return text
-
-
-def main():
-    captured = pathlib.Path(sys.argv[1])
-    out = captured.read_text() if captured.exists() else ""
-    if OP.startswith("out-"):
-        for name in TARGETS:
-            path = pathlib.Path(name)
-            if path.is_file():
-                path.write_text(transform_file(path.read_text()))
-    elif OP == "stdout-json-key-order" and out.strip():
-        out = rewrite_json(out, reorder, None)
-    elif OP == "stdout-code-fence" and out.strip():
-        out = "```json\\n" + out.rstrip("\\n") + "\\n```\\n"
-    elif OP == "stdout-trailing-newline" and out:
-        out = toggle_newline(out)
-    sys.stdout.write(out)
-
-
-main()
-'''
-
-SH_WRAPPER = """#!/usr/bin/env bash
-here="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
-captured="$(mktemp)"
-bash "$here/{orig}" "$@" > "$captured"
-status=$?
-python3 "$here/{transform}" "$captured"
-rm -f "$captured"
-exit $status
-"""
-
-PY_WRAPPER = """import pathlib
-import subprocess
-import sys
-import tempfile
-
-here = pathlib.Path(__file__).resolve().parent
-run = subprocess.run([sys.executable, str(here / {orig!r}), *sys.argv[1:]], stdout=subprocess.PIPE)
-with tempfile.NamedTemporaryFile("wb", delete=False, suffix=".out") as fh:
-    fh.write(run.stdout)
-subprocess.run([sys.executable, str(here / {transform!r}), fh.name])
-pathlib.Path(fh.name).unlink()
-sys.exit(run.returncode)
-"""
-
-
-def wrap_entry(files: Mapping[str, str], entry: str, op: str, targets: list[str]) -> dict[str, str]:
-    """Solution files where ``entry`` runs the original, then the ``op`` transform."""
-    directory, _, name = entry.rpartition("/")
-    prefix = f"{directory}/" if directory else ""
-    orig = f"_gp_orig_{name}"
-    out = dict(files)
-    out[prefix + orig] = files[entry]
-    out[prefix + TRANSFORM] = TRANSFORM_SRC.format(op=op, targets=targets)
-    template = PY_WRAPPER if entry.endswith(".py") else SH_WRAPPER
-    out[entry] = template.format(orig=orig, transform=TRANSFORM)
-    return out
 
 
 def output_formats(files: Mapping[str, str], ctx: Context) -> Iterable[Proposal]:
@@ -175,6 +64,17 @@ def output_formats(files: Mapping[str, str], ctx: Context) -> Iterable[Proposal]
         plans.append(("stdout-code-fence", [], "wrap printed JSON in a code fence"))
     for op, targets, desc in plans:
         yield Proposal(P, op, wrap_entry(files, ctx.entry, op, targets), desc, ",".join(targets))
+    delay = harmless_delay(ctx.timeout_s)
+    if delay > 0:
+        files_d = wrap_entry(files, ctx.entry, "none", [], delay_s=delay)
+        yield Proposal(P, "pre-delay", files_d, f"start {delay:g}s later", ctx.entry)
+
+
+def harmless_delay(timeout_s: float) -> float:
+    """A start delay well inside the task's time limit (0 when the limit is too short)."""
+    if timeout_s < 4:
+        return 0.0
+    return float(min(3.0, round(timeout_s * 0.25, 1)))
 
 
 def _function_locals(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:

@@ -23,9 +23,11 @@ references, benchmarks) fails when the set is empty: an empty set proves nothing
 Artifact contracts checked here (later iterations may tighten them, never loosen):
 
 * E0 ``artifacts/e0/results.json``: ``labels_path``, ``labels_sha256_path``,
-  ``bootstrap {seed, B, alpha}``, ``tasks [{task, planted, slice, flagged,
+  ``bootstrap {seed, B, alpha}``, ``tasks [{task, planted, slice, detected, flagged,
   adjudicated_real}]``, ``recall`` and ``precision`` as ``{point, ci: [lo, hi]}``,
   ``provenance``. Labels file: ``{"tasks": {<task>: {"planted": bool, "slice": str}}}``.
+  A detection is a flag in the planted direction; precision counts as false positives
+  the flags that are neither detections nor adjudicated real weaknesses.
 * Audits ``artifacts/audit/<benchmark>/``: ``summary.json`` (``benchmark``,
   ``category``, ``confirmatory``, ``prereg``, ``substitute_for``,
   ``n_tasks_population``, ``n_sampled``, ``bootstrap``, ``e1.false_accept_task_rate``,
@@ -687,17 +689,19 @@ def g5_tool_validity(ctx: Ctx) -> Result:
     if len(rows) < E0_MIN_TASKS:
         return Result(False, f"E0 has {len(rows)} counted tasks (< {E0_MIN_TASKS})")
     planted = [bool(r.get("planted")) for r in rows]
-    flagged = [bool(r.get("flagged")) for r in rows]
-    real = [bool(r.get("adjudicated_real")) and not p for r, p in zip(rows, planted, strict=True)]
+    detected = [bool(r.get("detected")) and p for r, p in zip(rows, planted, strict=True)]
+    flagged = [bool(r.get("flagged")) or d for r, d in zip(rows, detected, strict=True)]
+    real = [bool(r.get("adjudicated_real")) for r in rows]
+
+    def tp_of(idx: Sequence[int]) -> int:
+        return sum(1 for i in idx if detected[i])
 
     def rec(idx: Sequence[int]) -> float | None:
-        tp = sum(1 for i in idx if planted[i] and flagged[i])
-        return ratio(tp, sum(1 for i in idx if planted[i]))
+        return ratio(tp_of(idx), sum(1 for i in idx if planted[i]))
 
     def prec(idx: Sequence[int]) -> float | None:
-        tp = sum(1 for i in idx if planted[i] and flagged[i])
-        fp = sum(1 for i in idx if flagged[i] and not planted[i] and not real[i])
-        return ratio(tp, tp + fp)
+        fp = sum(1 for i in idx if flagged[i] and not detected[i] and not real[i])
+        return ratio(tp_of(idx), tp_of(idx) + fp)
 
     all_idx = list(range(len(rows)))
     r_pt, p_pt = rec(all_idx), prec(all_idx)
@@ -711,7 +715,9 @@ def g5_tool_validity(ctx: Ctx) -> Result:
         return Result(False, "E0 stated recall/precision differ from recomputation")
     if not (close_ci(stated_r.get("ci"), r_ci) and close_ci(stated_p.get("ci"), p_ci)):
         return Result(False, "E0 stated intervals differ from recomputation")
-    misses = [str(r["task"]) for r, p, f in zip(rows, planted, flagged, strict=True) if p and not f]
+    misses = [
+        str(r["task"]) for r, p, d in zip(rows, planted, detected, strict=True) if p and not d
+    ]
     misses_doc = c / "docs" / "E0_MISSES.md"
     if not misses_doc.exists():
         return Result(False, "docs/E0_MISSES.md missing")

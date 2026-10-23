@@ -5,8 +5,10 @@ Stages, each over every task so model calls can be batched:
 A. Run the unmodified reference once to see what it produces.
 B. Extract requirements from the task text (model, via the client wrapper).
 C. Determinism pre-check: grade the reference ``k`` times with the requirement probes;
-   keep requirements that hold on every reference run; generate variants; execute
-   each variant once; validate it deterministically (witness).
+   keep requirements that hold on every reference run; generate classical variants;
+   execute each variant once; validate it deterministically (witness).
+C2. Ask the model for requirement-targeted and equivalent variants (optional), then
+   execute and witness-validate them the same way.
 D. Review every variant with the model validator.
 E. Combine validations; re-run the grader on variants that would raise a flag so
    only stable verdicts count; score.
@@ -44,6 +46,7 @@ from graderproof.validate import (
 from graderproof.variants import Context, Generator
 from graderproof.variants import preserving as pres
 from graderproof.variants import violating as viol
+from graderproof.variants.model import ModelProposer
 
 
 @dataclass(frozen=True)
@@ -114,6 +117,7 @@ def context_for(task: Task, reference: Outcome, languages: Mapping[str, str]) ->
         stdout_json=pres.json_like(reference.stdout.strip()),
         stdout_nonempty=bool(reference.stdout.strip()),
         kind=str(task.environment.get("kind", "script")),
+        timeout_s=float(task.environment.get("timeout_s", 0) or 0),
     )
 
 
@@ -137,6 +141,7 @@ class Auditor:
     reviewer: ModelReviewer
     config: AuditConfig = field(default_factory=AuditConfig)
     generator: Generator | None = None
+    proposer: ModelProposer | None = None
 
     def run(self, tasks: Sequence[Task]) -> tuple[list[TaskResult], list[TaskEvidence]]:
         """Audit ``tasks``; raises PendingWorkError when model responses are missing."""
@@ -145,7 +150,7 @@ class Auditor:
         first = {t.key: self.runner.execute(t, t.reference_solution).outcome for t in tasks}
         requirements = self.extractor.extract([(t, first[t.key]) for t in tasks])
         determinism: dict[str, Any] = {}
-        pairs: list[tuple[Task, Variant]] = []
+        classical: list[tuple[Task, Variant]] = []
         for t in tasks:
             ev = evidence[t.key]
             reqs = requirements.get(t.key, [])
@@ -157,15 +162,30 @@ class Auditor:
             ev.requirements, ev.invalid_requirements = valid_requirements(reqs, refs)
             ctx = context_for(t, refs[0], self.adapter.mutable_files(t))
             for v in gen.variants(t.id, t.reference_solution, ctx):
-                ex = self.runner.execute(t, v.files, probes_of(ev.requirements), variant_id=v.id)
-                validation, witness = witness_validation(v, ev.requirements, refs[0], ex.outcome)
-                v2 = v.with_validation(validation)
-                ev.variants.append(v2)
-                ev.executions[v2.id] = ex
-                ev.witnesses[v2.id] = witness if validation.verdict is v.kind else None
-                ev.grader_runs[v2.id] = [ex.grade.passed]
-                pairs.append((t, v2))
-        reviews = self.reviewer.review(pairs)
+                classical += self._execute_variant(t, v, ev)
+        pending: list[str] = []
+        proposed: list[tuple[Task, Variant]] = []
+        if self.proposer is not None:
+            try:
+                proposals = self.proposer.propose(
+                    [(t, evidence[t.key].requirements) for t in tasks]
+                )
+            except PendingWorkError as exc:
+                pending += exc.hashes
+                proposals = {}
+            for t in tasks:
+                for v in proposals.get(t.key, []):
+                    proposed += self._execute_variant(t, v, evidence[t.key])
+        reviews: dict[str, Validation] = {}
+        for group in (classical, proposed):
+            if not group:
+                continue
+            try:
+                reviews.update(self.reviewer.review(group))
+            except PendingWorkError as exc:
+                pending += exc.hashes
+        if pending:
+            raise PendingWorkError(pending)
         results: list[TaskResult] = []
         for t in tasks:
             ev = evidence[t.key]
@@ -199,6 +219,21 @@ class Auditor:
                 )
             )
         return results, [evidence[t.key] for t in tasks]
+
+    def _execute_variant(
+        self, task: Task, v: Variant, ev: TaskEvidence
+    ) -> list[tuple[Task, Variant]]:
+        """Run one variant once and witness-validate it (skipping duplicates)."""
+        if v.id in ev.executions or ev.reference is None:
+            return []
+        ex = self.runner.execute(task, v.files, probes_of(ev.requirements), variant_id=v.id)
+        validation, witness = witness_validation(v, ev.requirements, ev.reference, ex.outcome)
+        v2 = v.with_validation(validation)
+        ev.variants.append(v2)
+        ev.executions[v2.id] = ex
+        ev.witnesses[v2.id] = witness if validation.verdict is v.kind else None
+        ev.grader_runs[v2.id] = [ex.grade.passed]
+        return [(task, v2)]
 
     def _stable_verdict(self, task: Task, v: Variant, ev: TaskEvidence) -> bool | None:
         """The grader's verdict, confirmed by extra runs when it would raise a flag."""

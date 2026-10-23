@@ -12,6 +12,7 @@ from graderproof.variants import Context, Generator, Operator, unified_diff
 from graderproof.variants import preserving as pres
 from graderproof.variants import pysource as ps
 from graderproof.variants import violating as viol
+from graderproof.variants.wrap import wrap_entry
 
 PY = '''"""Doc."""
 import os
@@ -190,7 +191,7 @@ def run_wrapped(
     (task_dir / "solution" / entry).write_text(solve)
     (task_dir / "grader" / "grade.sh").write_text("exit 0\n")
     task = ToybenchAdapter().load(tmp_path / "bench")[0]
-    files = pres.wrap_entry(task.reference_solution, entry, op, outputs)
+    files = wrap_entry(task.reference_solution, entry, op, outputs)
     ex = ToybenchAdapter().execute(task, files, LocalSandbox())
     return ex.outcome.stdout, dict(ex.outcome.files)
 
@@ -221,6 +222,42 @@ def test_wrapped_transforms_execute(tmp_path: Path) -> None:
         tmp_path / "9", "stdout-code-fence", [], "print('{\"q\": 1}')\n", entry="solve.py"
     )
     assert out.startswith("```json")
+
+
+def test_output_mutations_and_delay(tmp_path: Path) -> None:
+    c = ctx(
+        languages={"solve.sh": "shell"}, entry="solve.sh", outputs=["t.txt"], stdout_nonempty=True
+    )
+    names = [p.operator for p in viol.output_mutations({"solve.sh": "echo hi\n"}, c)]
+    assert names == [
+        "out-extra-line",
+        "out-drop-last-line",
+        "stdout-extra-line",
+        "stdout-drop-last-line",
+    ]
+    assert all(p.kind is VariantKind.VIOLATING for p in viol.output_mutations({"solve.sh": "x"}, c))
+    assert (
+        list(viol.output_mutations({"solve.sh": "x"}, ctx(kind="module", entry="solve.sh"))) == []
+    )
+    assert pres.harmless_delay(2) == 0.0
+    assert pres.harmless_delay(4) == 1.0
+    assert pres.harmless_delay(60) == 3.0
+    solve = 'printf "a\\nb\\n" > t.txt\necho one; echo two\n'
+    out, files = run_wrapped(tmp_path / "x1", "out-extra-line", ["t.txt"], solve)
+    assert files["t.txt"] == "a\nb\nextra\n"
+    out, files = run_wrapped(tmp_path / "x2", "out-drop-last-line", ["t.txt"], solve)
+    assert files["t.txt"] == "a\n"
+    out, _ = run_wrapped(tmp_path / "x3", "stdout-extra-line", [], solve)
+    assert out == "one\ntwo\nextra\n"
+    out, _ = run_wrapped(tmp_path / "x4", "stdout-drop-last-line", [], solve)
+    assert out == "one\n"
+    dc = ctx(languages={"solve.sh": "shell"}, entry="solve.sh", timeout_s=4.0)
+    delayed = [
+        p for p in pres.output_formats({"solve.sh": "echo hi\n"}, dc) if p.operator == "pre-delay"
+    ]
+    assert len(delayed) == 1 and "sleep 1.0" in delayed[0].files["solve.sh"]
+    consts = list(viol.py_constant({"m.py": "x = 'hello'\n"}, ctx()))
+    assert {p.files["m.py"] for p in consts} == {"x = ''\n", "x = 'hellox'\n", "x = 'hell'\n"}
 
 
 def test_generator_sampling_is_deterministic_and_bounded() -> None:

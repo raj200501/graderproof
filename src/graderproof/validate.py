@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from graderproof.core import Task, Validation, Variant, VariantKind, canonical_json, sha256_text
-from graderproof.models import ModelClient, PendingResponseError, PendingWorkError, chunks
+from graderproof.models import ModelClient
 from graderproof.spec import CHECK_TYPES, Outcome, Requirement, holds
 
 WITNESS_VALIDATOR = "witness:requirements/v1"
@@ -162,24 +162,16 @@ class ModelReviewer:
             "enums": {"verdict": ["violating", "preserving", "unsure"]},
         }
         out: dict[str, Validation] = {}
-        pending: list[str] = []
-        for batch in chunks(items, self.batch_size):
-            try:
-                responses = self.client.batch(
-                    "review", REVIEW_PROMPT_VERSION, REVIEW_INSTRUCTIONS, schema, batch
-                )
-            except PendingResponseError as exc:
-                pending.append(exc.request_hash)
-                continue
-            for vid, r in responses.items():
-                verdict = r.get("verdict")
-                kind = VariantKind(verdict) if verdict in ("violating", "preserving") else None
-                reason = str(r.get("reason", ""))
-                if r.get("requirement"):
-                    reason = f"{r['requirement']}: {reason}"
-                out[vid] = Validation(self.name, kind, reason[:300])
-        if pending:
-            raise PendingWorkError(pending)
+        responses = self.client.batch_items(
+            "review", REVIEW_PROMPT_VERSION, REVIEW_INSTRUCTIONS, schema, items, self.batch_size
+        )
+        for vid, r in responses.items():
+            verdict = r.get("verdict")
+            kind = VariantKind(verdict) if verdict in ("violating", "preserving") else None
+            reason = str(r.get("reason", ""))
+            if r.get("requirement"):
+                reason = f"{r['requirement']}: {reason}"
+            out[vid] = Validation(self.name, kind, reason[:300])
         return out
 
 
@@ -216,23 +208,20 @@ class RequirementExtractor:
         """Requirements keyed by task key; malformed requirements are dropped."""
         items = [self.item(t, o) for t, o in pairs]
         schema = {"required": ["requirements"]}
-        out: dict[str, list[Requirement]] = {}
-        pending: list[str] = []
-        for batch in chunks(items, self.batch_size):
-            try:
-                responses = self.client.batch(
-                    "requirements", EXTRACT_PROMPT_VERSION, EXTRACT_INSTRUCTIONS, schema, batch
-                )
-            except PendingResponseError as exc:
-                pending.append(exc.request_hash)
-                continue
-            for key, r in responses.items():
-                out[key] = parse_requirements(
-                    r.get("requirements", []), source=f"model:{EXTRACT_PROMPT_VERSION}"
-                )
-        if pending:
-            raise PendingWorkError(pending)
-        return out
+        responses = self.client.batch_items(
+            "requirements",
+            EXTRACT_PROMPT_VERSION,
+            EXTRACT_INSTRUCTIONS,
+            schema,
+            items,
+            self.batch_size,
+        )
+        return {
+            key: parse_requirements(
+                r.get("requirements", []), source=f"model:{EXTRACT_PROMPT_VERSION}"
+            )
+            for key, r in responses.items()
+        }
 
 
 def parse_requirements(raw: Sequence[Any], source: str) -> list[Requirement]:

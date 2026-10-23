@@ -38,7 +38,8 @@ class Context:
         json_outputs: The subset of ``outputs`` that hold a JSON object or array.
         stdout_json: Whether the reference prints JSON on stdout.
         stdout_nonempty: Whether the reference prints anything on stdout.
-        kind: The task kind (``script``, ``module``, or ``trajectory``).
+        kind: The task kind (``script``, ``module``, ``trajectory``, or ``data``).
+        timeout_s: The task's time limit in seconds.
     """
 
     languages: Mapping[str, str]
@@ -48,6 +49,7 @@ class Context:
     stdout_json: bool = False
     stdout_nonempty: bool = False
     kind: str = "script"
+    timeout_s: float = 0.0
 
 
 Operator = Callable[[Mapping[str, str], Context], Iterable[Proposal]]

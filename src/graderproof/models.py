@@ -173,6 +173,84 @@ class ModelClient:
             request.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n")
         raise PendingResponseError(h, request)
 
+    def item_key(
+        self,
+        purpose: str,
+        prompt_version: str,
+        instructions: str,
+        schema: Mapping[str, Any],
+        item: Mapping[str, Any],
+    ) -> str:
+        """Content address of one item under one prompt (independent of its batch)."""
+        return sha256_text(
+            canonical_json(
+                {
+                    "purpose": purpose,
+                    "prompt_version": prompt_version,
+                    "instructions": instructions,
+                    "schema": dict(schema),
+                    "item": dict(item),
+                }
+            )
+        )
+
+    def answered_items(self) -> dict[str, dict[str, Any]]:
+        """Every ingested item response, keyed by :meth:`item_key`."""
+        done = self._ingested()
+        index: dict[str, dict[str, Any]] = {}
+        for h in sorted(done):
+            req_path = self.store / "requests" / f"{h}.json"
+            resp_path = self.store / "responses" / f"{h}.json"
+            if not req_path.exists() or not resp_path.exists():
+                continue
+            req = json.loads(req_path.read_text())
+            resp = json.loads(resp_path.read_text())
+            for item in req["items"]:
+                key = self.item_key(
+                    req["purpose"],
+                    req["prompt_version"],
+                    req["instructions"],
+                    req.get("response_schema", {}),
+                    item,
+                )
+                answer = resp["items"].get(str(item["id"]))
+                if isinstance(answer, Mapping):
+                    index[key] = dict(answer)
+        return index
+
+    def batch_items(
+        self,
+        purpose: str,
+        prompt_version: str,
+        instructions: str,
+        schema: Mapping[str, Any],
+        items: Sequence[Mapping[str, Any]],
+        size: int,
+    ) -> dict[str, dict[str, Any]]:
+        """Responses for ``items``, reusing any item answered before in any batch.
+
+        Unanswered items are batched (sorted by id, ``size`` per request); raises
+        :class:`PendingWorkError` listing every new request when any is unanswered.
+        """
+        index = self.answered_items()
+        out: dict[str, dict[str, Any]] = {}
+        todo: list[Mapping[str, Any]] = []
+        for item in items:
+            key = self.item_key(purpose, prompt_version, instructions, schema, item)
+            if key in index:
+                out[str(item["id"])] = index[key]
+            else:
+                todo.append(item)
+        pending: list[str] = []
+        for chunk in chunks(todo, size):
+            try:
+                out.update(self.batch(purpose, prompt_version, instructions, schema, chunk))
+            except PendingResponseError as exc:
+                pending.append(exc.request_hash)
+        if pending:
+            raise PendingWorkError(pending)
+        return out
+
     def pending(self) -> list[Path]:
         """Requests with no ingested response."""
         done = self._ingested()

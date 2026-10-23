@@ -89,31 +89,34 @@ def proportion(
 
 def recall_precision(
     planted: Sequence[bool],
+    detected: Sequence[bool],
     flagged: Sequence[bool],
     real: Sequence[bool],
     seed: int,
     replicates: int,
     alpha: float = 0.05,
 ) -> tuple[Estimate, Estimate] | None:
-    """Planted-weakness recall and precision with intervals.
+    """Planted-weakness recall and precision with task bootstrap intervals.
 
-    Recall uses ``seed`` and precision ``seed + 1``.
-
-    A flag on a clean task counts as a false positive unless ``real`` marks it as an
-    adjudicated real weakness, which is reported separately and excluded here.
+    Per task: ``planted`` (a weakness was planted), ``detected`` (graderproof flagged it
+    in the planted direction), ``flagged`` (graderproof raised any flag), and ``real``
+    (a flag that is not a detection was adjudicated a genuine weakness). True
+    positives are detections; false positives are flags that are neither detections
+    nor adjudicated real. Recall uses ``seed`` and precision ``seed + 1``.
     """
     n = len(planted)
-    if not (len(flagged) == len(real) == n):
-        raise ValueError("planted, flagged, and real must have equal length")
+    if not (len(detected) == len(flagged) == len(real) == n):
+        raise ValueError("planted, detected, flagged, and real must have equal length")
+
+    def tp_of(idx: Sequence[int]) -> int:
+        return sum(1 for i in idx if planted[i] and detected[i])
 
     def rec(idx: Sequence[int]) -> float | None:
-        tp = sum(1 for i in idx if planted[i] and flagged[i])
-        return ratio(tp, sum(1 for i in idx if planted[i]))
+        return ratio(tp_of(idx), sum(1 for i in idx if planted[i]))
 
     def prec(idx: Sequence[int]) -> float | None:
-        tp = sum(1 for i in idx if planted[i] and flagged[i])
-        fp = sum(1 for i in idx if flagged[i] and not planted[i] and not real[i])
-        return ratio(tp, tp + fp)
+        fp = sum(1 for i in idx if flagged[i] and not (planted[i] and detected[i]) and not real[i])
+        return ratio(tp_of(idx), tp_of(idx) + fp)
 
     everything = list(range(n))
     r_pt, p_pt = rec(everything), prec(everything)

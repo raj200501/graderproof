@@ -54,6 +54,7 @@ def build_parser() -> argparse.ArgumentParser:
             p.add_argument(
                 "--sandbox", choices=["auto", "bwrap", "unshare", "local"], default="auto"
             )
+            p.add_argument("--no-propose", action="store_true", help="skip model-proposed variants")
         if name in ("audit", "models", "demo"):
             p.add_argument("--store", type=Path, default=Path("artifacts/model_calls"))
             p.add_argument("--ledger", type=Path, default=Path("artifacts/usage/ledger.jsonl"))
@@ -80,6 +81,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
         best_sandbox,
     )
     from graderproof.validate import ModelReviewer, RequirementExtractor
+    from graderproof.variants.model import ModelProposer
 
     if args.adapter != "toybench" or args.target is None:
         print(f"graderproof audit: adapter {args.adapter!r} not built yet", file=sys.stderr)
@@ -104,6 +106,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
         extractor=RequirementExtractor(client),
         reviewer=ModelReviewer(client),
         config=config,
+        proposer=None if args.no_propose else ModelProposer(client),
     )
     try:
         results, evidence = auditor.run(tasks)

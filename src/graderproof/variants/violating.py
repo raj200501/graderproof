@@ -18,6 +18,7 @@ from typing import Any
 from graderproof.core import VariantKind
 from graderproof.variants import Context, Operator, Proposal
 from graderproof.variants import pysource as ps
+from graderproof.variants.wrap import wrap_entry
 
 V = VariantKind.VIOLATING
 SKIP_STMTS = (
@@ -103,6 +104,8 @@ def _new_constants(value: object) -> list[object]:
         out: list[object] = [""]
         if re.fullmatch(r"[\w./-]+\.\w+", value):
             out.append(value + ".bak")
+        elif len(value) > 1 and value.strip():
+            out += [value + "x", value[:-1]]
         return out
     return []
 
@@ -445,6 +448,21 @@ def traj_argument(files: Mapping[str, str], ctx: Context) -> Iterable[Proposal]:
                 )
 
 
+def output_mutations(files: Mapping[str, str], ctx: Context) -> Iterable[Proposal]:
+    """Content mutations of a script's outputs: one extra line, or the last line dropped."""
+    if ctx.kind != "script" or not ctx.entry or ctx.entry not in files:
+        return
+    plans: list[tuple[str, list[str], str]] = []
+    if ctx.outputs:
+        plans.append(("out-extra-line", list(ctx.outputs), "append an extra line to outputs"))
+        plans.append(("out-drop-last-line", list(ctx.outputs), "drop the last line of outputs"))
+    if ctx.stdout_nonempty:
+        plans.append(("stdout-extra-line", [], "print an extra line"))
+        plans.append(("stdout-drop-last-line", [], "omit the last printed line"))
+    for op, targets, desc in plans:
+        yield Proposal(V, op, wrap_entry(files, ctx.entry, op, targets), desc, ",".join(targets))
+
+
 PYTHON_OPERATORS: tuple[Operator, ...] = (
     py_statement_delete,
     py_constant,
@@ -462,4 +480,6 @@ SHELL_OPERATORS: tuple[Operator, ...] = (
     sh_partial_output,
 )
 TRAJECTORY_OPERATORS: tuple[Operator, ...] = (traj_drop_call, traj_reorder_dependent, traj_argument)
-ALL: tuple[Operator, ...] = PYTHON_OPERATORS + SHELL_OPERATORS + TRAJECTORY_OPERATORS
+ALL: tuple[Operator, ...] = (
+    PYTHON_OPERATORS + SHELL_OPERATORS + TRAJECTORY_OPERATORS + (output_mutations,)
+)

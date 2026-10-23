@@ -38,7 +38,7 @@ demo: ## offline demo from recorded fixtures (output must equal tests/golden/dem
 	@GRADERPROOF_NO_MODEL_CALLS=1 $(RUN) graderproof demo --check tests/golden/demo_output.txt
 
 prereg-verify: ## preregistration chain and ordering
-	@$(PY) tools/stub.py prereg-verify G11
+	$(PY) tools/prereg.py verify
 
 claimcheck: ## every result number traces to a banked artifact
 	@$(PY) tools/stub.py claimcheck G10

@@ -108,3 +108,27 @@ def test_helpers() -> None:
     assert [[i["id"] for i in b] for b in batches] == [["a", "b"], ["c"]]
     assert models.PendingWorkError(["a", "b"]).hashes == ["a", "b"]
     assert len(models.utc_now()) == 20
+
+
+def test_batch_items_reuses_answers_across_batches(client: models.ModelClient) -> None:
+    client.budget.write_text(BUDGET.replace("cap_share = 0.2", "cap_share = 1"))
+    items = [{"id": "a"}, {"id": "b"}]
+    with pytest.raises(models.PendingWorkError) as exc:
+        client.batch_items("p", "v1", "i", SCHEMA, items, size=1)
+    assert len(exc.value.hashes) == 2
+    for h in exc.value.hashes:
+        req = json.loads((client.store / "requests" / f"{h}.json").read_text())
+        answer(client, h, {i["id"]: {"verdict": "a"} for i in req["items"]})
+        client.ingest(h)
+    more = [*items, {"id": "c"}]
+    with pytest.raises(models.PendingWorkError) as exc2:
+        client.batch_items("p", "v1", "i", SCHEMA, more, size=5)
+    assert len(exc2.value.hashes) == 1
+    req = json.loads((client.store / "requests" / f"{exc2.value.hashes[0]}.json").read_text())
+    assert [i["id"] for i in req["items"]] == ["c"]
+    answer(client, exc2.value.hashes[0], {"c": {"verdict": "b"}})
+    client.ingest(exc2.value.hashes[0])
+    out = client.batch_items("p", "v1", "i", SCHEMA, more, size=5)
+    assert out == {"a": {"verdict": "a"}, "b": {"verdict": "a"}, "c": {"verdict": "b"}}
+    (client.store / "responses" / f"{exc2.value.hashes[0]}.json").unlink()
+    assert len(client.answered_items()) == 2

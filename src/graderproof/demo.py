@@ -20,6 +20,7 @@ from graderproof.run import Runner
 from graderproof.sandbox import LocalSandbox, Sandbox, best_sandbox
 from graderproof.score import TaskResult, agreement
 from graderproof.validate import ModelReviewer, RequirementExtractor
+from graderproof.variants.model import ModelProposer
 
 DEMO_CONFIG = AuditConfig(
     k=3, confirm_runs=2, seed=0, max_per_operator=6, max_total=40, replicates=1000
@@ -86,6 +87,7 @@ def run_demo(tasks_dir: Path, store: Path, ledger: Path, budget: Path) -> str:
             extractor=RequirementExtractor(client),
             reviewer=ModelReviewer(client),
             config=DEMO_CONFIG,
+            proposer=ModelProposer(client),
         )
         results, evidence = auditor.run(tasks)
     finally:

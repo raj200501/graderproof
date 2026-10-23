@@ -1,0 +1,128 @@
+{
+  "created_utc": "2026-10-23T02:30:08Z",
+  "hash": "b984847baea6df13257c7c6b9e842a78d77efa0293c2c0506790d3acab355d2b",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "demo:classify",
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write `classify.py` containing a function `classify(n)`."
+        },
+        {
+          "id": "R2",
+          "text": "`classify(n)` returns \"fizzbuzz\" if `n` is divisible by both 3 and 5."
+        },
+        {
+          "id": "R3",
+          "text": "`classify(n)` returns \"fizz\" if `n` is divisible by 3 only."
+        },
+        {
+          "id": "R4",
+          "text": "`classify(n)` returns \"buzz\" if `n` is divisible by 5 only."
+        },
+        {
+          "id": "R5",
+          "text": "Otherwise `classify(n)` returns the decimal string of `n` (for example `classify(7)` returns \"7\")."
+        }
+      ],
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "demo:greeting",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting=\"Hello, graderproof!\"\necho \"$greeting\" > hello.txt\necho \"${#greeting}\" > count.txt\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Create `hello.txt`."
+        },
+        {
+          "id": "R2",
+          "text": "`hello.txt` has `Hello, graderproof!` as its only line."
+        },
+        {
+          "id": "R3",
+          "text": "Create `count.txt`."
+        },
+        {
+          "id": "R4",
+          "text": "`count.txt` contains the number of characters in the greeting, not counting the newline (19)."
+        }
+      ],
+      "task_text": "Create `hello.txt` whose only line is `Hello, graderproof!`. Create `count.txt` containing the number of characters in that greeting (not counting the newline).\n"
+    },
+    {
+      "id": "demo:refund",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Look up the order with `get_order` (order `A17`)."
+        },
+        {
+          "id": "R2",
+          "text": "Confirm the refund amount with the customer using `confirm_with_user`."
+        },
+        {
+          "id": "R3",
+          "text": "Issue a full refund of the order total with `refund` (order `A17`, amount 40, the order total)."
+        },
+        {
+          "id": "R4",
+          "text": "Then send the customer a receipt with `send_receipt`."
+        },
+        {
+          "id": "R5",
+          "text": "Before issuing any refund, confirm the refund amount with the customer: `confirm_with_user` must come before `refund`."
+        },
+        {
+          "id": "R6",
+          "text": "Step order: the order lookup with `get_order` comes before the confirmation and before the refund."
+        },
+        {
+          "id": "R7",
+          "text": "Then send the receipt: `send_receipt` comes after the refund has been issued."
+        }
+      ],
+      "task_text": "A customer asks for a refund of order `A17`. Follow the support policy:\n\n1. Look up the order with `get_order`.\n2. Before issuing any refund, confirm the refund amount with the customer using `confirm_with_user`.\n3. Issue a full refund of the order total with `refund`.\n4. Then send the customer a receipt with `send_receipt`.\n"
+    },
+    {
+      "id": "demo:status-json",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Print a JSON object to standard output."
+        },
+        {
+          "id": "R2",
+          "text": "The `\"status\"` field is set to the string `\"ok\"`."
+        },
+        {
+          "id": "R3",
+          "text": "The `\"items\"` field is set to the number of lines in `data.txt` (4)."
+        }
+      ],
+      "task_text": "Print a JSON object to standard output with two fields: `\"status\"` set to the string `\"ok\"`, and `\"items\"` set to the number of lines in `data.txt`.\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}
