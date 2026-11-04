@@ -1,10 +1,13 @@
 """Gate tests for tools/ship_check.py G5 to G11 on small temporary git repositories.
 
 Each gate gets a minimal layout that passes. Each test then breaks it the way a
-reviewer scenario did (artifacts/review/latest.json B1 to B5, N10, N12; the scratch
-scripts g5_falsepass.py, g11_e0order.py, g8g9_vacuous.py, and g7_mismatch.py are
-ported here) or the way an obvious variant would (missing files, empty sets, edited
-preregistrations, stale hashes), and checks that the gate fails for that reason.
+reviewer scenario did (artifacts/review/latest.json B1 to B5, N10, N12) or the way an
+obvious variant would (missing files, empty sets, edited preregistrations, stale
+hashes), and checks that the gate fails for that reason. The reviewer's scratch
+scripts are ported as ``test_*_reviewer_*``: g5_falsepass.py scenarios A, B, and C
+(``test_g5_reviewer_a/b/c_*``), g11_e0order.py (``test_g11_reviewer_b3_*``),
+g8g9_vacuous.py (``test_g8_reviewer_b4_*`` and ``test_g9_reviewer_b5_*``), and
+g7_mismatch.py (``test_g7_reviewer_n10_*``).
 
 Expected statistics are computed in this file from the definitions in the ship_check
 module docstring, independently of ship_check's own code; only the bootstrap
@@ -15,17 +18,17 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
 import subprocess
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
-import prereg
 import pytest
 import ship_check as sc
+
+import prereg
 
 TOOLS = Path(__file__).resolve().parent.parent / "tools"
 ENV = ("-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false")
@@ -123,9 +126,7 @@ def vrow(
         "task_hash": task_hash,
         "kind": kind,
         "operator": "op",
-        "validations": [
-            {"validator": names[i % 2], "verdict": v} for i, v in enumerate(marks)
-        ],
+        "validations": [{"validator": names[i % 2], "verdict": v} for i, v in enumerate(marks)],
         "witness_sha256": sha(vid),
         "counted_in_headline": counted,
         "grader_passed": passed,
@@ -552,7 +553,14 @@ def test_g5_rows_must_match_the_recomputed_detection(tmp_path: Path) -> None:
     case = e0_case()
     case.flags["pr03"] = ("stable_fail", False, False)
     want = [
-        Want(w.id, w.planted, w.slice, w.id == "pr03" or w.flagged, w.id == "pr03" or w.detected, w.real)
+        Want(
+            w.id,
+            w.planted,
+            w.slice,
+            w.id == "pr03" or w.flagged,
+            w.id == "pr03" or w.detected,
+            w.real,
+        )
         for w in e0_want(case)
     ]
     r = g5(tmp_path, e0_phases(case, e0_results(case, want)))
@@ -566,7 +574,14 @@ def test_g5_recomputes_recall_without_per_row_fields(tmp_path: Path) -> None:
     case.flags["pr03"] = ("stable_fail", False, False)
     case.misses += "- pr03: reference rejected.\n"
     old_rule = [
-        Want(w.id, w.planted, w.slice, w.id == "pr03" or w.flagged, w.id == "pr03" or w.detected, w.real)
+        Want(
+            w.id,
+            w.planted,
+            w.slice,
+            w.id == "pr03" or w.flagged,
+            w.id == "pr03" or w.detected,
+            w.real,
+        )
         for w in e0_want(case)
     ]
     results = e0_results(case, old_rule)
@@ -708,7 +723,12 @@ def g6_rows() -> list[dict[str, Any]]:
 
 def two(a: Any, b: Any, names: tuple[str, str] = ("a", "b")) -> dict[str, Any]:
     """A validations list with two entries."""
-    return {"validations": [{"validator": names[0], "verdict": a}, {"validator": names[1], "verdict": b}]}
+    return {
+        "validations": [
+            {"validator": names[0], "verdict": a},
+            {"validator": names[1], "verdict": b},
+        ]
+    }
 
 
 def test_g6_passes_and_reports_agreement_over_label_verdicts(tmp_path: Path) -> None:
@@ -931,7 +951,9 @@ def test_g7_compares_stated_rates(tmp_path: Path, key: str, value: Any, message:
 def test_g7_validates_the_task_table(tmp_path: Path) -> None:
     trows, vrows = audit_rows("b1")
     ghost = vrow(sha("b1:ghost"), 0, "violating", True)
-    stated = [{**t, "false_reject": True} if t["determinism"] == "stable_fail" else t for t in trows]
+    stated = [
+        {**t, "false_reject": True} if t["determinism"] == "stable_fail" else t for t in trows
+    ]
     cases: list[tuple[list[dict[str, Any]], list[dict[str, Any]], str]] = [
         ([{**trows[0], "determinism": None}, *trows[1:]], vrows, "has determinism None"),
         ([*trows, trows[0]], vrows, "twice"),
@@ -1151,7 +1173,10 @@ def unrepaired(**entry: Any) -> list[dict[str, Any]]:
             {"unrepaired": [*unrepaired(reason="x"), {"task_hash": sha("b1:t4"), "reason": "x"}]},
             "1 listed tasks have no surviving variant",
         ),
-        ({"unrepaired": [*unrepaired(reason="x"), *unrepaired(reason="y")]}, "listed more than once"),
+        (
+            {"unrepaired": [*unrepaired(reason="x"), *unrepaired(reason="y")]},
+            "listed more than once",
+        ),
         ({"schema": None}, "schema is not graderproof.e4/1"),
         ({"ran": "true"}, "not marked ran"),
         ({"benchmark": "other"}, "benchmark 'other' is not 'b1'"),
@@ -1199,8 +1224,9 @@ def test_g8_requires_accepted_logs_for_the_right_task(tmp_path: Path) -> None:
     case.public[PUB_LOG] = dump({"accepted": False, "task_hash": H_B2_T0})
     r = g8(tmp_path / "public", case)
     assert not r.ok
-    assert 'validation log outbound/patches/b2-t0.validation.json does not say "accepted": true' in (
-        r.evidence
+    assert (
+        'validation log outbound/patches/b2-t0.validation.json does not say "accepted": true'
+        in (r.evidence)
     )
     case = e4_case()
     case.private[PRIV_LOG] = dump({"accepted": "true", "task_hash": H_B1_T0})
@@ -1363,12 +1389,19 @@ def test_g9_passes_with_recomputed_flips_and_rank_changes(tmp_path: Path) -> Non
 def test_g9_reviewer_b5_empty_intervals(tmp_path: Path) -> None:
     """g8g9_vacuous.py: ran, provenance, and empty interval lists, nothing else."""
     files = g9_files()
-    vacuous = {"ran": True, "provenance": PROV, "pass_flips": {"ci": []}, "rank_changes": {"ci": []}}
+    vacuous = {
+        "ran": True,
+        "provenance": PROV,
+        "pass_flips": {"ci": []},
+        "rank_changes": {"ci": []},
+    }
     files["artifacts/e5/b1/summary.json"] = dump(vacuous)
     r = g9(tmp_path / "vacuous", files)
     assert not r.ok
     assert "artifacts/e5/b1/summary.json has no bootstrap block" in r.evidence
-    files["artifacts/e5/b1/summary.json"] = dump({**vacuous, "bootstrap": e5_doc(g9_files())["bootstrap"]})
+    files["artifacts/e5/b1/summary.json"] = dump(
+        {**vacuous, "bootstrap": e5_doc(g9_files())["bootstrap"]}
+    )
     r = g9(tmp_path / "nopoint", files)
     assert not r.ok
     assert "artifacts/e5/b1 pass_flips point None differs" in r.evidence
@@ -1450,7 +1483,9 @@ def test_g9_needs_an_e5_run_and_checks_every_one(tmp_path: Path) -> None:
     assert not r.ok
     assert "artifacts/e5/b2/rows.jsonl missing or empty" in r.evidence
     files = g9_files()
-    files["artifacts/e5/b1/summary.json"] = dump({**e5_doc(files), "bootstrap": {"seed": 1, "B": 999, "alpha": 0.05}})
+    files["artifacts/e5/b1/summary.json"] = dump(
+        {**e5_doc(files), "bootstrap": {"seed": 1, "B": 999, "alpha": 0.05}}
+    )
     assert "B=999 (< 1000)" in g9(tmp_path / "reps", files).evidence
 
 
@@ -1720,7 +1755,10 @@ def test_g11_requires_the_e0_summary_to_say_confirmatory(tmp_path: Path, verify:
     repo.commit("unmark", {"artifacts/e0/summary.json": dump({"prereg": PREREG_E0})})
     r = g11(tmp_path, repo)
     assert not r.ok
-    assert verify == REAL_VERIFY or "artifacts/e0/summary.json is not marked confirmatory" in r.evidence
+    assert (
+        verify == REAL_VERIFY
+        or "artifacts/e0/summary.json is not marked confirmatory" in r.evidence
+    )
 
 
 @BOTH
@@ -1729,7 +1767,9 @@ def test_g11_fails_on_an_unreadable_summary(tmp_path: Path, verify: str) -> None
     repo.commit("broken", {"artifacts/audit/b2/summary.json": "{not json"})
     r = g11(tmp_path, repo)
     assert not r.ok
-    assert verify == REAL_VERIFY or "artifacts/audit/b2/summary.json is not valid JSON" in r.evidence
+    assert (
+        verify == REAL_VERIFY or "artifacts/audit/b2/summary.json is not valid JSON" in r.evidence
+    )
 
 
 def test_g11_fails_on_empty_sets(tmp_path: Path) -> None:
@@ -1755,24 +1795,3 @@ def test_g11_counts_a_preregistration_merged_from_a_branch_once(tmp_path: Path) 
     repo.commit("e0 score", E0_SCORE)
     r = g11(tmp_path, repo)
     assert r.ok, r.evidence
-
-
-def test_reviewer_scripts_are_covered() -> None:
-    """Keep this list in step with the scratch scripts the reviewer ran."""
-    ported = {
-        "g5_falsepass.py": [
-            test_g5_reviewer_a_labels_and_hash_rewritten_after_the_run,
-            test_g5_reviewer_b_results_drop_misses_and_repeat_a_detection,
-            test_g5_reviewer_c_clean_flags_marked_real_without_adjudication,
-        ],
-        "g11_e0order.py": [test_g11_reviewer_b3_e0_outputs_before_the_preregistration],
-        "g8g9_vacuous.py": [test_g8_reviewer_b4_empty_repair_set, test_g9_reviewer_b5_empty_intervals],
-        "g7_mismatch.py": [test_g7_reviewer_n10_rejected_reference_is_not_scored],
-    }
-    assert all(callable(t) for tests in ported.values() for t in tests)
-
-
-def test_shutil_is_available_for_layout_copies() -> None:
-    assert shutil.which("git") is not None
-    assert isinstance(Callable, object)
-

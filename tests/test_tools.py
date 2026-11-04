@@ -282,10 +282,45 @@ def test_ratio_and_close() -> None:
     assert ship_check.ratio(1, 0) is None
     assert ship_check.ratio(1, 4) == 0.25
     assert ship_check.close(0.25, 0.25)
+    assert ship_check.close(1, 1.0)
     assert not ship_check.close("0.25", 0.25)
+    assert not ship_check.close(True, 1.0)
+    assert not ship_check.close(float("nan"), 0.0)
     assert ship_check.close_ci([0.1, 0.2], (0.1, 0.2))
     assert not ship_check.close_ci([0.1], (0.1, 0.2))
     assert not ship_check.close_ci([0.1, 0.2], None)
+    assert ship_check.is_int(3) and not ship_check.is_int(True) and not ship_check.is_int(3.0)
+
+
+def test_bootstrap_params_are_strict() -> None:
+    good = {"bootstrap": {"seed": 1, "B": 1000, "alpha": 0.05}}
+    assert ship_check.bootstrap_params(good) == (1, 1000, 0.05)
+    bad: list[tuple[dict[str, Any], str]] = [
+        ({}, "no bootstrap block"),
+        ({"bootstrap": {"seed": "1", "B": 1000, "alpha": 0.05}}, "must be integers"),
+        ({"bootstrap": {"seed": 1, "B": 999, "alpha": 0.05}}, "B=999"),
+        ({"bootstrap": {"seed": 1, "B": 1000}}, "alpha is not 0.05"),
+        ({"bootstrap": {"seed": 1, "B": True, "alpha": 0.05}}, "must be integers"),
+    ]
+    for doc, message in bad:
+        with pytest.raises(ship_check.GateError, match=message):
+            ship_check.bootstrap_params(doc)
+
+
+def test_check_estimate_and_clean_rel() -> None:
+    ship_check.check_estimate({"point": 0.5, "ci": [0.25, 0.75], "n": 4}, 0.5, (0.25, 0.75), 4, "x")
+    for stated, ci, message in (
+        ({"point": 0.4, "ci": [0.25, 0.75], "n": 4}, (0.25, 0.75), "x point 0.4"),
+        ({"point": 0.5, "ci": [0.25, 0.75], "n": 5}, (0.25, 0.75), "x n 5"),
+        ({"point": 0.5, "ci": [0.25, 0.75], "n": 4}, None, "cannot be recomputed"),
+        (None, (0.25, 0.75), "x missing"),
+    ):
+        with pytest.raises(ship_check.GateError, match=message):
+            ship_check.check_estimate(stated, 0.5, ci, 4, "x")
+    assert ship_check.clean_rel("outbound/patches/a.patch", "outbound/patches/")
+    for bad in ("outbound/patches/../x", "/outbound/patches/a", "outbound/patches", "a\\b", 3):
+        assert ship_check.clean_rel(bad, "outbound/patches/") is None
+    assert ship_check.clean_rel("outbound/patches//a", "outbound/patches/") is None
 
 
 def test_headings_and_sections_skip_code_fences() -> None:
@@ -304,6 +339,69 @@ def test_makefile_ci_target_check(tmp_path: Path) -> None:
     assert "typecheck" in ship_check.makefile_ci_problems(mk)
     mk.write_text("all:\n")
     assert "no ci target" in ship_check.makefile_ci_problems(mk)
+
+
+MYPY_OK = '[tool.mypy]\nstrict = true\nwarn_unreachable = true\nmypy_path = ["src"]\n'
+
+
+def mypy_layout(tmp_path: Path, pyproject: str, source: str = "x: int = 1\n") -> Path:
+    (tmp_path / "src" / "graderproof").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "src" / "graderproof" / "m.py").write_text(source)
+    (tmp_path / "pyproject.toml").write_text(pyproject)
+    return tmp_path
+
+
+@pytest.mark.parametrize(
+    ("pyproject", "message"),
+    [
+        (MYPY_OK + "ignore_errors = true\n", "ignore_errors = true"),
+        (MYPY_OK + 'disable_error_code = ["attr-defined"]\n', "disable_error_code"),
+        (MYPY_OK + 'follow_imports = "skip"\n', "follow_imports = skip"),
+        (MYPY_OK + "strict_optional = false\n", "strict_optional = false"),
+        (MYPY_OK + "implicit_optional = true\n", "implicit_optional = true"),
+        (MYPY_OK + 'exclude = ["graderproof/m\\\\.py$"]\n', "exclude matches src/graderproof/m.py"),
+        (MYPY_OK + 'exclude = "src/graderproof/"\n', "exclude matches src/graderproof/"),
+        (
+            MYPY_OK
+            + '[[tool.mypy.overrides]]\nmodule = "graderproof.m"\ndisallow_untyped_defs = false\n',
+            "disallow_untyped_defs = false in the override for ['graderproof.m']",
+        ),
+        (
+            MYPY_OK + '[[tool.mypy.overrides]]\nmodule = ["*.m"]\nignore_errors = true\n',
+            "ignore_errors = true in the override",
+        ),
+        (
+            MYPY_OK
+            + '[[tool.mypy.overrides]]\nmodule = "graderproof.*"\nfollow_imports = "silent"\n',
+            "follow_imports = silent",
+        ),
+    ],
+)
+def test_mypy_weakening_in_config(tmp_path: Path, pyproject: str, message: str) -> None:
+    assert message in ship_check.mypy_weakening(mypy_layout(tmp_path, pyproject))
+
+
+def test_mypy_weakening_ignores_harmless_config(tmp_path: Path) -> None:
+    assert ship_check.mypy_weakening(mypy_layout(tmp_path, MYPY_OK)) == ""
+    yaml_only = MYPY_OK + '[[tool.mypy.overrides]]\nmodule = "yaml.*"\nignore_errors = true\n'
+    assert ship_check.mypy_weakening(mypy_layout(tmp_path, yaml_only)) == ""
+    tests_only = MYPY_OK + 'exclude = ["^tests/fixtures/"]\n'
+    assert ship_check.mypy_weakening(mypy_layout(tmp_path, tests_only)) == ""
+    (tmp_path / "mypy.ini").write_text("[mypy]\n")
+    assert "extra mypy config file mypy.ini" in ship_check.mypy_weakening(tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("source", "message"),
+    [
+        ("# mypy: ignore-errors\nx = 1\n", "inline # mypy: comment at src/graderproof/m.py:1"),
+        ('"""Doc."""\n# mypy: disable-error-code="misc"\n', "inline # mypy: comment"),
+        ("# type" + ": ignore  # whole file\nx = 1\n", "file-level type ignore"),
+        ("from typing import no_type_check\n", "no_type_check at src/graderproof/m.py:1"),
+    ],
+)
+def test_mypy_weakening_in_source(tmp_path: Path, source: str, message: str) -> None:
+    assert message in ship_check.mypy_weakening(mypy_layout(tmp_path, MYPY_OK, source))
 
 
 def test_bare_type_ignores(tmp_path: Path) -> None:
@@ -372,14 +470,34 @@ def test_git_history_helpers(tmp_path: Path) -> None:
     first = review.git(repo, "rev-parse", "HEAD")[1]
     (repo / "b.txt").write_text("b\n")
     second = commit_all(repo, "b")
-    assert ship_check.first_commit(repo, "a.txt") == first
-    assert ship_check.first_commit(repo, "b.txt") == second
-    assert ship_check.first_commit(repo, "none.txt") is None
     assert ship_check.strictly_before(repo, first, second)
     assert not ship_check.strictly_before(repo, second, second)
-    assert ship_check.earliest_commit(repo, ["b.txt", "a.txt"]) == first
-    assert ship_check.earliest_commit(repo, []) is None
+    assert not ship_check.strictly_before(repo, second, first)
     assert ship_check.commits_touching(repo, "b.txt") == [second]
+    assert ship_check.not_after(repo, first, [second]) is None
+    assert ship_check.not_after(repo, second, [first, second]) == first
+    assert ship_check.data_commits(repo, []) == []
+
+
+def test_data_commits_follow_renames_not_copies(tmp_path: Path) -> None:
+    repo = git_repo(tmp_path)
+    text = '{\n "rows": ["one", "two", "three"]\n}\n'
+    (repo / "pilot").mkdir()
+    (repo / "pilot" / "t.json").write_text(text)
+    pilot = commit_all(repo, "pilot")
+    (repo / "other").mkdir()
+    (repo / "other" / "copy.json").write_text(text)
+    commit_all(repo, "an identical file elsewhere")
+    (repo / "data").mkdir()
+    (repo / "data" / "fresh.json").write_text(text)
+    fresh = commit_all(repo, "data with the same content (a copy, not a move)")
+    assert ship_check.data_commits(repo, ["data"]) == [fresh]
+    (repo / "pilot" / "t.json").rename(repo / "data" / "t.json")
+    moved = commit_all(repo, "pilot moved into data")
+    found = ship_check.data_commits(repo, ["data"])
+    assert set(found) == {fresh, moved, pilot}
+    assert ship_check.renames(repo) == [("pilot/t.json", "data/t.json")]
+    assert ship_check.under("data/t.json", ["data"]) and not ship_check.under("database", ["data"])
 
 
 def test_manifest_verification(tmp_path: Path) -> None:
@@ -402,52 +520,98 @@ def test_manifest_verification(tmp_path: Path) -> None:
     assert "private/outbound/patches/t.patch" in result["entries"]
     assert any("gone.patch: missing" in p for p in result["problems"])
     assert any("not under private" in p for p in result["problems"])
+    assert result["logs"] == {}
+
+
+def test_manifest_records_validation_log_facts_only(tmp_path: Path) -> None:
+    repo = git_repo(tmp_path)
+    root = repo / "private" / "outbound" / "patches"
+    root.mkdir(parents=True)
+    logs = {
+        "ok.validation.json": {"accepted": True, "task_hash": "h", "witness": "secret"},
+        "no.validation.json": {"accepted": "true", "task_hash": 7},
+        "bad.validation.json": None,
+    }
+    rows = []
+    for name, doc in logs.items():
+        (root / name).write_text("{oops" if doc is None else json.dumps(doc))
+        rel = f"private/outbound/patches/{name}"
+        rows.append({"path": rel, "sha256": ship_check.sha256_file(root / name)})
+    man = repo / "outbound" / "patches" / "MANIFEST.json"
+    man.parent.mkdir(parents=True)
+    man.write_text(json.dumps({"files": [*rows, "not an object"]}))
+    subprocess.run(["git", "-C", str(repo), "add", "outbound"], check=True)
+    result = ship_check.verify_manifest(repo)
+    facts = result["logs"]
+    assert facts["private/outbound/patches/ok.validation.json"] == {
+        "accepted": True,
+        "task_hash": "h",
+    }
+    assert facts["private/outbound/patches/no.validation.json"] == {
+        "accepted": None,
+        "task_hash": None,
+    }
+    assert facts["private/outbound/patches/bad.validation.json"]["accepted"] is None
+    assert result["problems"] == ["MANIFEST.json has an entry that is not an object"]
+    man.write_text(json.dumps({"files": "x"}))
+    assert ship_check.verify_manifest(repo)["problems"] == ["MANIFEST.json has no files list"]
+
+
+def audit_dir(tmp_path: Path, tasks: list[dict[str, Any]], variants: list[dict[str, Any]]) -> Path:
+    adir = tmp_path / "bench"
+    adir.mkdir(exist_ok=True)
+    (adir / "tasks.jsonl").write_text("".join(json.dumps(r) + "\n" for r in tasks))
+    (adir / "variants.jsonl").write_text("".join(json.dumps(v) + "\n" for v in variants))
+    return adir
 
 
 def test_card_leak_detects_task_ids(tmp_path: Path) -> None:
-    adir = tmp_path / "bench"
-    adir.mkdir()
     h = ship_check.sha256_text("bench:task-7")
-    (adir / "tasks.jsonl").write_text(json.dumps({"task_hash": h, "flaky": False}) + "\n")
+    rejected = ship_check.sha256_text("bench:task-8")
+    tasks = [
+        {"task_hash": h, "determinism": "stable_pass"},
+        {"task_hash": rejected, "determinism": "stable_fail"},
+    ]
     variant = {"task_hash": h, "kind": "violating", "counted_in_headline": True}
-    (adir / "variants.jsonl").write_text(json.dumps({**variant, "grader_passed": True}) + "\n")
+    adir = audit_dir(tmp_path, tasks, [{**variant, "grader_passed": True}])
     assert ship_check.card_leak("bench", {"rate": 0.1}, "aggregate only", adir) == ""
     assert "flagged task" in ship_check.card_leak("bench", {}, "see task-7", adir)
+    assert "flagged task" in ship_check.card_leak("bench", {}, "see task-8", adir)
     assert ship_check.card_leak("bench", {"fixed_upstream_tasks": ["task-7"]}, "task-7", adir) == ""
     assert "task-level keys" in ship_check.card_leak("bench", {"tasks": []}, "", adir)
 
 
-def test_task_indicators_exclude_flaky_and_uncounted(tmp_path: Path) -> None:
-    adir = tmp_path / "b"
-    adir.mkdir()
-    rows = [{"task_hash": "a", "flaky": False}, {"task_hash": "b", "flaky": True}]
-    (adir / "tasks.jsonl").write_text("\n".join(json.dumps(r) for r in rows) + "\n")
-    unstable = {"task_hash": "a", "counted_in_headline": True, "grader_passed": None}
+def test_audit_table_counts_scorable_tasks_and_stable_verdicts(tmp_path: Path) -> None:
+    """D26: only stable_pass tasks get indicators; variants need a stable verdict."""
+    a, b, c = (ship_check.sha256_text(x) for x in ("b:a", "b:b", "b:c"))
+    tasks = [
+        {"task_hash": a, "determinism": "stable_pass", "flaky": False},
+        {"task_hash": b, "determinism": "flaky", "flaky": True},
+        {"task_hash": c, "determinism": "stable_fail", "reference_rejected": True},
+    ]
+    unstable = {"task_hash": a, "counted_in_headline": True, "grader_passed": None}
     vs = [
         {**unstable, "kind": "preserving"},
         {**unstable, "kind": "violating"},
-        {
-            "task_hash": "a",
-            "kind": "preserving",
-            "counted_in_headline": True,
-            "grader_passed": False,
-        },
-        {
-            "task_hash": "a",
-            "kind": "violating",
-            "counted_in_headline": False,
-            "grader_passed": True,
-        },
-        {"task_hash": "b", "kind": "violating", "counted_in_headline": True, "grader_passed": True},
+        {"task_hash": a, "kind": "preserving", "counted_in_headline": True, "grader_passed": False},
+        {"task_hash": a, "kind": "violating", "counted_in_headline": False, "grader_passed": True},
+        {"task_hash": a, "kind": "violating", "counted_in_headline": "yes", "grader_passed": True},
+        {"task_hash": b, "kind": "violating", "counted_in_headline": True, "grader_passed": True},
+        {"task_hash": c, "kind": "preserving", "counted_in_headline": True, "grader_passed": False},
     ]
-    (adir / "variants.jsonl").write_text("\n".join(json.dumps(v) for v in vs) + "\n")
-    result = ship_check.task_indicators(adir)
-    assert not isinstance(result, str)
-    kept, fa, fr = result
-    assert [t["task_hash"] for t in kept] == ["a"]
-    assert fa == [False]
-    assert fr == [True]
-    assert ship_check.task_indicators(tmp_path / "none") == "tasks.jsonl missing or empty"
+    rows = ship_check.audit_table(audit_dir(tmp_path, tasks, vs), "bench")
+    assert [(r.scorable, r.false_accept, r.false_reject) for r in rows] == [
+        (True, False, True),
+        (False, False, False),
+        (False, False, False),
+    ]
+    with pytest.raises(ship_check.GateError, match="missing or empty"):
+        ship_check.audit_table(tmp_path / "none", "none")
+    tasks[0]["false_reject"] = False
+    with pytest.raises(ship_check.GateError, match="false_reject is False; recomputed"):
+        ship_check.audit_table(audit_dir(tmp_path, tasks, vs), "bench")
+    with pytest.raises(ship_check.GateError, match="false_accept is None; recomputed"):
+        ship_check.audit_table(audit_dir(tmp_path, tasks[1:], vs[5:]), "bench", require_flags=True)
 
 
 def test_one_line_and_tail() -> None:

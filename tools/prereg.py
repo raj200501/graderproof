@@ -199,8 +199,10 @@ def confirmatory_artifacts(repo: Path) -> list[Path]:
         except ValueError:
             out.append(p)
             continue
-        if p.relative_to(repo).as_posix() == E0_SUMMARY or (
-            isinstance(doc, dict) and doc.get("confirmatory")
+        if (
+            not isinstance(doc, dict)
+            or p.relative_to(repo).as_posix() == E0_SUMMARY
+            or doc.get("confirmatory")
         ):
             out.append(p)
     e0 = repo / E0_RESULTS

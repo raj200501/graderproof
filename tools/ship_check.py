@@ -1857,16 +1857,20 @@ def data_dirs(where: str, s: Mapping[str, Any]) -> list[str]:
 def confirmatory_artifacts(clone: Path) -> list[Path]:
     """Every summary.json under artifacts/ marked confirmatory, plus the E0 files.
 
-    An unreadable summary.json is included so that G11 fails on it rather than skip it.
+    A summary.json that is unreadable or not a JSON object is included, so that G11
+    fails on it rather than skip it.
     """
     found = []
     for p in sorted((clone / "artifacts").rglob("summary.json")):
         try:
             doc = load_json(p)
         except (OSError, ValueError):
-            found.append(p)
-            continue
-        if rel_to(clone, p) == E0_SUMMARY or (isinstance(doc, Mapping) and doc.get("confirmatory")):
+            doc = None
+        if (
+            not isinstance(doc, Mapping)
+            or rel_to(clone, p) == E0_SUMMARY
+            or doc.get("confirmatory")
+        ):
             found.append(p)
     if (clone / E0_RESULTS).is_file():
         found.append(clone / E0_RESULTS)
