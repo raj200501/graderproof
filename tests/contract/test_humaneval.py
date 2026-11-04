@@ -481,9 +481,12 @@ def test_long_results_are_cut_in_the_printed_line(tasks: dict[str, Task]) -> Non
 
 
 UPSTREAM_DRIVER = """\
+import importlib
 import json
 import sys
 
+for name in sys.argv[4:]:  # modules upstream's caller has imported before any check
+    importlib.import_module(name)
 sys.path.insert(0, sys.argv[1])
 from execution import check_correctness
 
@@ -497,16 +500,22 @@ with open(sys.argv[3], "w", encoding="utf-8") as fh:
 """
 
 
-def upstream_results(cases: list[dict[str, Any]], root: Path) -> list[str]:
-    """Result strings of the recorded upstream ``check_correctness``, run under bubblewrap."""
+def upstream_results(
+    cases: list[dict[str, Any]], root: Path, preload: Sequence[str] = ()
+) -> list[str]:
+    """Result strings of the recorded upstream ``check_correctness``, run under bubblewrap.
+
+    ``preload`` names modules the driver imports first, as upstream's
+    ``evaluate_functional_correctness()`` has numpy imported before it checks anything.
+    """
     lib, ws = root / "upstream", root / "ws"
-    lib.mkdir()
+    lib.mkdir(parents=True)
     ws.mkdir()
     (lib / "execution.py").write_bytes(UPSTREAM_EXECUTION.read_bytes())
     (ws / "driver.py").write_text(UPSTREAM_DRIVER, encoding="utf-8")
     (ws / "cases.json").write_text(json.dumps(cases), encoding="utf-8")
     argv = ["python3", str(ws / "driver.py"), str(lib), str(ws / "cases.json"), str(ws / "out")]
-    res = BwrapSandbox().run(argv, cwd=ws, writable=[ws], readonly=[lib])
+    res = BwrapSandbox().run([*argv, *preload], cwd=ws, writable=[ws], readonly=[lib])
     assert res.exit_status == 0, res.stderr
     results: list[str] = json.loads((ws / "out").read_text(encoding="utf-8"))
     return results
@@ -564,6 +573,27 @@ def test_grader_agrees_with_upstream_check_correctness(
     kinds = {r if r in ("passed", "timed out") else r.split(":")[0] for r in expected}
     assert kinds == {"passed", "failed", "timed out"}
     assert expected.count("passed") == len(raw_records()) + 1  # references and print noise
+
+
+@needs_bwrap
+def test_numpy_programs_differ_from_upstreams_command_line(
+    tasks: dict[str, Task], tmp_path: Path
+) -> None:
+    """The documented difference (docs/adapters/humaneval.md, Grading): numpy is not preloaded.
+
+    upstream's evaluation.py imports numpy before any check forks; numpy's import calls
+    os.putenv, which reliability_guard() disables, so only a preloaded numpy works.
+    """
+    probe = BwrapSandbox().run(["python3", "-c", "import numpy"], cwd=tmp_path, writable=[tmp_path])
+    if probe.exit_status != 0:
+        pytest.skip("the sandbox's python3 cannot import numpy")
+    rec = by_id("HumanEval/23")
+    body = "    import numpy\n    return int(numpy.int64(len(string)))\n"
+    passed, report = graded(tasks["HumanEval-23"], rec["prompt"] + body)
+    assert not passed and report["result"] == "failed: 'NoneType' object is not callable"
+    case = {"problem": rec, "completion": body, "timeout": 3.0}
+    assert upstream_results([case], tmp_path / "plain") == [report["result"]]
+    assert upstream_results([case], tmp_path / "numpy", preload=["numpy"]) == ["passed"]
 
 
 @needs_bwrap

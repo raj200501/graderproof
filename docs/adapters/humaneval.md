@@ -163,11 +163,12 @@ the grader's in these ways:
   has only the standard-library modules the grader imports. Importing numpy calls
   `os.putenv`, which `reliability_guard()` disables, so a correct program that imports
   numpy gets `failed: 'NoneType' object is not callable` here and `passed` under
-  upstream's command line. This was checked under bubblewrap on 2026-11-04 with the
-  sandbox's `python3` and numpy 2.5.3. In the same check, `resource` (which the guard
-  blocks on purpose, here and upstream) and `trace` were the only standard-library
-  modules that could not be imported after the guard, so programs that use only the
-  standard library are not affected.
+  upstream's command line. A contract test checks this wherever the sandbox's `python3`
+  can import numpy (on 2026-11-04 here: CPython 3.13.16 with numpy 2.5.3). An
+  exploratory check on the same day found `resource` (which the guard blocks on purpose,
+  here and upstream) and `trace` to be the only standard-library modules that cannot be
+  imported after the guard, so programs that use only the standard library are not
+  affected.
 * **Threads.** Upstream runs checks in a pool of 4 threads (the `n_workers` default)
   and forks each child from that multi-threaded process. The grader forks from a
   single-threaded process.
@@ -217,13 +218,15 @@ the grader's `python3`.
 records (HumanEval/23, 32, 45, 50, 51, which cover all three strata), upstream's
 `execution.py`, and upstream's `LICENSE` (see `tests/fixtures/humaneval/README.md`). The
 tests check the fixtures' SHA-256 and git blob ids, conversion and loading, the refusal
-of malformed records (before anything is written), that each
-reference passes its grader, that wrong solutions fail, the time limit, agreement with
-upstream's `check_correctness()`, function-call probes, the Runner's sandbox policy, the
-`check` command, `fetch` (with git replaced by a fake), and the command line. HumanEval
-test code, canonical solutions, and upstream's `execution.py` are third-party code, so
-the tests that run them use bubblewrap and are skipped where it does not work (for
-example on CI runners without it); every other test runs no task code.
+of malformed records (before anything is written), that each reference passes its
+grader, that wrong solutions fail, the time limit, agreement with upstream's
+`check_correctness()`, the numpy difference from upstream's command line (skipped where
+the sandbox's `python3` has no numpy), function-call probes, the Runner's sandbox
+policy, the `check` command, `fetch` (with git replaced by a fake), and the command
+line. HumanEval test code, canonical solutions, and upstream's `execution.py` are
+third-party code, so the tests that run them use bubblewrap and are skipped where it
+does not work (for example on CI runners without it); every other test runs no task
+code.
 
 ## Verification on the full data
 
