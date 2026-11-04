@@ -85,7 +85,8 @@ def test_schema_problems() -> None:
     assert citecheck.schema_problems({"schema": "other", "entries": []}) == [
         f"{CITE}: schema must be {schema!r}"
     ]
-    for not_a_list in ({}, None):
+    not_lists: tuple[Any, ...] = ({}, None)
+    for not_a_list in not_lists:
         assert citecheck.schema_problems({"schema": schema, "entries": not_a_list}) == [
             f"{CITE}: entries must be a list"
         ]
