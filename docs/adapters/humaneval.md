@@ -16,7 +16,7 @@ Code" (2021, https://arxiv.org/abs/2107.03374; citecheck key `humaneval-2021`).
 |---|---|
 | Repository | https://github.com/openai/human-eval (`git clone https://github.com/openai/human-eval.git`) |
 | Pinned commit | `b9453e8f1865df0a0057a1383767caa400acfbcf`: the merge of pull request #70, which adds a deprecation notice to the README, committed 2026-10-16. It was the head of `master` when checked on 2026-11-04. |
-| Data file | `data/HumanEval.jsonl.gz`, SHA-256 `b796127e635a67f93fb35c04f4cb03cf06f38c8072ee7cee8833d7bee06979ef`, unchanged since the first commit (463c980, 2021-07-06) |
+| Data file | `data/HumanEval.jsonl.gz`, SHA-256 `b796127e635a67f93fb35c04f4cb03cf06f38c8072ee7cee8833d7bee06979ef`, unchanged since the first commit (463c980, authored 2021-07-06) |
 | Records | HumanEval/0 to HumanEval/163, each with `task_id`, `prompt`, `entry_point`, `canonical_solution`, `test` |
 | Grading code | `human_eval/execution.py`, git blob `bcfd7c5d452e2dcbb1ea89317c47b9e0f1c2c4ca`, last changed in commit 37c4dd6 ("fix broken eval", 2025-01-16, merged 2025-01-17) |
 | Retrieval | Cloned with git and verified on 2026-11-04. The benchmark survey first read the same commit on 2026-10-23. |
@@ -120,20 +120,24 @@ fields of upstream's results file, with the result cut to 2000 characters for di
 and exits 0 exactly when the result is `passed`, which is what toybench counts as a
 pass.
 
-Differences from upstream, none of which changes a result string:
+Changes to upstream's `check_correctness()` and `unsafe_execute()`:
 
 1. The program comes from `solution.py` rather than from the strings `prompt` and
    `completion`. For a program that starts with the prompt, the check program is the
    same string. A missing or non-UTF-8 `solution.py` gives `failed: <error>`.
-2. The child sends its result over a pipe instead of appending it to a
-   `multiprocessing.Manager` list. The parent waits up to the time limit plus one second
-   for the result, then until the same deadline for the child to exit, and kills it if
-   it is still running.
+2. The child sends its result to the parent over a pipe instead of appending it to a
+   `multiprocessing.Manager` list. The string is encoded as UTF-8 with the
+   `surrogatepass` error handler, so every result string arrives unchanged, including
+   exception messages with unpaired surrogates. The parent waits up to the time limit
+   plus one second for the result, then until the same deadline for the child to exit,
+   and kills it if it is still running.
 3. The `fork` start method is named explicitly. It is the Linux default before Python
-   3.14, which upstream relies on.
+   3.14 (3.14 made `forkserver` the default), so the child starts as a copy of the
+   grader, as upstream's child starts as a copy of the evaluation process on Linux.
 4. `reliability_guard()` disables `help` through the `builtins` module, because a
    generated grader runs as `__main__`, whose `__builtins__` is a module rather than a
    dictionary.
+5. Upstream's warning comment above the `exec` call is left out.
 
 All other functions and classes (`time_limit`, `swallow_io`, `create_tempdir`,
 `TimeoutException`, `WriteOnlyStringIO`, `redirect_stdin`, `chdir`, and the rest of
@@ -141,9 +145,42 @@ All other functions and classes (`time_limit`, `swallow_io`, `create_tempdir`,
 one compares those syntax trees with the recorded upstream `execution.py`, and one runs
 the recorded upstream `check_correctness()` under bubblewrap on the fixture references
 and on wrong programs of every result kind (wrong answers, syntax errors, exceptions,
-`sys.exit`, `exit()`, `input()`, printed output, `os._exit`, a loop past a shortened time
-limit, a missing helper function, and a read of `solution.py` from the working
-directory), and requires the same result strings from the generated graders.
+non-ASCII and unpaired-surrogate exception messages, `sys.exit`, `exit()`, `input()`,
+printed output, `os._exit`, a loop past a shortened time limit, a missing helper
+function, and a read of `solution.py` from the working directory), and requires the
+same result strings from the generated graders. That test calls `check_correctness()`
+from a driver that imports nothing else.
+
+So a program that does not depend on the process it runs in gets the same result
+string here as from upstream's `check_correctness()` on the same Python version.
+Upstream's usual entry points, the function `evaluate_functional_correctness()` and the
+`evaluate_functional_correctness` command, run checks in a process that differs from
+the grader's in these ways:
+
+* **Preloaded modules.** `human_eval/evaluation.py` imports numpy and tqdm, and the
+  command also imports fire, before any check forks. The child inherits them, so a
+  program can import them although `reliability_guard()` has run. The grader's child
+  has only the standard-library modules the grader imports. Importing numpy calls
+  `os.putenv`, which `reliability_guard()` disables, so a correct program that imports
+  numpy gets `failed: 'NoneType' object is not callable` here and `passed` under
+  upstream's command line. This was checked under bubblewrap on 2026-11-04 with the
+  sandbox's `python3` and numpy 2.5.3. In the same check, `resource` (which the guard
+  blocks on purpose, here and upstream) and `trace` were the only standard-library
+  modules that could not be imported after the guard, so programs that use only the
+  standard library are not affected.
+* **Threads.** Upstream runs checks in a pool of 4 threads (the `n_workers` default)
+  and forks each child from that multi-threaded process. The grader forks from a
+  single-threaded process.
+* **Hash seed and environment.** graderproof's sandbox sets `PYTHONHASHSEED=0` and
+  scrubs the environment; upstream's child inherits the evaluation process's random
+  hash seed and environment. A program whose result depends on the iteration order of
+  a set of strings can be stable here and vary between upstream runs.
+* **Call depth.** The program runs a few Python frames deeper or shallower than under
+  upstream, which matters only for recursion within a few frames of the recursion
+  limit.
+
+The grader uses only the standard library, so it does not preload numpy. Preloading it
+to match upstream's command line would be a separate, recorded decision.
 
 ## Strata
 
@@ -164,12 +201,23 @@ is read-only, only the workspace is writable, `/tmp` is a fresh tmpfs, the home
 directory is hidden, there is no network, and the environment is scrubbed of
 credentials.
 
+There are two time limits. `timeout_s = 20` in `task.toml` is graderproof's wall-clock
+limit for the whole grader process. HumanEval's own limit, 3.0 seconds per check, is
+inside `grade.py` and is the one that produces `timed out`. graderproof's `pre-delay`
+operator, which scales a start delay to `timeout_s`, applies only to `script` tasks, so
+it does not touch these `module` tasks.
+
+graderproof's function-call probes (requirement checks) import `solution.py` with the
+Python that runs graderproof (3.12 under the repository's `.python-version`), not with
+the grader's `python3`.
+
 ## Tests
 
 `tests/contract/test_humaneval.py` runs offline on recorded fixtures: five verbatim
 records (HumanEval/23, 32, 45, 50, 51, which cover all three strata), upstream's
 `execution.py`, and upstream's `LICENSE` (see `tests/fixtures/humaneval/README.md`). The
-tests check the fixtures' SHA-256 and git blob ids, conversion and loading, that each
+tests check the fixtures' SHA-256 and git blob ids, conversion and loading, the refusal
+of malformed records (before anything is written), that each
 reference passes its grader, that wrong solutions fail, the time limit, agreement with
 upstream's `check_correctness()`, function-call probes, the Runner's sandbox policy, the
 `check` command, `fetch` (with git replaced by a fake), and the command line. HumanEval
@@ -195,14 +243,21 @@ result numbers (non-negotiable 1).
 * The 3-second limit is wall-clock time (`ITIMER_REAL`). A program close to the limit can
   pass on one run and time out on another under load; the Runner's determinism precheck
   reports such tasks as flaky rather than dropping them.
+* The instruction does not state the time limit, as HumanEval's prompt does not. A
+  correct program that takes longer than 3 seconds is rejected.
+* A correct program that imports numpy is rejected here and accepted by upstream's
+  command line (see Grading). A variant that adds such an import can therefore look like
+  a false reject that HumanEval's own harness would not make.
 * Results can depend on the interpreter version for programs that rely on
   version-specific behavior. Upstream was written for Python 3.7 or later; the graders
   run on the sandbox's `python3`.
 * The instruction asks for the prompt as given, so an edit to a prompt's helper function
   or docstring counts as a violation of the stated task even when it does not change
   behavior. This matches HumanEval, where the prompt is fixed.
-* The test code is embedded in `grader/grade.py` as the `TEST` constant, so a grader
-  repair edits that constant.
+* The test code is embedded in `grader/grade.py` as the `TEST` constant, so a repair
+  that strengthens HumanEval's own test edits that constant. A repair can instead run
+  its own checker on the workspace before `grade.py`; because `grade.py` reads only
+  `solution.py` from the working directory, it works unchanged behind such a wrapper.
 * Only the original HumanEval tests are used. EvalPlus HumanEval+ would be a separate,
   exploratory comparison (D18).
 * Task-level findings for HumanEval stay in `private/` (non-negotiable 14); only
