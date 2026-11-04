@@ -1,0 +1,594 @@
+{
+  "created_utc": "2026-11-04T02:29:00Z",
+  "hash": "9e096d89c05046c6eeaf247e355524b8befb81fcf663a64d3d18168fb36a1562",
+  "instructions": "You turn a task's text into atomic, machine-checkable requirements. For each item you\nget the task text, the task kind, the reference solution (it satisfies the task), the\ninitial workspace, and what the reference produced (files, stdout, exit status, tool\ncalls, final state). You are not shown how the task is graded and must not guess.\n\nWrite one requirement per distinct obligation in the task text (outputs, their\ncontent, required steps, ordering constraints, prohibited actions, policies). Each\nrequirement has an \"id\" (R1, R2, ...), \"text\" (the obligation in plain words, quoting\nthe task where possible), and \"checks\": a list of typed checks that pass on the\nreference outcome and fail when the obligation is broken. Allowed check types and\nfields: file_exists {path}; file_absent {path}; file_equals {path, text, normalize:\nnone|strip|trailing_ws}; file_contains {path, text}; file_regex {path, pattern};\nfile_json {path, pointer, equals, lenient}; file_lines {path, count};\nstdout_contains {text}; stdout_regex {pattern}; stdout_json {pointer, equals,\nlenient}; exit_code {code}; call {probe: {function, args, kwargs}, equals} or\n{probe, matches_reference: true}; same_as_reference {target: stdout|state|file:<path>,\nnormalize}; trajectory_includes {tool, args}; trajectory_excludes {tool, args};\ntrajectory_before {first: {tool, args}, then: {tool, args}}; state_equals {pointer,\nequals}.\n\nBe exactly as strict as the task text. If the text demands an exact format, check it\nexactly; if it only asks for content, check content (use \"normalize\" or \"lenient\" so\nthat harmless formatting does not fail the check). For function tasks, add call\nprobes on the examples in the text and on a few further valid inputs, using\nmatches_reference for inputs whose expected output the text does not state. Return\nfor each item: {\"requirements\": [ ... ]}.\n",
+  "items": [
+    {
+      "id": "b2a4e9330d00fb6d663af0bf1316cb5492c1aa98b2d3b12351b232b1cfbd8bde",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "classes": {
+            "CL-SAT-YOGA": {
+              "capacity": 4,
+              "day": "Saturday",
+              "roster": [
+                "G-111"
+              ],
+              "time": "10:00",
+              "title": "Slow yoga",
+              "waitlist": []
+            },
+            "CL-THU-YOGA": {
+              "capacity": 2,
+              "day": "Thursday",
+              "roster": [
+                "G-120",
+                "G-311"
+              ],
+              "time": "18:00",
+              "title": "Yoga flow",
+              "waitlist": [
+                "G-150",
+                "G-208"
+              ]
+            },
+            "CL-TUE-YOGA": {
+              "capacity": 3,
+              "day": "Tuesday",
+              "roster": [
+                "G-111",
+                "G-305"
+              ],
+              "time": "18:00",
+              "title": "Yoga flow",
+              "waitlist": []
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {},
+            "result": {
+              "classes": {
+                "CL-SAT-YOGA": {
+                  "capacity": 4,
+                  "day": "Saturday",
+                  "roster": [
+                    "G-111"
+                  ],
+                  "time": "10:00",
+                  "title": "Slow yoga",
+                  "waitlist": []
+                },
+                "CL-THU-YOGA": {
+                  "capacity": 2,
+                  "day": "Thursday",
+                  "roster": [
+                    "G-120",
+                    "G-311"
+                  ],
+                  "time": "18:00",
+                  "title": "Yoga flow",
+                  "waitlist": [
+                    "G-150"
+                  ]
+                },
+                "CL-TUE-YOGA": {
+                  "capacity": 3,
+                  "day": "Tuesday",
+                  "roster": [
+                    "G-111",
+                    "G-208",
+                    "G-305"
+                  ],
+                  "time": "18:00",
+                  "title": "Yoga flow",
+                  "waitlist": []
+                }
+              },
+              "ok": true
+            },
+            "tool": "list_classes"
+          },
+          {
+            "args": {
+              "class_id": "CL-TUE-YOGA",
+              "member_id": "G-208"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "cancel_booking"
+          },
+          {
+            "args": {
+              "class_id": "CL-THU-YOGA",
+              "member_id": "G-208"
+            },
+            "result": {
+              "ok": true,
+              "position": 2
+            },
+            "tool": "join_waitlist"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n]\n"
+      },
+      "task_text": "# Swap a fitness class for a waitlist spot\n\nGym member `G-208` can no longer attend Tuesday's yoga class `CL-TUE-YOGA`. Cancel that booking, and add the member to the waitlist of Thursday's yoga class `CL-THU-YOGA`, which is full. Do not change anything else.\n\nTools (see `support/env.py`):\n\n- `list_classes()`\n- `cancel_booking(member_id, class_id)`\n- `book_class(member_id, class_id)`: fails when the class is full\n- `join_waitlist(member_id, class_id)`: adds the member to the end of the waitlist\n"
+    },
+    {
+      "id": "b31e16c23214a870f2cd009d60147aa225190703563a2e69ab826096a7d4266b",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "orders": {
+            "ORD-55087": {
+              "customer": "Iain Murray",
+              "items": [
+                "Rain jacket"
+              ],
+              "shipping_address": "27 Comely Bank Avenue, Edinburgh EH4 1EL",
+              "status": "shipped"
+            },
+            "ORD-55120": {
+              "customer": "Iain Murray",
+              "items": [
+                "Hiking boots (UK 9)"
+              ],
+              "shipping_address": "Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP",
+              "status": "processing"
+            },
+            "ORD-55133": {
+              "customer": "Freya Lund",
+              "items": [
+                "Two-person tent"
+              ],
+              "shipping_address": "9 Rose Street, Aberdeen AB10 1UB",
+              "status": "processing"
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "order_id": "ORD-55120"
+            },
+            "result": {
+              "ok": true,
+              "order": {
+                "customer": "Iain Murray",
+                "items": [
+                  "Hiking boots (UK 9)"
+                ],
+                "shipping_address": "27 Comely Bank Avenue, Edinburgh EH4 1EL",
+                "status": "processing"
+              }
+            },
+            "tool": "get_order"
+          },
+          {
+            "args": {
+              "address": "Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP",
+              "order_id": "ORD-55120"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "update_shipping_address"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+      },
+      "task_text": "# Change a shipping address\n\nCustomer Iain Murray emails that he has moved. His order `ORD-55120` has not shipped yet.\n\nUse `update_shipping_address` to set the shipping address of order `ORD-55120` to exactly this one-line string:\n\n`Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP`\n\nDo not change any other order, and do not change any other field of this order.\n\nTools (see `support/env.py`):\n\n- `get_order(order_id)`\n- `update_shipping_address(order_id, address)` (only possible while the order is `processing`)\n"
+    },
+    {
+      "id": "b5b662c75ed95926f3e1d5c92948f0126904b38d1a7ca3eaeaa91691d37afe69",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "customers": {
+            "C-8812": {
+              "card_last4": "4821",
+              "name": "Tom\u00e1s Rivera"
+            },
+            "C-8840": {
+              "card_last4": "1177",
+              "name": "Helen Achebe"
+            }
+          },
+          "orders": {
+            "ORD-90388": {
+              "customer_id": "C-8840",
+              "items": [
+                {
+                  "name": "Electric kettle",
+                  "price_cents": 3450,
+                  "sku": "KTL-07"
+                }
+              ],
+              "refunded_cents": 0,
+              "status": "delivered"
+            },
+            "ORD-90417": {
+              "customer_id": "C-8812",
+              "items": [
+                {
+                  "name": "Countertop blender",
+                  "price_cents": 6499,
+                  "sku": "BLD-200"
+                },
+                {
+                  "name": "Travel mug",
+                  "price_cents": 1299,
+                  "sku": "MUG-12"
+                }
+              ],
+              "refunded_cents": 6499,
+              "status": "partially_refunded"
+            }
+          },
+          "refunds": [
+            {
+              "amount_cents": 6499,
+              "order_id": "ORD-90417",
+              "reason": "damaged"
+            }
+          ],
+          "verified": [
+            "C-8812"
+          ]
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "customer_id": "C-8812",
+              "last4": "4821"
+            },
+            "result": {
+              "ok": true,
+              "verified": true
+            },
+            "tool": "verify_identity"
+          },
+          {
+            "args": {
+              "order_id": "ORD-90417"
+            },
+            "result": {
+              "ok": true,
+              "order": {
+                "customer_id": "C-8812",
+                "items": [
+                  {
+                    "name": "Countertop blender",
+                    "price_cents": 6499,
+                    "sku": "BLD-200"
+                  },
+                  {
+                    "name": "Travel mug",
+                    "price_cents": 1299,
+                    "sku": "MUG-12"
+                  }
+                ],
+                "refunded_cents": 0,
+                "status": "delivered"
+              }
+            },
+            "tool": "get_order"
+          },
+          {
+            "args": {
+              "amount_cents": 6499,
+              "order_id": "ORD-90417",
+              "reason": "damaged"
+            },
+            "result": {
+              "ok": true,
+              "refund_id": "RF-1"
+            },
+            "tool": "issue_refund"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+      },
+      "task_text": "# Refund a damaged item\n\nCustomer Tom\u00e1s Rivera (customer `C-8812`) writes that the countertop blender in his order `ORD-90417` arrived with a cracked jug. He asks for a refund of the blender only ($64.99). He gave the last four digits of his card as `4821`.\n\nSupport policy: before issuing any refund you must verify the customer's identity by calling `verify_identity` with the customer ID and the last four digits of the card on file, and you may only refund after that check succeeds.\n\nThen refund 6499 cents on order `ORD-90417` with reason `damaged`. Make no other refunds or changes.\n\nTools (see `support/env.py`):\n\n- `verify_identity(customer_id, last4)`\n- `get_order(order_id)`\n- `issue_refund(order_id, amount_cents, reason)`\n"
+    },
+    {
+      "id": "bb02f2c2cba37c5513dffcd508e3c1e568b2868b15505e1b3963af64491c9be8",
+      "initial_workspace": {
+        "matrix.tsv": "metric\tQ1\tQ2\tQ3\tQ4\nrevenue\t1.2 M\t1.4 M\t1.1 M\t1.9 M\nnew customers\t310\t355\t298\t502\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "matrix.tsv": "metric\tQ1\tQ2\tQ3\tQ4\nrevenue\t1.2 M\t1.4 M\t1.1 M\t1.9 M\nnew customers\t310\t355\t298\t502\n",
+          "transposed.tsv": "metric\trevenue\tnew customers\nQ1\t1.2 M\t310\nQ2\t1.4 M\t355\nQ3\t1.1 M\t298\nQ4\t1.9 M\t502\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+      },
+      "task_text": "# Transpose a TSV table\n\n`matrix.tsv` is a tab-separated table in which every row has the same number of cells. Write `transposed.tsv` with rows and columns swapped: the cell in row i, column j of the output is the cell in row j, column i of the input.\n\nWrite the output in the same format: cells separated by a single tab character, every row (including the last) terminated by a newline, and cell text unchanged (cells may contain spaces).\n"
+    },
+    {
+      "id": "bb4f3fdca39716f5377ff4ffff1b10d63e113016e949672df874bd9de68d1083",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "next_ticket": 1002,
+          "tickets": {
+            "T-0998": {
+              "category": "hardware",
+              "comments": [],
+              "priority": "low",
+              "status": "closed",
+              "team": "desktop",
+              "title": "Cannot print to floor 3 printer",
+              "user_id": "U-204"
+            },
+            "T-1000": {
+              "category": "software",
+              "comments": [],
+              "priority": "medium",
+              "status": "open",
+              "team": "apps",
+              "title": "CRM export times out",
+              "user_id": "U-311"
+            },
+            "T-1001": {
+              "category": "network",
+              "comments": [],
+              "priority": "high",
+              "status": "open",
+              "team": "netops",
+              "title": "VPN disconnects every few minutes",
+              "user_id": "U-204"
+            }
+          },
+          "users": {
+            "U-204": {
+              "department": "Finance",
+              "email": "ana.lima@example.com",
+              "name": "Ana Lima"
+            },
+            "U-311": {
+              "department": "Sales",
+              "email": "ben.ochoa@example.com",
+              "name": "Ben Ochoa"
+            },
+            "U-412": {
+              "department": "Legal",
+              "email": "ana.lindqvist@example.com",
+              "name": "Ana Lindqvist"
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "email": "ana.lima@example.com"
+            },
+            "result": {
+              "department": "Finance",
+              "name": "Ana Lima",
+              "ok": true,
+              "user_id": "U-204"
+            },
+            "tool": "find_user"
+          },
+          {
+            "args": {
+              "category": "network",
+              "priority": "high",
+              "title": "VPN disconnects every few minutes",
+              "user_id": "U-204"
+            },
+            "result": {
+              "ok": true,
+              "ticket_id": "T-1001"
+            },
+            "tool": "create_ticket"
+          },
+          {
+            "args": {
+              "team": "netops",
+              "ticket_id": "T-1001"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "assign_ticket"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+      },
+      "task_text": "# Open a helpdesk ticket\n\nYou are working the IT helpdesk queue. Ana Lima (ana.lima@example.com) writes:\n\n> Since this morning the office VPN drops every few minutes and I have to log in again each time.\n\nUse the helpdesk tools to:\n\n1. Look up Ana's user record with `find_user`.\n2. Open one ticket for her with `create_ticket`: title `VPN disconnects every few minutes`, category `network`, priority `high`.\n3. Assign the new ticket to the `netops` team with `assign_ticket`.\n\nTickets are numbered in sequence; the next ticket created will be `T-1001`. Do not modify any existing ticket.\n\nTools (see `support/env.py`):\n\n- `find_user(email)`\n- `create_ticket(user_id, title, category, priority)`\n- `assign_ticket(ticket_id, team)`\n- `add_comment(ticket_id, text)`\n- `get_ticket(ticket_id)`\n"
+    },
+    {
+      "id": "bbf853e256902a2948387ac9b9089809cec392078df87ec3f77ad826f1533e42",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+      },
+      "task_text": "# Normalize dates from supplier invoices\n\nSupplier invoices write dates in different ways. Write a Python module `dateparse.py` with a function `to_iso_date(text)` that returns the date as an ISO string `YYYY-MM-DD`.\n\nAccepted input formats (surrounding spaces are ignored):\n\n- `Month D, YYYY`, where Month is an English month name, either in full (`March`) or as its three-letter abbreviation (`Mar`), in any capitalization, and D has one or two digits: `\"March 5, 2026\"` gives `\"2026-03-05\"`.\n- `DD/MM/YYYY` (day first, two digits each): `\"05/03/2026\"` gives `\"2026-03-05\"`.\n- `YYYY.MM.DD`: `\"2026.03.05\"` gives `\"2026-03-05\"`.\n\nRaise `ValueError` for anything else, including dates that do not exist such as `\"31/04/2026\"`.\n"
+    },
+    {
+      "id": "bc4641b21e8bc9a233f05e9b948191a581f54daed7a2917e87a70db8774ebd87",
+      "initial_workspace": {
+        "app.env": "# Booking API settings\nAPP_NAME=booking-api\nAPP_PORT=8080\n\nDATABASE_URL=\"postgres://booking@db.internal:5432/booking\"\nFEATURE_FLAGS='search,waitlist'\n   LOG_LEVEL = info\nEMPTY_VALUE=\nGREETING=\"Welcome to \"Harbour\" Hotels\"\n   # APP_PORT=1234\nCACHE_TTL=300 # seconds\nAPP_PORT=9090\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "app.env": "# Booking API settings\nAPP_NAME=booking-api\nAPP_PORT=8080\n\nDATABASE_URL=\"postgres://booking@db.internal:5432/booking\"\nFEATURE_FLAGS='search,waitlist'\n   LOG_LEVEL = info\nEMPTY_VALUE=\nGREETING=\"Welcome to \"Harbour\" Hotels\"\n   # APP_PORT=1234\nCACHE_TTL=300 # seconds\nAPP_PORT=9090\n",
+          "config.json": "{\n  \"APP_NAME\": \"booking-api\",\n  \"APP_PORT\": \"9090\",\n  \"DATABASE_URL\": \"postgres://booking@db.internal:5432/booking\",\n  \"FEATURE_FLAGS\": \"search,waitlist\",\n  \"LOG_LEVEL\": \"info\",\n  \"EMPTY_VALUE\": \"\",\n  \"GREETING\": \"Welcome to \\\"Harbour\\\" Hotels\",\n  \"CACHE_TTL\": \"300 # seconds\"\n}\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "import json\n\nconfig = {}\nwith open(\"app.env\", encoding=\"utf-8\") as fh:\n    for raw in fh.read().split(\"\\n\"):\n        line = raw.strip(\" \\t\")\n        if not line or line.startswith(\"#\"):\n            continue\n        key, _, value = line.partition(\"=\")\n        key, value = key.strip(\" \\t\"), value.strip(\" \\t\")\n        if len(value) >= 2 and value[0] == value[-1] and value[0] in \"\\\"'\":\n            value = value[1:-1]\n        config[key] = value\n\nwith open(\"config.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(config, fh, indent=2)\n    fh.write(\"\\n\")\n"
+      },
+      "task_text": "# Convert an env file to JSON\n\nThe deployment tool wants its settings as JSON. Convert `app.env` into `config.json`.\n\nRules for reading `app.env`:\n\n- Ignore blank lines and lines whose first non-space character is `#`.\n- Every other line has the form `KEY=VALUE`, split at the first `=`. Remove spaces and tabs around the key and around the value.\n- If the value (after that) starts and ends with the same quote character, `\"` or `'`, remove that pair of quotes. Nothing else is unescaped.\n- If a key appears more than once, the last occurrence wins.\n\n`config.json` must contain a JSON object mapping each key to its value as a string. Formatting and key order are up to you.\n"
+    },
+    {
+      "id": "c61acaf40ef700539138b8d9f17029d6e5ada4d33e7a1a8d3ba316ddd6562bd0",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "bookings": {
+            "B-9001": {
+              "check_in": "2026-12-19",
+              "check_out": "2026-12-21",
+              "guest_name": "Paul Okoro",
+              "loyalty_number": null,
+              "room": "118",
+              "status": "confirmed"
+            },
+            "B-9002": {
+              "check_in": "2026-12-18",
+              "check_out": "2026-12-20",
+              "guest_name": "Elif Demir",
+              "loyalty_number": "LY-55821",
+              "room": "412",
+              "status": "confirmed"
+            }
+          },
+          "next_id": 9003,
+          "rooms": {
+            "118": {
+              "bed": "king",
+              "price_cents": 17500,
+              "smoking": false
+            },
+            "205": {
+              "bed": "queen",
+              "price_cents": 15000,
+              "smoking": false
+            },
+            "220": {
+              "bed": "king",
+              "price_cents": 15000,
+              "smoking": true
+            },
+            "305": {
+              "bed": "king",
+              "price_cents": 21000,
+              "smoking": false
+            },
+            "412": {
+              "bed": "king",
+              "price_cents": 18900,
+              "smoking": false
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "check_in": "2026-12-18",
+              "check_out": "2026-12-20"
+            },
+            "result": {
+              "ok": true,
+              "rooms": {
+                "205": {
+                  "bed": "queen",
+                  "price_cents": 15000,
+                  "smoking": false
+                },
+                "220": {
+                  "bed": "king",
+                  "price_cents": 15000,
+                  "smoking": true
+                },
+                "305": {
+                  "bed": "king",
+                  "price_cents": 21000,
+                  "smoking": false
+                },
+                "412": {
+                  "bed": "king",
+                  "price_cents": 18900,
+                  "smoking": false
+                }
+              }
+            },
+            "tool": "search_rooms"
+          },
+          {
+            "args": {
+              "check_in": "2026-12-18",
+              "check_out": "2026-12-20",
+              "guest_name": "Elif Demir",
+              "loyalty_number": "LY-55821",
+              "room": "412"
+            },
+            "result": {
+              "booking_id": "B-9002",
+              "ok": true
+            },
+            "tool": "create_booking"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n]\n"
+      },
+      "task_text": "# Book the cheapest matching room\n\nElif Demir wants a room from `2026-12-18` (check-in) to `2026-12-20` (check-out).\n\nBook the cheapest room that is available for those dates, is non-smoking, and has a king bed. Book it under the guest name `Elif Demir` and attach her loyalty number `LY-55821`. Make no other bookings or changes.\n\nTools (see `support/env.py`):\n\n- `search_rooms(check_in, check_out)`: rooms available for the whole stay, with bed type, smoking flag, and nightly price\n- `create_booking(room, guest_name, check_in, check_out, loyalty_number)`\n- `cancel_booking(booking_id)`\n"
+    }
+  ],
+  "prompt_version": "requirements/v1",
+  "purpose": "requirements",
+  "response_schema": {
+    "required": [
+      "requirements"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

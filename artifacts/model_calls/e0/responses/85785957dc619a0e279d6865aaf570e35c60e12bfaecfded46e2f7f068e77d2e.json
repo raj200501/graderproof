@@ -1,0 +1,202 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "85785957dc619a0e279d6865aaf570e35c60e12bfaecfded46e2f7f068e77d2e",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "055f4b5d87202dff228c7e13936300837aa2c4b828aa8332482510cb1ac698ff": {
+      "requirements": [
+        {"id": "R1", "text": "Write `usage.csv`.", "checks": [{"type": "file_exists", "path": "usage.csv"}]},
+        {"id": "R2", "text": "The first row of usage.csv is the header `meter,kwh`.", "checks": [{"type": "file_regex", "path": "usage.csv", "pattern": "\\Ameter,kwh\\r?\\n"}]},
+        {"id": "R3", "text": "One row per meter that appears in readings.csv (four meters) after the header.", "checks": [{"type": "file_lines", "path": "usage.csv", "count": 5}]},
+        {"id": "R4", "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118).", "checks": [{"type": "file_equals", "path": "usage.csv", "text": "meter,kwh\nMTR-01,395\nMTR-02,292\nMTR-03,775\nMTR-04,1118\n", "normalize": "strip"}]}
+      ]
+    },
+    "088161a1dd941e1a3e9e20d24b0a876f04b9c7204486b6183e7aeeaa21a01fb7": {
+      "requirements": [
+        {"id": "R1", "text": "Write a Python module `distance.py`.", "checks": [{"type": "file_exists", "path": "distance.py"}]},
+        {"id": "R2", "text": "levenshtein(a, b) returns the minimum number of single-character insertions, deletions and substitutions turning a into b (classic examples).", "checks": [
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["kitten", "sitting"], "kwargs": {}}, "equals": 3},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["flaw", "lawn"], "kwargs": {}}, "equals": 2},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["intention", "execution"], "kwargs": {}}, "equals": 5},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["abc", "abc"], "kwargs": {}}, "equals": 0},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["", ""], "kwargs": {}}, "equals": 0},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["abc", ""], "kwargs": {}}, "equals": 3},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["", "abcd"], "kwargs": {}}, "equals": 4},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["sunday", "saturday"], "kwargs": {}}, "equals": 3},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["Hotel Aurora", "Hotel Aurora Inn"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["gumbo", "gambol"], "kwargs": {}}, "matches_reference": true}
+        ]},
+        {"id": "R3", "text": "Characters are compared exactly (case-sensitive).", "checks": [
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["a", "A"], "kwargs": {}}, "equals": 1},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["Hilton", "hilton"], "kwargs": {}}, "equals": 1},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["HELLO", "hello"], "kwargs": {}}, "equals": 5}
+        ]},
+        {"id": "R4", "text": "Each Unicode code point counts as one character.", "checks": [
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["café", "cafe"], "kwargs": {}}, "equals": 1},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["日本語", "日本"], "kwargs": {}}, "equals": 1},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["😀a", "a"], "kwargs": {}}, "equals": 1},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["😀", "😁"], "kwargs": {}}, "equals": 1},
+          {"type": "call", "probe": {"function": "levenshtein", "args": ["naïve", "naive"], "kwargs": {}}, "matches_reference": true}
+        ]}
+      ]
+    },
+    "097f9b3f711d531dcc427a4db235a3664920533ef442bdfa67cb7cafa5ed6ce3": {
+      "requirements": [
+        {"id": "R1", "text": "Call `send_verification_code` for her account TK-9035.", "checks": [{"type": "trajectory_includes", "tool": "send_verification_code", "args": {"account_id": "TK-9035"}}]},
+        {"id": "R2", "text": "Call `confirm_verification` with the code she read back, `481516`, for account TK-9035.", "checks": [
+          {"type": "trajectory_includes", "tool": "confirm_verification", "args": {"account_id": "TK-9035", "code": "481516"}},
+          {"type": "state_equals", "pointer": "/verified", "equals": ["TK-9035"]}
+        ]},
+        {"id": "R3", "text": "Verification code is sent before it is confirmed.", "checks": [{"type": "trajectory_before", "first": {"tool": "send_verification_code", "args": {"account_id": "TK-9035"}}, "then": {"tool": "confirm_verification", "args": {"account_id": "TK-9035", "code": "481516"}}}]},
+        {"id": "R4", "text": "Transfer the ticket for seat A12 (TKT-3) to rafael.ortiz@example.com.", "checks": [
+          {"type": "trajectory_includes", "tool": "transfer_ticket", "args": {"ticket_id": "TKT-3", "recipient_email": "rafael.ortiz@example.com"}},
+          {"type": "state_equals", "pointer": "/tickets/TKT-3/owner", "equals": "rafael.ortiz@example.com"}
+        ]},
+        {"id": "R5", "text": "Transfer the ticket for seat A13 (TKT-4) to rafael.ortiz@example.com.", "checks": [
+          {"type": "trajectory_includes", "tool": "transfer_ticket", "args": {"ticket_id": "TKT-4", "recipient_email": "rafael.ortiz@example.com"}},
+          {"type": "state_equals", "pointer": "/tickets/TKT-4/owner", "equals": "rafael.ortiz@example.com"}
+        ]},
+        {"id": "R6", "text": "Transfer tickets only after the verification has succeeded.", "checks": [
+          {"type": "trajectory_before", "first": {"tool": "confirm_verification", "args": {"account_id": "TK-9035", "code": "481516"}}, "then": {"tool": "transfer_ticket", "args": {"ticket_id": "TKT-3"}}},
+          {"type": "trajectory_before", "first": {"tool": "confirm_verification", "args": {"account_id": "TK-9035", "code": "481516"}}, "then": {"tool": "transfer_ticket", "args": {"ticket_id": "TKT-4"}}}
+        ]},
+        {"id": "R7", "text": "Seats A10 and A11 (TKT-1, TKT-2) stay on her account.", "checks": [
+          {"type": "trajectory_excludes", "tool": "transfer_ticket", "args": {"ticket_id": "TKT-1"}},
+          {"type": "trajectory_excludes", "tool": "transfer_ticket", "args": {"ticket_id": "TKT-2"}},
+          {"type": "state_equals", "pointer": "/tickets/TKT-1/owner", "equals": "TK-9035"},
+          {"type": "state_equals", "pointer": "/tickets/TKT-2/owner", "equals": "TK-9035"}
+        ]},
+        {"id": "R8", "text": "No other ticket (such as TKT-5, owned by another account) is transferred.", "checks": [
+          {"type": "trajectory_excludes", "tool": "transfer_ticket", "args": {"ticket_id": "TKT-5"}},
+          {"type": "state_equals", "pointer": "/tickets/TKT-5/owner", "equals": "TK-1200"}
+        ]}
+      ]
+    },
+    "0ae99bdab228513992e2ee78fa4eb879217f94989a068174793ab30adf198004": {
+      "requirements": [
+        {"id": "R1", "text": "Write `report.json` containing a JSON object.", "checks": [{"type": "file_exists", "path": "report.json"}]},
+        {"id": "R2", "text": "`date`: the date from the file, as a string.", "checks": [{"type": "file_json", "path": "report.json", "pointer": "/date", "equals": "2026-11-03", "lenient": false}]},
+        {"id": "R3", "text": "`stores`: the number of data rows, as an integer.", "checks": [{"type": "file_json", "path": "report.json", "pointer": "/stores", "equals": 4, "lenient": false}]},
+        {"id": "R4", "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number.", "checks": [{"type": "file_json", "path": "report.json", "pointer": "/total", "equals": 3169.85, "lenient": false}]},
+        {"id": "R5", "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable).", "checks": [{"type": "file_regex", "path": "report.json", "pattern": "\"generated_at\"\\s*:\\s*\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\""}]}
+      ]
+    },
+    "0d6d764dbd18235eab3dc0e8540a0999dbb121ead9a38fb8f0c4545a260d922e": {
+      "requirements": [
+        {"id": "R1", "text": "Remove the mug (SKU MUG-02) from the cart of CU-310.", "checks": [
+          {"type": "trajectory_includes", "tool": "remove_item", "args": {"customer_id": "CU-310", "sku": "MUG-02"}},
+          {"type": "state_equals", "pointer": "/orders/0/items", "equals": [
+            {"name": "Sencha 100 g", "price_cents": 899, "qty": 2, "sku": "TEA-01"},
+            {"name": "Gooseneck kettle", "price_cents": 5900, "qty": 1, "sku": "KET-07"}
+          ]}
+        ]},
+        {"id": "R2", "text": "Apply the coupon WINTER10.", "checks": [
+          {"type": "trajectory_includes", "tool": "apply_coupon", "args": {"customer_id": "CU-310", "code": "WINTER10"}},
+          {"type": "state_equals", "pointer": "/orders/0/coupon", "equals": "WINTER10"}
+        ]},
+        {"id": "R3", "text": "Check out to the saved address labeled `office`.", "checks": [
+          {"type": "trajectory_includes", "tool": "checkout", "args": {"customer_id": "CU-310", "address_label": "office"}},
+          {"type": "state_equals", "pointer": "/orders/0/customer_id", "equals": "CU-310"},
+          {"type": "state_equals", "pointer": "/orders/0/ship_to", "equals": "Unit 4, 22 Wharf Road, Leeds LS1 4DT"}
+        ]},
+        {"id": "R4", "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout.", "checks": [
+          {"type": "trajectory_before", "first": {"tool": "remove_item", "args": {"customer_id": "CU-310", "sku": "MUG-02"}}, "then": {"tool": "checkout", "args": {"customer_id": "CU-310"}}},
+          {"type": "trajectory_before", "first": {"tool": "apply_coupon", "args": {"customer_id": "CU-310", "code": "WINTER10"}}, "then": {"tool": "checkout", "args": {"customer_id": "CU-310"}}}
+        ]},
+        {"id": "R5", "text": "Leave the other items and their quantities as they are (2 x TEA-01, 1 x KET-07).", "checks": [
+          {"type": "trajectory_excludes", "tool": "remove_item", "args": {"customer_id": "CU-310", "sku": "TEA-01"}},
+          {"type": "trajectory_excludes", "tool": "remove_item", "args": {"customer_id": "CU-310", "sku": "KET-07"}},
+          {"type": "state_equals", "pointer": "/orders/0/subtotal_cents", "equals": 7698}
+        ]},
+        {"id": "R6", "text": "Exactly one order is placed (the checkout results in order SO-7001).", "checks": [
+          {"type": "state_equals", "pointer": "/orders/0/order_id", "equals": "SO-7001"},
+          {"type": "state_equals", "pointer": "/orders/1", "equals": null}
+        ]}
+      ]
+    },
+    "1bd90568a653779e6faac98a7136d9d255b0d70038e8bcc63b4a2cb48b3fd41d": {
+      "requirements": [
+        {"id": "R1", "text": "Write a Python module `brackets.py`.", "checks": [{"type": "file_exists", "path": "brackets.py"}]},
+        {"id": "R2", "text": "The empty string is balanced.", "checks": [{"type": "call", "probe": {"function": "is_balanced", "args": [""], "kwargs": {}}, "equals": true}]},
+        {"id": "R3", "text": "Return True if the brackets (), [] and {} are balanced and properly nested.", "checks": [
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["()"], "kwargs": {}}, "equals": true},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["[]"], "kwargs": {}}, "equals": true},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["{}"], "kwargs": {}}, "equals": true},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["{[()]}"], "kwargs": {}}, "equals": true},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["()[]{}"], "kwargs": {}}, "equals": true},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["(([]){})"], "kwargs": {}}, "equals": true}
+        ]},
+        {"id": "R4", "text": "Return False otherwise: unclosed, unopened, mismatched or wrongly nested brackets.", "checks": [
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["("], "kwargs": {}}, "equals": false},
+          {"type": "call", "probe": {"function": "is_balanced", "args": [")"], "kwargs": {}}, "equals": false},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["(]"], "kwargs": {}}, "equals": false},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["([)]"], "kwargs": {}}, "equals": false},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["}{"], "kwargs": {}}, "equals": false},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["(()"], "kwargs": {}}, "equals": false},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["())"], "kwargs": {}}, "equals": false},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["{[}]"], "kwargs": {}}, "equals": false}
+        ]},
+        {"id": "R5", "text": "Every other character is ignored.", "checks": [
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["abc"], "kwargs": {}}, "equals": true},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["a(b)c"], "kwargs": {}}, "equals": true},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["Hello {{name}}, <b>[x]</b>"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["a(b]c"], "kwargs": {}}, "equals": false},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["<(>)"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "is_balanced", "args": ["if (x) { y[0] = 'z'; "], "kwargs": {}}, "equals": false}
+        ]}
+      ]
+    },
+    "1ea14d6ad427a8349b4a5d935ad3bf827deeb50315f1846cbdc054ff4ca24bca": {
+      "requirements": [
+        {"id": "R1", "text": "Write a Python module `ratings.py`.", "checks": [{"type": "file_exists", "path": "ratings.py"}]},
+        {"id": "R2", "text": "average_rating(ratings) returns the arithmetic mean of the ratings rounded to 2 decimal places, as a number; `[5, 4, 4]` gives `4.33`.", "checks": [
+          {"type": "call", "probe": {"function": "average_rating", "args": [[5, 4, 4]], "kwargs": {}}, "equals": 4.33},
+          {"type": "call", "probe": {"function": "average_rating", "args": [[5]], "kwargs": {}}, "equals": 5},
+          {"type": "call", "probe": {"function": "average_rating", "args": [[1, 2]], "kwargs": {}}, "equals": 1.5},
+          {"type": "call", "probe": {"function": "average_rating", "args": [[1, 1, 2]], "kwargs": {}}, "equals": 1.33},
+          {"type": "call", "probe": {"function": "average_rating", "args": [[1, 2, 2]], "kwargs": {}}, "equals": 1.67},
+          {"type": "call", "probe": {"function": "average_rating", "args": [[5, 5, 4, 4, 4]], "kwargs": {}}, "equals": 4.4},
+          {"type": "call", "probe": {"function": "average_rating", "args": [[3, 3, 3, 3]], "kwargs": {}}, "equals": 3},
+          {"type": "call", "probe": {"function": "average_rating", "args": [[1, 5, 5, 4, 3, 2, 5]], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "average_rating", "args": [[4, 4, 5, 5, 5, 5, 1, 1, 2]], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "average_rating", "args": [[1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2]], "kwargs": {}}, "matches_reference": true}
+        ]}
+      ]
+    },
+    "22bdbc86941e25ba2d1c946dab3de6c1a038c96d62176c612de1550f65df5284": {
+      "requirements": [
+        {"id": "R1", "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist).", "checks": [
+          {"type": "file_exists", "path": "photos/2026-07-12_14-30-05.jpg"},
+          {"type": "file_exists", "path": "photos/2026-07-12_14-35-22.jpg"},
+          {"type": "file_exists", "path": "photos/2026-08-01_09-00-00.jpg"},
+          {"type": "file_exists", "path": "photos/2026-10-31_23-59-59.jpg"}
+        ]},
+        {"id": "R2", "text": "The matching files are renamed, not copied: the old names no longer exist.", "checks": [
+          {"type": "file_absent", "path": "photos/IMG_20260712_143005.jpg"},
+          {"type": "file_absent", "path": "photos/IMG_20260712_143522.jpg"},
+          {"type": "file_absent", "path": "photos/IMG_20260801_090000.jpg"},
+          {"type": "file_absent", "path": "photos/IMG_20261031_235959.jpg"}
+        ]},
+        {"id": "R3", "text": "Do not change any file's contents: renamed files keep their original contents.", "checks": [
+          {"type": "file_equals", "path": "photos/2026-07-12_14-30-05.jpg", "text": "placeholder image data for IMG_20260712_143005\n", "normalize": "none"},
+          {"type": "file_equals", "path": "photos/2026-07-12_14-35-22.jpg", "text": "placeholder image data for IMG_20260712_143522\n", "normalize": "none"},
+          {"type": "file_equals", "path": "photos/2026-08-01_09-00-00.jpg", "text": "placeholder image data for IMG_20260801_090000\n", "normalize": "none"},
+          {"type": "file_equals", "path": "photos/2026-10-31_23-59-59.jpg", "text": "placeholder image data for IMG_20261031_235959\n", "normalize": "none"}
+        ]},
+        {"id": "R4", "text": "Leave every other file in photos/ exactly as it is (same name, same contents): the .jpeg file, the wrongly patterned IMG_2026_0901.jpg, the lowercase img_ file and notes.txt.", "checks": [
+          {"type": "file_equals", "path": "photos/IMG_20260712_143005.jpeg", "text": "placeholder image data for IMG_20260712_143005 edited\n", "normalize": "none"},
+          {"type": "file_equals", "path": "photos/IMG_2026_0901.jpg", "text": "placeholder image data for IMG_2026_0901\n", "normalize": "none"},
+          {"type": "file_equals", "path": "photos/img_20260901_101010.jpg", "text": "placeholder image data for img_20260901_101010\n", "normalize": "none"},
+          {"type": "file_equals", "path": "photos/notes.txt", "text": "Trip to the coast, July 2026.\n", "normalize": "none"}
+        ]},
+        {"id": "R5", "text": "Non-matching names are not renamed into the new format.", "checks": [
+          {"type": "file_absent", "path": "photos/2026-07-12_14-30-05.jpeg"},
+          {"type": "file_absent", "path": "photos/2026-09-01_10-10-10.jpg"},
+          {"type": "file_absent", "path": "photos/2026-09-01.jpg"}
+        ]}
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

@@ -1,0 +1,186 @@
+{
+  "created_utc": "2026-11-04T02:41:03Z",
+  "hash": "86d02587259f6012ab93e340b15f707fefefcdac6d4b01a91b38532269d117d7",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "d59141d2658d0fe50958352a5b940a45f17ffaf9b377da1f4e97b3beb1305d4c",
+      "reference_solution": {
+        "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module phones.py"
+        },
+        {
+          "id": "R2",
+          "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+        },
+        {
+          "id": "R3",
+          "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+        }
+      ],
+      "task_text": "# Normalize US phone numbers\n\nThe CRM stores phone numbers exactly as customers typed them. Write a Python module `phones.py` with a function `normalize_phone(raw)` that converts a US phone number to E.164 form.\n\n- Remove spaces, dots, dashes, and parentheses. After that, a single leading `+` is also removed.\n- What remains must consist of ASCII digits only and be either 10 digits, or 11 digits starting with `1` (the country code).\n- Return `\"+1\"` followed by the 10-digit national number. For example, `normalize_phone(\"(415) 555-0132\")` and `normalize_phone(\"+1 415.555.0132\")` both return `\"+14155550132\"`.\n- For any other input (wrong number of digits, letters, other symbols, an empty string), raise `ValueError`.\n"
+    },
+    {
+      "id": "d854c1d6dd1040c9c6e131a664c2b5ce49d3971799f2d05259b4e74c813754a6",
+      "reference_solution": {
+        "roman.py": "_VALUES = [\n    (1000, \"M\"), (900, \"CM\"), (500, \"D\"), (400, \"CD\"), (100, \"C\"), (90, \"XC\"),\n    (50, \"L\"), (40, \"XL\"), (10, \"X\"), (9, \"IX\"), (5, \"V\"), (4, \"IV\"), (1, \"I\"),\n]\n\n\ndef to_roman(n):\n    if not 1 <= n <= 3999:\n        raise ValueError(\"n must be between 1 and 3999\")\n    out = []\n    for value, letters in _VALUES:\n        count, n = divmod(n, value)\n        out.append(letters * count)\n    return \"\".join(out)\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module roman.py"
+        },
+        {
+          "id": "R2",
+          "text": "to_roman(n) returns the uppercase Roman numeral, e.g. to_roman(1994) returns MCMXCIV"
+        },
+        {
+          "id": "R3",
+          "text": "Standard subtractive notation (IV, IX, XL, XC, CD, CM)"
+        }
+      ],
+      "task_text": "# Roman numerals\n\nWrite a Python module `roman.py` with a function `to_roman(n)` that returns the Roman numeral for an integer `n` from 1 to 3999, using the standard subtractive notation (`IV`, `IX`, `XL`, `XC`, `CD`, `CM`) and uppercase letters. For example, `to_roman(1994)` returns `\"MCMXCIV\"`.\n\nIf `n` is outside 1 to 3999, raise `ValueError`.\n"
+    },
+    {
+      "id": "dc815a91feef86df1cd6f77ded47cf5831c6b2d551792f56f8e503eaa185fc3f",
+      "reference_solution": {
+        "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module wrap.py"
+        },
+        {
+          "id": "R2",
+          "text": "Fill lines greedily with single spaces, each line at most width characters"
+        },
+        {
+          "id": "R3",
+          "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+        },
+        {
+          "id": "R4",
+          "text": "A word longer than width is put on a line of its own, unbroken"
+        },
+        {
+          "id": "R5",
+          "text": "No line has leading or trailing spaces; return a list of lines"
+        },
+        {
+          "id": "R6",
+          "text": "If text contains no words, return []"
+        },
+        {
+          "id": "R7",
+          "text": "Boundary behaviour on further inputs agrees with the reference"
+        }
+      ],
+      "task_text": "# Word wrapping\n\nWrite a Python module `wrap.py` with a function `wrap(text, width)` that wraps text for a fixed-width terminal. `width` is a positive integer.\n\n- Words are the maximal runs of non-whitespace characters in `text`.\n- Fill lines greedily: put words on the current line, separated by single spaces, as long as the line stays at most `width` characters long; when the next word does not fit, start a new line with it.\n- A word longer than `width` is put on a line of its own, unbroken.\n- Return the list of lines. No line has leading or trailing spaces. If `text` contains no words, return `[]`.\n"
+    },
+    {
+      "id": "dd0615213b45a8ce3196f23e25493cd507ddf3fde1088f61744d32a50a7d7fe8",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Verify the account holder with verify_account (account AC-4410, ZIP 60614)"
+        },
+        {
+          "id": "R2",
+          "text": "Policy ordering: verify before scheduling any plan change"
+        },
+        {
+          "id": "R3",
+          "text": "Schedule the change to plan basic with effective period_end using schedule_plan_change"
+        },
+        {
+          "id": "R4",
+          "text": "Not immediately: the current plan stays pro and no plan change with effective now is made"
+        },
+        {
+          "id": "R5",
+          "text": "Add an account note about the downgrade to AC-4410 with add_note (text must contain the word downgrade, any capitalization)"
+        },
+        {
+          "id": "R6",
+          "text": "Do not change any other account"
+        }
+      ],
+      "task_text": "# Downgrade a subscription plan\n\nKofi Mensah wants to move account `AC-4410` from the Pro plan to the Basic plan at the end of the current billing period, not immediately.\n\n- Policy: before scheduling any plan change, verify the account holder with `verify_account`. He gave the ZIP code `60614`.\n- Schedule the change to plan `basic` with `effective` set to `period_end` using `schedule_plan_change`.\n- Add an account note about the downgrade with `add_note`; the note text must contain the word `downgrade` (any capitalization).\n\nDo not change any other account.\n\nTools (see `support/env.py`):\n\n- `verify_account(account_id, zip_code)`\n- `get_account(account_id)`\n- `schedule_plan_change(account_id, plan, effective)`, where `effective` is `now` or `period_end`\n- `add_note(account_id, text)`\n"
+    },
+    {
+      "id": "ded8ef98b259166383ec9a6e0e8713e66e29dd899b80b187823cabd86007585c",
+      "reference_solution": {
+        "pairs.py": "from collections import Counter\n\n\ndef count_pairs(nums, target):\n    seen = Counter()\n    count = 0\n    for value in nums:\n        count += seen[target - value]\n        seen[value] += 1\n    return count\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a Python module `pairs.py`."
+        },
+        {
+          "id": "R2",
+          "text": "`count_pairs(nums, target)` returns the number of index pairs (i, j), i < j, with nums[i] + nums[j] == target; example count_pairs([1, 5, 7, -1, 5], 6) returns 3."
+        },
+        {
+          "id": "R3",
+          "text": "Negative values and repeated values are handled (a value may pair with equal values at different indices, but an element does not pair with itself)."
+        },
+        {
+          "id": "R4",
+          "text": "An empty list or a list with one element gives 0."
+        },
+        {
+          "id": "R5",
+          "text": "Inputs of up to 5,000 integers are supported and give the correct count."
+        }
+      ],
+      "task_text": "# Count pairs with a given sum\n\nWrite a Python module `pairs.py` with a function `count_pairs(nums, target)` that returns the number of index pairs `(i, j)` with `i < j` and `nums[i] + nums[j] == target`.\n\n- `nums` is a list of at most 5,000 integers; values may be negative and may repeat. `target` is an integer.\n- Example: `count_pairs([1, 5, 7, -1, 5], 6)` returns `3` (1 + 5, 7 + (-1), and 1 + the second 5).\n- An empty list or a list with one element gives `0`.\n"
+    },
+    {
+      "id": "e03dd6153ff2f5f4b69b0cc733e0e0e7600c173ad692aca056e8e86bf07243a4",
+      "reference_solution": {
+        "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a Python module `rle.py`."
+        },
+        {
+          "id": "R2",
+          "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+        },
+        {
+          "id": "R3",
+          "text": "Spaces, newlines, and other characters are encoded like any other character."
+        },
+        {
+          "id": "R4",
+          "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\"."
+        },
+        {
+          "id": "R6",
+          "text": "decode inverts encode for strings without digits."
+        }
+      ],
+      "task_text": "# Run-length encoding\n\nWrite a Python module `rle.py` with two functions.\n\n- `encode(s)`: `s` is a string that contains no decimal digits. Replace each maximal run of one repeated character by the run length in decimal (no leading zeros) followed by that character. For example, `encode(\"aaab\")` returns `\"3a1b\"`, `encode(\"a\" * 12)` returns `\"12a\"`, and `encode(\"\")` returns `\"\"`. Spaces, newlines, and other characters are encoded like any other character.\n- `decode(code)`: the inverse. `code` is a sequence of pairs, each a positive decimal count without leading zeros followed by one character that is not a digit; the result repeats each character count times, so `decode(\"3a1b\")` returns `\"aaab\"` and `decode(\"\")` returns `\"\"`. Raise `ValueError` if `code` is not of this form (for example `\"a3\"`, `\"3\"`, `\"0a\"`, or `\"03a\"`).\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

@@ -1,0 +1,421 @@
+{
+  "created_utc": "2026-11-04T02:29:00Z",
+  "hash": "904bb8c713fdf95ed0f990dedfe8b53d17e7a257c6dad1f2d16e42ecb468348e",
+  "instructions": "You turn a task's text into atomic, machine-checkable requirements. For each item you\nget the task text, the task kind, the reference solution (it satisfies the task), the\ninitial workspace, and what the reference produced (files, stdout, exit status, tool\ncalls, final state). You are not shown how the task is graded and must not guess.\n\nWrite one requirement per distinct obligation in the task text (outputs, their\ncontent, required steps, ordering constraints, prohibited actions, policies). Each\nrequirement has an \"id\" (R1, R2, ...), \"text\" (the obligation in plain words, quoting\nthe task where possible), and \"checks\": a list of typed checks that pass on the\nreference outcome and fail when the obligation is broken. Allowed check types and\nfields: file_exists {path}; file_absent {path}; file_equals {path, text, normalize:\nnone|strip|trailing_ws}; file_contains {path, text}; file_regex {path, pattern};\nfile_json {path, pointer, equals, lenient}; file_lines {path, count};\nstdout_contains {text}; stdout_regex {pattern}; stdout_json {pointer, equals,\nlenient}; exit_code {code}; call {probe: {function, args, kwargs}, equals} or\n{probe, matches_reference: true}; same_as_reference {target: stdout|state|file:<path>,\nnormalize}; trajectory_includes {tool, args}; trajectory_excludes {tool, args};\ntrajectory_before {first: {tool, args}, then: {tool, args}}; state_equals {pointer,\nequals}.\n\nBe exactly as strict as the task text. If the text demands an exact format, check it\nexactly; if it only asks for content, check content (use \"normalize\" or \"lenient\" so\nthat harmless formatting does not fail the check). For function tasks, add call\nprobes on the examples in the text and on a few further valid inputs, using\nmatches_reference for inputs whose expected output the text does not state. Return\nfor each item: {\"requirements\": [ ... ]}.\n",
+  "items": [
+    {
+      "id": "9e5efee08af90eb9b89c3bcb282f1953b59d0a7068c373e286cc88156c6dfb44",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "holds": {
+            "Klara and the Sun": [
+              "M-1301"
+            ],
+            "Piranesi": [
+              "M-0877"
+            ]
+          },
+          "loans": {
+            "L-501": {
+              "due": "2026-11-20",
+              "member_id": "M-1209",
+              "renewals": 1,
+              "title": "The Overstory"
+            },
+            "L-502": {
+              "due": "2026-11-08",
+              "member_id": "M-1209",
+              "renewals": 0,
+              "title": "Piranesi"
+            },
+            "L-503": {
+              "due": "2026-11-24",
+              "member_id": "M-1209",
+              "renewals": 2,
+              "title": "Braiding Sweetgrass"
+            },
+            "L-504": {
+              "due": "2026-11-24",
+              "member_id": "M-1209",
+              "renewals": 0,
+              "title": "Klara and the Sun"
+            },
+            "L-611": {
+              "due": "2026-11-09",
+              "member_id": "M-0877",
+              "renewals": 0,
+              "title": "The Overstory"
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "member_id": "M-1209"
+            },
+            "result": {
+              "loans": {
+                "L-501": {
+                  "due": "2026-11-06",
+                  "holds_by_others": 0,
+                  "member_id": "M-1209",
+                  "renewals": 0,
+                  "title": "The Overstory"
+                },
+                "L-502": {
+                  "due": "2026-11-08",
+                  "holds_by_others": 1,
+                  "member_id": "M-1209",
+                  "renewals": 0,
+                  "title": "Piranesi"
+                },
+                "L-503": {
+                  "due": "2026-11-10",
+                  "holds_by_others": 0,
+                  "member_id": "M-1209",
+                  "renewals": 1,
+                  "title": "Braiding Sweetgrass"
+                },
+                "L-504": {
+                  "due": "2026-11-24",
+                  "holds_by_others": 1,
+                  "member_id": "M-1209",
+                  "renewals": 0,
+                  "title": "Klara and the Sun"
+                }
+              },
+              "ok": true
+            },
+            "tool": "list_loans"
+          },
+          {
+            "args": {
+              "loan_id": "L-501"
+            },
+            "result": {
+              "due": "2026-11-20",
+              "ok": true
+            },
+            "tool": "renew_loan"
+          },
+          {
+            "args": {
+              "loan_id": "L-503"
+            },
+            "result": {
+              "due": "2026-11-24",
+              "ok": true
+            },
+            "tool": "renew_loan"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n]\n"
+      },
+      "task_text": "# Renew library loans\n\nLibrary member `M-1209` asks to renew everything that is due on or before `2026-11-10`.\n\nRenew each of the member's loans due on or before `2026-11-10` exactly once with `renew_loan`, except loans whose title another member has placed a hold on (`list_loans` shows the holds). Do not renew any other loan.\n\nTools (see `support/env.py`):\n\n- `list_loans(member_id)`\n- `renew_loan(loan_id)`: extends the due date by 14 days\n"
+    },
+    {
+      "id": "a0fe68f7cf0abe5b40dcaac502bbdffdd038190336c3afe95a6d0637e056418a",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "next_id": 504,
+          "reservations": {
+            "R-501": {
+              "date": "2026-11-14",
+              "name": "Oliver Grant",
+              "notes": "",
+              "party_size": 4,
+              "phone": "+44 20 7946 0102",
+              "status": "booked",
+              "table": "T3",
+              "time": "19:30"
+            },
+            "R-502": {
+              "date": "2026-11-14",
+              "name": "Sofia Marin",
+              "notes": "anniversary",
+              "party_size": 2,
+              "phone": "+44 20 7946 0877",
+              "status": "booked",
+              "table": "T1",
+              "time": "20:00"
+            },
+            "R-503": {
+              "date": "2026-11-14",
+              "name": "Priya Raman",
+              "notes": "wheelchair access",
+              "party_size": 4,
+              "phone": "+44 20 7946 0321",
+              "status": "booked",
+              "table": "T4",
+              "time": "19:30"
+            }
+          },
+          "tables": {
+            "T1": 2,
+            "T2": 2,
+            "T3": 4,
+            "T4": 4,
+            "T5": 6
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "date": "2026-11-14",
+              "party_size": 4,
+              "time": "19:30"
+            },
+            "result": {
+              "available": true,
+              "ok": true
+            },
+            "tool": "check_availability"
+          },
+          {
+            "args": {
+              "date": "2026-11-14",
+              "name": "Priya Raman",
+              "notes": "wheelchair access",
+              "party_size": 4,
+              "phone": "+44 20 7946 0321",
+              "time": "19:30"
+            },
+            "result": {
+              "ok": true,
+              "reservation_id": "R-503",
+              "table": "T4"
+            },
+            "tool": "create_reservation"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n]\n"
+      },
+      "task_text": "# Restaurant reservation\n\nA caller asks for a dinner reservation. Use the reservation tools to book a table with these details:\n\n- name: `Priya Raman`\n- phone: `+44 20 7946 0321`\n- date: `2026-11-14`, time: `19:30`\n- party size: 4\n- notes: `wheelchair access`\n\nMake exactly one new reservation and leave all existing reservations as they are.\n\nTools (see `support/env.py`):\n\n- `check_availability(date, time, party_size)`\n- `create_reservation(name, phone, date, time, party_size, notes)`\n- `cancel_reservation(reservation_id)`\n- `list_reservations(date)`\n"
+    },
+    {
+      "id": "a181f23e6ce28a6235bbc8a64b26759e1338dc12d12ea8c7ac9e0248686bc490",
+      "initial_workspace": {},
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "schema.sql": "CREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+      },
+      "task_text": "# SQLite schema for the orders service\n\nWrite `schema.sql` in the working directory: a SQLite script that, run on an empty database, creates exactly the following.\n\n- Table `customers` with columns, in this order: `id INTEGER PRIMARY KEY`, `email TEXT NOT NULL UNIQUE`, `created_at TEXT NOT NULL`.\n- Table `orders` with columns, in this order: `id INTEGER PRIMARY KEY`, `customer_id INTEGER NOT NULL` with a foreign key referencing `customers(id)`, `total_cents INTEGER NOT NULL`, `status TEXT NOT NULL DEFAULT 'pending'`.\n- An index named `idx_orders_customer` on `orders(customer_id)`.\n\nThe script must run without errors and must not create any other table, view, index, or trigger (the automatic index SQLite creates for a `UNIQUE` column does not count).\n"
+    },
+    {
+      "id": "a1c9fb2c9022ec31a1f2d1570274e815831cbfe546e1d22da1a4a72eb5d0be9a",
+      "initial_workspace": {
+        "nginx.conf": "user www-data;\nworker_processes auto;\npid /run/nginx.pid;\n\nevents {\n    worker_connections 1024;\n    multi_accept on;\n}\n\nhttp {\n    sendfile on;\n    tcp_nopush on;\n    keepalive_timeout 65;\n    types_hash_max_size 2048;\n\n    include /etc/nginx/mime.types;\n    default_type application/octet-stream;\n\n    # Logging\n    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n\n    gzip on;\n\n    include /etc/nginx/conf.d/*.conf;\n}\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "nginx.conf": "user www-data;\nworker_processes auto;\npid /run/nginx.pid;\n\nevents {\n    worker_connections 4096;\n    multi_accept on;\n}\n\nhttp {\n    sendfile on;\n    tcp_nopush on;\n    keepalive_timeout 30;\n    types_hash_max_size 2048;\n\n    include /etc/nginx/mime.types;\n    default_type application/octet-stream;\n\n    # Logging\n    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n\n    gzip on;\n\n    include /etc/nginx/conf.d/*.conf;\n}\n",
+          "nginx.conf.orig": "user www-data;\nworker_processes auto;\npid /run/nginx.pid;\n\nevents {\n    worker_connections 1024;\n    multi_accept on;\n}\n\nhttp {\n    sendfile on;\n    tcp_nopush on;\n    keepalive_timeout 65;\n    types_hash_max_size 2048;\n\n    include /etc/nginx/mime.types;\n    default_type application/octet-stream;\n\n    # Logging\n    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n\n    gzip on;\n\n    include /etc/nginx/conf.d/*.conf;\n}\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n"
+      },
+      "task_text": "# Tune the web server configuration\n\nThe web server in front of the booking site needs more concurrent connections and shorter idle keep-alives. The configuration file is `nginx.conf` in the working directory.\n\n1. Before editing anything, save an exact copy of the original file as `nginx.conf.orig` in the same directory.\n2. In `nginx.conf`, change `worker_connections 1024;` to `worker_connections 4096;`.\n3. In `nginx.conf`, change `keepalive_timeout 65;` to `keepalive_timeout 30;`.\n\nLeave everything else in `nginx.conf` byte-for-byte unchanged, including indentation, comments, and blank lines.\n"
+    },
+    {
+      "id": "a749069371764e852585b3334d2639404996882f6269f0bf582d324f423227f6",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "events": [
+            {
+              "kind": "refill",
+              "rx_id": "RX-1001",
+              "seq": 1
+            },
+            {
+              "kind": "notify",
+              "patient_id": "P-5512",
+              "seq": 2
+            }
+          ],
+          "notifications": [
+            {
+              "message": "Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.",
+              "patient_id": "P-5512"
+            }
+          ],
+          "pharmacies": {
+            "PH-ELM": "Elm Street Pharmacy",
+            "PH-HBR": "Harbour Road Pharmacy"
+          },
+          "prescriptions": {
+            "RX-1001": {
+              "drug": "atorvastatin 20 mg",
+              "patient_id": "P-5512",
+              "refills_left": 1
+            },
+            "RX-1002": {
+              "drug": "amoxicillin 500 mg",
+              "patient_id": "P-5512",
+              "refills_left": 0
+            },
+            "RX-1107": {
+              "drug": "atorvastatin 40 mg",
+              "patient_id": "P-6020",
+              "refills_left": 5
+            }
+          },
+          "refills": [
+            {
+              "pharmacy_id": "PH-ELM",
+              "rx_id": "RX-1001"
+            }
+          ]
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "patient_id": "P-5512"
+            },
+            "result": {
+              "ok": true,
+              "prescriptions": {
+                "RX-1001": {
+                  "drug": "atorvastatin 20 mg",
+                  "patient_id": "P-5512",
+                  "refills_left": 2
+                },
+                "RX-1002": {
+                  "drug": "amoxicillin 500 mg",
+                  "patient_id": "P-5512",
+                  "refills_left": 0
+                }
+              }
+            },
+            "tool": "list_prescriptions"
+          },
+          {
+            "args": {
+              "pharmacy_id": "PH-ELM",
+              "rx_id": "RX-1001"
+            },
+            "result": {
+              "ok": true,
+              "ready": "tomorrow after 14:00"
+            },
+            "tool": "request_refill"
+          },
+          {
+            "args": {
+              "message": "Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.",
+              "patient_id": "P-5512"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "notify_patient"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+      },
+      "task_text": "# Refill a prescription\n\nPatient `P-5512` asks to refill her atorvastatin prescription for pickup at the Elm Street pharmacy.\n\n1. Request a refill of prescription `RX-1001` at pharmacy `PH-ELM` with `request_refill`.\n2. Then notify the patient with `notify_patient`. The message must include the pharmacy name `Elm Street` and the prescription number `RX-1001`.\n\nDo not request refills of any other prescription.\n\nTools (see `support/env.py`):\n\n- `list_prescriptions(patient_id)`\n- `list_pharmacies()`\n- `request_refill(rx_id, pharmacy_id)`\n- `notify_patient(patient_id, message)`\n"
+    },
+    {
+      "id": "a8739f693f08108b084de7eaae06e5be158c001280f2a6650feb7a370f60a29a",
+      "initial_workspace": {
+        "hosts": "127.0.0.1   localhost\n::1         localhost ip6-localhost ip6-loopback\n10.20.0.4   git.internal\n10.20.0.9   ci.internal\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "hosts": "127.0.0.1   localhost\n::1         localhost ip6-localhost ip6-loopback\n10.20.0.4   git.internal\n10.20.0.9   ci.internal\n10.20.0.15  build-cache.internal\n",
+          "hosts.bak": "127.0.0.1   localhost\n::1         localhost ip6-localhost ip6-loopback\n10.20.0.4   git.internal\n10.20.0.9   ci.internal\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts\n"
+      },
+      "task_text": "# Add a hosts entry\n\nThe build machines need to resolve the new cache server. The file `hosts` in the working directory is the machine's hosts file.\n\n1. First make a backup: copy `hosts` to `hosts.bak` unchanged. The backup must be completely written before `hosts` is modified in any way, so that a crash during the edit never leaves the machine without a good copy.\n2. Then append the line `10.20.0.15  build-cache.internal` (two spaces between the address and the name) to the end of `hosts`, keeping all existing lines unchanged. The file must end with a newline.\n"
+    },
+    {
+      "id": "a9a7c1d97fd3c78dd18688155a10c3c6b3bc718265de4ed5d482d86605022219",
+      "initial_workspace": {},
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "bin/wordcount": "#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+      },
+      "task_text": "# Word-count helper script\n\nThe editors want a small command to count words in their drafts.\n\nCreate an executable bash script at `bin/wordcount` (create the `bin/` directory). When run as `bin/wordcount FILE`, it must print the number of words in FILE as a plain decimal integer on a single line, and exit with status 0. A word is a maximal run of non-whitespace characters, which is what `wc -w` counts; an empty file has 0 words.\n\nThe script must start with `#!/usr/bin/env bash` or `#!/bin/bash` and may use only bash and coreutils.\n"
+    },
+    {
+      "id": "b20808fda577e1dc8435672390b70a83bc57e00f138a807b0d6b7ab68512d19b",
+      "initial_workspace": {
+        "speech.txt": "We came here to build a library, and the library we build must serve the town.\nThe town asked for a place to read, a place to meet, and a place to learn.\nSo we will build it, and we will keep it open: open doors, open shelves, open hours.\nThat is the promise we make to the town -- and to every reader in it.\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "speech.txt": "We came here to build a library, and the library we build must serve the town.\nThe town asked for a place to read, a place to meet, and a place to learn.\nSo we will build it, and we will keep it open: open doors, open shelves, open hours.\nThat is the promise we make to the town -- and to every reader in it.\n"
+        },
+        "state": null,
+        "stdout": "to 6\nthe 5\nwe 5\na 4\nand 4\n",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n"
+      },
+      "task_text": "# Most frequent words\n\nPrint the five most frequent words in `speech.txt`.\n\n- A word is a maximal run of ASCII letters (`A` to `Z`, `a` to `z`); every other character separates words. Words are compared case-insensitively.\n- Print one line per word, most frequent first, in the form `<word> <count>`: the word in lowercase, a single space, and its number of occurrences. Break ties in count by alphabetical order of the word.\n- Print exactly these five lines and nothing else.\n"
+    }
+  ],
+  "prompt_version": "requirements/v1",
+  "purpose": "requirements",
+  "response_schema": {
+    "required": [
+      "requirements"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

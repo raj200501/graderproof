@@ -1,0 +1,174 @@
+{
+  "created_utc": "2026-11-04T02:41:03Z",
+  "hash": "47a22fbfae2e79629b10a60f61c1e061f2a61df967bde900503a5fa322798d4e",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "f2e62da0c11056a1848b2a8b53303e2a076c804e55bf1688c24c81883a3dcade",
+      "reference_solution": {
+        "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a Python module `finance.py`."
+        },
+        {
+          "id": "R2",
+          "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+        },
+        {
+          "id": "R3",
+          "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+        },
+        {
+          "id": "R4",
+          "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+        }
+      ],
+      "task_text": "# Compound interest calculator\n\nWrite a Python module `finance.py` with a function `future_value(principal, annual_rate, years, periods_per_year)` for the savings calculator on the bank's website.\n\n- `principal` is the amount deposited (a number of dollars), `annual_rate` is the nominal yearly interest rate in percent (so `4.5` means 4.5%), `years` is a whole number of years, and `periods_per_year` is how many times per year interest is compounded (for example 12 for monthly).\n- The result is `principal * (1 + r / n) ** (n * years)`, where `r = annual_rate / 100` and `n = periods_per_year`.\n- Return the result as a float rounded to the nearest cent (2 decimal places).\n"
+    },
+    {
+      "id": "f43369ded8de97783e74e6bc0b816b0e8901e2682e860ef79ff69f3ee4636eaa",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Look up booking X7K2QD (with get_booking) before applying the policy."
+        },
+        {
+          "id": "R2",
+          "text": "Cancel the booking with `cancel_booking`."
+        },
+        {
+          "id": "R3",
+          "text": "Non-refundable fare: issue a travel credit equal to the fare minus a 7500-cent change fee (41200 - 7500 = 33700) with `issue_travel_credit`."
+        },
+        {
+          "id": "R4",
+          "text": "Non-refundable fare: do not refund anything."
+        },
+        {
+          "id": "R5",
+          "text": "Do not change any other booking."
+        }
+      ],
+      "task_text": "# Cancel a flight booking\n\nNoah Fischer asks to cancel his booking `X7K2QD`. Look it up and apply the cancellation policy:\n\n- Cancel the booking with `cancel_booking`.\n- Refundable fare: refund the full fare to the original payment method with `issue_refund`.\n- Non-refundable fare: do not refund anything; instead issue a travel credit equal to the fare minus a 7500-cent change fee with `issue_travel_credit`.\n\nDo not change any other booking.\n\nTools (see `support/env.py`):\n\n- `get_booking(pnr)`\n- `cancel_booking(pnr)`\n- `issue_refund(pnr, amount_cents)`\n- `issue_travel_credit(pnr, amount_cents)`\n"
+    },
+    {
+      "id": "f43bcd0a37478eca94b67a201cacb4f97e4cbcd9d674bf63f04ff007459d63ae",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Mark return RMA-7712 as received with `mark_received`, condition `good`."
+        },
+        {
+          "id": "R2",
+          "text": "Refund RMA-7712 to the original payment method with `refund_rma`."
+        },
+        {
+          "id": "R3",
+          "text": "Ordering: mark the return received first (step 1), then refund (step 2); refund is only possible after receipt in good condition."
+        },
+        {
+          "id": "R4",
+          "text": "The refund must actually be issued: final state shows RMA-7712 refunded and a refund record of its amount."
+        },
+        {
+          "id": "R5",
+          "text": "Do not change any other return."
+        }
+      ],
+      "task_text": "# Refund a returned item\n\nThe warehouse confirms that the parcel for return `RMA-7712` (trail running shoes from order `ORD-61200`) arrived and the shoes are in good condition.\n\n1. Mark the return as received with `mark_received`, condition `good`.\n2. Refund it to the original payment method with `refund_rma`. The refund must actually be issued.\n\nDo not change any other return.\n\nTools (see `support/env.py`):\n\n- `get_rma(rma_id)`\n- `mark_received(rma_id, condition)`, where `condition` is `good` or `damaged`\n- `refund_rma(rma_id)`: only possible for a return received in good condition\n"
+    },
+    {
+      "id": "fa327cd3920a36512aeeb27274c767aac9ac9d9a067d580d3e50a1b995a72483",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Look up the permit by plate KX-482-LM with `lookup_permit`."
+        },
+        {
+          "id": "R2",
+          "text": "Renew PRM-7730 for 12 months with `renew_permit`, extending the expiry by 12 months."
+        },
+        {
+          "id": "R3",
+          "text": "Charge Dana Kowalski's card on file (customer CU-5521) 9600 cents with `charge_card`, using the description `permit renewal PRM-7730`."
+        },
+        {
+          "id": "R4",
+          "text": "Do not make any other charge."
+        },
+        {
+          "id": "R5",
+          "text": "Do not change any other permit."
+        }
+      ],
+      "task_text": "# Renew a residential parking permit\n\nDana Kowalski (customer `CU-5521`) wants to renew the residential parking permit for her car, plate `KX-482-LM`.\n\n1. Look up the permit by plate with `lookup_permit`. Her permit is `PRM-7730`.\n2. Renew it for 12 months with `renew_permit`, which extends the expiry date by the given number of months.\n3. Charge her card on file 9600 cents (12 months at $8.00) with `charge_card`, using the description `permit renewal PRM-7730`.\n\nDo not change any other permit and do not make any other charge.\n\nTools (see `support/env.py`):\n\n- `lookup_permit(plate)`\n- `renew_permit(permit_id, months)`\n- `charge_card(customer_id, amount_cents, description)`\n"
+    },
+    {
+      "id": "fe001ded2cc1b8172e8687f61d78e73db3259843e7a9f72d8d9f6e046726d1d3",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Enroll student S-4471 in exactly one section of CS201."
+        },
+        {
+          "id": "R2",
+          "text": "The chosen section must have a free seat (CS201-C has none) and its meetings must not overlap any section the student is already enrolled in (CS201-A overlaps HIST210-A on Mon/Wed and CS201-B overlaps MATH220-B on Tue/Thu)."
+        },
+        {
+          "id": "R3",
+          "text": "Keep the student's existing enrollments (do not drop anything)."
+        }
+      ],
+      "task_text": "# Enroll a student in a course section\n\nStudent `S-4471` needs to take CS201 this term. Enroll the student in exactly one section of `CS201` that has a free seat and whose meeting times do not overlap any section the student is already enrolled in. Keep the student's existing enrollments.\n\nTwo meetings overlap when they are on the same day and their time ranges intersect.\n\nTools (see `support/env.py`):\n\n- `get_student(student_id)`: current enrollments\n- `list_sections(course)`: sections with meeting times and free seats\n- `enroll(student_id, section_id)`\n- `drop(student_id, section_id)`\n"
+    },
+    {
+      "id": "fe684a0d29c4a010334da69cc00a441f07a14a29d3795d2aceac331b32b6b186",
+      "reference_solution": {
+        "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "The script runs successfully."
+        },
+        {
+          "id": "R2",
+          "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+        },
+        {
+          "id": "R3",
+          "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+        },
+        {
+          "id": "R4",
+          "text": "Print nothing else to standard output."
+        }
+      ],
+      "task_text": "# Invoice total\n\n`invoice.csv` lists the line items of an invoice, with columns `item,quantity,unit_price`. Compute the amount due:\n\n- subtotal = the sum of quantity \u00d7 unit_price over all rows;\n- tax = 8.25% of the subtotal, rounded to the nearest cent (exact halves round up);\n- total = subtotal + tax.\n\nPrint exactly one line to standard output, in the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, and the total with a comma as the thousands separator and exactly two decimal places. Print nothing else.\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

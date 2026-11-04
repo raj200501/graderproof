@@ -1,0 +1,162 @@
+{
+  "created_utc": "2026-11-04T02:41:03Z",
+  "hash": "87d4060889ff6411c5a3f08bb36c210f4b9b737737a4abdd86de122cc358c03e",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "1ea14d6ad427a8349b4a5d935ad3bf827deeb50315f1846cbdc054ff4ca24bca",
+      "reference_solution": {
+        "ratings.py": "def average_rating(ratings):\n    return round(sum(ratings) / len(ratings), 2)\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module `ratings.py`."
+        },
+        {
+          "id": "R2",
+          "text": "average_rating(ratings) returns the arithmetic mean of the ratings rounded to 2 decimal places, as a number; `[5, 4, 4]` gives `4.33`."
+        }
+      ],
+      "task_text": "# Average product rating\n\nProduct pages show the average star rating. Write a Python module `ratings.py` with a function `average_rating(ratings)`.\n\n- `ratings` is a non-empty list of integers from 1 to 5.\n- Return the arithmetic mean of the ratings rounded to 2 decimal places, as a number. For example, `[5, 4, 4]` gives `4.33`.\n"
+    },
+    {
+      "id": "22bdbc86941e25ba2d1c946dab3de6c1a038c96d62176c612de1550f65df5284",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist)."
+        },
+        {
+          "id": "R2",
+          "text": "The matching files are renamed, not copied: the old names no longer exist."
+        },
+        {
+          "id": "R3",
+          "text": "Do not change any file's contents: renamed files keep their original contents."
+        },
+        {
+          "id": "R4",
+          "text": "Leave every other file in photos/ exactly as it is (same name, same contents): the .jpeg file, the wrongly patterned IMG_2026_0901.jpg, the lowercase img_ file and notes.txt."
+        },
+        {
+          "id": "R5",
+          "text": "Non-matching names are not renamed into the new format."
+        }
+      ],
+      "task_text": "# Rename camera photos\n\nThe camera names photos `IMG_YYYYMMDD_HHMMSS.jpg`. Rename every file in `photos/` whose name matches that pattern exactly (uppercase `IMG_`, eight digits, `_`, six digits, `.jpg`) to `YYYY-MM-DD_HH-MM-SS.jpg`. For example, `IMG_20260712_143005.jpg` becomes `2026-07-12_14-30-05.jpg`.\n\nDo not change any file's contents. Leave every other file in `photos/` exactly as it is.\n"
+    },
+    {
+      "id": "243fa62ac001404072e80a8e986f7087ae71772f4cc22cb79eeca87958a3490a",
+      "reference_solution": {
+        "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n    return sorted(groups)\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module dupes.py providing duplicate_groups(files)."
+        },
+        {
+          "id": "R2",
+          "text": "Files with exactly equal contents are duplicates; return one group (sorted list of all paths) per content shared by two or more paths."
+        },
+        {
+          "id": "R3",
+          "text": "Contents that belong to only one path produce no group; if there are no duplicates return []."
+        },
+        {
+          "id": "R4",
+          "text": "Order the groups by their first path (each group is the sorted list of its paths)."
+        }
+      ],
+      "task_text": "# Find duplicate files\n\nA cleanup tool needs to report files with identical contents. Write a Python module `dupes.py` with a function `duplicate_groups(files)`.\n\n- `files` is a dict mapping a file path (a string) to that file's contents (a string).\n- Two files are duplicates when their contents are exactly equal.\n- Return a list of groups, one group for each content that is shared by two or more paths. A group is the sorted list of all paths with that content. Contents that belong to only one path produce no group.\n- Order the groups by their first path. If there are no duplicates, return `[]`.\n"
+    },
+    {
+      "id": "29312a402338b433d7e61a9c3b2759341ae2a3ae69d83514cc6c6eee5b1679a7",
+      "reference_solution": {
+        "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write totals.csv in the working directory."
+        },
+        {
+          "id": "R2",
+          "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+        },
+        {
+          "id": "R3",
+          "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+        },
+        {
+          "id": "R4",
+          "text": "Totals are written with exactly two decimal places (for example 600.00)."
+        }
+      ],
+      "task_text": "# Payments per customer\n\n`payments.csv` lists October payments with the columns `date,customer,amount`.\n\nWrite `totals.csv`: a CSV file with the header row `customer,total` followed by one row per customer, giving the sum of that customer's payments. Sort the rows by customer name (plain string comparison) and write each total with exactly two decimal places (for example `600.00`). Customer names are CSV values and must be quoted where the CSV format requires it.\n"
+    },
+    {
+      "id": "318057baa0253123b08fd8ba3bdf4ef271bcc79e014610bc7cff0ff7ecdf51f1",
+      "reference_solution": {
+        "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+        },
+        {
+          "id": "R2",
+          "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+        },
+        {
+          "id": "R3",
+          "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+        },
+        {
+          "id": "R4",
+          "text": "If end is not after start, return 0."
+        },
+        {
+          "id": "R5",
+          "text": "Return the count as an integer."
+        }
+      ],
+      "task_text": "# Count business days\n\nWrite a Python module `workdays.py` with a function `business_days(start, end, holidays=())` used to estimate delivery times.\n\n- `start` and `end` are dates given as ISO strings (`YYYY-MM-DD`); `holidays` is an iterable of ISO date strings.\n- Count the dates `d` with `start <= d < end` (the start date is included, the end date is not) that fall on Monday to Friday and are not in `holidays`.\n- If `end` is not after `start`, return `0`.\n- Return the count as an integer.\n"
+    },
+    {
+      "id": "35ed2bbe4e5878261147ebf1e505dc70302f10aea7744fdadf14dfdfc69f8888",
+      "reference_solution": {
+        "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Produce by_category.csv and summary.json."
+        },
+        {
+          "id": "R2",
+          "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+        },
+        {
+          "id": "R3",
+          "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+        }
+      ],
+      "task_text": "# Expense report by category\n\n`expenses.csv` lists the team's October expenses with the columns `date,category,amount`. Produce two files:\n\n- `by_category.csv`: the header row `category,total`, then one row per category that occurs in `expenses.csv`, sorted by category name, where `total` is the sum of that category's amounts written with exactly two decimal places.\n- `summary.json`: a JSON object with exactly two keys, `categories` (the number of categories, an integer) and `grand_total` (the sum of all amounts, rounded to 2 decimal places, as a number).\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

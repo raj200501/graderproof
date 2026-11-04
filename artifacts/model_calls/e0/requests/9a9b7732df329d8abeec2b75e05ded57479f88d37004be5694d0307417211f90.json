@@ -1,0 +1,146 @@
+{
+  "created_utc": "2026-11-04T02:41:03Z",
+  "hash": "9a9b7732df329d8abeec2b75e05ded57479f88d37004be5694d0307417211f90",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "59b064eebb4490fcc2d0857ec54a3ef2e22fa29decad603c6cbbf8b564cb3962",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Apply the label invoices to every message whose sender is exactly billing@northwind.example (M-02, M-04, M-07)."
+        },
+        {
+          "id": "R2",
+          "text": "Archive each of those messages."
+        },
+        {
+          "id": "R3",
+          "text": "Do not label, archive, or otherwise change any other message, including the look-alike sender billing@northwind-example.com and accounts@northwind.example."
+        },
+        {
+          "id": "R4",
+          "text": "Do not remove existing labels (M-04 keeps vendors, M-03 keeps budget)."
+        },
+        {
+          "id": "R5",
+          "text": "The agent actually uses the tools to label and archive the target messages."
+        }
+      ],
+      "task_text": "# Triage the shared inbox\n\nIn the finance team's shared inbox, apply the label `invoices` to every message whose sender is exactly `billing@northwind.example`, and archive each of those messages.\n\nDo not label, archive, or otherwise change any other message, and do not remove existing labels.\n\nTools (see `support/env.py`):\n\n- `list_messages()`\n- `add_label(message_id, label)`\n- `remove_label(message_id, label)`\n- `archive(message_id)`\n"
+    },
+    {
+      "id": "5ef4358f009839c1d392a236272c458c465faf5e9709f1482f68a80145cf87bf",
+      "reference_solution": {
+        "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write products.json in the working directory."
+        },
+        {
+          "id": "R2",
+          "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+        },
+        {
+          "id": "R3",
+          "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+        },
+        {
+          "id": "R4",
+          "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+        },
+        {
+          "id": "R5",
+          "text": "in_stock is JSON true for yes and false for no."
+        }
+      ],
+      "task_text": "# Product catalog to JSON\n\nThe online shop exports its catalog as `products.csv` in the working directory. The new storefront needs the same data as JSON.\n\nWrite `products.json` in the working directory. It must contain a JSON array with one object per data row of `products.csv`, in the same order as the rows. Each object has exactly these four keys:\n\n- `sku`: the SKU, as a string, unchanged.\n- `name`: the product name, as a string, unchanged. The CSV uses standard quoting, so a quoted value such as `\"Braided Cable, 2 m\"` is a single field.\n- `price`: the price as a JSON number (for example `39.5` for `39.50`).\n- `in_stock`: `true` if the `in_stock` column is `yes`, `false` if it is `no`.\n\nIndentation, spacing, and the order of keys inside each object are up to you.\n"
+    },
+    {
+      "id": "603b70601045f508922412a469a233a11947cb6f35b334098ef30454b5226189",
+      "reference_solution": {
+        "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module sizes.py defining format_size(n)."
+        }
+      ],
+      "task_text": "# Human-readable file sizes\n\nWrite a Python module `sizes.py` with a function `format_size(n)` for the file browser, where `n` is a non-negative integer number of bytes.\n\n- If `n` is less than 1024, return the number followed by ` B`, for example `\"0 B\"` or `\"1023 B\"`.\n- Otherwise choose the largest unit among `KiB` (1024 bytes), `MiB` (1024\u00b2 bytes), `GiB` (1024\u00b3 bytes), and `TiB` (1024\u2074 bytes) that is not larger than `n`, divide `n` by it, and write the result with exactly one decimal place, a space, and the unit, for example `format_size(1536)` returns `\"1.5 KiB\"`. Sizes of 1024 TiB or more are still written in TiB.\n- Round to one decimal place with halves rounded up (1280 bytes is `\"1.3 KiB\"`). The unit is chosen before rounding, so 1048575 bytes is `\"1024.0 KiB\"`.\n"
+    },
+    {
+      "id": "659c9cc9425f157a5355d9525048c047193f6d27cc3ac5015fbc953c2a6648a7",
+      "reference_solution": {
+        "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write CHANGELOG.md."
+        },
+        {
+          "id": "R2",
+          "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+        },
+        {
+          "id": "R3",
+          "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+        }
+      ],
+      "task_text": "# Build a changelog from commit subjects\n\n`commits.txt` lists the subjects of the commits in the next release, one per line, in the form `type(scope): description` or `type: description` (an optional `!` may follow the type or scope, as in `feat!:`).\n\nWrite `CHANGELOG.md`:\n\n- A commit's type is the text before the first `:`, without any `(scope)` part and without a trailing `!`. Its description is the text after the first `: `.\n- Write a line `## Features` followed by one line `- <description>` for every `feat` commit, then a line `## Fixes` followed by one line `- <description>` for every `fix` commit. Keep the order in which the commits appear in `commits.txt`.\n- Ignore commits of any other type. Leave out a section heading if the section would be empty.\n- Blank lines between or around these lines are optional; the file must contain no other text.\n"
+    },
+    {
+      "id": "665e7a352c7e64732dbf3c55aff71f9bb6a6269b62a4cd1be13866b8e89cfc0b",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Set the display_name of user U-7781 to exactly 'Maya R. Okafor'."
+        },
+        {
+          "id": "R2",
+          "text": "Set the pronouns of user U-7781 to exactly 'she/her'."
+        },
+        {
+          "id": "R3",
+          "text": "Do not change any other field of U-7781 (department Analytics, title Data Analyst, phone +1 312 555 0148)."
+        },
+        {
+          "id": "R4",
+          "text": "Do not change any other user (U-7790 is left as it is)."
+        }
+      ],
+      "task_text": "# Correct a staff directory profile\n\nHR forwarded a request from user `U-7781`: their name was entered in capitals and without their middle initial, and their pronouns are missing.\n\nUsing the directory tools, set the `display_name` of user `U-7781` to exactly `Maya R. Okafor` (with this capitalization, spacing, and punctuation) and set their `pronouns` to exactly `she/her`. Do not change any other field or any other user.\n\nTools (see `support/env.py`):\n\n- `get_profile(user_id)`\n- `update_profile(user_id, field, value)`, where `field` is one of `display_name`, `pronouns`, `title`, `phone`\n"
+    },
+    {
+      "id": "686a601b7d247fa7edce7b8afada3993b5588e4f5e9fca55b9efdb7054e62399",
+      "reference_solution": {
+        "naming.py": "def _upper(ch):\n    return \"A\" <= ch <= \"Z\"\n\n\ndef _lower_or_digit(ch):\n    return \"a\" <= ch <= \"z\" or \"0\" <= ch <= \"9\"\n\n\ndef to_snake(name):\n    out = []\n    for i, ch in enumerate(name):\n        if i > 0 and _upper(ch):\n            prev = name[i - 1]\n            nxt = name[i + 1] if i + 1 < len(name) else \"\"\n            if _lower_or_digit(prev) or (_upper(prev) and \"a\" <= nxt <= \"z\" and nxt != \"\"):\n                out.append(\"_\")\n        out.append(ch.lower())\n    return \"\".join(out)\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module naming.py with a function to_snake(name)."
+        }
+      ],
+      "task_text": "# camelCase to snake_case\n\nWrite a Python module `naming.py` with a function `to_snake(name)` used when generating database column names. `name` is a non-empty identifier made of ASCII letters and digits, in camelCase or PascalCase, possibly containing acronyms.\n\n- Insert `_` before an uppercase letter whose previous character is a lowercase letter or a digit.\n- Also insert `_` before an uppercase letter that is preceded by an uppercase letter and followed by a lowercase letter (this separates an acronym from the next word).\n- Then convert the whole result to lowercase.\n\nExamples: `\"userId\"` gives `\"user_id\"`, `\"HTTPServer\"` gives `\"http_server\"`, and `\"getHTTPResponseCode\"` gives `\"get_http_response_code\"`.\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

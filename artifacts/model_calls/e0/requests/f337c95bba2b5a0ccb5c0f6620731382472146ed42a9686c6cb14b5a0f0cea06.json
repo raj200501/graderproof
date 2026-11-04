@@ -1,0 +1,182 @@
+{
+  "created_utc": "2026-11-04T02:41:03Z",
+  "hash": "f337c95bba2b5a0ccb5c0f6620731382472146ed42a9686c6cb14b5a0f0cea06",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "6ad0242b535ed85d3e607d05a88e3ae6edd7b8cd143a602c45a6ec8fcdfcfb95",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Create an event titled `Q4 budget review`."
+        },
+        {
+          "id": "R2",
+          "text": "The event is on 2026-11-12 from 14:00 to 14:30."
+        },
+        {
+          "id": "R3",
+          "text": "Invite exactly Lena Ortiz, Sam Cho and Priya Nair (their listed emails) and nobody else."
+        },
+        {
+          "id": "R4",
+          "text": "Do not change any existing event."
+        }
+      ],
+      "task_text": "# Schedule a budget review\n\nCreate a calendar event titled `Q4 budget review` on `2026-11-12` from `14:00` to `14:30`.\n\nInvite exactly these three people and nobody else:\n\n- Lena Ortiz (`lena.ortiz@example.com`)\n- Sam Cho (`sam.cho@example.com`)\n- Priya Nair (`priya.nair@example.com`)\n\nDo not change any existing event.\n\nTools (see `support/env.py`):\n\n- `find_person(name)`\n- `list_events(date)`\n- `create_event(title, date, start, end, attendees)`, where `attendees` is a list of email addresses\n- `add_attendees(event_id, emails)`\n"
+    },
+    {
+      "id": "6d616480807a0e4a20b813e7a936f76c4b4f54241a4044cc229a3a5971a46c3d",
+      "reference_solution": {
+        "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module `slug.py` with a function `slugify(title)`."
+        },
+        {
+          "id": "R2",
+          "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+        },
+        {
+          "id": "R3",
+          "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+        },
+        {
+          "id": "R4",
+          "text": "Remove any `-` at the start or end of the result."
+        },
+        {
+          "id": "R5",
+          "text": "Return the slug as a string; it is \"\" when the title has no ASCII letters or digits."
+        }
+      ],
+      "task_text": "# URL slugs for article titles\n\nWrite a Python module `slug.py` with a function `slugify(title)` that turns an article title into a URL slug.\n\n- Convert ASCII uppercase letters to lowercase.\n- Keep ASCII letters and digits. Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as `\u00e9`, and so on) becomes a single `-`.\n- Remove any `-` at the start or end of the result.\n- Return the slug as a string; it is `\"\"` when the title has no ASCII letters or digits.\n\nExamples: `slugify(\"Hello, World!\")` returns `\"hello-world\"`, and `slugify(\"Caf\u00e9 au lait\")` returns `\"caf-au-lait\"`.\n"
+    },
+    {
+      "id": "6ef5bc2ac5a70fd0a55d668a597d0a09063f9a3a3d691777e90eebc5304869ca",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Cancel `SUB-3381` immediately with `cancel_subscription` (`when` set to `immediately`)."
+        },
+        {
+          "id": "R2",
+          "text": "Refund the unused part of the current period, 700 cents, with `issue_refund`."
+        },
+        {
+          "id": "R3",
+          "text": "Steps are ordered: cancel first, then refund."
+        },
+        {
+          "id": "R4",
+          "text": "Do not change any other subscription."
+        },
+        {
+          "id": "R5",
+          "text": "Issue no other refunds."
+        }
+      ],
+      "task_text": "# Cancel a subscription with a partial refund\n\nOla Nordmann asks to cancel his meal-kit subscription `SUB-3381` right away.\n\n1. Cancel `SUB-3381` immediately with `cancel_subscription` (`when` set to `immediately`, not at the end of the period).\n2. Refund the unused part of the current period, 700 cents, with `issue_refund`.\n\nDo not change any other subscription and issue no other refunds.\n\nTools (see `support/env.py`):\n\n- `get_subscription(sub_id)`\n- `cancel_subscription(sub_id, when)`, where `when` is `immediately` or `period_end`\n- `issue_refund(sub_id, amount_cents)`\n"
+    },
+    {
+      "id": "7100e86dcce06899e9d740a17d965e4768f5b3a2fd2c5ba1fdf90b62555ac4ac",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\nchmod +x bin/countlines\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Create an executable bash script at `bin/countlines` (create the `bin/` directory)."
+        },
+        {
+          "id": "R2",
+          "text": "The script must start with `#!/usr/bin/env bash` or `#!/bin/bash`."
+        },
+        {
+          "id": "R3",
+          "text": "Run as `bin/countlines DIR`, it takes DIR as its argument and counts lines of `.log` files directly inside DIR."
+        },
+        {
+          "id": "R4",
+          "text": "Count lines the way `wc -l` does (number of newline characters); print the total as a plain decimal integer on one line; if DIR contains no such files, print `0`."
+        },
+        {
+          "id": "R5",
+          "text": "The script may use only bash and coreutils."
+        }
+      ],
+      "task_text": "# Log line counter\n\nThe operations team wants a quick way to see how much a service has logged.\n\nCreate an executable bash script at `bin/countlines` (create the `bin/` directory). When run as `bin/countlines DIR`, it must print the total number of lines in all regular files directly inside DIR whose names end in `.log` (files in subdirectories do not count), as a plain decimal integer on one line, and exit with status 0.\n\n- Count lines the way `wc -l` does, that is, the number of newline characters.\n- If DIR contains no such files, print `0`.\n- The script must start with `#!/usr/bin/env bash` or `#!/bin/bash` and may use only bash and coreutils.\n"
+    },
+    {
+      "id": "71bb88ee2efa4bdd81c7b62d12ade4f205a54a416df76a5ebb88857cb70cb42b",
+      "reference_solution": {
+        "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+        },
+        {
+          "id": "R2",
+          "text": "`orders`: the number of orders (an integer)."
+        },
+        {
+          "id": "R3",
+          "text": "`units`: the total quantity over all orders (an integer)."
+        },
+        {
+          "id": "R4",
+          "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+        },
+        {
+          "id": "R5",
+          "text": "`top_product`: the product with the largest total quantity (a string)."
+        }
+      ],
+      "task_text": "# Daily order summary\n\n`orders.jsonl` contains one JSON object per line, one per order, with the fields `order_id`, `product`, `quantity`, and `unit_price`.\n\nWrite `summary.json` containing a single JSON object with exactly these keys:\n\n- `orders`: the number of orders (an integer);\n- `units`: the total quantity over all orders (an integer);\n- `revenue`: the sum of quantity \u00d7 unit_price over all orders, rounded to 2 decimal places (a number);\n- `top_product`: the product with the largest total quantity (a string; there is no tie in this data).\n"
+    },
+    {
+      "id": "7619281e02fe68cd880e47569e9f4b0ce7488283ae063171bb2b034951aa1007",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Make exactly one transfer."
+        },
+        {
+          "id": "R2",
+          "text": "The transfer is 25000 cents from checking `ACC-3301` to savings `ACC-3302`."
+        },
+        {
+          "id": "R3",
+          "text": "The transfer has memo `holiday fund`."
+        },
+        {
+          "id": "R4",
+          "text": "Do not move money into or out of any other account."
+        }
+      ],
+      "task_text": "# Move money to savings\n\nJonah Weiss (customer `C-118`) calls the bank: he wants to move $250.00 from his checking account to his savings account, with the memo `holiday fund`.\n\nUse the banking tools to make exactly one transfer of 25000 cents from his checking account `ACC-3301` to his savings account `ACC-3302`, with memo `holiday fund`. Do not move money into or out of any other account.\n\nTools (see `support/env.py`):\n\n- `list_accounts(customer_id)`\n- `get_balance(account_id)`\n- `transfer(from_account, to_account, amount_cents, memo)`\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

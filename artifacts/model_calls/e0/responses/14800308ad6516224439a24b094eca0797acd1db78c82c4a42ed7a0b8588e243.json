@@ -1,0 +1,254 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "14800308ad6516224439a24b094eca0797acd1db78c82c4a42ed7a0b8588e243",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "c738ed1612d3c55987179e47f7976edfbbaed5571e2b43ecd91a79d250818418": {
+      "requirements": [
+        {"id": "R1", "text": "Write a Python module tagging.py", "checks": [{"type": "file_exists", "path": "tagging.py"}]},
+        {"id": "R2", "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag", "checks": [
+          {"type": "call", "probe": {"function": "all_tags", "args": [[{"tags": ["  Python "]}]], "kwargs": {}}, "equals": ["python"]},
+          {"type": "call", "probe": {"function": "all_tags", "args": [[{"tags": ["\tWeb Dev\n"]}]], "kwargs": {}}, "equals": ["web dev"]}
+        ]},
+        {"id": "R3", "text": "Ignore tags that are empty after normalization", "checks": [
+          {"type": "call", "probe": {"function": "all_tags", "args": [[{"tags": ["", "   ", "\t"]}]], "kwargs": {}}, "equals": []},
+          {"type": "call", "probe": {"function": "all_tags", "args": [[{"tags": [" ", "Go"]}]], "kwargs": {}}, "equals": ["go"]}
+        ]},
+        {"id": "R4", "text": "Return each distinct normalized tag exactly once, across posts and within a post", "checks": [
+          {"type": "call", "probe": {"function": "all_tags", "args": [[{"tags": ["Go", "go"]}, {"tags": [" GO ", "gO"]}]], "kwargs": {}}, "equals": ["go"]},
+          {"type": "call", "probe": {"function": "all_tags", "args": [[{"tags": ["A"]}, {"tags": ["a "]}, {"tags": []}]], "kwargs": {}}, "equals": ["a"]}
+        ]},
+        {"id": "R5", "text": "Return a list; empty input gives an empty list", "checks": [
+          {"type": "call", "probe": {"function": "all_tags", "args": [[]], "kwargs": {}}, "equals": []},
+          {"type": "call", "probe": {"function": "all_tags", "args": [[{"tags": []}]], "kwargs": {}}, "equals": []}
+        ]}
+      ]
+    },
+    "ce8651d35a45f7dae395b6c60ba4235ef7a68d29e71fa49af53afd644fd6d24c": {
+      "requirements": [
+        {"id": "R1", "text": "Book a double room for Hannah Becker, check-in 2026-12-03, check-out 2026-12-06, using book_room", "checks": [
+          {"type": "trajectory_includes", "tool": "book_room", "args": {"guest_name": "Hannah Becker", "room_type": "double", "check_in": "2026-12-03", "check_out": "2026-12-06"}},
+          {"type": "state_equals", "pointer": "/bookings/R-2041/guest_name", "equals": "Hannah Becker"},
+          {"type": "state_equals", "pointer": "/bookings/R-2041/room_type", "equals": "double"},
+          {"type": "state_equals", "pointer": "/bookings/R-2041/check_in", "equals": "2026-12-03"},
+          {"type": "state_equals", "pointer": "/bookings/R-2041/check_out", "equals": "2026-12-06"},
+          {"type": "state_equals", "pointer": "/bookings/R-2041/status", "equals": "confirmed"}
+        ]},
+        {"id": "R2", "text": "Email hannah.becker@example.com with send_email, subject Booking confirmed", "checks": [
+          {"type": "trajectory_includes", "tool": "send_email", "args": {"to": "hannah.becker@example.com", "subject": "Booking confirmed"}},
+          {"type": "state_equals", "pointer": "/outbox/0/to", "equals": "hannah.becker@example.com"},
+          {"type": "state_equals", "pointer": "/outbox/0/subject", "equals": "Booking confirmed"}
+        ]},
+        {"id": "R3", "text": "Ordering: book the room first, then send the email", "checks": [
+          {"type": "trajectory_before", "first": {"tool": "book_room", "args": {"guest_name": "Hannah Becker"}}, "then": {"tool": "send_email", "args": {"to": "hannah.becker@example.com"}}}
+        ]},
+        {"id": "R4", "text": "Make no other bookings: the sequence advances only once and the existing booking is untouched", "checks": [
+          {"type": "state_equals", "pointer": "/next_ref", "equals": 2042},
+          {"type": "state_equals", "pointer": "/bookings/R-2040/guest_name", "equals": "Arjun Mehta"},
+          {"type": "state_equals", "pointer": "/bookings/R-2040/status", "equals": "confirmed"},
+          {"type": "trajectory_excludes", "tool": "book_room", "args": {"room_type": "single"}},
+          {"type": "trajectory_excludes", "tool": "book_room", "args": {"room_type": "family"}}
+        ]},
+        {"id": "R5", "text": "Send no other emails: only to the guest", "checks": [
+          {"type": "trajectory_excludes", "tool": "send_email", "args": {"to": "arjun.mehta@example.com"}},
+          {"type": "state_equals", "pointer": "/outbox/0/to", "equals": "hannah.becker@example.com"}
+        ]}
+      ]
+    },
+    "d1b4ab441deff99aabce7d0ffd8f2ed0f89e7fc37c4509da789152e0766636ac": {
+      "requirements": [
+        {"id": "R1", "text": "Write a Python module semver.py", "checks": [{"type": "file_exists", "path": "semver.py"}]},
+        {"id": "R2", "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0", "checks": [
+          {"type": "call", "probe": {"function": "bump", "args": ["1.9.9", "major"], "kwargs": {}}, "equals": "2.0.0"},
+          {"type": "call", "probe": {"function": "bump", "args": ["0.0.0", "major"], "kwargs": {}}, "equals": "1.0.0"},
+          {"type": "call", "probe": {"function": "bump", "args": ["9.99.100", "major"], "kwargs": {}}, "equals": "10.0.0"}
+        ]},
+        {"id": "R3", "text": "Bumping minor increments MINOR and resets PATCH to 0", "checks": [
+          {"type": "call", "probe": {"function": "bump", "args": ["1.2.3", "minor"], "kwargs": {}}, "equals": "1.3.0"},
+          {"type": "call", "probe": {"function": "bump", "args": ["1.9.9", "minor"], "kwargs": {}}, "equals": "1.10.0"},
+          {"type": "call", "probe": {"function": "bump", "args": ["0.0.7", "minor"], "kwargs": {}}, "equals": "0.1.0"}
+        ]},
+        {"id": "R4", "text": "Bumping patch increments PATCH", "checks": [
+          {"type": "call", "probe": {"function": "bump", "args": ["1.2.3", "patch"], "kwargs": {}}, "equals": "1.2.4"},
+          {"type": "call", "probe": {"function": "bump", "args": ["1.2.9", "patch"], "kwargs": {}}, "equals": "1.2.10"},
+          {"type": "call", "probe": {"function": "bump", "args": ["0.0.0", "patch"], "kwargs": {}}, "equals": "0.0.1"}
+        ]},
+        {"id": "R5", "text": "Raise ValueError for an invalid version (too few or too many parts, leading zeros, suffix, prefix, other non-matching strings)", "checks": [
+          {"type": "call", "probe": {"function": "bump", "args": ["1.2", "patch"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "bump", "args": ["1.2.3.4", "patch"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "bump", "args": ["01.2.3", "patch"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "bump", "args": ["1.02.3", "minor"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "bump", "args": ["1.2.03", "patch"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "bump", "args": ["1.2.3-beta", "patch"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "bump", "args": ["v1.2.3", "patch"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "bump", "args": ["", "patch"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "bump", "args": ["1.2.-3", "patch"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "bump", "args": ["1.2.3\n", "patch"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "bump", "args": [" 1.2.3", "patch"], "kwargs": {}}, "matches_reference": true}
+        ]},
+        {"id": "R6", "text": "Raise ValueError for an unknown part", "checks": [
+          {"type": "call", "probe": {"function": "bump", "args": ["1.2.3", "build"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "bump", "args": ["1.2.3", "Major"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "bump", "args": ["1.2.3", ""], "kwargs": {}}, "matches_reference": true}
+        ]}
+      ]
+    },
+    "d3ce41aabc8cd3862a73d50e25d96d4655b2c582c30a16a9c99787068ff4d73f": {
+      "requirements": [
+        {"id": "R1", "text": "Write a Python module flatten.py", "checks": [{"type": "file_exists", "path": "flatten.py"}]},
+        {"id": "R2", "text": "One entry per non-dict value, keyed by the path of keys joined with sep", "checks": [
+          {"type": "call", "probe": {"function": "flatten", "args": [{"db": {"host": "x", "port": 5432}}], "kwargs": {}}, "equals": {"db.host": "x", "db.port": 5432}},
+          {"type": "call", "probe": {"function": "flatten", "args": [{"a": 1, "b": {"c": {"d": {"e": 2}}}}], "kwargs": {}}, "equals": {"a": 1, "b.c.d.e": 2}}
+        ]},
+        {"id": "R3", "text": "A custom sep is used to join the path", "checks": [
+          {"type": "call", "probe": {"function": "flatten", "args": [{"a": {"b": 1}}], "kwargs": {"sep": "/"}}, "equals": {"a/b": 1}},
+          {"type": "call", "probe": {"function": "flatten", "args": [{"a": {"b": {"c": 1}}, "x": 2}, "__"], "kwargs": {}}, "equals": {"a__b__c": 1, "x": 2}}
+        ]},
+        {"id": "R4", "text": "Non-dict values, including lists, are kept as they are and not flattened", "checks": [
+          {"type": "call", "probe": {"function": "flatten", "args": [{"a": [1, 2, {"b": 3}], "c": null, "d": "s", "e": 0, "f": false}], "kwargs": {}}, "equals": {"a": [1, 2, {"b": 3}], "c": null, "d": "s", "e": 0, "f": false}},
+          {"type": "call", "probe": {"function": "flatten", "args": [{"o": {"l": [[1], [2]]}}], "kwargs": {}}, "equals": {"o.l": [[1], [2]]}}
+        ]},
+        {"id": "R5", "text": "An empty nested dict contributes no entries; flatten({}) returns {}", "checks": [
+          {"type": "call", "probe": {"function": "flatten", "args": [{}], "kwargs": {}}, "equals": {}},
+          {"type": "call", "probe": {"function": "flatten", "args": [{"a": {}, "b": {"c": {}}}], "kwargs": {}}, "equals": {}},
+          {"type": "call", "probe": {"function": "flatten", "args": [{"a": {}, "b": 1}], "kwargs": {}}, "equals": {"b": 1}}
+        ]},
+        {"id": "R6", "text": "Return a new dict and do not modify d or anything inside it", "checks": [
+          {"type": "call", "probe": {"function": "flatten", "args": [{"a": {"b": [1, 2]}, "c": {"d": {"e": 1}}}], "kwargs": {}}, "matches_reference": true}
+        ]}
+      ]
+    },
+    "d59141d2658d0fe50958352a5b940a45f17ffaf9b377da1f4e97b3beb1305d4c": {
+      "requirements": [
+        {"id": "R1", "text": "Write a Python module phones.py", "checks": [{"type": "file_exists", "path": "phones.py"}]},
+        {"id": "R2", "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number", "checks": [
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["(415) 555-0132"], "kwargs": {}}, "equals": "+14155550132"},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["+1 415.555.0132"], "kwargs": {}}, "equals": "+14155550132"},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["415-555-0132"], "kwargs": {}}, "equals": "+14155550132"},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["4155550132"], "kwargs": {}}, "equals": "+14155550132"}
+        ]},
+        {"id": "R3", "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1", "checks": [
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["14155550132"], "kwargs": {}}, "equals": "+14155550132"},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["1 (415) 555-0132"], "kwargs": {}}, "equals": "+14155550132"},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["+14155550132"], "kwargs": {}}, "equals": "+14155550132"}
+        ]},
+        {"id": "R4", "text": "Raise ValueError for the wrong number of digits (including 11 digits not starting with 1)", "checks": [
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["415555013"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["41555501322"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["24155550132"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["141555501320"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["1"], "kwargs": {}}, "matches_reference": true}
+        ]},
+        {"id": "R5", "text": "Raise ValueError for letters, other symbols, and an empty string", "checks": [
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["415-555-CALL"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["415/555/0132"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["415_555_0132"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["#4155550132"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": [""], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["   "], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["+"], "kwargs": {}}, "matches_reference": true}
+        ]},
+        {"id": "R6", "text": "Only a single leading + is removed; digits must be ASCII", "checks": [
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["++14155550132"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["415+5550132"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["٤١٥٥٥٥٠١٣٢"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "normalize_phone", "args": ["+ 1 415 555 0132"], "kwargs": {}}, "matches_reference": true}
+        ]}
+      ]
+    },
+    "d854c1d6dd1040c9c6e131a664c2b5ce49d3971799f2d05259b4e74c813754a6": {
+      "requirements": [
+        {"id": "R1", "text": "Write a Python module roman.py", "checks": [{"type": "file_exists", "path": "roman.py"}]},
+        {"id": "R2", "text": "to_roman(n) returns the uppercase Roman numeral, e.g. to_roman(1994) returns MCMXCIV", "checks": [
+          {"type": "call", "probe": {"function": "to_roman", "args": [1994], "kwargs": {}}, "equals": "MCMXCIV"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [1], "kwargs": {}}, "equals": "I"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [3], "kwargs": {}}, "equals": "III"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [58], "kwargs": {}}, "equals": "LVIII"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [2024], "kwargs": {}}, "equals": "MMXXIV"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [3888], "kwargs": {}}, "equals": "MMMDCCCLXXXVIII"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [3999], "kwargs": {}}, "equals": "MMMCMXCIX"}
+        ]},
+        {"id": "R3", "text": "Standard subtractive notation (IV, IX, XL, XC, CD, CM)", "checks": [
+          {"type": "call", "probe": {"function": "to_roman", "args": [4], "kwargs": {}}, "equals": "IV"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [9], "kwargs": {}}, "equals": "IX"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [40], "kwargs": {}}, "equals": "XL"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [90], "kwargs": {}}, "equals": "XC"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [400], "kwargs": {}}, "equals": "CD"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [900], "kwargs": {}}, "equals": "CM"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [49], "kwargs": {}}, "equals": "XLIX"},
+          {"type": "call", "probe": {"function": "to_roman", "args": [444], "kwargs": {}}, "equals": "CDXLIV"}
+        ]},
+        {"id": "R4", "text": "Raise ValueError if n is outside 1 to 3999", "checks": [
+          {"type": "call", "probe": {"function": "to_roman", "args": [0], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "to_roman", "args": [-1], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "to_roman", "args": [4000], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "to_roman", "args": [10000], "kwargs": {}}, "matches_reference": true}
+        ]}
+      ]
+    },
+    "dc815a91feef86df1cd6f77ded47cf5831c6b2d551792f56f8e503eaa185fc3f": {
+      "requirements": [
+        {"id": "R1", "text": "Write a Python module wrap.py", "checks": [{"type": "file_exists", "path": "wrap.py"}]},
+        {"id": "R2", "text": "Fill lines greedily with single spaces, each line at most width characters", "checks": [
+          {"type": "call", "probe": {"function": "wrap", "args": ["the quick brown fox jumps", 10], "kwargs": {}}, "equals": ["the quick", "brown fox", "jumps"]},
+          {"type": "call", "probe": {"function": "wrap", "args": ["aaa bbb ccc", 7], "kwargs": {}}, "equals": ["aaa bbb", "ccc"]},
+          {"type": "call", "probe": {"function": "wrap", "args": ["aaa bbb ccc", 11], "kwargs": {}}, "equals": ["aaa bbb ccc"]},
+          {"type": "call", "probe": {"function": "wrap", "args": ["aaa bbb ccc", 6], "kwargs": {}}, "equals": ["aaa", "bbb", "ccc"]},
+          {"type": "call", "probe": {"function": "wrap", "args": ["a b c d e f", 3], "kwargs": {}}, "equals": ["a b", "c d", "e f"]}
+        ]},
+        {"id": "R3", "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces", "checks": [
+          {"type": "call", "probe": {"function": "wrap", "args": ["  hello   world \n again\tx ", 20], "kwargs": {}}, "equals": ["hello world again x"]},
+          {"type": "call", "probe": {"function": "wrap", "args": ["one\ntwo\n\nthree", 7], "kwargs": {}}, "equals": ["one two", "three"]}
+        ]},
+        {"id": "R4", "text": "A word longer than width is put on a line of its own, unbroken", "checks": [
+          {"type": "call", "probe": {"function": "wrap", "args": ["a extraordinarily b", 5], "kwargs": {}}, "equals": ["a", "extraordinarily", "b"]},
+          {"type": "call", "probe": {"function": "wrap", "args": ["abcdefgh", 3], "kwargs": {}}, "equals": ["abcdefgh"]},
+          {"type": "call", "probe": {"function": "wrap", "args": ["ab cdefgh ij kl", 4], "kwargs": {}}, "equals": ["ab", "cdefgh", "ij", "kl"]}
+        ]},
+        {"id": "R5", "text": "No line has leading or trailing spaces; return a list of lines", "checks": [
+          {"type": "call", "probe": {"function": "wrap", "args": ["  lead and trail  ", 8], "kwargs": {}}, "equals": ["lead and", "trail"]},
+          {"type": "call", "probe": {"function": "wrap", "args": ["x", 1], "kwargs": {}}, "equals": ["x"]}
+        ]},
+        {"id": "R6", "text": "If text contains no words, return []", "checks": [
+          {"type": "call", "probe": {"function": "wrap", "args": ["", 10], "kwargs": {}}, "equals": []},
+          {"type": "call", "probe": {"function": "wrap", "args": ["   \n\t ", 10], "kwargs": {}}, "equals": []}
+        ]},
+        {"id": "R7", "text": "Boundary behaviour on further inputs agrees with the reference", "checks": [
+          {"type": "call", "probe": {"function": "wrap", "args": ["lorem ipsum dolor sit amet consectetur adipiscing elit", 12], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "wrap", "args": ["ab cd ef gh", 5], "kwargs": {}}, "matches_reference": true}
+        ]}
+      ]
+    },
+    "dd0615213b45a8ce3196f23e25493cd507ddf3fde1088f61744d32a50a7d7fe8": {
+      "requirements": [
+        {"id": "R1", "text": "Verify the account holder with verify_account (account AC-4410, ZIP 60614)", "checks": [
+          {"type": "trajectory_includes", "tool": "verify_account", "args": {"account_id": "AC-4410", "zip_code": "60614"}}
+        ]},
+        {"id": "R2", "text": "Policy ordering: verify before scheduling any plan change", "checks": [
+          {"type": "trajectory_before", "first": {"tool": "verify_account", "args": {"account_id": "AC-4410", "zip_code": "60614"}}, "then": {"tool": "schedule_plan_change", "args": {}}}
+        ]},
+        {"id": "R3", "text": "Schedule the change to plan basic with effective period_end using schedule_plan_change", "checks": [
+          {"type": "trajectory_includes", "tool": "schedule_plan_change", "args": {"account_id": "AC-4410", "plan": "basic", "effective": "period_end"}},
+          {"type": "state_equals", "pointer": "/accounts/AC-4410/pending_change/plan", "equals": "basic"},
+          {"type": "state_equals", "pointer": "/accounts/AC-4410/pending_change/effective", "equals": "2026-11-21"}
+        ]},
+        {"id": "R4", "text": "Not immediately: the current plan stays pro and no plan change with effective now is made", "checks": [
+          {"type": "state_equals", "pointer": "/accounts/AC-4410/plan", "equals": "pro"},
+          {"type": "trajectory_excludes", "tool": "schedule_plan_change", "args": {"effective": "now"}}
+        ]},
+        {"id": "R5", "text": "Add an account note about the downgrade to AC-4410 with add_note (text must contain the word downgrade, any capitalization)", "checks": [
+          {"type": "trajectory_includes", "tool": "add_note", "args": {"account_id": "AC-4410"}}
+        ]},
+        {"id": "R6", "text": "Do not change any other account", "checks": [
+          {"type": "state_equals", "pointer": "/accounts/AC-4471/plan", "equals": "team"},
+          {"type": "state_equals", "pointer": "/accounts/AC-4471/pending_change", "equals": null},
+          {"type": "state_equals", "pointer": "/accounts/AC-4471/notes", "equals": []},
+          {"type": "trajectory_excludes", "tool": "schedule_plan_change", "args": {"account_id": "AC-4471"}},
+          {"type": "trajectory_excludes", "tool": "add_note", "args": {"account_id": "AC-4471"}}
+        ]}
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

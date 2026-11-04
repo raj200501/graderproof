@@ -1,0 +1,263 @@
+{
+  "created_utc": "2026-11-04T02:29:00Z",
+  "hash": "b23f4c671812311be46ac8bf25244df37dcf0375caa43a2b6968c86b513e279f",
+  "instructions": "You turn a task's text into atomic, machine-checkable requirements. For each item you\nget the task text, the task kind, the reference solution (it satisfies the task), the\ninitial workspace, and what the reference produced (files, stdout, exit status, tool\ncalls, final state). You are not shown how the task is graded and must not guess.\n\nWrite one requirement per distinct obligation in the task text (outputs, their\ncontent, required steps, ordering constraints, prohibited actions, policies). Each\nrequirement has an \"id\" (R1, R2, ...), \"text\" (the obligation in plain words, quoting\nthe task where possible), and \"checks\": a list of typed checks that pass on the\nreference outcome and fail when the obligation is broken. Allowed check types and\nfields: file_exists {path}; file_absent {path}; file_equals {path, text, normalize:\nnone|strip|trailing_ws}; file_contains {path, text}; file_regex {path, pattern};\nfile_json {path, pointer, equals, lenient}; file_lines {path, count};\nstdout_contains {text}; stdout_regex {pattern}; stdout_json {pointer, equals,\nlenient}; exit_code {code}; call {probe: {function, args, kwargs}, equals} or\n{probe, matches_reference: true}; same_as_reference {target: stdout|state|file:<path>,\nnormalize}; trajectory_includes {tool, args}; trajectory_excludes {tool, args};\ntrajectory_before {first: {tool, args}, then: {tool, args}}; state_equals {pointer,\nequals}.\n\nBe exactly as strict as the task text. If the text demands an exact format, check it\nexactly; if it only asks for content, check content (use \"normalize\" or \"lenient\" so\nthat harmless formatting does not fail the check). For function tasks, add call\nprobes on the examples in the text and on a few further valid inputs, using\nmatches_reference for inputs whose expected output the text does not state. Return\nfor each item: {\"requirements\": [ ... ]}.\n",
+  "items": [
+    {
+      "id": "243fa62ac001404072e80a8e986f7087ae71772f4cc22cb79eeca87958a3490a",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n    return sorted(groups)\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n    return sorted(groups)\n"
+      },
+      "task_text": "# Find duplicate files\n\nA cleanup tool needs to report files with identical contents. Write a Python module `dupes.py` with a function `duplicate_groups(files)`.\n\n- `files` is a dict mapping a file path (a string) to that file's contents (a string).\n- Two files are duplicates when their contents are exactly equal.\n- Return a list of groups, one group for each content that is shared by two or more paths. A group is the sorted list of all paths with that content. Contents that belong to only one path produce no group.\n- Order the groups by their first path. If there are no duplicates, return `[]`.\n"
+    },
+    {
+      "id": "29312a402338b433d7e61a9c3b2759341ae2a3ae69d83514cc6c6eee5b1679a7",
+      "initial_workspace": {
+        "payments.csv": "date,customer,amount\n2026-10-01,Northwind Traders,1200.00\n2026-10-03,Contoso Ltd,310.50\n2026-10-07,Northwind Traders,89.99\n2026-10-12,Fabrikam Inc,2250.00\n2026-10-15,Contoso Ltd,45.25\n2026-10-21,\"Adventure Works, LLC\",600.00\n2026-10-28,Fabrikam Inc,149.95\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "payments.csv": "date,customer,amount\n2026-10-01,Northwind Traders,1200.00\n2026-10-03,Contoso Ltd,310.50\n2026-10-07,Northwind Traders,89.99\n2026-10-12,Fabrikam Inc,2250.00\n2026-10-15,Contoso Ltd,45.25\n2026-10-21,\"Adventure Works, LLC\",600.00\n2026-10-28,Fabrikam Inc,149.95\n",
+          "totals.csv": "customer,total\n\"Adventure Works, LLC\",600.00\nContoso Ltd,355.75\nFabrikam Inc,2399.95\nNorthwind Traders,1289.99\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+      },
+      "task_text": "# Payments per customer\n\n`payments.csv` lists October payments with the columns `date,customer,amount`.\n\nWrite `totals.csv`: a CSV file with the header row `customer,total` followed by one row per customer, giving the sum of that customer's payments. Sort the rows by customer name (plain string comparison) and write each total with exactly two decimal places (for example `600.00`). Customer names are CSV values and must be quoted where the CSV format requires it.\n"
+    },
+    {
+      "id": "318057baa0253123b08fd8ba3bdf4ef271bcc79e014610bc7cff0ff7ecdf51f1",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+      },
+      "task_text": "# Count business days\n\nWrite a Python module `workdays.py` with a function `business_days(start, end, holidays=())` used to estimate delivery times.\n\n- `start` and `end` are dates given as ISO strings (`YYYY-MM-DD`); `holidays` is an iterable of ISO date strings.\n- Count the dates `d` with `start <= d < end` (the start date is included, the end date is not) that fall on Monday to Friday and are not in `holidays`.\n- If `end` is not after `start`, return `0`.\n- Return the count as an integer.\n"
+    },
+    {
+      "id": "35ed2bbe4e5878261147ebf1e505dc70302f10aea7744fdadf14dfdfc69f8888",
+      "initial_workspace": {
+        "expenses.csv": "date,category,amount\n2026-10-02,travel,412.80\n2026-10-03,meals,38.50\n2026-10-07,software,120.00\n2026-10-09,meals,64.25\n2026-10-14,travel,189.99\n2026-10-18,office,23.40\n2026-10-22,software,49.00\n2026-10-29,meals,17.75\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "by_category.csv": "category,total\nmeals,120.50\noffice,23.40\nsoftware,169.00\ntravel,602.79\n",
+          "expenses.csv": "date,category,amount\n2026-10-02,travel,412.80\n2026-10-03,meals,38.50\n2026-10-07,software,120.00\n2026-10-09,meals,64.25\n2026-10-14,travel,189.99\n2026-10-18,office,23.40\n2026-10-22,software,49.00\n2026-10-29,meals,17.75\n",
+          "summary.json": "{\"categories\": 4, \"grand_total\": 915.69}\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+      },
+      "task_text": "# Expense report by category\n\n`expenses.csv` lists the team's October expenses with the columns `date,category,amount`. Produce two files:\n\n- `by_category.csv`: the header row `category,total`, then one row per category that occurs in `expenses.csv`, sorted by category name, where `total` is the sum of that category's amounts written with exactly two decimal places.\n- `summary.json`: a JSON object with exactly two keys, `categories` (the number of categories, an integer) and `grand_total` (the sum of all amounts, rounded to 2 decimal places, as a number).\n"
+    },
+    {
+      "id": "397a1b4a70e65da0575d3f02756ca68237a352500b3e662d05a118999c6384e8",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "sms.py": "SINGLE_LIMIT = 160\nPART_SIZE = 153\n\n\ndef split_sms(message):\n    if len(message) <= SINGLE_LIMIT:\n        return [message]\n    return [message[i : i + PART_SIZE] for i in range(0, len(message), PART_SIZE)]\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "sms.py": "SINGLE_LIMIT = 160\nPART_SIZE = 153\n\n\ndef split_sms(message):\n    if len(message) <= SINGLE_LIMIT:\n        return [message]\n    return [message[i : i + PART_SIZE] for i in range(0, len(message), PART_SIZE)]\n"
+      },
+      "task_text": "# Split long text messages\n\nThe SMS gateway sends long texts as multi-part messages, and each part of a multi-part message holds at most 153 characters. Write a Python module `sms.py` with a function `split_sms(message)` that returns the list of parts to send:\n\n- If `message` has at most 160 characters, return `[message]` (a single, unsplit message). This includes the empty message, which returns `[\"\"]`.\n- Otherwise split it into consecutive parts of exactly 153 characters, except the last part, which holds the remaining 1 to 153 characters.\n- Joining the parts in order must give back `message` exactly: do not strip, add, reorder, or change any character.\n"
+    },
+    {
+      "id": "397e3795688e2a65325b67b4a756c06874d0ef1a76d7967e232c3c78ff3d69d0",
+      "initial_workspace": {
+        "team.csv": "name,role,location\nAda Park,Engineering Manager,Berlin\nLuis Romero,Backend Engineer,Madrid\nGrace Kim,Product Designer,Seoul\nTomasz Nowak,Site Reliability Engineer,Warsaw\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "team.csv": "name,role,location\nAda Park,Engineering Manager,Berlin\nLuis Romero,Backend Engineer,Madrid\nGrace Kim,Product Designer,Seoul\nTomasz Nowak,Site Reliability Engineer,Warsaw\n",
+          "team.md": "| name | role | location |\n| --- | --- | --- |\n| Ada Park | Engineering Manager | Berlin |\n| Luis Romero | Backend Engineer | Madrid |\n| Grace Kim | Product Designer | Seoul |\n| Tomasz Nowak | Site Reliability Engineer | Warsaw |\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n"
+      },
+      "task_text": "# Team list as a Markdown table\n\nConvert `team.csv` (a header row and one row per person; no field contains a comma or quotes) into a Markdown table in `team.md`.\n\n- The first row of the table is the header row with the CSV column names, followed by a separator row, followed by one row per CSV record in the original order.\n- Every row starts with `|` and ends with `|`, with cells separated by `|`. Spaces around cell text are optional and are ignored; cell text itself must be unchanged.\n- Each separator cell consists of three or more `-` characters, optionally with a leading and/or trailing `:` for alignment.\n- `team.md` contains only the table (a final newline is optional).\n"
+    },
+    {
+      "id": "3c0f4ab2e192b5f0d8250b5413025f298712fbfad64af02dea53009670fcffa1",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "appointments": {
+            "APT-6620": {
+              "date": "2026-11-18",
+              "patient_id": "P-3307",
+              "provider": "Dr. Hale",
+              "status": "scheduled",
+              "time": "10:15"
+            },
+            "APT-6655": {
+              "date": "2026-11-18",
+              "patient_id": "P-4410",
+              "provider": "Dr. Hale",
+              "status": "scheduled",
+              "time": "11:00"
+            }
+          },
+          "open_slots": {
+            "Dr. Hale": {
+              "2026-11-11": [
+                "09:00"
+              ],
+              "2026-11-18": [
+                "09:30",
+                "14:00"
+              ],
+              "2026-11-19": [
+                "08:45"
+              ]
+            }
+          },
+          "patients": {
+            "P-3307": {
+              "mobile": "+44 7700 900412",
+              "name": "Gareth Lowe"
+            },
+            "P-4410": {
+              "mobile": "+44 7700 900877",
+              "name": "Ines Duarte"
+            }
+          },
+          "sms_outbox": [
+            {
+              "patient_id": "P-3307",
+              "text": "Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15."
+            }
+          ]
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "date": "2026-11-18",
+              "provider": "Dr. Hale"
+            },
+            "result": {
+              "ok": true,
+              "slots": [
+                "09:30",
+                "10:15",
+                "14:00"
+              ]
+            },
+            "tool": "find_slots"
+          },
+          {
+            "args": {
+              "appointment_id": "APT-6620",
+              "date": "2026-11-18",
+              "time": "10:15"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "reschedule"
+          },
+          {
+            "args": {
+              "patient_id": "P-3307",
+              "text": "Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15."
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "send_sms"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n]\n"
+      },
+      "task_text": "# Reschedule a clinic appointment\n\nPatient Gareth Lowe (patient `P-3307`) phoned the clinic: he cannot make his appointment `APT-6620` with Dr. Hale and asked for the open slot on `2026-11-18` at `10:15`.\n\n1. Move appointment `APT-6620` to `2026-11-18` at `10:15` with `reschedule`.\n2. After the appointment has been moved, text the patient with `send_sms` to confirm. The message must include the new date written as `2026-11-18` and the new time written as `10:15`.\n\nDo not change any other appointment.\n\nTools (see `support/env.py`):\n\n- `find_slots(provider, date)`\n- `reschedule(appointment_id, date, time)`\n- `send_sms(patient_id, text)`\n"
+    },
+    {
+      "id": "4176dbee329d43014eec627e89f589169ed32fd103d1ad6f75dfaae92e2b085e",
+      "initial_workspace": {
+        "README.md": "Booking service  \n\nRun `python -m cli.main`.  \n",
+        "src/app/__init__.py": "\"\"\"Booking service application package.\"\"\"  \n",
+        "src/app/pricing.py": "from decimal import Decimal\t\n\nTAX_RATE = Decimal(\"0.20\")   \n  \ndef gross(net):\n    \"\"\"Return the price including tax.\"\"\"\t \n    return (net * (1 + TAX_RATE)).quantize(Decimal(\"0.01\"))\n\n\ndef discount(price, percent):    \n\treturn price * (100 - percent) / 100\t\n",
+        "src/cli/main.py": "import sys\n\nfrom app.pricing import gross  \n\n\ndef main(argv):  \n    for arg in argv[1:]:\n        print(gross(arg)) \n    return 0\n\n\nif __name__ == \"__main__\":\n    sys.exit(main(sys.argv))  ",
+        "src/cli/notes.txt": "keep this trailing space \n",
+        "vendor/tinyjson.py": "# tinyjson 0.3.1 (MIT License), vendored unmodified.   \ndef dumps(obj):  \n    return repr(obj)\t\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "README.md": "Booking service  \n\nRun `python -m cli.main`.  \n",
+          "src/app/__init__.py": "\"\"\"Booking service application package.\"\"\"\n",
+          "src/app/pricing.py": "from decimal import Decimal\n\nTAX_RATE = Decimal(\"0.20\")\n\ndef gross(net):\n    \"\"\"Return the price including tax.\"\"\"\n    return (net * (1 + TAX_RATE)).quantize(Decimal(\"0.01\"))\n\n\ndef discount(price, percent):\n\treturn price * (100 - percent) / 100\n",
+          "src/cli/main.py": "import sys\n\nfrom app.pricing import gross\n\n\ndef main(argv):\n    for arg in argv[1:]:\n        print(gross(arg))\n    return 0\n\n\nif __name__ == \"__main__\":\n    sys.exit(main(sys.argv))",
+          "src/cli/notes.txt": "keep this trailing space \n",
+          "vendor/tinyjson.py": "# tinyjson 0.3.1 (MIT License), vendored unmodified.   \ndef dumps(obj):  \n    return repr(obj)\t\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+      },
+      "task_text": "# Strip trailing whitespace from the source tree\n\nThe linter rejects lines that end in whitespace. Clean up the project in the working directory:\n\n- For every `.py` file under `src/` (including subdirectories), remove all spaces and tabs at the end of every line.\n- Change nothing else in those files: keep the line order, indentation, blank lines, and whether or not the file ends with a newline.\n- Do not modify any file outside `src/`, and do not modify files under `src/` that are not `.py` files. In particular, `vendor/` holds third-party code that must stay byte-for-byte identical.\n"
+    }
+  ],
+  "prompt_version": "requirements/v1",
+  "purpose": "requirements",
+  "response_schema": {
+    "required": [
+      "requirements"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}
