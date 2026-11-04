@@ -1,0 +1,21 @@
+# graderproof example
+
+This is a worked example of a template for `make report`; docs/claims/README.md explains the rules. The tests render it in a temporary repository against a synthetic artifact and check that the result passes `make claimcheck` and `make freshness`. docs/claims/spec.json maps it to null, so it is never rendered in this repository.
+
+In the synthetic example, the grader accepted {{claim:example.rate}} of the broken solutions (95% CI {{claim:example.rate_lo}} to {{claim:example.rate_hi}}) over {{claim:example.tasks}} tasks, {{claim:example.flaky}} of them flaky.
+
+{{figure:example}}
+
+| Benchmark | False-accept task rate | Tasks |
+|---|---|---|
+| Example (synthetic) | **{{claim:example.rate}}** | {{claim:example.tasks}} |
+
+The preregistered sample size is at least 40 tasks per benchmark. That is a design parameter, so it sits in the allowlist instead of carrying a claim marker.
+
+```bash
+make report && make claimcheck freshness citecheck
+```
+
+Identifiers (E1, G10), versions (Python 3.12), dates (2026-11-04), commits (843405b), and references (section 6, rule 1) need nothing.
+
+A quoted line that must keep its own numbers is exempted with a reason: "passed 12 of 12" <!-- claimcheck:ignore-line quoted verbatim from a third-party changelog -->
