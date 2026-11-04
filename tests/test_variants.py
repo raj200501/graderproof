@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from graderproof.adapters.toybench import ToybenchAdapter
 from graderproof.core import VariantKind
 from graderproof.sandbox import LocalSandbox
@@ -12,7 +14,9 @@ from graderproof.variants import Context, Generator, Operator, unified_diff
 from graderproof.variants import preserving as pres
 from graderproof.variants import pysource as ps
 from graderproof.variants import violating as viol
-from graderproof.variants.wrap import wrap_entry
+from graderproof.variants.wrap import REWRITES, transform_source, wrap_entry
+
+V, P = VariantKind.VIOLATING, VariantKind.PRESERVING
 
 PY = '''"""Doc."""
 import os
@@ -274,3 +278,29 @@ def test_generator_sampling_is_deterministic_and_bounded() -> None:
     assert max(counts.values()) <= 2
     assert gen.variants("other", files, ctx()) != a
     assert unified_diff({"a": "x\n"}, {"a": "y\n"}).startswith("--- a/a")
+
+
+def test_sampling_keeps_a_share_for_preserving_variants() -> None:
+    files = {"m.py": PY, "s.sh": SH, "trajectory.json": TRAJ}
+    ops = [*viol.ALL, *pres.ALL]
+    everything = Generator(operators=ops, max_per_operator=2, max_total=10_000, seed=3)
+    available = [v for v in everything.variants("t", files, ctx()) if v.kind is P]
+    viol_available = [v for v in everything.variants("t", files, ctx()) if v.kind is V]
+    assert len(viol_available) > 9 and available
+    small = Generator(operators=ops, max_per_operator=2, max_total=9, seed=3)
+    picked = small.variants("t", files, ctx())
+    assert len(picked) == 9
+    assert sum(v.kind is P for v in picked) == min(len(available), 3)
+
+
+def test_output_rewrites_never_name_their_operator() -> None:
+    for op in REWRITES:
+        if op == "none":
+            continue
+        source = transform_source(op, ["a.txt"])
+        assert op not in source and "violat" not in source and "preserv" not in source
+        compile(source, "transform.py", "exec")
+        wrapped = wrap_entry({"s.sh": "echo hi > a.txt\n"}, "s.sh", op, ["a.txt"])
+        assert all(op not in text for text in wrapped.values())
+    with pytest.raises(ValueError):
+        transform_source("no-such-rewrite", [])

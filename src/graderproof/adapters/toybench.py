@@ -36,6 +36,7 @@ workspace snapshot, grader run, then function-call probes on a copy of the snaps
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -75,19 +76,60 @@ def _write_tree(root: Path, files: Mapping[str, str]) -> None:
             dest.chmod(0o755)
 
 
+def read_nofollow(path: Path) -> bytes | None:
+    """File bytes, refusing to follow a symbolic link (None if missing, a link, or unreadable)."""
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    except OSError:
+        return None
+    try:
+        with os.fdopen(fd, "rb") as fh:
+            return fh.read(MAX_FILE_BYTES + 1)
+    except OSError:
+        return None
+
+
 def snapshot(root: Path, skip: str = STATE_DIR) -> dict[str, str]:
-    """Workspace text files after a run; binary or oversized files become a marker."""
+    """Workspace files after a run, read without following symbolic links.
+
+    Sandboxed code can plant links to host files; a link is recorded as a marker with
+    its target text and is never dereferenced. Binary or oversized files and
+    unreadable entries also become markers.
+    """
     files: dict[str, str] = {}
-    for p in sorted(root.rglob("*")):
-        rel = p.relative_to(root).as_posix()
-        if not p.is_file() or rel == skip or rel.startswith(skip + "/"):
-            continue
-        data = p.read_bytes()
-        if len(data) > MAX_FILE_BYTES or b"\0" in data[:8192]:
-            files[rel] = f"<binary {len(data)} bytes>"
-        else:
-            files[rel] = data.decode("utf-8", errors="replace")
-    return files
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        here = Path(dirpath)
+        for name in sorted(dirnames):
+            if (here / name).is_symlink():
+                rel = (here / name).relative_to(root).as_posix()
+                files[rel] = f"<symlink to {os.readlink(here / name)}>"
+        for name in sorted(filenames):
+            p = here / name
+            rel = p.relative_to(root).as_posix()
+            if rel == skip or rel.startswith(skip + "/"):
+                continue
+            if p.is_symlink():
+                files[rel] = f"<symlink to {os.readlink(p)}>"
+                continue
+            data = read_nofollow(p)
+            if data is None:
+                files[rel] = "<unreadable>"
+            elif len(data) > MAX_FILE_BYTES or b"\0" in data[:8192]:
+                files[rel] = f"<binary {len(data)} bytes>"
+            else:
+                files[rel] = data.decode("utf-8", errors="replace")
+    return dict(sorted(files.items()))
+
+
+def read_json_nofollow(path: Path) -> Any:
+    """Parsed JSON from a file that is not a link (None if missing, a link, or invalid)."""
+    data = read_nofollow(path)
+    if data is None:
+        return None
+    try:
+        return json.loads(data.decode("utf-8", errors="replace"))
+    except ValueError:
+        return None
 
 
 def interpreter(entry: str) -> list[str]:
@@ -141,8 +183,8 @@ class ToybenchAdapter:
             reference_solution=_read_tree(d / "solution"),
             grading_entrypoint=[*interpreter(g_entry)[:1], f"grader/{g_entry}"],
             metadata={
-                "trusted_local": not meta.get("third_party", False),
                 **dict(meta.get("metadata", {})),
+                "trusted_local": not meta.get("third_party", False),
             },
         )
 
@@ -212,7 +254,7 @@ class ToybenchAdapter:
                 state, trajectory = _read_trajectory(ws / STATE_DIR)
         files = snapshot(ws)
         probe_ws = root / "probe_ws"
-        shutil.copytree(ws, probe_ws)
+        shutil.copytree(ws, probe_ws, symlinks=True)
         (out / "solution.stdout").write_text(stdout, encoding="utf-8")
         g_entry = str(env["grader_entry"])
         g_env = {
@@ -267,15 +309,17 @@ class ToybenchAdapter:
         argv = [sys.executable, "-m", "graderproof._runners", "probe", module]
         argv += [str(out / "probes.json"), str(result_path)]
         res = sandbox.run(argv, cwd=ws, writable=[ws], readonly=[out], limits=lim)
-        if res.exit_status != 0 or not result_path.exists():
+        data = read_json_nofollow(result_path) if res.exit_status == 0 else None
+        if not isinstance(data, dict):
             err = f"probe runner failed: {res.stderr.strip()[-200:]}"
             return {probe_key(p): {"ok": False, "error": err} for p in probes}
-        data: dict[str, dict[str, Any]] = json.loads(result_path.read_text())
-        return data
+        return {str(k): dict(v) for k, v in data.items() if isinstance(v, dict)}
 
 
 def _read_trajectory(state_dir: Path) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
-    state_file, traj_file = state_dir / "state.json", state_dir / "trajectory.json"
-    state = json.loads(state_file.read_text()) if state_file.exists() else None
-    traj = json.loads(traj_file.read_text()) if traj_file.exists() else []
-    return state, traj
+    if state_dir.is_symlink():
+        return None, []
+    state = read_json_nofollow(state_dir / "state.json")
+    traj = read_json_nofollow(state_dir / "trajectory.json")
+    calls = [c for c in traj if isinstance(c, dict)] if isinstance(traj, list) else []
+    return (state if isinstance(state, dict) else None), calls

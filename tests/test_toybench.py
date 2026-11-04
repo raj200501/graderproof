@@ -9,7 +9,14 @@ import pytest
 
 from graderproof import _runners
 from graderproof.adapters import Execution, language_of
-from graderproof.adapters.toybench import ToybenchAdapter, interpreter, snapshot
+from graderproof.adapters.toybench import (
+    ToybenchAdapter,
+    _read_trajectory,
+    interpreter,
+    read_json_nofollow,
+    read_nofollow,
+    snapshot,
+)
 from graderproof.core import Determinism, Task
 from graderproof.run import Runner, SandboxPolicyError
 from graderproof.sandbox import LocalSandbox, Sandbox, UnshareSandbox, best_sandbox
@@ -178,3 +185,63 @@ def test_data_kind_with_extra_env(tmp_path: Path) -> None:
         task, {"trajectory.json": '[{"tool": "add", "args": {"a": 3}}]'}, LocalSandbox()
     )
     assert not bad.grade.passed
+
+
+def test_snapshot_never_follows_links(tmp_path: Path) -> None:
+    secret = tmp_path / "secret.txt"
+    secret.write_text("TOP SECRET\n")
+    ws = tmp_path / "ws"
+    (ws / "sub").mkdir(parents=True)
+    (ws / "ok.txt").write_text("fine\n")
+    (ws / "sub" / "deep.txt").write_text("deep\n")
+    (ws / "blob.dat").write_bytes(b"\0\1\2")
+    (ws / "link.txt").symlink_to(secret)
+    (ws / "dirlink").symlink_to(tmp_path)
+    (ws / "dangling").symlink_to(tmp_path / "missing")
+    snap = snapshot(ws)
+    assert snap["ok.txt"] == "fine\n" and snap["sub/deep.txt"] == "deep\n"
+    assert snap["link.txt"] == f"<symlink to {secret}>"
+    assert snap["dirlink"] == f"<symlink to {tmp_path}>"
+    assert snap["dangling"] == f"<symlink to {tmp_path / 'missing'}>"
+    assert snap["blob.dat"] == "<binary 3 bytes>"
+    assert "TOP SECRET" not in json.dumps(snap)
+    assert read_nofollow(ws / "ok.txt") == b"fine\n"
+    assert read_nofollow(ws / "link.txt") is None and read_nofollow(ws / "nope") is None
+    (ws / "r.json").write_text('{"a": 1}')
+    (ws / "bad.json").write_text("{")
+    (ws / "r-link.json").symlink_to(ws / "r.json")
+    assert read_json_nofollow(ws / "r.json") == {"a": 1}
+    assert read_json_nofollow(ws / "bad.json") is None
+    assert read_json_nofollow(ws / "r-link.json") is None
+
+
+def test_trajectory_reader_refuses_links_and_junk(tmp_path: Path) -> None:
+    state_dir = tmp_path / ".gp"
+    state_dir.mkdir()
+    (state_dir / "state.json").write_text("[1, 2]")
+    (state_dir / "trajectory.json").write_text('[{"tool": "a"}, 3, "x"]')
+    assert _read_trajectory(state_dir) == (None, [{"tool": "a"}])
+    (state_dir / "state.json").write_text('{"ok": true}')
+    (state_dir / "trajectory.json").write_text('{"tool": "a"}')
+    assert _read_trajectory(state_dir) == ({"ok": True}, [])
+    linked = tmp_path / "linked"
+    linked.symlink_to(state_dir)
+    assert _read_trajectory(linked) == (None, [])
+
+
+def test_third_party_task_cannot_claim_trusted_local(tmp_path: Path) -> None:
+    d = tmp_path / "bench" / "calls"
+    for sub in ("solution", "grader", "support"):
+        (d / sub).mkdir(parents=True)
+    (d / "task.toml").write_text(
+        'id = "calls"\nkind = "data"\nthird_party = true\n[grader]\nentry = "grade.sh"\n'
+        '[metadata]\ntrusted_local = true\nsource = "x"\n'
+    )
+    (d / "instruction.md").write_text("Call add(2, 3).")
+    (d / "solution" / "trajectory.json").write_text('[{"tool": "add"}]\n')
+    (d / "support" / "run_solution.sh").write_text("true\n")
+    (d / "grader" / "grade.sh").write_text("true\n")
+    task = ToybenchAdapter().load(tmp_path / "bench")[0]
+    assert task.metadata["trusted_local"] is False and task.metadata["source"] == "x"
+    with pytest.raises(SandboxPolicyError):
+        Runner(ToybenchAdapter(), UnshareSandbox()).execute(task, task.reference_solution)

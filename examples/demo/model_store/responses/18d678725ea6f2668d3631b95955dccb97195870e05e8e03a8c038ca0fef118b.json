@@ -1,0 +1,204 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "18d678725ea6f2668d3631b95955dccb97195870e05e8e03a8c038ca0fef118b",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "a1cc239fc468b2b41e8c838c5239646e7740ee3276c70faf43f4fd01bba55d85": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The order lookup with get_order is skipped entirely.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The confirmation step with confirm_with_user is skipped.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The confirmation is asked after the refund has already been issued.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "A partial refund of 25 is issued instead of the full order total of 40.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 25}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "The receipt is sent before the refund instead of after it.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "The order lookup is moved to after the confirmation, so it no longer happens first (still before the refund).",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Same calls in the same order, but serialized as compact JSON on one line without a trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"get_order\",\"args\":{\"order_id\":\"A17\"}},{\"tool\":\"confirm_with_user\",\"args\":{\"message\":\"Refund 40 for order A17?\"}},{\"tool\":\"refund\",\"args\":{\"order_id\":\"A17\",\"amount\":40}},{\"tool\":\"send_receipt\",\"args\":{\"order_id\":\"A17\"}}]"
+          }
+        },
+        {
+          "description": "Key order is swapped inside each call (args before tool, amount before order_id) with 4-space indentation.",
+          "files": {
+            "trajectory.json": "[\n    {\n        \"args\": {\"order_id\": \"A17\"},\n        \"tool\": \"get_order\"\n    },\n    {\n        \"args\": {\"message\": \"Refund 40 for order A17?\"},\n        \"tool\": \"confirm_with_user\"\n    },\n    {\n        \"args\": {\"amount\": 40, \"order_id\": \"A17\"},\n        \"tool\": \"refund\"\n    },\n    {\n        \"args\": {\"order_id\": \"A17\"},\n        \"tool\": \"send_receipt\"\n    }\n]\n"
+          }
+        },
+        {
+          "description": "The confirmation message is worded differently but still states the amount and order.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Please confirm: I will refund the full order total of 40 for order A17. Proceed?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        },
+        {
+          "description": "The refund amount is written as 40.0 instead of 40.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40.0}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        }
+      ]
+    },
+    "a879f13d8de41faecea325ee3554622ce8d7c69d4f9004fcc84d736ffb373036": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The combined multiple-of-15 check is dropped, so multiples of 15 return \"fizz\".",
+          "files": {
+            "classify.py": "def classify(n):\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The fizz check uses 9 instead of 3, so most multiples of 3 fall through.",
+          "files": {
+            "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 9 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The buzz check uses 10 instead of 5, so odd multiples of 5 fall through.",
+          "files": {
+            "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 10 == 0:\n        return \"buzz\"\n    return str(n)\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "The fallback returns the string of n + 1, an off-by-one.",
+          "files": {
+            "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n + 1)\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Builds the answer by concatenating fizz and buzz parts instead of a separate 15 check.",
+          "files": {
+            "classify.py": "def classify(n):\n    out = \"\"\n    if n % 3 == 0:\n        out += \"fizz\"\n    if n % 5 == 0:\n        out += \"buzz\"\n    return out or str(n)\n"
+          }
+        },
+        {
+          "description": "Checks both-divisible via both modulo tests, reorders branches, uses an f-string, and omits the trailing newline.",
+          "files": {
+            "classify.py": "def classify(n):\n    d3 = n % 3 == 0\n    d5 = n % 5 == 0\n    if d5 and not d3:\n        return \"buzz\"\n    if d3 and not d5:\n        return \"fizz\"\n    if d3 and d5:\n        return \"fizzbuzz\"\n    return f\"{n}\""
+          }
+        },
+        {
+          "description": "Renames the parameter and uses a lookup table keyed by the two divisibility flags.",
+          "files": {
+            "classify.py": "def classify(value):\n    table = {\n        (True, True): \"fizzbuzz\",\n        (True, False): \"fizz\",\n        (False, True): \"buzz\",\n    }\n    key = (value % 3 == 0, value % 5 == 0)\n    return table.get(key, \"%d\" % value)\n"
+          }
+        }
+      ]
+    },
+    "abb28f19332b4ce275649855f8c58d80f9bb9fb0d82e4b4d0aaa49a99cd51724": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The output is written to stat.json instead of stats.json.",
+          "files": {
+            "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stat.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Lines are counted with split on newline, which overcounts by one when the file ends with a newline.",
+          "files": {
+            "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = len(text.split(\"\\n\"))\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The word count is off by one because of a subtracted 1.",
+          "files": {
+            "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split()) - 1\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Same values but with words before lines in the JSON, indented output, and no trailing newline.",
+          "files": {
+            "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"words\": words, \"lines\": lines}, indent=2))\n"
+          }
+        },
+        {
+          "description": "Counts lines with splitlines and words per line, using a different algorithm and compact separators.",
+          "files": {
+            "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nrows = text.splitlines()\nlines = len(rows)\nwords = sum(len(row.split()) for row in rows)\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}, separators=(\",\", \":\")) + \"\\n\")\n"
+          }
+        }
+      ]
+    },
+    "c47774fe2caed05ee128e7d10a04ad64ad7ee4d77bc3b5e50769c7bf90ab7ffa": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The status field is set to \"done\" instead of \"ok\".",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"done\\\", \\\"items\\\": $n}\"\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The item count is off by one because 1 is added to the line count.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(( $(wc -l < data.txt) + 1 ))\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Prints the same object with items before status and no spaces after colons or commas.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"items\\\":$n,\\\"status\\\":\\\"ok\\\"}\"\n"
+          }
+        },
+        {
+          "description": "Counts lines with awk and prints with printf, adding a pretty-printed multi-line layout.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(awk 'END { print NR }' data.txt)\nprintf '{\\n  \"status\": \"ok\",\\n  \"items\": %d\\n}\\n' \"$n\"\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

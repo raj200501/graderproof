@@ -112,3 +112,11 @@ Execution cache keys include a fingerprint of the graderproof package source, th
 ## D26 (2026-11-04) Scorable tasks and validator agreement (review N10, N12)
 
 A task is scorable only when its grader passes the reference stably (`determinism = stable_pass`); rates, ship-check recomputation, and E4 survivor lists all use this one definition. Validator agreement is computed over variants whose validators all returned a label verdict (violating or preserving); variants with an `unsure` or evidence-free verdict are counted and reported separately and never count as agreement.
+
+## D27 (2026-11-04) Response hashes for responses ingested before they were recorded
+
+From this date, ingesting a model response records the SHA-256 of the response file in its ledger line, and the client refuses to serve a response whose bytes changed after ingestion (`ResponseChangedError`). Ledger lines written before this change (the demo fixtures recorded on 2026-10-23) carry no hash; their responses are served without the check rather than re-requested, because re-requesting would spend calls to re-create fixtures that are already committed and whose content is in git history. Every confirmatory run uses only responses ingested after this change, so every confirmatory response is hash-checked. The demo store was re-recorded on 2026-11-04 after model items switched to task key hashes (D24); the old fixtures stay in the store and the ledger because those calls happened.
+
+## D28 (2026-11-04) E0 runs from a frozen worktree with private/ hidden
+
+E0 runs from a detached git worktree checked out at the commit that freezes its preregistration, so development can continue in the main checkout while the run is in progress, and the run provably uses the frozen code. The E0 labels stay in the main checkout's `private/`, which a worktree does not contain, so the bwrap sandbox now hides the `private/` directory of both the checkout the package was loaded from and, for a git worktree, its main checkout (found through the worktree's `.git` file), in addition to the home directory and `/tmp`. A confirmatory run refuses a sandbox that does not isolate writes (`unshare` or `local`), so E0 runs only under bwrap here.

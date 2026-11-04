@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import hashlib
 import json
 import sys
 from collections.abc import Callable, Sequence
@@ -73,6 +74,9 @@ def _audit_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--extract-batch", type=int, default=8, help="tasks per extraction call")
     p.add_argument("--propose-batch", type=int, default=4, help="tasks per proposal call")
     p.add_argument("--review-batch", type=int, default=25, help="variants per review call")
+    p.add_argument("--confirmatory", action="store_true", help="a preregistered run")
+    p.add_argument("--prereg", help="the preregistration this run follows (prereg/NNNN-*.md)")
+    p.add_argument("--review-queue", type=Path, default=Path("private/review_queue"))
 
 
 def _repair_args(p: argparse.ArgumentParser) -> None:
@@ -136,6 +140,25 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def confirmatory_refusal(
+    args: argparse.Namespace, dirty: Sequence[str], isolated: bool = True
+) -> str:
+    """Why a confirmatory run may not start (empty when it may).
+
+    It needs an existing preregistration, no uncommitted changes to the code or tasks
+    (``dirty``), and a sandbox that isolates writes and hides private paths
+    (``isolated``; DECISIONS.md D25, D28).
+    """
+    prereg = str(args.prereg or "")
+    if not prereg.startswith("prereg/") or not Path(prereg).is_file():
+        return "a confirmatory run needs --prereg naming an existing prereg/NNNN-*.md"
+    if dirty:
+        return f"refusing a confirmatory run on uncommitted changes: {list(dirty)[:5]}"
+    if not isolated:
+        return "a confirmatory run needs a write-isolating sandbox (bwrap or docker)"
+    return ""
+
+
 def parse_env(pairs: Sequence[str]) -> dict[str, str]:
     """``KEY=VALUE`` strings to a mapping."""
     out: dict[str, str] = {}
@@ -158,9 +181,9 @@ def report_pending(command: str, store: Path, hashes: Sequence[str]) -> int:
 def cmd_audit(args: argparse.Namespace) -> int:
     """``graderproof audit``."""
     from graderproof.adapters.toybench import ToybenchAdapter
-    from graderproof.audit import AuditConfig, Auditor, write_outputs
+    from graderproof.audit import AuditConfig, Auditor, dirty_paths, write_outputs
     from graderproof.models import ModelClient, PendingWorkError
-    from graderproof.run import Runner
+    from graderproof.run import Runner, sandbox_version
     from graderproof.sandbox import (
         BwrapSandbox,
         LocalSandbox,
@@ -189,8 +212,18 @@ def cmd_audit(args: argparse.Namespace) -> int:
     if sandbox is None:
         print("graderproof audit: no sandbox available", file=sys.stderr)
         return 1
+    if args.confirmatory:
+        refusal = confirmatory_refusal(
+            args,
+            dirty_paths(("src", "tools", "prereg", str(args.target))),
+            isolated=sandbox.isolates_writes,
+        )
+        if refusal:
+            print(f"graderproof audit: {refusal}", file=sys.stderr)
+            return 1
     adapter = ToybenchAdapter(extra_env=parse_env(args.env))
     tasks = adapter.load(Path(args.target))
+    third_party = any(not t.metadata.get("trusted_local") for t in tasks)
     client = ModelClient(store=args.store, ledger=args.ledger, budget=args.budget)
     config = AuditConfig(
         k=args.k,
@@ -212,10 +245,27 @@ def cmd_audit(args: argparse.Namespace) -> int:
         results, evidence = auditor.run(tasks)
     except PendingWorkError as exc:
         return report_pending("audit", args.store, exc.hashes)
+    benchmark = Path(args.target).name
+    default_evidence = (
+        (Path("private/evidence") / benchmark) if third_party else args.out / "evidence"
+    )
+    out_evidence = args.evidence or default_evidence
     meta = {
-        "benchmark": Path(args.target).name,
+        "benchmark": benchmark,
         "adapter": args.adapter,
+        "confirmatory": bool(args.confirmatory),
+        "prereg": args.prereg,
+        "third_party": third_party,
         "sandbox": sandbox.name,
+        "sandbox_version": sandbox_version(sandbox.name),
+        "models": client.served_models(),
+        "paths": {
+            "target": str(args.target),
+            "cache": str(args.cache),
+            "evidence": str(out_evidence),
+            "ledger": str(args.ledger),
+            "store": str(args.store),
+        },
         "model_store": args.store.as_posix(),
         "prompts": {
             "requirements": EXTRACT_PROMPT_VERSION,
@@ -228,9 +278,15 @@ def cmd_audit(args: argparse.Namespace) -> int:
             "review": args.review_batch,
         },
     }
-    out_evidence = args.evidence or args.out / "evidence"
     summary = write_outputs(
-        results, evidence, args.out, out_evidence, config, meta, args.public_task_ids
+        results,
+        evidence,
+        args.out,
+        out_evidence,
+        config,
+        meta,
+        args.public_task_ids,
+        review_queue=args.review_queue,
     )
     print(json.dumps(summary["aggregate"], indent=2, sort_keys=True))
     return 0
@@ -434,12 +490,21 @@ def cmd_e0_score(args: argparse.Namespace) -> int:
     from graderproof import e0
     from graderproof.audit import AuditConfig, provenance
 
+    committed = args.labels_sha256.read_text().split()[:1] if args.labels_sha256.exists() else []
+    actual = hashlib.sha256(args.labels.read_bytes()).hexdigest()
+    if committed != [actual]:
+        print("graderproof e0-score: labels do not match their committed hash", file=sys.stderr)
+        return 1
     lines = (args.audit / "tasks.jsonl").read_text().splitlines()
     rows = [json.loads(x) for x in lines if x.strip()]
     labels = json.loads(args.labels.read_text())["tasks"]
     adjudication = json.loads(args.adjudication.read_text()) if args.adjudication.exists() else {}
     ruled = adjudication.get("tasks", {})
-    scores = e0.task_scores(rows, labels, ruled)
+    try:
+        scores = e0.task_scores(rows, labels, ruled)
+    except ValueError as exc:
+        print(f"graderproof e0-score: {exc}", file=sys.stderr)
+        return 1
     pending = [s.task for s in e0.needs_adjudication(scores) if s.task not in ruled]
     if pending:
         print(f"graderproof e0-score: flags awaiting adjudication: {pending}", file=sys.stderr)

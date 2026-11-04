@@ -22,12 +22,13 @@ Requests are batched, content-addressed, and file-based (DECISIONS.md D17):
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import json
 import math
 import os
 import tomllib
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -60,6 +61,10 @@ class PendingWorkError(RuntimeError):
     def __init__(self, hashes: Sequence[str]) -> None:
         super().__init__(f"{len(hashes)} model requests pending")
         self.hashes = list(hashes)
+
+
+class ResponseChangedError(RuntimeError):
+    """An ingested response file no longer matches the hash recorded at ingestion."""
 
 
 class CapExceededError(RuntimeError):
@@ -102,6 +107,8 @@ class ModelClient:
     ledger: Path
     budget: Path
     disabled: bool | None = None
+    served: set[str] = field(default_factory=set, init=False)
+    """Request hashes whose responses this client has served (for provenance)."""
 
     def __post_init__(self) -> None:
         if self.disabled is None:
@@ -128,16 +135,33 @@ class ModelClient:
             )
         )
 
-    def _ingested(self) -> set[str]:
+    def ledger_rows(self) -> dict[str, dict[str, Any]]:
+        """Ledger lines keyed by request hash."""
         if not self.ledger.exists():
-            return set()
-        out = set()
+            return {}
+        out: dict[str, dict[str, Any]] = {}
         for line in self.ledger.read_text().splitlines():
             if line.strip():
-                req = json.loads(line).get("request")
-                if req:
-                    out.add(str(req))
+                row = json.loads(line)
+                if row.get("request"):
+                    out[str(row["request"])] = row
         return out
+
+    def _ingested(self) -> set[str]:
+        return set(self.ledger_rows())
+
+    def _verified_response(self, request_hash: str, rows: Mapping[str, Mapping[str, Any]]) -> Any:
+        """The ingested response, refusing one whose bytes changed since ingestion.
+
+        Ledger lines written before response hashes were recorded carry no hash and
+        are served as they are (DECISIONS.md D27).
+        """
+        data = (self.store / "responses" / f"{request_hash}.json").read_bytes()
+        expected = rows.get(request_hash, {}).get("response_sha256")
+        if expected is not None and hashlib.sha256(data).hexdigest() != expected:
+            raise ResponseChangedError(f"response {request_hash[:12]} changed after ingestion")
+        self.served.add(request_hash)
+        return json.loads(data)
 
     def batch(
         self,
@@ -150,8 +174,9 @@ class ModelClient:
         """Responses for ``items`` keyed by item ``id``; raises if not yet available."""
         h = self.request_hash(purpose, prompt_version, instructions, schema, items)
         response = self.store / "responses" / f"{h}.json"
-        if response.exists() and h in self._ingested():
-            data = json.loads(response.read_text())
+        rows = self.ledger_rows()
+        if response.exists() and h in rows:
+            data = self._verified_response(h, rows)
             return {str(k): dict(v) for k, v in data["items"].items()}
         if self.disabled:
             raise ModelCallBlockedError(
@@ -196,15 +221,15 @@ class ModelClient:
 
     def answered_items(self) -> dict[str, dict[str, Any]]:
         """Every ingested item response, keyed by :meth:`item_key`."""
-        done = self._ingested()
+        rows = self.ledger_rows()
         index: dict[str, dict[str, Any]] = {}
-        for h in sorted(done):
+        for h in sorted(rows):
             req_path = self.store / "requests" / f"{h}.json"
             resp_path = self.store / "responses" / f"{h}.json"
             if not req_path.exists() or not resp_path.exists():
                 continue
             req = json.loads(req_path.read_text())
-            resp = json.loads(resp_path.read_text())
+            resp = self._verified_response(h, rows)
             for item in req["items"]:
                 key = self.item_key(
                     req["purpose"],
@@ -251,6 +276,16 @@ class ModelClient:
             raise PendingWorkError(pending)
         return out
 
+    def served_models(self) -> list[str]:
+        """Distinct backend and model names behind every response served so far."""
+        rows = self.ledger_rows()
+        names = {
+            f"{rows[h].get('backend', '')}:{rows[h].get('model', '')}"
+            for h in self.served
+            if h in rows
+        }
+        return sorted(names)
+
     def pending(self) -> list[Path]:
         """Requests with no ingested response."""
         done = self._ingested()
@@ -294,6 +329,8 @@ class ModelClient:
         usage = response.get("usage") or {}
         row = {
             "utc": stamp,
+            "requested_utc": request.get("created_utc"),
+            "response_sha256": hashlib.sha256(resp_path.read_bytes()).hexdigest(),
             "kind": "single_call",
             "purpose": request["purpose"],
             "request": request_hash,

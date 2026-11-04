@@ -33,7 +33,7 @@ from graderproof import __version__
 from graderproof.adapters import Adapter, Execution
 from graderproof.core import Task, Validation, Variant, canonical_json, sha256_text
 from graderproof.models import PendingWorkError, utc_now
-from graderproof.run import Runner
+from graderproof.run import Runner, package_fingerprint
 from graderproof.score import TaskResult, VariantResult, aggregate, operator_counts, variant_record
 from graderproof.spec import Outcome, Requirement, probes_of
 from graderproof.validate import (
@@ -258,10 +258,33 @@ def git_sha(cwd: Path | None = None) -> str:
     return proc.stdout.strip() if proc.returncode == 0 else "unknown"
 
 
+def dirty_paths(
+    paths: Sequence[str] = ("src", "tools", "prereg"), cwd: Path | None = None
+) -> list[str]:
+    """Uncommitted changes (including untracked files) under ``paths``."""
+    proc = subprocess.run(
+        ["git", "status", "--porcelain", "--untracked-files=all", "--", *paths],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        return ["<not a git checkout>"]
+    return [line[3:] for line in proc.stdout.splitlines() if line.strip()]
+
+
 def provenance(config: AuditConfig, extra: Mapping[str, Any] | None = None) -> dict[str, Any]:
-    """Provenance block for artifacts."""
+    """Provenance block for artifacts.
+
+    ``git_dirty`` is true when the code that produced the artifact (``src/``,
+    ``tools/``, ``prereg/``) differed from ``git_sha``; ``package_fingerprint`` hashes
+    the package source actually loaded.
+    """
     return {
         "git_sha": git_sha(),
+        "git_dirty": bool(dirty_paths()),
+        "package_fingerprint": package_fingerprint(),
         "command": " ".join(sys.argv),
         "created_utc": utc_now(),
         "graderproof_version": __version__,
@@ -280,8 +303,14 @@ def write_outputs(
     config: AuditConfig,
     meta: Mapping[str, Any],
     public_task_ids: bool,
+    review_queue: Path | None = None,
 ) -> dict[str, Any]:
-    """Bank tasks.jsonl, variants.jsonl, summary.json (public) and per-task evidence."""
+    """Bank tasks.jsonl, variants.jsonl, summary.json (public) and per-task evidence.
+
+    Variants whose validators disagree are excluded from headline numbers and, when
+    ``review_queue`` is given, listed in ``<review_queue>/<benchmark>.jsonl`` for a
+    human decision (brief section 4).
+    """
     public_dir.mkdir(parents=True, exist_ok=True)
     evidence_dir.mkdir(parents=True, exist_ok=True)
     with (public_dir / "tasks.jsonl").open("w") as fh:
@@ -299,6 +328,8 @@ def write_outputs(
         (evidence_dir / f"{r.task_hash}.json").write_text(
             json.dumps(ev.to_dict(r), indent=1, sort_keys=True) + "\n"
         )
+    if review_queue is not None:
+        write_review_queue(results, review_queue / f"{meta.get('benchmark', 'audit')}.jsonl")
     agg = aggregate(results, config.seed, config.replicates)
     summary = {
         "schema": "graderproof.audit/1",
@@ -313,6 +344,32 @@ def write_outputs(
     }
     (public_dir / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
     return summary
+
+
+def write_review_queue(results: Sequence[TaskResult], path: Path) -> int:
+    """List every variant whose validators disagree; returns how many were written."""
+    rows = [
+        {
+            "task_hash": r.task_hash,
+            "variant_id": vr.variant.id,
+            "kind": vr.variant.kind.value,
+            "operator": vr.variant.operator,
+            "validations": [
+                {
+                    "validator": x.validator,
+                    "verdict": None if x.verdict is None else x.verdict.value,
+                    "evidence": x.evidence,
+                }
+                for x in vr.variant.validations
+            ],
+        }
+        for r in results
+        for vr in r.variants
+        if vr.variant.validation_status.value == "disagreed"
+    ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("".join(json.dumps(row, sort_keys=True) + "\n" for row in rows))
+    return len(rows)
 
 
 __all__ = [

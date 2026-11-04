@@ -2,13 +2,23 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 
 import pytest
 
 from graderproof import __version__
-from graderproof.cli import BUILT, COMMANDS, NOT_BUILT, PENDING, build_parser, main
+from graderproof.cli import (
+    BUILT,
+    COMMANDS,
+    NOT_BUILT,
+    PENDING,
+    build_parser,
+    confirmatory_refusal,
+    main,
+    parse_env,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -127,3 +137,25 @@ def test_demo_command_and_check(tmp_path: Path, capsys: pytest.CaptureFixture[st
         )
         == 1
     )
+
+
+def test_confirmatory_runs_need_a_prereg_and_a_clean_tree(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "prereg").mkdir()
+    (tmp_path / "prereg" / "0001-x.md").write_text("frozen\n")
+    (tmp_path / "notes.md").write_text("x\n")
+
+    def ns(prereg: str | None) -> argparse.Namespace:
+        return argparse.Namespace(prereg=prereg)
+
+    assert "--prereg" in confirmatory_refusal(ns(None), [])
+    assert "--prereg" in confirmatory_refusal(ns("notes.md"), [])
+    assert "--prereg" in confirmatory_refusal(ns("prereg/0002-missing.md"), [])
+    assert "uncommitted" in confirmatory_refusal(ns("prereg/0001-x.md"), ["src/a.py"])
+    assert "sandbox" in confirmatory_refusal(ns("prereg/0001-x.md"), [], isolated=False)
+    assert confirmatory_refusal(ns("prereg/0001-x.md"), []) == ""
+    assert parse_env(["A=1", "B=x=y"]) == {"A": "1", "B": "x=y"}
+    with pytest.raises(SystemExit):
+        parse_env(["novalue"])

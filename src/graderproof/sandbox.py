@@ -6,7 +6,7 @@ on the host. Backends, in order of preference:
 * :class:`DockerSandbox`: ``docker run --network none`` (needs a daemon and an image);
 * :class:`BwrapSandbox`: bubblewrap with a read-only root, writable bind mounts only
   for the workspace, no network, private PID/IPC/UTS namespaces, a tmpfs ``/tmp``, and
-  the home directory hidden;
+  the home directory and the repository's private/ directory hidden;
 * :class:`UnshareSandbox`: a user and network namespace (no network, but no write
   isolation), acceptable only for this project's own generated tasks;
 * :class:`LocalSandbox`: no isolation, for project-generated tasks in tests only.
@@ -123,6 +123,38 @@ def execute(cmd: Sequence[str], env: Mapping[str, str], limits: Limits, backend:
     )
 
 
+def checkouts(repo: Path) -> list[Path]:
+    """``repo`` and, when it is a git worktree, the main checkout it belongs to.
+
+    A worktree's ``.git`` is a file reading ``gitdir: <main>/.git/worktrees/<name>``.
+    """
+    out = [repo]
+    marker = repo / ".git"
+    if marker.is_file():
+        text = marker.read_text(encoding="utf-8", errors="replace").strip()
+        if text.startswith("gitdir:"):
+            gitdir = Path(text.split(":", 1)[1].strip())
+            if gitdir.parent.name == "worktrees" and gitdir.parent.parent.name == ".git":
+                out.append(gitdir.parents[2])
+    return out
+
+
+def default_hidden(repo: Path | None = None) -> list[Path]:
+    """Paths bwrap hides: the home directory and the repository's private/ directories.
+
+    private/ holds unpublished findings and the E0 labels; sandboxed task code must
+    never be able to read it, including when graderproof runs from a git worktree
+    (such as the frozen E0 checkout) whose main checkout holds private/.
+    ``repo`` defaults to the checkout this package was loaded from.
+    """
+    hidden = [Path.home()]
+    root = Path(__file__).resolve().parents[2] if repo is None else repo
+    for checkout in checkouts(root):
+        if (checkout / "pyproject.toml").exists() and (checkout / "private").is_dir():
+            hidden.append(checkout / "private")
+    return hidden
+
+
 class Sandbox(Protocol):
     """A way to run one command with a writable workspace and no network."""
 
@@ -148,7 +180,7 @@ class BwrapSandbox:
 
     name: str = "bwrap"
     isolates_writes: bool = True
-    hidden: Sequence[Path] = field(default_factory=lambda: [Path.home()])
+    hidden: Sequence[Path] = field(default_factory=default_hidden)
 
     def command(
         self, argv: Sequence[str], cwd: Path, writable: Sequence[Path], readonly: Sequence[Path]

@@ -34,7 +34,9 @@ def demo_sandbox() -> Sandbox:
 
 def render(results: Sequence[TaskResult], evidence_witness: dict[str, str]) -> str:
     """Deterministic plain-text report."""
-    lines = [f"graderproof demo: {len(results)} toybench demo tasks, recorded model responses"]
+    lines = [
+        f"graderproof demo: {len(results)} synthetic toybench demo tasks, recorded model responses"
+    ]
     for r in results:
         lines.append("")
         lines.append(

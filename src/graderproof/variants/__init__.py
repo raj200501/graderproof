@@ -88,7 +88,13 @@ class Generator:
         return out
 
     def sample(self, proposals: Sequence[Proposal], salt: str) -> list[Proposal]:
-        """At most ``max_per_operator`` per operator and ``max_total`` overall, seeded."""
+        """At most ``max_per_operator`` per operator and ``max_total`` overall, seeded.
+
+        When the per-operator sample still exceeds ``max_total``, preserving variants
+        keep a reserved share (up to a third of ``max_total``, more if violating
+        variants are scarce), so a single format variant that would expose a brittle
+        grader is not dropped by chance among many violating ones.
+        """
         rng = random.Random(f"{self.seed}:{salt}")
         by_op: dict[str, list[Proposal]] = {}
         for p in proposals:
@@ -100,7 +106,11 @@ class Generator:
                 group = rng.sample(group, self.max_per_operator)
             picked.extend(group)
         if len(picked) > self.max_total:
-            picked = rng.sample(picked, self.max_total)
+            pres = [p for p in picked if p.kind is VariantKind.PRESERVING]
+            viol = [p for p in picked if p.kind is VariantKind.VIOLATING]
+            n_pres = min(len(pres), max(self.max_total // 3, self.max_total - len(viol)))
+            n_viol = min(len(viol), self.max_total - n_pres)
+            picked = rng.sample(pres, n_pres) + rng.sample(viol, n_viol)
         return sorted(picked, key=lambda p: (p.operator, p.target, p.description))
 
     def variants(self, task_id: str, files: Mapping[str, str], ctx: Context) -> list[Variant]:

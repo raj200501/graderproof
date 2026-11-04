@@ -15,10 +15,12 @@ from graderproof.validate import (
     ModelReviewer,
     RequirementExtractor,
     parse_requirements,
+    patterns_compile,
     valid_requirements,
     witness_hash,
     witness_validation,
 )
+from graderproof.variants.wrap import wrap_entry
 
 TASK = Task(
     "t",
@@ -121,3 +123,34 @@ def test_extractor_round_trip(tmp_path: Path) -> None:
     )
     out = ex.extract([(TASK, REF)])
     assert [r.id for r in out[TASK.key]] == ["R1"]
+
+
+def test_uncompilable_patterns_and_raising_checks() -> None:
+    assert patterns_compile([{"type": "stdout_regex", "pattern": "a+"}, {"type": "x"}])
+    assert not patterns_compile([{"type": "file_regex", "path": "a.txt", "pattern": "("}])
+    raw = [
+        {"id": "R1", "text": "ok", "checks": [{"type": "stdout_regex", "pattern": "ok"}]},
+        {"id": "R2", "text": "bad", "checks": [{"type": "stdout_regex", "pattern": "(["}]},
+    ]
+    assert [r.id for r in parse_requirements(raw, "model")] == ["R1"]
+    broken = Requirement("R9", "bad regex", ({"type": "stdout_regex", "pattern": "(["},))
+    v, w = witness_validation(variant(), [broken, REQ], REF, Outcome(files={"a.txt": "no\n"}))
+    assert v.verdict is VariantKind.VIOLATING and w is not None
+    assert [b["requirement"] for b in w["broken"]] == ["R1"]
+    v2, w2 = witness_validation(variant(), [broken], REF, REF)
+    assert v2.verdict is None and w2 is None
+
+
+def test_model_items_carry_hashes_not_names(tmp_path: Path) -> None:
+    client = store(tmp_path)
+    item = RequirementExtractor(client).item(TASK, REF)
+    assert item["id"] == TASK.key_hash and TASK.key not in json.dumps(item)
+    wrapped = Variant(
+        "t",
+        VariantKind.PRESERVING,
+        "out-json-key-order",
+        "diff",
+        wrap_entry({"s.sh": "echo ok > a.txt\n"}, "s.sh", "out-json-key-order", ["a.txt"]),
+    )
+    text = json.dumps(ModelReviewer(client).item(TASK, wrapped))
+    assert "out-json-key-order" not in text and "key-order" not in text

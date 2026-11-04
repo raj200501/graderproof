@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import shutil
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -124,3 +126,37 @@ def test_probes_without_binaries(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("graderproof.sandbox.shutil.which", lambda name: None)
     assert sb.bwrap_works() is False
     assert sb.unshare_works() is False
+
+
+def test_default_hidden_covers_private_dirs_of_worktrees(tmp_path: Path) -> None:
+    main = tmp_path / "main"
+    (main / "private").mkdir(parents=True)
+    (main / "pyproject.toml").write_text("")
+    assert sb.default_hidden(main) == [Path.home(), main / "private"]
+    wt = tmp_path / "wt"
+    wt.mkdir()
+    (wt / "pyproject.toml").write_text("")
+    (wt / ".git").write_text(f"gitdir: {main}/.git/worktrees/e0\n")
+    assert sb.checkouts(wt) == [wt, main]
+    assert sb.default_hidden(wt) == [Path.home(), main / "private"]
+    (wt / ".git").write_text("gitdir: /elsewhere/modules/x\n")
+    assert sb.checkouts(wt) == [wt]
+    (tmp_path / "plain").mkdir()
+    assert sb.default_hidden(tmp_path / "plain") == [Path.home()]
+    assert Path.home() in sb.default_hidden()
+
+
+@pytest.mark.skipif(not sb.bwrap_works(), reason="bubblewrap not usable here")
+def test_bwrap_hides_private_paths(tmp_path: Path) -> None:
+    # outside /tmp, which bwrap replaces with an empty tmpfs anyway
+    secret = Path(tempfile.mkdtemp(dir="/var/tmp"))
+    try:
+        (secret / "labels.json").write_text("planted")
+        ws = tmp_path / "ws"
+        ws.mkdir()
+        argv = ["sh", "-c", f"cat {secret}/labels.json 2>/dev/null || echo hidden"]
+        assert "planted" in sb.BwrapSandbox(hidden=[]).run(argv, ws, [ws]).stdout
+        res = sb.BwrapSandbox(hidden=[secret]).run(argv, ws, [ws])
+        assert "planted" not in res.stdout and "hidden" in res.stdout
+    finally:
+        shutil.rmtree(secret)

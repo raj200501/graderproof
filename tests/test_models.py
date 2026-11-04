@@ -132,3 +132,35 @@ def test_batch_items_reuses_answers_across_batches(client: models.ModelClient) -
     assert out == {"a": {"verdict": "a"}, "b": {"verdict": "a"}, "c": {"verdict": "b"}}
     (client.store / "responses" / f"{exc2.value.hashes[0]}.json").unlink()
     assert len(client.answered_items()) == 2
+
+
+def test_changed_responses_are_refused_and_served_models_recorded(
+    client: models.ModelClient,
+) -> None:
+    items = [{"id": "x", "q": 1}]
+    with pytest.raises(models.PendingResponseError) as exc:
+        client.batch("p", "v1", "do it", SCHEMA, items)
+    h = exc.value.request_hash
+    answer(client, h, {"x": {"verdict": "a"}})
+    row = client.ingest(h, now="2026-10-23T00:00:00Z")
+    assert len(row["response_sha256"]) == 64 and "requested_utc" in row
+    assert client.served_models() == []
+    assert client.batch("p", "v1", "do it", SCHEMA, items) == {"x": {"verdict": "a"}}
+    assert client.served_models() == ["test:m"]
+    answer(client, h, {"x": {"verdict": "b"}})  # edited after ingestion
+    with pytest.raises(models.ResponseChangedError):
+        client.batch("p", "v1", "do it", SCHEMA, items)
+
+
+def test_legacy_ledger_rows_without_hash_are_served(client: models.ModelClient) -> None:
+    items = [{"id": "x", "q": 1}]
+    with pytest.raises(models.PendingResponseError) as exc:
+        client.batch("p", "v1", "do it", SCHEMA, items)
+    h = exc.value.request_hash
+    answer(client, h, {"x": {"verdict": "a"}})
+    client.ingest(h, now="2026-10-23T00:00:00Z")
+    rows = [json.loads(line) for line in client.ledger.read_text().splitlines()]
+    for r in rows:
+        r.pop("response_sha256", None)
+    client.ledger.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    assert client.batch("p", "v1", "do it", SCHEMA, items) == {"x": {"verdict": "a"}}

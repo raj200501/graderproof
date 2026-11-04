@@ -50,6 +50,7 @@ def test_proposer_round_trip(tmp_path: Path) -> None:
     proposer = ModelProposer(client)
     item = proposer.item(TASK, [REQ])
     assert item["requirements"] == [{"id": "R1", "text": "prints hi"}]
+    assert item["id"] == TASK.key_hash and TASK.key not in json.dumps(item)
     assert "checks" not in json.dumps(item)
     with pytest.raises(PendingWorkError) as exc:
         proposer.propose([(TASK, [REQ])])
@@ -58,7 +59,9 @@ def test_proposer_round_trip(tmp_path: Path) -> None:
         "request": h,
         "backend": "t",
         "model": "m",
-        "items": {TASK.key: {"violating": [{"files": {"s.sh": "echo no\n"}}], "preserving": []}},
+        "items": {
+            TASK.key_hash: {"violating": [{"files": {"s.sh": "echo no\n"}}], "preserving": []}
+        },
     }
     (client.store / "responses").mkdir(parents=True)
     (client.store / "responses" / f"{h}.json").write_text(json.dumps(resp))

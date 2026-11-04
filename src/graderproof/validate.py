@@ -18,6 +18,7 @@ text, the reference solution, and the reference outcome, never the grader.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -89,10 +90,13 @@ def witness_validation(
     broken: list[dict[str, Any]] = []
     held: list[str] = []
     for req in requirements:
-        ok_ref, _ = holds(req, reference, reference)
-        if not ok_ref:
+        try:
+            ok_ref, _ = holds(req, reference, reference)
+            if not ok_ref:
+                continue
+            ok, results = holds(req, outcome, reference)
+        except Exception:  # a check that cannot be evaluated is no evidence either way
             continue
-        ok, results = holds(req, outcome, reference)
         if ok:
             held.append(req.id)
         else:
@@ -186,7 +190,7 @@ class RequirementExtractor:
         """The request item for one task."""
         env = task.environment
         return {
-            "id": task.key,
+            "id": task.key_hash,
             "kind": str(env.get("kind", "")),
             "task_text": _clip(task.instructions, 8000),
             "reference_solution": {p: _clip(t) for p, t in task.reference_solution.items()},
@@ -205,7 +209,11 @@ class RequirementExtractor:
         }
 
     def extract(self, pairs: Sequence[tuple[Task, Outcome]]) -> dict[str, list[Requirement]]:
-        """Requirements keyed by task key; malformed requirements are dropped."""
+        """Requirements keyed by task key; malformed requirements are dropped.
+
+        Items are identified by the task's key hash, never its name (DECISIONS.md D24).
+        """
+        by_hash = {t.key_hash: t.key for t, _ in pairs}
         items = [self.item(t, o) for t, o in pairs]
         schema = {"required": ["requirements"]}
         responses = self.client.batch_items(
@@ -217,10 +225,11 @@ class RequirementExtractor:
             self.batch_size,
         )
         return {
-            key: parse_requirements(
+            by_hash[h]: parse_requirements(
                 r.get("requirements", []), source=f"model:{EXTRACT_PROMPT_VERSION}"
             )
-            for key, r in responses.items()
+            for h, r in responses.items()
+            if h in by_hash
         }
 
 
@@ -235,7 +244,7 @@ def parse_requirements(raw: Sequence[Any], source: str) -> list[Requirement]:
             for c in r.get("checks", [])
             if isinstance(c, Mapping) and c.get("type") in CHECK_TYPES
         ]
-        if not checks or not r.get("id"):
+        if not checks or not r.get("id") or not patterns_compile(checks):
             continue
         try:
             reqs.append(
@@ -251,6 +260,17 @@ def parse_requirements(raw: Sequence[Any], source: str) -> list[Requirement]:
     return reqs
 
 
+def patterns_compile(checks: Sequence[Mapping[str, Any]]) -> bool:
+    """Whether every regular expression in ``checks`` compiles."""
+    for c in checks:
+        if "pattern" in c:
+            try:
+                re.compile(str(c["pattern"]))
+            except re.error:
+                return False
+    return True
+
+
 def valid_requirements(
     requirements: Sequence[Requirement], references: Sequence[Outcome]
 ) -> tuple[list[Requirement], list[Requirement]]:
@@ -260,7 +280,7 @@ def valid_requirements(
     for req in requirements:
         try:
             ok = all(holds(req, ref, references[0])[0] for ref in references)
-        except (ValueError, KeyError, TypeError):
+        except Exception:  # any evaluation error makes the requirement invalid
             ok = False
         (good if ok else bad).append(req)
     return good, bad

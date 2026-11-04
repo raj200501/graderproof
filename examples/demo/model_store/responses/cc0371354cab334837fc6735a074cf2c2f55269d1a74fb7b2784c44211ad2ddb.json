@@ -1,0 +1,95 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "cc0371354cab334837fc6735a074cf2c2f55269d1a74fb7b2784c44211ad2ddb",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "a1cc239fc468b2b41e8c838c5239646e7740ee3276c70faf43f4fd01bba55d85": {
+      "requirements": [
+        {"id": "R1", "text": "Look up the order with get_order.", "checks": [
+          {"type": "trajectory_includes", "tool": "get_order", "args": {"order_id": "A17"}}
+        ]},
+        {"id": "R2", "text": "Confirm the refund amount with the customer using confirm_with_user.", "checks": [
+          {"type": "trajectory_includes", "tool": "confirm_with_user", "args": {}}
+        ]},
+        {"id": "R3", "text": "Before issuing any refund, confirm with the customer (confirm_with_user comes before refund).", "checks": [
+          {"type": "trajectory_before", "first": {"tool": "confirm_with_user", "args": {}}, "then": {"tool": "refund", "args": {}}}
+        ]},
+        {"id": "R4", "text": "Issue a full refund of the order total (40) with refund for order A17.", "checks": [
+          {"type": "trajectory_includes", "tool": "refund", "args": {"order_id": "A17", "amount": 40}},
+          {"type": "state_equals", "pointer": "/orders/A17/refunded", "equals": 40}
+        ]},
+        {"id": "R5", "text": "Then send the customer a receipt with send_receipt, after the refund.", "checks": [
+          {"type": "trajectory_includes", "tool": "send_receipt", "args": {"order_id": "A17"}},
+          {"type": "trajectory_before", "first": {"tool": "refund", "args": {}}, "then": {"tool": "send_receipt", "args": {}}}
+        ]},
+        {"id": "R6", "text": "The order lookup happens first, before the refund.", "checks": [
+          {"type": "trajectory_before", "first": {"tool": "get_order", "args": {}}, "then": {"tool": "refund", "args": {}}}
+        ]}
+      ]
+    },
+    "a879f13d8de41faecea325ee3554622ce8d7c69d4f9004fcc84d736ffb373036": {
+      "requirements": [
+        {"id": "R1", "text": "Write classify.py defining classify(n).", "checks": [
+          {"type": "file_exists", "path": "classify.py"}
+        ]},
+        {"id": "R2", "text": "Return \"fizzbuzz\" if n is divisible by both 3 and 5.", "checks": [
+          {"type": "call", "probe": {"function": "classify", "args": [15], "kwargs": {}}, "equals": "fizzbuzz"},
+          {"type": "call", "probe": {"function": "classify", "args": [30], "kwargs": {}}, "equals": "fizzbuzz"},
+          {"type": "call", "probe": {"function": "classify", "args": [45], "kwargs": {}}, "equals": "fizzbuzz"}
+        ]},
+        {"id": "R3", "text": "Return \"fizz\" if n is divisible by 3 only.", "checks": [
+          {"type": "call", "probe": {"function": "classify", "args": [3], "kwargs": {}}, "equals": "fizz"},
+          {"type": "call", "probe": {"function": "classify", "args": [9], "kwargs": {}}, "equals": "fizz"},
+          {"type": "call", "probe": {"function": "classify", "args": [12], "kwargs": {}}, "equals": "fizz"}
+        ]},
+        {"id": "R4", "text": "Return \"buzz\" if n is divisible by 5 only.", "checks": [
+          {"type": "call", "probe": {"function": "classify", "args": [5], "kwargs": {}}, "equals": "buzz"},
+          {"type": "call", "probe": {"function": "classify", "args": [10], "kwargs": {}}, "equals": "buzz"},
+          {"type": "call", "probe": {"function": "classify", "args": [25], "kwargs": {}}, "equals": "buzz"}
+        ]},
+        {"id": "R5", "text": "Otherwise return the decimal string of n (classify(7) returns \"7\").", "checks": [
+          {"type": "call", "probe": {"function": "classify", "args": [7], "kwargs": {}}, "equals": "7"},
+          {"type": "call", "probe": {"function": "classify", "args": [1], "kwargs": {}}, "equals": "1"},
+          {"type": "call", "probe": {"function": "classify", "args": [14], "kwargs": {}}, "equals": "14"},
+          {"type": "call", "probe": {"function": "classify", "args": [101], "kwargs": {}}, "equals": "101"}
+        ]}
+      ]
+    },
+    "abb28f19332b4ce275649855f8c58d80f9bb9fb0d82e4b4d0aaa49a99cd51724": {
+      "requirements": [
+        {"id": "R1", "text": "Write stats.json in the working directory.", "checks": [
+          {"type": "file_exists", "path": "stats.json"}
+        ]},
+        {"id": "R2", "text": "stats.json has integer field lines, the number of lines in input.txt (3).", "checks": [
+          {"type": "file_json", "path": "stats.json", "pointer": "/lines", "equals": 3, "lenient": true}
+        ]},
+        {"id": "R3", "text": "stats.json has integer field words, the number of whitespace-separated words in input.txt (9).", "checks": [
+          {"type": "file_json", "path": "stats.json", "pointer": "/words", "equals": 9, "lenient": true}
+        ]}
+      ]
+    },
+    "c47774fe2caed05ee128e7d10a04ad64ad7ee4d77bc3b5e50769c7bf90ab7ffa": {
+      "requirements": [
+        {"id": "R1", "text": "Print a JSON object to standard output with \"status\" set to the string \"ok\".", "checks": [
+          {"type": "stdout_json", "pointer": "/status", "equals": "ok", "lenient": true}
+        ]},
+        {"id": "R2", "text": "\"items\" is the number of lines in data.txt (4).", "checks": [
+          {"type": "stdout_json", "pointer": "/items", "equals": 4, "lenient": true}
+        ]}
+      ]
+    },
+    "ca5057db2128dd5c511d0e267ded839949658e4c480dbb86d21a49d464b3fe9d": {
+      "requirements": [
+        {"id": "R1", "text": "Create hello.txt whose only line is `Hello, graderproof!`.", "checks": [
+          {"type": "file_equals", "path": "hello.txt", "text": "Hello, graderproof!\n", "normalize": "trailing_ws"},
+          {"type": "file_lines", "path": "hello.txt", "count": 1}
+        ]},
+        {"id": "R2", "text": "Create count.txt containing the number of characters in the greeting, not counting the newline (19).", "checks": [
+          {"type": "file_equals", "path": "count.txt", "text": "19", "normalize": "strip"}
+        ]}
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

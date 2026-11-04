@@ -3,16 +3,28 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
 
 from graderproof import demo
 from graderproof.adapters.toybench import ToybenchAdapter
-from graderproof.audit import AuditConfig, Auditor, context_for, git_sha, provenance, write_outputs
+from graderproof.audit import (
+    AuditConfig,
+    Auditor,
+    context_for,
+    dirty_paths,
+    git_sha,
+    provenance,
+    write_outputs,
+    write_review_queue,
+)
+from graderproof.core import Determinism, Validation, Variant, VariantKind
 from graderproof.models import ModelClient, PendingWorkError
 from graderproof.run import Runner
 from graderproof.sandbox import LocalSandbox
+from graderproof.score import TaskResult, VariantResult
 from graderproof.spec import Outcome
 from graderproof.validate import ModelReviewer, RequirementExtractor
 
@@ -110,3 +122,51 @@ def test_context_and_provenance() -> None:
     prov = provenance(AuditConfig(), {"x": 1})
     assert prov["x"] == 1 and prov["git_sha"] == git_sha()
     assert git_sha(Path("/")) == "unknown"
+
+
+Kind = VariantKind | None
+
+
+def queued(kind: VariantKind, a: Kind, b: Kind, n: int) -> VariantResult:
+    v = Variant("t", kind, f"op{n}", "", {"f": str(n)}, {"w": 1})
+    v = v.with_validation(Validation("witness", a)).with_validation(Validation("model", b))
+    return VariantResult(v, True, 1)
+
+
+def test_review_queue_lists_only_disagreements(tmp_path: Path) -> None:
+    v, p = VariantKind.VIOLATING, VariantKind.PRESERVING
+    results = [
+        TaskResult(
+            "b:t",
+            "h1",
+            Determinism.STABLE_PASS,
+            3,
+            1,
+            [queued(v, v, v, 0), queued(v, v, p, 1), queued(p, p, None, 2), queued(v, p, p, 3)],
+        )
+    ]
+    path = tmp_path / "queue" / "b.jsonl"
+    assert write_review_queue(results, path) == 2
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    assert [r["operator"] for r in rows] == ["op1", "op2"]
+    assert rows[0]["task_hash"] == "h1" and "b:t" not in path.read_text()
+    assert rows[1]["validations"][1] == {"validator": "model", "verdict": None, "evidence": ""}
+
+
+def test_dirty_paths_reports_uncommitted_code(tmp_path: Path) -> None:
+    assert dirty_paths(cwd=tmp_path) == ["<not a git checkout>"]
+    git = ["git", "-c", "user.name=t", "-c", "user.email=t@example.invalid"]
+    subprocess.run([*git, "init", "-q"], cwd=tmp_path, check=True)
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "a.py").write_text("x = 1\n")
+    (tmp_path / "notes.md").write_text("n\n")
+    subprocess.run([*git, "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run([*git, "commit", "-qm", "c"], cwd=tmp_path, check=True)
+    assert dirty_paths(cwd=tmp_path) == []
+    (tmp_path / "notes.md").write_text("changed\n")
+    assert dirty_paths(cwd=tmp_path) == []  # outside src/, tools/, prereg/
+    (tmp_path / "src" / "a.py").write_text("x = 2\n")
+    (tmp_path / "src" / "new.py").write_text("y = 1\n")
+    assert dirty_paths(cwd=tmp_path) == ["src/a.py", "src/new.py"]
+    prov = provenance(AuditConfig(), {"x": 1})
+    assert isinstance(prov["git_dirty"], bool) and len(prov["package_fingerprint"]) == 64

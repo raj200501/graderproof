@@ -10,6 +10,7 @@ from graderproof.score import (
     agreement,
     by_key,
     operator_counts,
+    unsure_count,
     variant_record,
 )
 
@@ -97,3 +98,16 @@ def test_aggregate_and_helpers() -> None:
     empty = aggregate([], 1, 10)
     assert empty.false_accept is None and empty.to_dict()["false_accept_task_rate"] is None
     assert agreement([]) == (None, 0, 0)
+
+
+def test_unsure_verdicts_are_not_judged_for_agreement() -> None:
+    vrs = [
+        VariantResult(make(V, (V, V)), True, 1),
+        VariantResult(make(V, (V, P), n=1), True, 1),
+        VariantResult(make(V, (V, None), n=2), True, 1),
+        VariantResult(make(P, (None, None), n=3), True, 1),
+    ]
+    t = TaskResult("b:t", "h", Determinism.STABLE_PASS, 3, 1, vrs)
+    assert agreement([t]) == (0.5, 1, 2)
+    assert unsure_count([t]) == 2
+    assert aggregate([t], seed=1, replicates=20).n_unsure_variants == 2

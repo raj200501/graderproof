@@ -1,0 +1,33 @@
+{
+  "created_utc": "2026-11-04T01:59:01Z",
+  "hash": "fbdfceb7a6b466894bae1d4d48d8e8cf7624135cb947308be9b7fe3c76846df6",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "ca5057db2128dd5c511d0e267ded839949658e4c480dbb86d21a49d464b3fe9d",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting=\"Hello, graderproof!\"\necho \"$greeting\" > hello.txt\necho \"${#greeting}\" > count.txt\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Create hello.txt whose only line is `Hello, graderproof!`."
+        },
+        {
+          "id": "R2",
+          "text": "Create count.txt containing the number of characters in the greeting, not counting the newline (19)."
+        }
+      ],
+      "task_text": "Create `hello.txt` whose only line is `Hello, graderproof!`. Create `count.txt` containing the number of characters in that greeting (not counting the newline).\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

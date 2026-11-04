@@ -182,6 +182,7 @@ class Aggregate:
     agreement_rate: float | None
     n_headline_variants: int
     n_excluded_variants: int
+    n_unsure_variants: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         """Plain-JSON representation."""
@@ -200,19 +201,34 @@ class Aggregate:
             "agreement_rate": self.agreement_rate,
             "n_headline_variants": self.n_headline_variants,
             "n_excluded_variants": self.n_excluded_variants,
+            "n_unsure_variants": self.n_unsure_variants,
         }
 
 
 def agreement(results: Sequence[TaskResult]) -> tuple[float | None, int, int]:
-    """(rate, agreeing, judged): share of variants with 2+ validators that all agree."""
+    """(rate, agreeing, judged) over variants whose 2+ validators all gave a label.
+
+    A variant with any ``unsure`` or evidence-free verdict is not judged (DECISIONS.md
+    D26); :func:`unsure_count` reports those separately.
+    """
     judged = agree = 0
     for t in results:
         for vr in t.variants:
             vals = vr.variant.validations
-            if len({x.validator for x in vals}) >= 2:
+            if len({x.validator for x in vals}) >= 2 and all(x.verdict is not None for x in vals):
                 judged += 1
                 agree += len({x.verdict for x in vals}) == 1
     return (agree / judged if judged else None), agree, judged
+
+
+def unsure_count(results: Sequence[TaskResult]) -> int:
+    """Variants where some validator returned no label verdict."""
+    return sum(
+        1
+        for t in results
+        for vr in t.variants
+        if any(x.verdict is None for x in vr.variant.validations)
+    )
 
 
 def aggregate(results: Sequence[TaskResult], seed: int, replicates: int) -> Aggregate:
@@ -235,6 +251,7 @@ def aggregate(results: Sequence[TaskResult], seed: int, replicates: int) -> Aggr
         agreement_rate=rate,
         n_headline_variants=headline,
         n_excluded_variants=len(all_variants) - headline,
+        n_unsure_variants=unsure_count(results),
     )
 
 

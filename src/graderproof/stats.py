@@ -95,8 +95,12 @@ def recall_precision(
     seed: int,
     replicates: int,
     alpha: float = 0.05,
-) -> tuple[Estimate, Estimate] | None:
+) -> tuple[Estimate | None, Estimate | None]:
     """Planted-weakness recall and precision with task bootstrap intervals.
+
+    Each estimate is computed independently and is None only when it is itself
+    undefined (no planted task for recall; no flag at all for precision), so a run
+    with no flags still reports its recall.
 
     Per task: ``planted`` (a weakness was planted), ``detected`` (graderproof flagged it
     in the planted direction), ``flagged`` (graderproof raised any flag), and ``real``
@@ -122,9 +126,33 @@ def recall_precision(
     r_pt, p_pt = rec(everything), prec(everything)
     r_ci = bootstrap_ci(n, rec, seed, replicates, alpha)
     p_ci = bootstrap_ci(n, prec, seed + 1, replicates, alpha)
-    if r_pt is None or p_pt is None or r_ci is None or p_ci is None:
+    recall = None if r_pt is None or r_ci is None else Estimate(r_pt, r_ci[0], r_ci[1], n)
+    precision = None if p_pt is None or p_ci is None else Estimate(p_pt, p_ci[0], p_ci[1], n)
+    return recall, precision
+
+
+def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> tuple[float, float] | None:
+    """Exact binomial interval for k successes in n trials (None when n is zero).
+
+    Unlike the percentile bootstrap, it does not collapse to a point when k is 0 or n.
+    Bounds are found by bisection on the exact binomial tails.
+    """
+    if n <= 0 or not 0 <= k <= n:
         return None
-    return Estimate(r_pt, r_ci[0], r_ci[1], n), Estimate(p_pt, p_ci[0], p_ci[1], n)
+
+    def solve(f: Callable[[float], float], target: float) -> float:
+        lo, hi = 0.0, 1.0
+        for _ in range(100):
+            mid = (lo + hi) / 2
+            if f(mid) < target:
+                lo = mid
+            else:
+                hi = mid
+        return (lo + hi) / 2
+
+    lower = 0.0 if k == 0 else solve(lambda p: binomial_tail_ge(k, n, p), alpha / 2)
+    upper = 1.0 if k == n else solve(lambda p: -binomial_tail_le(k, n, p), -alpha / 2)
+    return lower, upper
 
 
 def holm(pvalues: Sequence[float], alpha: float = 0.05) -> list[bool]:

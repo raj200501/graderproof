@@ -68,7 +68,7 @@ class ModelProposer:
     def item(self, task: Task, requirements: Sequence[Requirement]) -> dict[str, Any]:
         """The request item for one task (requirement text only; no checks, no grader)."""
         item: dict[str, Any] = {
-            "id": task.key,
+            "id": task.key_hash,
             "task_text": task.instructions,
             "reference_solution": dict(task.reference_solution),
             "requirements": [{"id": r.id, "text": r.text} for r in requirements],
@@ -80,18 +80,21 @@ class ModelProposer:
     def propose(
         self, pairs: Sequence[tuple[Task, Sequence[Requirement]]]
     ) -> dict[str, list[Variant]]:
-        """Unvalidated variants keyed by task key; raises PendingWorkError until answered."""
-        tasks = {t.key: t for t, _ in pairs}
+        """Unvalidated variants keyed by task key; raises PendingWorkError until answered.
+
+        Items are identified by the task's key hash, never its name (DECISIONS.md D24).
+        """
+        by_hash = {t.key_hash: t for t, _ in pairs}
         items = [self.item(t, reqs) for t, reqs in pairs if reqs]
         schema = {"required": ["violating", "preserving"]}
-        out: dict[str, list[Variant]] = {key: [] for key in tasks}
+        out: dict[str, list[Variant]] = {t.key: [] for t, _ in pairs}
         responses = self.client.batch_items(
             "propose", PROPOSE_PROMPT_VERSION, PROPOSE_INSTRUCTIONS, schema, items, self.batch_size
         )
-        for key, r in responses.items():
-            task = tasks.get(key)
+        for h, r in responses.items():
+            task = by_hash.get(h)
             if task is not None:
-                out[key] = to_variants(task, r)
+                out[task.key] = to_variants(task, r)
         return out
 
 

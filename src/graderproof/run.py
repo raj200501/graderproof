@@ -10,7 +10,11 @@ reported (flaky or rejecting the reference), never silently dropped.
 
 from __future__ import annotations
 
+import functools
+import hashlib
 import json
+import shutil
+import subprocess
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -19,6 +23,40 @@ from typing import Any
 from graderproof.adapters import Adapter, Execution
 from graderproof.core import Determinism, Task, canonical_json, determinism, sha256_text
 from graderproof.sandbox import Limits, Sandbox
+
+
+@functools.cache
+def package_fingerprint() -> str:
+    """SHA-256 over every source file of the installed graderproof package."""
+    root = Path(__file__).resolve().parent
+    h = hashlib.sha256()
+    for path in sorted(root.rglob("*.py")):
+        h.update(path.relative_to(root).as_posix().encode())
+        h.update(b"\0")
+        h.update(path.read_bytes())
+        h.update(b"\0")
+    return h.hexdigest()
+
+
+@functools.cache
+def sandbox_version(backend: str) -> str:
+    """Version string of the sandbox tool behind ``backend`` (empty if unknown)."""
+    tool = {"bwrap": "bwrap", "unshare-netns": "unshare", "docker": "docker"}.get(backend)
+    if tool is None or shutil.which(tool) is None:
+        return ""
+    proc = subprocess.run([tool, "--version"], capture_output=True, text=True, check=False)
+    return (proc.stdout or proc.stderr).strip().splitlines()[0] if proc.returncode == 0 else ""
+
+
+def infrastructure_failure(result: Execution) -> bool:
+    """Whether an execution failed to start in the sandbox (never cached)."""
+    for status, err in (
+        (result.grade.exit_status, result.grade.stderr),
+        (result.outcome.exit_status, result.outcome.stderr),
+    ):
+        if status == 127 or "bwrap:" in err or "could not start" in err:
+            return True
+    return False
 
 
 class SandboxPolicyError(RuntimeError):
@@ -51,7 +89,12 @@ class Runner:
         probes: Sequence[Mapping[str, Any]],
         index: int,
     ) -> str:
-        """Content address of one execution."""
+        """Content address of one execution.
+
+        It covers the code and environment that produce the execution, not only its
+        inputs: the graderproof package source, the sandbox backend and its version,
+        the resource limits, and the adapter's extra environment (DECISIONS.md D25).
+        """
         return sha256_text(
             canonical_json(
                 {
@@ -60,6 +103,10 @@ class Runner:
                     "solution": dict(solution),
                     "probes": [dict(p) for p in probes],
                     "backend": self.sandbox.name,
+                    "sandbox_version": sandbox_version(self.sandbox.name),
+                    "limits": None if self.limits is None else repr(self.limits),
+                    "extra_env": dict(sorted(getattr(self.adapter, "extra_env", {}).items())),
+                    "package": package_fingerprint(),
                     "index": index,
                 }
             )
@@ -84,7 +131,7 @@ class Runner:
             task, solution, self.sandbox, probes, self.limits, variant_id=variant_id
         )
         self.executions += 1
-        if path is not None:
+        if path is not None and not infrastructure_failure(result):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps(result.to_dict(), sort_keys=True))
         return result
