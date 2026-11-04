@@ -117,7 +117,9 @@ A fenced code block that is never closed fails, because it would turn the rest o
 
 Watch for these, which are checked on purpose: numbers in table cells, HTML attributes, ordinary HTML comments, and link titles (`[x](url "title 3")`); a number with letters after it (`3x`, `7B`, `2nd`); a number in italics (`_0.42_`); the text of a link (`[5](url)`), a shortcut reference with no definition (`[6]`), and a line that only looks like a definition (`[Note]: the rate is 0.31`); paths in prose or link text (put them in backticks). Spelled-out numbers ("three tasks") are not detected, so write result numbers as digits through claims. `python3 tools/claimcheck.py --verbose` prints how every token was classified.
 
-The confidence level of an interval ("95% CI") is a design parameter: allowlist it with a context regex. Note that ship-check's first-screen interval pattern (`[lo, hi]`) does not see through claim markers, so state the level as `NN% CI` on the README's first screen.
+The confidence level of an interval is a design parameter, and `allowlist.tsv` already covers `95% CI`. Note that ship-check's first-screen interval pattern (`[lo, hi]`) does not see through claim markers, so state the level as `95% CI` on the README's first screen.
+
+Known limits, so review `--verbose` output rather than trusting a pass: a count from 1900 to 2099 reads as a year, a heading that starts with a dotted number (`## 2.5 ...`) reads as a numbered heading, a number after a reference word (`line 14`) reads as a reference, and spelled-out numbers are not seen. Write every result through a claim, whatever its form.
 
 Output: `claimcheck: <file> OK (<n> claims, <m> allowlisted)` per document, or each problem with its line, then `claimcheck: FAIL` and exit status 1.
 
