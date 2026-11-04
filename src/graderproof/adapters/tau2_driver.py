@@ -30,6 +30,7 @@ non-empty ``nl_assertions``) are refused, never judged.
 from __future__ import annotations
 
 import argparse
+import copy
 import importlib
 import json
 import os
@@ -57,6 +58,8 @@ CHANGE_DEPTH = 2
 UUID_SEED = 0
 """Seed for ``uuid.uuid4`` while calls run (telecom makes new bill ids with it)."""
 EXIT_ERROR = 2
+LOG_FORMAT = "{level} | {name}:{function}:{line} - {message}"
+"""tau2's log lines on stderr, without loguru's clock time, so stderr repeats too."""
 MODULES = {
     "message": "tau2.data_model.message",
     "simulation": "tau2.data_model.simulation",
@@ -92,7 +95,7 @@ def load_tau2(root: Path) -> SimpleNamespace:
     sys.path.insert(0, str(src))
     loguru = importlib.import_module("loguru")
     loguru.logger.remove()
-    loguru.logger.add(sys.stderr, level="WARNING")
+    loguru.logger.add(sys.stderr, level="WARNING", format=LOG_FORMAT)
     modules = {name: importlib.import_module(path) for name, path in MODULES.items()}
     origin = Path(str(sys.modules["tau2"].__file__)).resolve()
     if not origin.is_relative_to(src):
@@ -200,9 +203,8 @@ def simulate(
         before = (db_dump(env.tools), db_dump(env.user_tools))
         for i, call in enumerate(calls):
             who = call["requestor"]
-            tc = msg.ToolCall(
-                id=f"call_{i}", name=call["tool"], arguments=dict(call["args"]), requestor=who
-            )
+            args = copy.deepcopy(dict(call["args"]))  # the log keeps the arguments as given
+            tc = msg.ToolCall(id=f"call_{i}", name=call["tool"], arguments=args, requestor=who)
             cls = msg.UserMessage if who == "user" else msg.AssistantMessage
             messages.append(
                 cls(role=who, tool_calls=[tc], turn_idx=len(messages), timestamp=TIMESTAMP)
@@ -484,5 +486,5 @@ def main(argv: Sequence[str] | None = None) -> int:
         return EXIT_ERROR
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover - run as a script inside the sandbox
     raise SystemExit(main())

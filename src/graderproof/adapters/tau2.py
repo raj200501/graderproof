@@ -64,8 +64,9 @@ BENCHMARK = "tau2"
 REPO_URL = "https://github.com/sierra-research/tau2-bench.git"
 PINNED_TAG = "v1.0.1"
 PINNED_COMMIT = "fc0055dc4e0a316c3f83133267fbd6faaa770992"
-"""The commit tag ``v1.0.1`` points to (an annotated tag, object ``b711c1e``), dated
-2026-07-16. Every released tau2-bench text trajectory set was graded with 1.x."""
+"""The commit the annotated tag ``v1.0.1`` (tag object ``b711c1e``) points to. The
+checkout's CHANGELOG dates release 1.0.1 2026-07-15 and says its grading changes affect
+only ``banking_knowledge``. D18 pins this version so E5 can re-grade released runs."""
 LICENSE = "MIT"
 COPYRIGHT = "Copyright (c) 2025 Sierra Research"
 DOMAINS = ("airline", "retail", "telecom")
