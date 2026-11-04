@@ -161,3 +161,51 @@ def test_uncoverable_repair_is_not_accepted(
         result, DEMO / "word-stats", only_exit, ToybenchAdapter(), local_runner, k=1
     )
     assert val == {"accepted": False, "reason": "no repairable requirement covers any survivor"}
+
+
+def test_repair_command_public_private_and_generalize(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, demo_evidence: list[tuple[Any, dict[str, Any]]]
+) -> None:
+    from graderproof.cli import PENDING, main
+
+    evidence = tmp_path / "evidence"
+    evidence.mkdir()
+    for task, doc in demo_evidence:
+        (evidence / f"{task.key_hash}.json").write_text(json.dumps(doc))
+    work = tmp_path / "work"
+    work.mkdir()
+    monkeypatch.chdir(work)
+    budget = tmp_path / "b.toml"
+    budget.write_text(
+        "cash_usd = 0\nclaude_agent_runs_per_day = 30\nclaude_agent_max_turns = 40\n"
+        "claude_single_calls_per_day = 300\nclaude_review_runs_per_day = 6\n"
+        "local_model_max_params_b = 8\ndisk_floor_gb = 8\n"
+    )
+    common = [str(DEMO), "--evidence", str(evidence), "--benchmark", "demo", "--k", "1"]
+    common += [
+        "--store",
+        str(tmp_path / "store"),
+        "--ledger",
+        str(tmp_path / "l.jsonl"),
+        "--budget",
+        str(budget),
+    ]
+    assert main(["repair", *common, "--out", str(tmp_path / "e4")]) == 0
+    summary = json.loads((tmp_path / "e4" / "summary.json").read_text())
+    assert summary["ran"] and summary["tasks_with_survivors"] == 3
+    assert {Path(r["patch"]).name for r in summary["repaired"]} == {
+        "word-stats.patch",
+        "classify.patch",
+        "refund.patch",
+    }
+    assert all(
+        Path(r["patch"]).exists() and Path(r["validation_log"]).exists()
+        for r in summary["repaired"]
+    )
+    assert summary["generalization"] == {"ran": False}
+    assert main(["repair", *common, "--out", str(tmp_path / "e4p"), "--private"]) == 0
+    manifest = json.loads(Path("outbound/patches/MANIFEST.json").read_text())
+    assert len(manifest["files"]) == 6
+    assert all(e["path"].startswith("private/outbound/patches/demo/") for e in manifest["files"])
+    assert main(["repair", *common, "--out", str(tmp_path / "e4g"), "--generalize"]) == PENDING
+    assert list((tmp_path / "store" / "requests").glob("*.json"))

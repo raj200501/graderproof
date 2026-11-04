@@ -1,8 +1,8 @@
 """Command-line interface: ``graderproof <command>``.
 
 Commands not yet built exit with status 2 and say so, so that no caller can
-mistake a placeholder for a result. ``audit`` exits with status 3 when model
-responses are pending, after printing where the requests are.
+mistake a placeholder for a result. ``audit`` and ``repair`` exit with status 3 when
+model responses are pending, after printing where the requests are.
 """
 
 from __future__ import annotations
@@ -11,8 +11,9 @@ import argparse
 import difflib
 import json
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import Any
 
 from graderproof import __version__
 
@@ -29,7 +30,100 @@ COMMANDS: dict[str, str] = {
     "models": "list pending model requests or ingest responses",
     "e0-score": "score E0 toybench flags against the planted labels",
 }
-BUILT = {"audit", "demo", "models", "e0-score"}
+BUILT = {"audit", "demo", "models", "e0-score", "repair"}
+
+
+def _target_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("target", nargs="?", help="path or dataset")
+    p.add_argument("--adapter", default="toybench", help="task format adapter")
+
+
+def _model_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--store", type=Path, default=Path("artifacts/model_calls"))
+    p.add_argument("--ledger", type=Path, default=Path("artifacts/usage/ledger.jsonl"))
+    p.add_argument("--budget", type=Path, default=Path("budget.toml"))
+
+
+def _env_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument(
+        "--env",
+        action="append",
+        default=[],
+        metavar="KEY=VALUE",
+        help="environment passed to sandboxed task scripts (pinned third-party paths)",
+    )
+
+
+def _audit_args(p: argparse.ArgumentParser) -> None:
+    _target_args(p)
+    _env_args(p)
+    _model_args(p)
+    p.add_argument("--out", type=Path, default=Path("runs/audit"), help="public artifact dir")
+    p.add_argument("--evidence", type=Path, help="evidence dir (default <out>/evidence)")
+    p.add_argument("--cache", type=Path, default=Path("runs/cache"))
+    p.add_argument("--public-task-ids", action="store_true")
+    p.add_argument("--k", type=int, default=3)
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--max-total", type=int, default=40)
+    p.add_argument("--sandbox", choices=["auto", "bwrap", "unshare", "local"], default="auto")
+    p.add_argument("--no-propose", action="store_true", help="skip model-proposed variants")
+    p.add_argument("--max-per-operator", type=int, default=6)
+    p.add_argument("--confirm-runs", type=int, default=2)
+    p.add_argument("--replicates", type=int, default=2000)
+    p.add_argument("--extract-batch", type=int, default=8, help="tasks per extraction call")
+    p.add_argument("--propose-batch", type=int, default=4, help="tasks per proposal call")
+    p.add_argument("--review-batch", type=int, default=25, help="variants per review call")
+
+
+def _repair_args(p: argparse.ArgumentParser) -> None:
+    _target_args(p)
+    _env_args(p)
+    _model_args(p)
+    p.add_argument("--evidence", type=Path, required=True, help="audit evidence dir")
+    p.add_argument("--out", type=Path, required=True, help="E4 artifact dir")
+    p.add_argument("--benchmark", required=True)
+    p.add_argument("--private", action="store_true", help="third-party tasks not fixed upstream")
+    p.add_argument("--manifest", type=Path, default=Path("outbound/patches/MANIFEST.json"))
+    p.add_argument("--cache", type=Path, default=Path("runs/cache"))
+    p.add_argument("--k", type=int, default=3)
+    p.add_argument("--seed", type=int, default=0, help="the original audit seed")
+    p.add_argument("--generalize", action="store_true", help="run the post-repair batch")
+    p.add_argument("--propose-batch", type=int, default=4)
+    p.add_argument("--review-batch", type=int, default=25)
+
+
+def _e0_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--audit", type=Path, default=Path("artifacts/e0"))
+    p.add_argument("--labels", type=Path, default=Path("toybench/labels.json"))
+    p.add_argument("--labels-sha256", type=Path, default=Path("toybench/labels.sha256"))
+    p.add_argument("--adjudication", type=Path, default=Path("artifacts/e0/adjudication.json"))
+    p.add_argument("--prereg", default="prereg/0001-e0-tool-validity.md")
+    p.add_argument("--out", type=Path, default=Path("artifacts/e0/results.json"))
+    p.add_argument("--seed", type=int, required=True)
+    p.add_argument("--replicates", type=int, default=2000)
+
+
+def _models_args(p: argparse.ArgumentParser) -> None:
+    _model_args(p)
+    p.add_argument("action", choices=["pending", "ingest"])
+
+
+def _demo_args(p: argparse.ArgumentParser) -> None:
+    _model_args(p)
+    p.add_argument("--tasks", type=Path, default=Path("examples/demo"))
+    p.add_argument("--check", type=Path, help="fail if the output differs from this file")
+
+
+ARGS: dict[str, Callable[[argparse.ArgumentParser], None]] = {
+    "audit": _audit_args,
+    "repair": _repair_args,
+    "e0-score": _e0_args,
+    "models": _models_args,
+    "demo": _demo_args,
+    "report": _target_args,
+    "lint": _target_args,
+    "card": _target_args,
+}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -38,51 +132,27 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"graderproof {__version__}")
     sub = parser.add_subparsers(dest="command", metavar="<command>")
     for name, help_text in COMMANDS.items():
-        p = sub.add_parser(name, help=help_text)
-        if name in ("audit", "report", "repair", "lint", "card"):
-            p.add_argument("target", nargs="?", help="path or dataset")
-            p.add_argument("--adapter", default="toybench", help="task format adapter")
-        if name == "audit":
-            p.add_argument(
-                "--out", type=Path, default=Path("runs/audit"), help="public artifact dir"
-            )
-            p.add_argument("--evidence", type=Path, help="evidence dir (default <out>/evidence)")
-            p.add_argument("--cache", type=Path, default=Path("runs/cache"))
-            p.add_argument("--public-task-ids", action="store_true")
-            p.add_argument("--k", type=int, default=3)
-            p.add_argument("--seed", type=int, default=0)
-            p.add_argument("--max-total", type=int, default=40)
-            p.add_argument(
-                "--sandbox", choices=["auto", "bwrap", "unshare", "local"], default="auto"
-            )
-            p.add_argument("--no-propose", action="store_true", help="skip model-proposed variants")
-            p.add_argument("--max-per-operator", type=int, default=6)
-            p.add_argument("--confirm-runs", type=int, default=2)
-            p.add_argument("--replicates", type=int, default=2000)
-            p.add_argument("--extract-batch", type=int, default=8, help="tasks per extraction call")
-            p.add_argument("--propose-batch", type=int, default=4, help="tasks per proposal call")
-            p.add_argument("--review-batch", type=int, default=25, help="variants per review call")
-        if name in ("audit", "models", "demo"):
-            p.add_argument("--store", type=Path, default=Path("artifacts/model_calls"))
-            p.add_argument("--ledger", type=Path, default=Path("artifacts/usage/ledger.jsonl"))
-            p.add_argument("--budget", type=Path, default=Path("budget.toml"))
-        if name == "models":
-            p.add_argument("action", choices=["pending", "ingest"])
-        if name == "e0-score":
-            p.add_argument("--audit", type=Path, default=Path("artifacts/e0"))
-            p.add_argument("--labels", type=Path, default=Path("toybench/labels.json"))
-            p.add_argument("--labels-sha256", type=Path, default=Path("toybench/labels.sha256"))
-            p.add_argument(
-                "--adjudication", type=Path, default=Path("artifacts/e0/adjudication.json")
-            )
-            p.add_argument("--prereg", default="prereg/0001-e0-tool-validity.md")
-            p.add_argument("--out", type=Path, default=Path("artifacts/e0/results.json"))
-            p.add_argument("--seed", type=int, required=True)
-            p.add_argument("--replicates", type=int, default=2000)
-        if name == "demo":
-            p.add_argument("--tasks", type=Path, default=Path("examples/demo"))
-            p.add_argument("--check", type=Path, help="fail if the output differs from this file")
+        ARGS[name](sub.add_parser(name, help=help_text))
     return parser
+
+
+def parse_env(pairs: Sequence[str]) -> dict[str, str]:
+    """``KEY=VALUE`` strings to a mapping."""
+    out: dict[str, str] = {}
+    for pair in pairs:
+        key, sep, value = pair.partition("=")
+        if not sep or not key:
+            raise SystemExit(f"--env expects KEY=VALUE, got {pair!r}")
+        out[key] = value
+    return out
+
+
+def report_pending(command: str, store: Path, hashes: Sequence[str]) -> int:
+    """Print pending request paths; returns :data:`PENDING`."""
+    for h in hashes:
+        print(f"pending {store / 'requests' / (h + '.json')}")
+    print(f"graderproof {command}: {len(hashes)} model requests pending", file=sys.stderr)
+    return PENDING
 
 
 def cmd_audit(args: argparse.Namespace) -> int:
@@ -98,8 +168,13 @@ def cmd_audit(args: argparse.Namespace) -> int:
         UnshareSandbox,
         best_sandbox,
     )
-    from graderproof.validate import ModelReviewer, RequirementExtractor
-    from graderproof.variants.model import ModelProposer
+    from graderproof.validate import (
+        EXTRACT_PROMPT_VERSION,
+        REVIEW_PROMPT_VERSION,
+        ModelReviewer,
+        RequirementExtractor,
+    )
+    from graderproof.variants.model import PROPOSE_PROMPT_VERSION, ModelProposer
 
     if args.adapter != "toybench" or args.target is None:
         print(f"graderproof audit: adapter {args.adapter!r} not built yet", file=sys.stderr)
@@ -114,7 +189,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
     if sandbox is None:
         print("graderproof audit: no sandbox available", file=sys.stderr)
         return 1
-    adapter = ToybenchAdapter()
+    adapter = ToybenchAdapter(extra_env=parse_env(args.env))
     tasks = adapter.load(Path(args.target))
     client = ModelClient(store=args.store, ledger=args.ledger, budget=args.budget)
     config = AuditConfig(
@@ -136,13 +211,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
     try:
         results, evidence = auditor.run(tasks)
     except PendingWorkError as exc:
-        for h in exc.hashes:
-            print(f"pending {args.store / 'requests' / (h + '.json')}")
-        print(f"graderproof audit: {len(exc.hashes)} model requests pending", file=sys.stderr)
-        return PENDING
-    from graderproof.validate import EXTRACT_PROMPT_VERSION, REVIEW_PROMPT_VERSION
-    from graderproof.variants.model import PROPOSE_PROMPT_VERSION
-
+        return report_pending("audit", args.store, exc.hashes)
     meta = {
         "benchmark": Path(args.target).name,
         "adapter": args.adapter,
@@ -159,14 +228,9 @@ def cmd_audit(args: argparse.Namespace) -> int:
             "review": args.review_batch,
         },
     }
+    out_evidence = args.evidence or args.out / "evidence"
     summary = write_outputs(
-        results,
-        evidence,
-        args.out,
-        args.evidence or args.out / "evidence",
-        config,
-        meta,
-        args.public_task_ids,
+        results, evidence, args.out, out_evidence, config, meta, args.public_task_ids
     )
     print(json.dumps(summary["aggregate"], indent=2, sort_keys=True))
     return 0
@@ -222,20 +286,161 @@ def cmd_demo(args: argparse.Namespace) -> int:
     return 0
 
 
+def load_task_dirs(root: Path, adapter: Any) -> tuple[dict[str, Any], dict[str, Path]]:
+    """Tasks under ``root`` keyed by task key, and their directories."""
+    tasks: dict[str, Any] = {}
+    dirs: dict[str, Path] = {}
+    for d in sorted(root.iterdir()):
+        if (d / "task.toml").exists():
+            task = adapter.load_one(d, root.name)
+            tasks[task.key], dirs[task.key] = task, d
+    return tasks, dirs
+
+
+def _repair_all(
+    args: argparse.Namespace,
+    tasks: dict[str, Any],
+    dirs: dict[str, Path],
+    docs: dict[str, Any],
+    adapter: Any,
+    runner_for: Callable[[Any], Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
+    """Build, validate, and write every repair; returns repaired, unrepaired, scores, built."""
+    from graderproof import repair
+
+    public_root = Path("outbound/patches") / args.benchmark
+    private_root = Path("private/outbound/patches") / args.benchmark
+    repaired: list[dict[str, Any]] = []
+    unrepaired: list[dict[str, Any]] = []
+    scores: list[dict[str, Any]] = []
+    built: dict[str, Any] = {}
+    for key, doc in docs.items():
+        task, task_dir = tasks[key], dirs[key]
+        result = repair.build_repair(task, task_dir, doc)
+        if result is not None:
+            repair.validate_repair(result, task_dir, doc, adapter, runner_for, args.k)
+        scores.append({"task_hash": task.key_hash, **repair.mutation_scores(doc, result)})
+        if result is None:
+            continue
+        if not result.accepted:
+            reason = result.validation.get("reason") or "acceptance criteria not met"
+            unrepaired.append({"task_hash": task.key_hash, "reason": reason})
+            continue
+        paths = repair.write_patch(
+            result, args.benchmark, task.id, public_root, private_root, not args.private
+        )
+        repaired.append({"task_hash": task.key_hash, "public": not args.private, **paths})
+        built[key] = result
+    return repaired, unrepaired, scores, built
+
+
+def _generalize(
+    args: argparse.Namespace,
+    tasks: dict[str, Any],
+    dirs: dict[str, Path],
+    docs: dict[str, Any],
+    built: dict[str, Any],
+    adapter: Any,
+    runner_for: Callable[[Any], Any],
+) -> dict[str, Any] | int:
+    """The post-repair batch: fresh variants the repairs never saw (or PENDING)."""
+    from graderproof import repair
+    from graderproof.audit import AuditConfig, Auditor
+    from graderproof.models import ModelClient, PendingWorkError
+    from graderproof.validate import ModelReviewer, RequirementExtractor
+    from graderproof.variants.model import ModelProposer
+
+    client = ModelClient(store=args.store, ledger=args.ledger, budget=args.budget)
+    config = AuditConfig(k=args.k, seed=args.seed + 1000)
+    fresh = Auditor(
+        adapter=adapter,
+        runner=runner_for(adapter),
+        extractor=RequirementExtractor(client),
+        reviewer=ModelReviewer(client, batch_size=args.review_batch),
+        config=config,
+        proposer=ModelProposer(client, batch_size=args.propose_batch, round=2),
+    )
+    order = sorted(built)
+    try:
+        fresh_results, fresh_evidence = fresh.run([tasks[k] for k in order])
+    except PendingWorkError as exc:
+        return report_pending("repair", args.store, exc.hashes)
+    rows: list[dict[str, Any]] = []
+    for key, fr, fe in zip(order, fresh_results, fresh_evidence, strict=True):
+        res = repair.evaluate_fresh(
+            docs[key], fe.to_dict(fr), built[key], dirs[key], adapter, runner_for
+        )
+        rows.extend({"task_hash": tasks[key].key_hash, **r} for r in res["rows"])
+    return {
+        "ran": True,
+        "seed": config.seed,
+        "proposal_round": 2,
+        **repair.generalization_counts(rows),
+        "rows": rows,
+    }
+
+
+def cmd_repair(args: argparse.Namespace) -> int:
+    """``graderproof repair``: E4 repairs, validation, patches, and the post-repair batch."""
+    from graderproof import repair
+    from graderproof.adapters.toybench import ToybenchAdapter
+    from graderproof.audit import AuditConfig, provenance
+    from graderproof.run import Runner
+    from graderproof.sandbox import BwrapSandbox
+
+    adapter = ToybenchAdapter(extra_env=parse_env(args.env))
+    tasks, dirs = load_task_dirs(Path(args.target), adapter)
+    docs: dict[str, Any] = {}
+    for f in sorted(args.evidence.glob("*.json")):
+        doc = json.loads(f.read_text())
+        if doc.get("task") in tasks:
+            docs[doc["task"]] = doc
+    sandbox = BwrapSandbox()
+
+    def runner_for(a: Any) -> Runner:
+        return Runner(a, sandbox, cache_dir=args.cache)
+
+    repaired, unrepaired, scores, built = _repair_all(args, tasks, dirs, docs, adapter, runner_for)
+    if args.private and repaired:
+        files = [str(p) for r in repaired for p in (r["patch"], r["validation_log"])]
+        repair.update_manifest(args.manifest, files, Path.cwd())
+    generalization: dict[str, Any] = {"ran": False}
+    if args.generalize and built:
+        gen = _generalize(args, tasks, dirs, docs, built, adapter, runner_for)
+        if isinstance(gen, int):
+            return gen
+        generalization = gen
+    summary = {
+        "schema": "graderproof.e4/1",
+        "ran": True,
+        "benchmark": args.benchmark,
+        "public": not args.private,
+        "tasks_with_survivors": sum(1 for d in docs.values() if repair.survivors(d)),
+        "repaired": repaired,
+        "unrepaired": unrepaired,
+        "mutation_scores": scores,
+        "generalization": generalization,
+        "provenance": provenance(AuditConfig(k=args.k, seed=args.seed)),
+    }
+    args.out.mkdir(parents=True, exist_ok=True)
+    (args.out / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    counts = {"with_survivors": summary["tasks_with_survivors"], "repaired": len(repaired)}
+    print(json.dumps({**counts, "unrepaired": len(unrepaired)}))
+    return 0
+
+
 def cmd_e0_score(args: argparse.Namespace) -> int:
     """``graderproof e0-score``: bank artifacts/e0/results.json from the audit and labels."""
     from graderproof import e0
     from graderproof.audit import AuditConfig, provenance
 
-    rows = [
-        json.loads(x) for x in (args.audit / "tasks.jsonl").read_text().splitlines() if x.strip()
-    ]
+    lines = (args.audit / "tasks.jsonl").read_text().splitlines()
+    rows = [json.loads(x) for x in lines if x.strip()]
     labels = json.loads(args.labels.read_text())["tasks"]
     adjudication = json.loads(args.adjudication.read_text()) if args.adjudication.exists() else {}
-    scores = e0.task_scores(rows, labels, adjudication.get("tasks", {}))
-    pending = [
-        s.task for s in e0.needs_adjudication(scores) if s.task not in adjudication.get("tasks", {})
-    ]
+    ruled = adjudication.get("tasks", {})
+    scores = e0.task_scores(rows, labels, ruled)
+    pending = [s.task for s in e0.needs_adjudication(scores) if s.task not in ruled]
     if pending:
         print(f"graderproof e0-score: flags awaiting adjudication: {pending}", file=sys.stderr)
         return 1
@@ -256,6 +461,15 @@ def cmd_e0_score(args: argparse.Namespace) -> int:
     return 0
 
 
+HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
+    "audit": cmd_audit,
+    "models": cmd_models,
+    "demo": cmd_demo,
+    "e0-score": cmd_e0_score,
+    "repair": cmd_repair,
+}
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Entry point. Returns the process exit status."""
     parser = build_parser()
@@ -263,16 +477,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command is None:
         parser.print_help()
         return 0
-    if args.command == "audit":
-        return cmd_audit(args)
-    if args.command == "models":
-        return cmd_models(args)
-    if args.command == "demo":
-        return cmd_demo(args)
-    if args.command == "e0-score":
-        return cmd_e0_score(args)
-    print(f"graderproof {args.command}: not built yet", file=sys.stderr)
-    return NOT_BUILT
+    handler = HANDLERS.get(args.command)
+    if handler is None:
+        print(f"graderproof {args.command}: not built yet", file=sys.stderr)
+        return NOT_BUILT
+    return handler(args)
 
 
 if __name__ == "__main__":  # pragma: no cover

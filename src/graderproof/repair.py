@@ -24,6 +24,7 @@ requirement are reported as uncovered.
 from __future__ import annotations
 
 import difflib
+import hashlib
 import inspect
 import json
 import shutil
@@ -416,3 +417,118 @@ def validate_repair(
     )
     result.validation = validation
     return validation
+
+
+def evaluate_fresh(
+    original: Mapping[str, Any],
+    fresh: Mapping[str, Any],
+    result: RepairResult,
+    task_dir: Path,
+    adapter: Adapter,
+    runner_for: Any,
+) -> dict[str, Any]:
+    """Run the repaired grader on a post-repair batch of variants the repair never saw.
+
+    Only counted fresh variants with a stable original verdict and an id absent from
+    the original audit are used.
+    """
+    seen = {str(v["id"]) for v in original.get("variants", [])}
+    batch = [
+        v
+        for v in fresh.get("variants", [])
+        if str(v["id"]) not in seen
+        and v.get("counted_in_headline")
+        and v.get("grader_passed") is not None
+    ]
+    rows: list[dict[str, Any]] = []
+    with tempfile.TemporaryDirectory(prefix="gp-gen-") as tmp:
+        bench = Path(tmp) / "bench"
+        bench.mkdir()
+        materialize(task_dir, result.files, bench / task_dir.name)
+        task = adapter.load(bench)[0]
+        runner: Runner = runner_for(adapter)
+        for v in batch:
+            repaired = runner.execute(task, v["files"], variant_id=str(v["id"])).grade.passed
+            rows.append(
+                {
+                    "variant_id": str(v["id"]),
+                    "kind": v.get("kind"),
+                    "operator": v.get("operator"),
+                    "original_passed": bool(v["grader_passed"]),
+                    "repaired_passed": repaired,
+                }
+            )
+    return {"rows": rows, **generalization_counts(rows)}
+
+
+def generalization_counts(rows: Sequence[Mapping[str, Any]]) -> dict[str, int]:
+    """Counts over fresh variants: survivors before and after repair, induced rejects."""
+    viol = [r for r in rows if r["kind"] == "violating"]
+    pres = [r for r in rows if r["kind"] == "preserving"]
+    return {
+        "n_fresh_variants": len(rows),
+        "n_fresh_violating": len(viol),
+        "n_fresh_preserving": len(pres),
+        "survivors_original": sum(1 for r in viol if r["original_passed"]),
+        "caught_by_repair": sum(
+            1 for r in viol if r["original_passed"] and not r["repaired_passed"]
+        ),
+        "survivors_repaired": sum(1 for r in viol if r["repaired_passed"]),
+        "preserving_accepted_original": sum(1 for r in pres if r["original_passed"]),
+        "induced_false_rejects": sum(
+            1 for r in pres if r["original_passed"] and not r["repaired_passed"]
+        ),
+    }
+
+
+def mutation_scores(evidence: Mapping[str, Any], result: RepairResult | None) -> dict[str, Any]:
+    """Mutation score on the original counted violating variants, before and after repair."""
+    viol = [
+        v
+        for v in evidence.get("variants", [])
+        if v.get("counted_in_headline")
+        and v.get("kind") == "violating"
+        and v.get("grader_passed") is not None
+    ]
+    if not viol:
+        return {"n": 0, "before": None, "after": None}
+    killed = sum(1 for v in viol if v["grader_passed"] is False)
+    caught = len(result.plan.targets) if result is not None and result.accepted else 0
+    return {"n": len(viol), "before": killed / len(viol), "after": (killed + caught) / len(viol)}
+
+
+def write_patch(
+    result: RepairResult,
+    benchmark: str,
+    task_id: str,
+    public_root: Path,
+    private_root: Path,
+    public: bool,
+) -> dict[str, str]:
+    """Write the patch and validation log; private files are named by task hash."""
+    root = public_root if public else private_root
+    stem = task_id if public else result.task_hash
+    root.mkdir(parents=True, exist_ok=True)
+    patch, log = root / f"{stem}.patch", root / f"{stem}.validation.json"
+    patch.write_text(result.patch, encoding="utf-8")
+    log.write_text(json.dumps(result.log(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return {"patch": patch.as_posix(), "validation_log": log.as_posix(), "benchmark": benchmark}
+
+
+def update_manifest(manifest: Path, paths: Sequence[str], repo_root: Path) -> None:
+    """Record the SHA-256 of private patch files in the tracked manifest (merge by path)."""
+    data = json.loads(manifest.read_text()) if manifest.exists() else {"files": []}
+    entries = {e["path"]: e for e in data.get("files", [])}
+    for rel in paths:
+        digest = hashlib.sha256((repo_root / rel).read_bytes()).hexdigest()
+        entries[rel] = {"path": rel, "sha256": digest}
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    out = {
+        "schema": "graderproof.patch_manifest/1",
+        "note": (
+            "SHA-256 of patches for third-party tasks not yet fixed upstream; "
+            "the files live in private/."
+        ),
+        "files": [entries[k] for k in sorted(entries)],
+    }
+    manifest.write_text(json.dumps(out, indent=2, sort_keys=True) + "\n")

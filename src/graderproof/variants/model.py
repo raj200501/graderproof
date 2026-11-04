@@ -60,15 +60,22 @@ class ModelProposer:
 
     client: ModelClient
     batch_size: int = 4
+    round: int = 1
+    """Proposal round. Round 1 items are unchanged; later rounds (the E4 post-repair
+    generalization batch) add ``round`` to each item, so they are new requests whose
+    answers are fresh proposals rather than the banked round-1 answers."""
 
     def item(self, task: Task, requirements: Sequence[Requirement]) -> dict[str, Any]:
         """The request item for one task (requirement text only; no checks, no grader)."""
-        return {
+        item: dict[str, Any] = {
             "id": task.key,
             "task_text": task.instructions,
             "reference_solution": dict(task.reference_solution),
             "requirements": [{"id": r.id, "text": r.text} for r in requirements],
         }
+        if self.round > 1:
+            item["round"] = self.round
+        return item
 
     def propose(
         self, pairs: Sequence[tuple[Task, Sequence[Requirement]]]

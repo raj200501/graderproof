@@ -66,3 +66,13 @@ def test_proposer_round_trip(tmp_path: Path) -> None:
     out = proposer.propose([(TASK, [REQ])])
     assert len(out[TASK.key]) == 1
     assert proposer.propose([(TASK, [])]) == {TASK.key: []}
+
+
+def test_later_rounds_are_new_requests() -> None:
+    client = ModelClient(
+        Path("/nonexistent"), Path("/nonexistent/l"), Path("/nonexistent/b"), disabled=True
+    )
+    first = ModelProposer(client).item(TASK, [REQ])
+    again = ModelProposer(client, round=2).item(TASK, [REQ])
+    assert "round" not in first and again["round"] == 2
+    assert {k: v for k, v in again.items() if k != "round"} == first
