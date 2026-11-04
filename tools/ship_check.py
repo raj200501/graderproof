@@ -58,10 +58,11 @@ Artifact contracts (later iterations may tighten them, never loosen):
   direction on every planted task. ``toybench/labels.sha256`` holds the labels' SHA-256
   as its first token; exactly one commit touches it, that commit predates
   ``artifacts/e0/`` and ``artifacts/model_calls/e0/``, and it already contains
-  ``toybench/tasks/`` exactly as at HEAD. ``artifacts/e0/tasks.jsonl`` rows also carry ``task``
-  = ``<benchmark>:<id>`` (one benchmark, one row per label, ``task_hash`` = SHA-256 of
-  ``task``). ``artifacts/e0/adjudication.json`` = ``{"tasks": {<id>: {"real": bool,
-  ...}}}`` holds an entry for every counted task that is flagged but not detected.
+  ``toybench/tasks/`` exactly as at HEAD. ``artifacts/e0/tasks.jsonl`` rows also carry
+  ``task`` = ``<benchmark>:<id>`` (one benchmark, one row per label, ``task_hash`` =
+  SHA-256 of ``task``). ``artifacts/e0/adjudication.json`` = ``{"tasks": {<id>:
+  {"real": bool, ...}}}`` holds an entry for every counted task that is flagged but not
+  detected.
   ``artifacts/e0/results.json``: ``bootstrap``, ``recall`` and ``precision`` as
   ``{point, ci: [lo, hi], n}``, ``tasks [{task: <id>, planted, slice, ...}]`` with one
   row per label (``detected``, ``flagged``, and ``adjudicated_real``, when present,
@@ -70,10 +71,12 @@ Artifact contracts (later iterations may tighten them, never loosen):
   false_accept; ``reject``: false_reject), so a rejected or flaky reference is never a
   flag or a detection; adjudicated real = flagged, not detected, and the entry's
   ``real`` is true. Counted tasks are those whose slice is not ``extra``, in ascending
-  id order. Recall = detected / planted; precision = detected / (detected + false
-  positives), where a false positive is flagged, not detected, and not adjudicated
-  real; ``n`` = the number of counted tasks. Every counted miss (planted, not
-  detected) appears in ``docs/E0_MISSES.md`` as a whole token.
+  id order: at least 60, at least 30 planted and 30 clean, and at least one planted
+  ``reject`` weakness (brief section 5). Recall = detected / planted; precision =
+  detected / (detected + false positives), where a false positive is flagged, not
+  detected, and not adjudicated real; ``n`` = the number of counted tasks. Every
+  counted miss (planted, not detected) appears in ``docs/E0_MISSES.md`` as a whole
+  token.
 * Audits (G7) ``artifacts/audit/<benchmark>/summary.json``: ``benchmark``,
   ``category``, ``confirmatory``, ``prereg``, ``substitute_for``, ``model_store``,
   ``n_tasks_population``, ``n_sampled``, ``bootstrap``, ``e1.false_accept_task_rate``
@@ -85,11 +88,15 @@ Artifact contracts (later iterations may tighten them, never loosen):
   ``unrepaired [{task_hash, reason}]``, ``generalization {ran, n_fresh_variants,
   survivors_original, caught_by_repair, survivors_repaired, induced_false_rejects,
   ...}``, ``provenance``. The repaired and unrepaired task hashes are, together and
-  without repeats, exactly the audit's scorable tasks with a surviving variant. Public
-  patches and logs are tracked under ``outbound/patches/``; private ones live under
-  ``private/outbound/patches/`` and are listed in ``outbound/patches/MANIFEST.json``.
-  Every validation log is a JSON object with ``"accepted": true`` and the entry's
-  ``task_hash``.
+  without repeats, exactly the audit's scorable tasks with a surviving variant; every
+  unrepaired entry gives a non-empty reason; a summary with repairs has a
+  generalization batch with ``ran: true``, ``n_fresh_variants > 0``, and consistent
+  non-negative counts. G8 fails when no audit has a surviving variant or no task is
+  repaired anywhere. Public patches and logs are tracked under ``outbound/patches/``;
+  private ones live under ``private/outbound/patches/`` and are listed in
+  ``outbound/patches/MANIFEST.json``. A patch and its validation log are different
+  files, and every validation log is a JSON object with ``"accepted": true`` and the
+  entry's ``task_hash``.
 * E5 (G9) ``artifacts/e5/<benchmark>/summary.json``: ``ran``, ``bootstrap``,
   ``pass_flips {point, ci}``, ``rank_changes {point, ci}``, ``provenance``; and
   ``rows.jsonl`` with ``{model, task_hash, trial, original_pass, repaired_pass}``
@@ -1317,6 +1324,17 @@ def g5_tool_validity(ctx: Ctx) -> Result:
     e0_rows_match(res, scores)
     counted = [s for s in scores if s.counted]
     need(len(counted) >= E0_MIN_TASKS, f"E0 has {len(counted)} counted tasks (< {E0_MIN_TASKS})")
+    n_planted = sum(s.planted for s in counted)
+    half = E0_MIN_TASKS // 2
+    need(
+        n_planted >= half and len(counted) - n_planted >= half,
+        f"E0 needs at least {half} planted and {half} clean counted tasks "
+        f"(has {n_planted} and {len(counted) - n_planted})",
+    )
+    need(
+        any(s.planted and labels[s.id].get("direction") == "reject" for s in counted),
+        "E0 has no planted false-reject (direction reject) weakness",
+    )
     pending = [s.id for s in counted if s.flagged and not s.detected and s.id not in rulings]
     need(not pending, f"flags without a ruling in {E0_ADJUDICATION}: {pending[:3]}")
     seed, b, alpha = bootstrap_params(res, E0_RESULTS)

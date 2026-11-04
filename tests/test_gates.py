@@ -620,6 +620,25 @@ def test_g5_needs_sixty_counted_tasks(tmp_path: Path) -> None:
     assert "E0 has 42 counted tasks (< 60)" in r.evidence
 
 
+def test_g5_needs_half_planted_and_half_clean(tmp_path: Path) -> None:
+    """Brief section 5: half planted (including false-reject brittleness), half clean."""
+    case = e0_case()
+    for i in range(28, 34):  # 38 planted, 26 clean
+        case.labels[f"c{i - 28:02d}"] = planted("accept")
+        case.flags[f"c{i - 28:02d}"] = ("stable_pass", True, False)
+    case.rulings = {}
+    r = g5(tmp_path / "skewed", e0_phases(case))
+    assert not r.ok
+    assert "E0 needs at least 30 planted and 30 clean counted tasks (has 38 and 26)" in r.evidence
+    case = e0_case()
+    for i in range(4):
+        case.labels[f"pr{i:02d}"] = planted("accept")
+        case.flags[f"pr{i:02d}"] = ("stable_pass", True, False)
+    r = g5(tmp_path / "noreject", e0_phases(case))
+    assert not r.ok
+    assert "E0 has no planted false-reject (direction reject) weakness" in r.evidence
+
+
 def test_g5_fails_below_the_recall_threshold(tmp_path: Path) -> None:
     case = e0_case()
     for i in range(20, 26):
