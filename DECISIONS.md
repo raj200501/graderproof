@@ -150,3 +150,15 @@ The tau2-bench adapter (v1.0.1, commit fc0055dc4e0a) converts the base tasks of 
 - **Grading.** The grader runs tau2's own evaluation with `strict_replay=True`, as live runs do; a lenient mode exists only for the E5 replay of released trajectories.
 - **Determinism.** `uuid4` is seeded during the solution run only, so new telecom bill ids repeat across runs; the grader runs unmodified tau2 code and no tool output contains such an id.
 - **Confirmations.** The airline and retail policies require the user's explicit "yes" before a write. In tau2 that confirmation is a conversational turn, not a tool call, so trajectory variants cannot drop or move it, and no reference tool matches graderproof's confirmation operator. This limits the outcome-only-process operators on tau2 and is reported as a limitation.
+
+## D33 (2026-11-04) How ship-check reads the gates after the review fixes
+
+The fixes for review findings B1 to B5 (and N10, N12, N14, N15) make `tools/ship_check.py` recompute every gate statistic from banked rows rather than trust stated values. Interpretations it encodes, recorded before any confirmatory artifact exists:
+
+- Every banked interval must use B of at least 1000 and alpha exactly 0.05, with the seed rule of D8.
+- G5 needs at least 30 planted and 30 clean counted tasks, with at least one planted false-reject weakness (brief section 5: half planted, half clean, including planted false-reject brittleness). toybench has 32 and 32, with planted reject weaknesses.
+- G5 recomputes flags from `artifacts/e0/tasks.jsonl` and `variants.jsonl`, detections by the D23 rule, and precision with the rulings in `artifacts/e0/adjudication.json`, which must exist (possibly empty) and rule on every counted flag that is not a detection.
+- "Predates" means the preregistration (or label-hash) commit is a proper ancestor of every commit that adds data under the artifact's directories, including its model store. Files moved into those directories are dated by their original commit (renames at 90% similarity or more); copies are not followed.
+- `artifacts/e0/summary.json` counts as confirmatory by its path.
+- G8 fails when no task anywhere is repaired, and every scorable task with a surviving variant must be either repaired or listed as unrepaired with a reason; tasks whose reference is rejected or flaky are not repair targets.
+- Grader cards treat tasks with a rejected or flaky reference as sensitive (aggregates only), like tasks with surviving variants.

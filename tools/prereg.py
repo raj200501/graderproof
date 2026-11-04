@@ -14,9 +14,18 @@ tamper-evident. The file and its chain entry are then committed together, once.
 3. every preregistration file was committed exactly once (never edited after freezing);
 4. an amendment (a file whose first lines contain ``Amends: NNNN``) cites an earlier
    preregistration;
-5. every confirmatory artifact (``artifacts/**/summary.json`` with ``"confirmatory":
-   true``, and ``artifacts/e0/results.json``) cites an existing preregistration whose
-   first commit is a proper ancestor of the artifact's first commit.
+5. every confirmatory artifact cites a frozen preregistration whose commit predates
+   the artifact's data. Confirmatory artifacts are every ``artifacts/**/summary.json``
+   with ``"confirmatory": true``, ``artifacts/e0/summary.json`` (which must say
+   ``"confirmatory": true``), and ``artifacts/e0/results.json``. The citation is the
+   ``"prereg"`` field, a path ``prereg/NNNN-<slug>.md``. The artifact's data are the
+   files under its own directory, under the directory named by its ``"model_store"``
+   field (a path under ``artifacts/``), and for E0 under ``artifacts/model_calls/e0/``.
+   The preregistration's commit must be a proper ancestor of every commit that added
+   a file there anywhere in the history (merges included) and of every commit that
+   added a file later renamed into them (true renames at 90% similarity or more;
+   copies are not followed). So E0 outputs or model calls committed before the E0
+   preregistration fail, whatever order the later files arrive in.
 
 It fails when there is no preregistration at all (an empty chain proves nothing).
 Commands: ``freeze <file>``, ``verify``, ``show``.
@@ -33,7 +42,8 @@ import json
 import re
 import subprocess
 import sys
-from pathlib import Path
+from collections.abc import Sequence
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 REPO = Path(__file__).resolve().parent.parent
@@ -41,7 +51,12 @@ PREREG = REPO / "prereg"
 CHAIN = PREREG / "FROZEN.jsonl"
 GENESIS = "0" * 64
 NAME_RE = re.compile(r"^\d{4}-[a-z0-9][a-z0-9-]*\.md$")
+CITE_RE = re.compile(r"^prereg/\d{4}-[a-z0-9][a-z0-9-]*\.md$")
 AMENDS_RE = re.compile(r"^\s*Amends:\s*(\d{4})\b", re.I | re.M)
+E0_DIR = "artifacts/e0"
+E0_SUMMARY = "artifacts/e0/summary.json"
+E0_RESULTS = "artifacts/e0/results.json"
+E0_MODEL_STORE = "artifacts/model_calls/e0"
 
 
 def sha256_file(path: Path) -> str:
@@ -98,11 +113,11 @@ def freeze(file: Path, repo: Path = REPO, now: str | None = None) -> dict[str, A
     return entry
 
 
-def first_commit(repo: Path, rel: str) -> str | None:
-    """Commit that first added ``rel``."""
-    rc, out = git(repo, "log", "--diff-filter=A", "--format=%H", "--reverse", "--", rel)
-    lines = out.splitlines() if rc == 0 and out else []
-    return lines[0] if lines else None
+def commits_of(repo: Path, rel: str) -> list[str]:
+    """Commits that changed ``rel``, newest first (git's default history simplification,
+    so a branch merged without changes of its own is not a second commit)."""
+    rc, out = git(repo, "log", "--format=%H", "--", rel)
+    return out.splitlines() if rc == 0 and out else []
 
 
 def strictly_before(repo: Path, a: str, b: str) -> bool:
@@ -110,20 +125,125 @@ def strictly_before(repo: Path, a: str, b: str) -> bool:
     return a != b and git(repo, "merge-base", "--is-ancestor", a, b)[0] == 0
 
 
+def adds(repo: Path, paths: Sequence[str]) -> list[str]:
+    """Commits that add a file under ``paths`` anywhere in the history (merges included)."""
+    rc, out = git(
+        repo, "log", "--full-history", "-m", "--diff-filter=A", "--format=%H", "--", *paths
+    )
+    return out.splitlines() if rc == 0 and out else []
+
+
+def renames(repo: Path) -> list[tuple[str, str]]:
+    """(source, destination) of every true rename in the history (90% similar or more).
+
+    Copies are not followed: ``git log --follow`` would date new data by any older
+    file that happens to look like it.
+    """
+    rc, out = git(
+        repo, "log", "--full-history", "-m", "-M90%", "--diff-filter=R", "--name-status",
+        "--format=",
+    )  # fmt: skip
+    parts = [ln.split("\t") for ln in out.splitlines()] if rc == 0 else []
+    return [(p[1], p[2]) for p in parts if len(p) == 3 and p[0].startswith("R")]
+
+
+def data_commits(repo: Path, dirs: Sequence[str]) -> list[str]:
+    """Every commit that brought a file into ``dirs``: adds anywhere in the history
+    (merges included) and the adds of any file later renamed into them (chains followed)."""
+
+    def under(path: str) -> bool:
+        return any(path == d or path.startswith(d.rstrip("/") + "/") for d in dirs)
+
+    found = adds(repo, dirs)
+    moves = renames(repo)
+    todo = {src for src, dst in moves if under(dst)}
+    seen: set[str] = set()
+    while todo:
+        src = todo.pop()
+        if src not in seen:
+            seen.add(src)
+            found += adds(repo, [src])
+            todo |= {s for s, d in moves if d == src}
+    return list(dict.fromkeys(found))
+
+
+def data_dirs(rel: str, doc: dict[str, Any]) -> tuple[list[str], str]:
+    """(directories whose files date the artifact at ``rel``, problem or empty)."""
+    where = PurePosixPath(rel).parent.as_posix()
+    dirs = [where]
+    store = doc.get("model_store")
+    if store not in (None, ""):
+        value = str(store).rstrip("/")
+        p = PurePosixPath(value)
+        if (
+            not isinstance(store, str)
+            or p.is_absolute()
+            or ".." in p.parts
+            or p.as_posix() != value
+            or not value.startswith("artifacts/")
+        ):
+            return [], f"{rel}: model_store {store!r} is not a directory under artifacts/"
+        dirs.append(value)
+    if where == E0_DIR or where.startswith(E0_DIR + "/"):
+        dirs.append(E0_MODEL_STORE)
+    return list(dict.fromkeys(dirs)), ""
+
+
 def confirmatory_artifacts(repo: Path) -> list[Path]:
-    """Artifacts that must cite a preregistration."""
+    """Artifacts that must cite a preregistration (unreadable summaries included)."""
     out = []
     art = repo / "artifacts"
     for p in sorted(art.rglob("summary.json")) if art.exists() else []:
         try:
-            if json.loads(p.read_text()).get("confirmatory"):
-                out.append(p)
+            doc = json.loads(p.read_text())
         except ValueError:
             out.append(p)
-    e0 = art / "e0" / "results.json"
+            continue
+        if (
+            not isinstance(doc, dict)
+            or p.relative_to(repo).as_posix() == E0_SUMMARY
+            or doc.get("confirmatory")
+        ):
+            out.append(p)
+    e0 = repo / E0_RESULTS
     if e0.exists():
         out.append(e0)
     return out
+
+
+def artifact_problems(repo: Path, art: Path, frozen: set[str]) -> list[str]:
+    """Why one confirmatory artifact is not preceded by its preregistration (or [])."""
+    rel = art.relative_to(repo).as_posix()
+    try:
+        doc = json.loads(art.read_text())
+    except ValueError:
+        return [f"{rel} is not valid JSON"]
+    if not isinstance(doc, dict):
+        return [f"{rel} is not a JSON object"]
+    problems = []
+    if rel == E0_SUMMARY and doc.get("confirmatory") is not True:
+        problems.append(f"{rel} is not marked confirmatory")
+    cited = doc.get("prereg")
+    if not isinstance(cited, str) or not CITE_RE.match(cited) or not (repo / cited).is_file():
+        return [*problems, f"{rel} cites no existing preregistration"]
+    if PurePosixPath(cited).name not in frozen:
+        return [*problems, f"{rel} cites {cited}, which is not frozen"]
+    commits = commits_of(repo, cited)
+    if len(commits) != 1:
+        return [*problems, f"{rel} cites {cited}, which is not committed exactly once"]
+    dirs, why = data_dirs(rel, doc)
+    if why:
+        return [*problems, why]
+    data = data_commits(repo, dirs)
+    if not data:
+        return [*problems, f"{cited} was not committed before {rel} (nothing under {dirs})"]
+    bad = next((c for c in data if not strictly_before(repo, commits[0], c)), None)
+    if bad:
+        problems.append(
+            f"{cited} was not committed before {rel} (commit {bad[:12]} adds files under "
+            f"{', '.join(dirs)})"
+        )
+    return problems
 
 
 def verify(repo: Path = REPO) -> list[str]:
@@ -160,26 +280,14 @@ def verify(repo: Path = REPO) -> list[str]:
             continue
         if sha256_file(f) != frozen.get("sha256"):
             problems.append(f"{rel} changed after it was frozen (sha256 mismatch)")
-        rc, log = git(repo, "log", "--format=%H", "--", rel)
-        n = len(log.splitlines()) if rc == 0 and log else 0
+        n = len(commits_of(repo, rel))
         if n != 1:
             problems.append(f"{rel} has {n} commits (must be committed exactly once)")
     for name in seen:
         if not (prereg_dir / name).exists():
             problems.append(f"chain names {name}, which does not exist")
     for art in confirmatory_artifacts(repo):
-        rel = art.relative_to(repo).as_posix()
-        try:
-            cited = str(json.loads(art.read_text()).get("prereg", ""))
-        except ValueError:
-            problems.append(f"{rel} is not valid JSON")
-            continue
-        if not cited.startswith("prereg/") or not (repo / cited).is_file():
-            problems.append(f"{rel} cites no existing preregistration")
-            continue
-        pc, ac = first_commit(repo, cited), first_commit(repo, rel)
-        if pc is None or ac is None or not strictly_before(repo, pc, ac):
-            problems.append(f"{cited} was not committed before {rel}")
+        problems += artifact_problems(repo, art, set(seen))
     return problems
 
 
