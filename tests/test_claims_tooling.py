@@ -283,7 +283,7 @@ def test_excluded_contexts() -> None:
         "See section 8, sections 6 to 10, rules 1 and 11, steps 1-3, Figure 2, Table 3.\n"
         "Also §8, §§ 8, 9, appendix 2, line 14, items 1, 2, and 3.\n"
         "arXiv 2606.08960v2 and arXiv:2507.02825.\n"
-        "Cited as [1] and [2][], with&#160;a space.\n"
+        "Cited as [1] and [2][], with&#160;a space, built with 0.11.32.\n"
         "## 3. Results\n"
         "### 3.2 Setup\n"
         "\n"

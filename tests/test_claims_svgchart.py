@@ -90,6 +90,8 @@ def test_whisker_knocks_out_the_part_over_the_bar() -> None:
     assert left[1] == f'<line x1="30" y1="20" x2="50" y2="20" stroke="{ink}"/>'
     middle = svgchart.whisker(10, 50, 20, (20, 60))
     assert [stroke(w) for w in middle] == [ink, knockout, ink, knockout]
+    beyond = svgchart.whisker(60, 80, 20, (0, 50))  # an interval need not contain the bar end
+    assert [stroke(w) for w in beyond] == [ink, ink, ink]
     inside = svgchart.whisker(10, 50, 20, (0, 80))
     assert all(knockout in w for w in inside) and len(inside) == 3
 

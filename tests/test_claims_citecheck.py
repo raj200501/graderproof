@@ -115,11 +115,13 @@ def test_claimed_url_verified_urls_and_status_of() -> None:
         {**citation("https://e.org", key="e"), "retrieved_utc": ""},
         "junk",
         final,
+        {**citation("https://f.org", key="f"), "claimed": {}},
     ]
     assert citecheck.verified_urls(entries) == {
         "https://a.org/x",
         "https://d.org",
         "https://d.org/final",
+        "https://f.org",
     }
     assert citecheck.status_of(entries, "https://b.org/") == "entry b is mismatch"
     assert citecheck.status_of(entries, "https://none.org") == f"no entry in {CITE}"
@@ -153,6 +155,9 @@ def test_run_and_main(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Non
         [f"citecheck: {CITE}: schema must be 'graderproof.citecheck/1'", "citecheck: FAIL"],
         1,
     )
+    put_json(root, CITE, good)
+    out, rc = citecheck.run(root)
+    assert rc == 1 and f"citecheck: {CITE} must be a JSON object" in out
     put_json(root, CITE, {"schema": citecheck.SCHEMA, "entries": good})
     assert citecheck.run(root) == (
         ["citecheck: 2 references verified in README.md and docs/REPORT.md"],
