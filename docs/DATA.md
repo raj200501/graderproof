@@ -19,7 +19,7 @@ Filled in when each adapter is merged, from the adapter's pinned constants and t
 | Benchmark | Source | Pinned version | License | Retrieved | Used for |
 |---|---|---|---|---|---|
 | tau2-bench | https://github.com/sierra-research/tau2-bench | tag v1.0.1 (peeled commit fc0055dc4e0a, per `artifacts/citecheck.json`) | MIT | pending merge | E1, E2, E5 |
-| BFCL V4 (berkeley-function-call-leaderboard) | https://github.com/ShishirPatil/gorilla | pending merge | Apache-2.0 | pending merge | E1, E2 |
+| BFCL V4 (berkeley-function-call-leaderboard), eight Python AST categories | https://github.com/ShishirPatil/gorilla | commit 6ea57973c7a6097fd7c5915698c54c17c5b1b6c8; question-file hashes in docs/adapters/bfcl.md | Apache-2.0; the five fixture records under `tests/fixtures/bfcl/` keep upstream's LICENSE | 2026-11-04 (sparse git checkout) | E1, E2 |
 | HumanEval | https://github.com/openai/human-eval | commit b9453e8f1865df0a0057a1383767caa400acfbcf; `data/HumanEval.jsonl.gz` SHA-256 b796127e635a67f93fb35c04f4cb03cf06f38c8072ee7cee8833d7bee06979ef (docs/adapters/humaneval.md) | MIT, Copyright (c) OpenAI; generated graders and the five fixture records keep the notice | 2026-11-04 (git clone) | E1, E2 (Terminal-Bench substitute) |
 
 ## Released results used for impact (E5)
