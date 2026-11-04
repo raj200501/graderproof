@@ -35,7 +35,7 @@ E1/E2 (prereg 0002, frozen at f63b2d9) runs from `/home/user/graderproof-e1`: al
 ## Next three actions
 
 1. After the cap resets: the last 8 E0 review batches, then finish the E0 audit, `tools/e0_adjudicate.py`, `graderproof e0-score`, commit `toybench/labels.json` unchanged, and write docs/E0_MISSES.md; then the 17 E1 extraction calls and the E1 proposal batches.
-2. Build the E3 (root causes), E5 (impact replay), and E6 (lint AUC) runners and the grader-card and report templates, with tests, while the audits wait on the cap.
+2. Build the E5 runner (released tau2 trajectories: repaired pass = original pass on the recorded run and the grafted checks on the replayed outcome) and the grader-card and report templates, while the audits wait on the cap. The E3 and E6 runners are built (cec7cbd).
 3. Run the milestone review once E0 is banked (one review run a day).
 
 ## Usage to date
