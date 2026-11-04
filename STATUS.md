@@ -3,7 +3,7 @@ STATE: ACTIVE
 
 # graderproof status
 
-Updated 2026-11-04 03:30 UTC. History lives in docs/LOG.md.
+Updated 2026-11-04 04:00 UTC. History lives in docs/LOG.md.
 
 ## Gates (from `python tools/ship_check.py --fast`; only a full run counts)
 
@@ -28,15 +28,15 @@ Fast check on a27b76e (2026-11-04): **5/14**.
 
 ## Now
 
-E0 (prereg 0001, frozen at 1629c30) runs from the frozen worktree `/home/user/graderproof-e0` (D28). Done: requirement extraction (9 calls), proposals (12), reviews of the classical variants (30), and 4 of 12 review batches for the model-proposed variants. Every model-worker transcript passed the D24 audit. The rest of round 3 waits for the single-call cap to reset at 00:00 UTC.
+E0 (prereg 0001, frozen at 1629c30) runs from the frozen worktree `/home/user/graderproof-e0` (D28): extraction, proposals, the classical-variant reviews, and 4 of 12 batches for the model-proposed variants are answered; 8 review batches wait for the daily cap (reset 00:00 UTC). Every model-worker transcript passed the D24 audit. `tools/e0_adjudicate.py` (D34) is ready for the step after the audit.
 
-In parallel: HumanEval, BFCL, and the claim tooling are merged (D29 to D31); the tau2-bench adapter and the gate fixes for review issues B1 to B5 are finishing in their worktrees.
+E1/E2 (prereg 0002, frozen at f63b2d9) runs from `/home/user/graderproof-e1`: all three adapters are merged (HumanEval D29, BFCL D31, tau2-bench D32), the sample is committed and reproduces exactly, and round 1 has produced 17 extraction requests (tau2 7, BFCL 5, HumanEval 5). Their model stores are private with public hash manifests (D35). The gate fixes for review B1 to B5 are merged (D33). The released tau2 trajectories for E5 are downloaded (git-ignored, hashes in `runs/e5/sources.json`).
 
 ## Next three actions
 
-1. After the cap resets: answer the last 8 E0 review batches, finish the audit (confirmation runs), score with `graderproof e0-score`, run the independent adjudication of flags that are not detections, commit `toybench/labels.json` unchanged, and write docs/E0_MISSES.md.
-2. Merge tau2-bench and the gate fixes; freeze prereg 0002 (E1/E2) with the committed sample and the banked power calculation; start E1/E2 from a frozen worktree.
-3. Re-run the milestone review once E0 is banked and the gate fixes are merged.
+1. After the cap resets: the last 8 E0 review batches, then finish the E0 audit, `tools/e0_adjudicate.py`, `graderproof e0-score`, commit `toybench/labels.json` unchanged, and write docs/E0_MISSES.md; then the 17 E1 extraction calls and the E1 proposal batches.
+2. Build the E3 (root causes), E5 (impact replay), and E6 (lint AUC) runners and the grader-card and report templates, with tests, while the audits wait on the cap.
+3. Run the milestone review once E0 is banked (one review run a day).
 
 ## Usage to date
 
