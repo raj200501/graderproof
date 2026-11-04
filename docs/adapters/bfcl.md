@@ -217,9 +217,9 @@ system messages, and non-ASCII text. `tests/fixtures/bfcl/verdicts.json` holds t
 verdicts that BFCL's checker at the pin gave, under bubblewrap, on the references and on
 hand-written changes to them. A stand-in `bfcl_eval` package written by the tests replays
 those verdicts, so the scripts and the driver run end to end without third-party code.
-Two live tests, which run only when `GP_BFCL_ROOT` is set and bubblewrap works, check that
-the fixture lines appear verbatim in the checkout and re-derive every recorded verdict
-with the real checker:
+Two live tests run only when `GP_BFCL_ROOT` is set. One checks that the fixture lines and
+`LICENSE` appear verbatim in the checkout; the other, which also needs bubblewrap,
+re-derives every recorded verdict with the real checker:
 
 ```
 GP_BFCL_ROOT=$PWD/runs/bfcl/src/berkeley-function-call-leaderboard \
