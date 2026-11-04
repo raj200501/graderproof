@@ -34,8 +34,9 @@ Rules shared by every gate:
   variant), and a **false reject** when a counted preserving variant has
   ``grader_passed: false``. Tasks that are not scorable have neither.
 * A commit **predates** a set of directories when it is a proper ancestor of every
-  commit that added a file under them: every add anywhere in the history (merges
-  included), and the original add of every file there now, following renames.
+  commit that added a file under them anywhere in the history (merges included) and
+  of every commit that added a file later renamed into them (true renames at 90%
+  similarity or more; copies are not followed).
 * A preregistration citation is a path ``prereg/NNNN-<slug>.md`` of a file that is
   committed exactly once and frozen in ``prereg/FROZEN.jsonl`` with its SHA-256.
 
@@ -408,28 +409,60 @@ def strictly_before(repo: Path, a: str, b: str) -> bool:
     return rc == 0
 
 
+def adds(repo: Path, paths: Sequence[str]) -> list[str]:
+    """Commits that add a file under ``paths`` anywhere in the history (merges included)."""
+    rc, out = git(
+        repo, "log", "--full-history", "-m", "--diff-filter=A", "--format=%H", "--", *paths
+    )
+    return out.splitlines() if rc == 0 and out else []
+
+
+def renames(repo: Path) -> list[tuple[str, str]]:
+    """(source, destination) of every rename in the history, at 90% similarity or more.
+
+    Only true renames count (a file deleted and a near-identical one added in the same
+    commit). Copies do not: ``git log --follow`` would also follow copies, which would
+    date new data by any older file that happens to look like it.
+    """
+    rc, out = git(
+        repo, "log", "--full-history", "-m", "-M90%", "--diff-filter=R", "--name-status",
+        "--format=",
+    )  # fmt: skip
+    pairs = []
+    for line in out.splitlines() if rc == 0 else []:
+        parts = line.split("\t")
+        if len(parts) == 3 and parts[0].startswith("R"):
+            pairs.append((parts[1], parts[2]))
+    return pairs
+
+
+def under(path: str, dirs: Iterable[str]) -> bool:
+    """Whether ``path`` is one of ``dirs`` or inside one."""
+    return any(path == d or path.startswith(d.rstrip("/") + "/") for d in dirs)
+
+
 def data_commits(repo: Path, dirs: Sequence[str]) -> list[str]:
     """Every commit that brought a file into ``dirs``.
 
     That is every commit adding a file under them anywhere in the history (side
-    branches and merges included), plus, for each file there at HEAD, the commit that
-    first added it under any earlier name (renames followed), so data cannot be dated
-    by the commit that moved it.
+    branches and merges included), plus the commits that added any file later renamed
+    into them (rename chains followed), so data cannot be dated by the commit that
+    moved it in.
     """
     if not dirs:
         return []
-    found: list[str] = []
-    rc, out = git(
-        repo, "log", "--full-history", "-m", "--diff-filter=A", "--format=%H", "--", *dirs
-    )
-    if rc == 0:
-        found += out.splitlines()
-    rc, names = git(repo, "ls-tree", "-r", "-z", "--name-only", "HEAD", "--", *dirs)
-    for name in names.split("\0") if rc == 0 else []:
-        if name:
-            rc, out = git(repo, "log", "--follow", "--diff-filter=A", "--format=%H", "--", name)
-            found += out.splitlines() if rc == 0 else []
-    return list(dict.fromkeys(c for c in found if c))
+    found = adds(repo, dirs)
+    moves = renames(repo)
+    todo = {src for src, dst in moves if under(dst, dirs)}
+    seen: set[str] = set()
+    while todo:
+        src = todo.pop()
+        if src in seen:
+            continue
+        seen.add(src)
+        found += adds(repo, [src])
+        todo |= {s for s, d in moves if d == src}
+    return list(dict.fromkeys(found))
 
 
 def not_after(repo: Path, anchor: str, commits: Iterable[str]) -> str | None:

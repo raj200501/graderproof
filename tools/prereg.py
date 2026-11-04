@@ -22,10 +22,10 @@ tamper-evident. The file and its chain entry are then committed together, once.
    files under its own directory, under the directory named by its ``"model_store"``
    field (a path under ``artifacts/``), and for E0 under ``artifacts/model_calls/e0/``.
    The preregistration's commit must be a proper ancestor of every commit that added
-   a file there: every add anywhere in the history (merges included), and the
-   original add of every file there now, following renames. So E0 outputs or model
-   calls committed before the E0 preregistration fail, whatever order the later
-   files arrive in.
+   a file there anywhere in the history (merges included) and of every commit that
+   added a file later renamed into them (true renames at 90% similarity or more;
+   copies are not followed). So E0 outputs or model calls committed before the E0
+   preregistration fail, whatever order the later files arrive in.
 
 It fails when there is no preregistration at all (an empty chain proves nothing).
 Commands: ``freeze <file>``, ``verify``, ``show``.
@@ -125,21 +125,46 @@ def strictly_before(repo: Path, a: str, b: str) -> bool:
     return a != b and git(repo, "merge-base", "--is-ancestor", a, b)[0] == 0
 
 
-def data_commits(repo: Path, dirs: Sequence[str]) -> list[str]:
-    """Every commit that brought a file into ``dirs`` (adds anywhere in the history,
-    merges included, and the original add of each file there now, renames followed)."""
-    found: list[str] = []
+def adds(repo: Path, paths: Sequence[str]) -> list[str]:
+    """Commits that add a file under ``paths`` anywhere in the history (merges included)."""
     rc, out = git(
-        repo, "log", "--full-history", "-m", "--diff-filter=A", "--format=%H", "--", *dirs
+        repo, "log", "--full-history", "-m", "--diff-filter=A", "--format=%H", "--", *paths
     )
-    if rc == 0:
-        found += out.splitlines()
-    rc, names = git(repo, "ls-tree", "-r", "-z", "--name-only", "HEAD", "--", *dirs)
-    for name in names.split("\0") if rc == 0 else []:
-        if name:
-            rc, out = git(repo, "log", "--follow", "--diff-filter=A", "--format=%H", "--", name)
-            found += out.splitlines() if rc == 0 else []
-    return list(dict.fromkeys(c for c in found if c))
+    return out.splitlines() if rc == 0 and out else []
+
+
+def renames(repo: Path) -> list[tuple[str, str]]:
+    """(source, destination) of every true rename in the history (90% similar or more).
+
+    Copies are not followed: ``git log --follow`` would date new data by any older
+    file that happens to look like it.
+    """
+    rc, out = git(
+        repo, "log", "--full-history", "-m", "-M90%", "--diff-filter=R", "--name-status",
+        "--format=",
+    )  # fmt: skip
+    parts = [ln.split("\t") for ln in out.splitlines()] if rc == 0 else []
+    return [(p[1], p[2]) for p in parts if len(p) == 3 and p[0].startswith("R")]
+
+
+def data_commits(repo: Path, dirs: Sequence[str]) -> list[str]:
+    """Every commit that brought a file into ``dirs``: adds anywhere in the history
+    (merges included) and the adds of any file later renamed into them (chains followed)."""
+
+    def under(path: str) -> bool:
+        return any(path == d or path.startswith(d.rstrip("/") + "/") for d in dirs)
+
+    found = adds(repo, dirs)
+    moves = renames(repo)
+    todo = {src for src, dst in moves if under(dst)}
+    seen: set[str] = set()
+    while todo:
+        src = todo.pop()
+        if src not in seen:
+            seen.add(src)
+            found += adds(repo, [src])
+            todo |= {s for s, d in moves if d == src}
+    return list(dict.fromkeys(found))
 
 
 def data_dirs(rel: str, doc: dict[str, Any]) -> tuple[list[str], str]:

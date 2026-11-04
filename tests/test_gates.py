@@ -977,3 +977,802 @@ def test_g7_substitution_must_be_decided_before_data(tmp_path: Path) -> None:
         build(tmp_path / "early", [("dec", decision), ("data", {**files, **decision})])
     )
     assert early.ok, early.evidence
+
+
+# =========================================================================== G8 (E4)
+
+SURVIVOR: AuditTask = ("t5", "stable_pass", [("violating", True, True)])
+G8_TASKS: dict[str, list[AuditTask]] = {
+    "b1": [*AUDIT_TASKS, SURVIVOR],  # surviving variants on t0 and t5
+    "b2": AUDIT_TASKS,  # on t0 (t4 is flaky: its survivor does not count)
+    "b3": AUDIT_TASKS[1:4],  # none
+}
+
+
+def generalization(**change: Any) -> dict[str, Any]:
+    return {
+        "ran": True,
+        "n_fresh_variants": 6,
+        "survivors_original": 2,
+        "caught_by_repair": 2,
+        "survivors_repaired": 0,
+        "induced_false_rejects": 0,
+        **change,
+    }
+
+
+@dataclass
+class E4Case:
+    """E4 summaries, private files (untracked), and public files (tracked)."""
+
+    e4: dict[str, dict[str, Any]]
+    private: dict[str, str]
+    public: dict[str, str]
+    manifest: dict[str, Any] | None = None
+    tasks: dict[str, list[AuditTask]] | None = None
+
+
+H_B1_T0, H_B1_T5, H_B2_T0 = sha("b1:t0"), sha("b1:t5"), sha("b2:t0")
+PRIV_PATCH = f"private/outbound/patches/{H_B1_T0}.patch"
+PRIV_LOG = f"private/outbound/patches/{H_B1_T0}.validation.json"
+PUB_PATCH, PUB_LOG = "outbound/patches/b2-t0.patch", "outbound/patches/b2-t0.validation.json"
+
+
+def e4_case() -> E4Case:
+    """b1: t0 repaired privately, t5 unrepaired; b2: t0 repaired in public."""
+    b1 = {
+        "schema": "graderproof.e4/1",
+        "ran": True,
+        "benchmark": "b1",
+        "repaired": [
+            {
+                "task_hash": H_B1_T0,
+                "benchmark": "b1",
+                "public": False,
+                "patch": PRIV_PATCH,
+                "validation_log": PRIV_LOG,
+            }
+        ],
+        "unrepaired": [{"task_hash": H_B1_T5, "reason": "only exit-code requirements broken"}],
+        "generalization": generalization(),
+        "provenance": PROV,
+    }
+    pub = {"task_hash": H_B2_T0, "benchmark": "b2", "public": True}
+    b2 = {
+        **b1,
+        "benchmark": "b2",
+        "repaired": [{**pub, "patch": PUB_PATCH, "validation_log": PUB_LOG}],
+        "unrepaired": [],
+    }
+    private = {
+        PRIV_PATCH: "--- a/grader/grade.sh\n+++ b/grader/grade.sh\n",
+        PRIV_LOG: dump({"accepted": True, "task_hash": H_B1_T0}),
+    }
+    public = {
+        PUB_PATCH: "--- a/grader/grade.sh\n+++ b/grader/grade.sh\n",
+        PUB_LOG: dump({"accepted": True, "task_hash": H_B2_T0}),
+    }
+    return E4Case({"b1": b1, "b2": b2}, private, public)
+
+
+def g8(tmp: Path, case: E4Case, track: Sequence[str] = ()) -> sc.Result:
+    """Build the origin checkout, run phase A there, clone it, and run G8 on the clone."""
+    repo = Repo(tmp / "origin")
+    files = audit_files(BENCHES, case.tasks or G8_TASKS)
+    files[".gitignore"] = "private/\n"
+    files.update(case.public)
+    for bench, summary in case.e4.items():
+        files[f"artifacts/e4/{bench}/summary.json"] = dump(summary)
+    manifest = case.manifest or {
+        "files": [{"path": p, "sha256": sha(t)} for p, t in sorted(case.private.items())]
+    }
+    files["outbound/patches/MANIFEST.json"] = dump(manifest)
+    repo.write(files)
+    repo.write(dict(case.private))
+    for rel in track:
+        repo.git("add", "-f", rel)
+    repo.commit("e4")
+    ctx = sc.Ctx(origin=repo.root, work=tmp / "work", fast=True, head=repo.git("rev-parse", "HEAD"))
+    sc.check_origin(ctx)
+    sc.make_clone(ctx)
+    return sc.g8_repair(ctx)
+
+
+def test_g8_passes_with_every_survivor_repaired_or_explained(tmp_path: Path) -> None:
+    r = g8(tmp_path, e4_case())
+    assert r.ok, r.evidence
+    assert "3 tasks with surviving variants: 2 repaired (1 public, 1 private" in r.evidence
+    assert "1 unrepaired with reasons; generalization 12 fresh variants" in r.evidence
+
+
+def test_g8_reviewer_b4_empty_repair_set(tmp_path: Path) -> None:
+    """g8g9_vacuous.py: a counted surviving variant and an E4 summary repairing nothing."""
+    case = e4_case()
+    case.e4["b1"]["repaired"], case.e4["b1"]["unrepaired"] = [], []
+    r = g8(tmp_path, case)
+    assert not r.ok
+    assert "artifacts/e4/b1: 2 tasks with surviving variants are neither repaired" in r.evidence
+
+
+def test_g8_fails_when_a_benchmark_with_survivors_has_no_e4_summary(tmp_path: Path) -> None:
+    case = e4_case()
+    del case.e4["b2"]
+    r = g8(tmp_path, case)
+    assert not r.ok
+    assert "artifacts/e4/b2/summary.json missing (1 tasks with surviving variants)" in r.evidence
+
+
+def test_g8_ignores_the_old_single_summary_layout(tmp_path: Path) -> None:
+    case = e4_case()
+    old = case.e4.pop("b1")
+    case.public["artifacts/e4/summary.json"] = dump(old)
+    r = g8(tmp_path, case)
+    assert not r.ok
+    assert "artifacts/e4/b1/summary.json missing" in r.evidence
+
+
+def test_g8_fails_when_no_audit_has_a_surviving_variant(tmp_path: Path) -> None:
+    """D6: an empty survivor set proves nothing."""
+    case = e4_case()
+    case.e4 = {}
+    case.tasks = {b: AUDIT_TASKS[1:4] for b in ("b1", "b2", "b3")}
+    r = g8(tmp_path, case)
+    assert not r.ok
+    assert "no surviving variants in any audit" in r.evidence
+
+
+def test_g8_fails_when_nothing_is_repaired_anywhere(tmp_path: Path) -> None:
+    case = e4_case()
+    reason = "only exit-code requirements broken"
+    case.e4["b1"]["repaired"] = []
+    case.e4["b1"]["unrepaired"] = [{"task_hash": h, "reason": reason} for h in (H_B1_T0, H_B1_T5)]
+    case.e4["b2"]["repaired"] = []
+    case.e4["b2"]["unrepaired"] = [{"task_hash": H_B2_T0, "reason": reason}]
+    case.private, case.public = {}, {}
+    r = g8(tmp_path, case)
+    assert not r.ok
+    assert "no task repaired in any benchmark" in r.evidence
+
+
+def unrepaired(**entry: Any) -> list[dict[str, Any]]:
+    return [{"task_hash": H_B1_T5, **entry}]
+
+
+@pytest.mark.parametrize(
+    ("change", "message"),
+    [
+        ({"unrepaired": unrepaired(reason="")}, "unrepaired "),
+        ({"unrepaired": unrepaired(reason=None)}, "has no reason"),
+        (
+            {"unrepaired": [*unrepaired(reason="x"), {"task_hash": sha("b1:t2"), "reason": "x"}]},
+            "1 listed tasks have no surviving variant",
+        ),
+        (
+            {"unrepaired": [*unrepaired(reason="x"), {"task_hash": sha("b1:t4"), "reason": "x"}]},
+            "1 listed tasks have no surviving variant",
+        ),
+        ({"unrepaired": [*unrepaired(reason="x"), *unrepaired(reason="y")]}, "listed more than once"),
+        ({"schema": None}, "schema is not graderproof.e4/1"),
+        ({"ran": "true"}, "not marked ran"),
+        ({"benchmark": "other"}, "benchmark 'other' is not 'b1'"),
+        ({"provenance": None}, "provenance lacks"),
+        ({"unrepaired": None}, "unrepaired is not a list"),
+        ({"generalization": {"ran": False}}, "no post-repair generalization batch"),
+        ({"generalization": generalization(n_fresh_variants=0)}, "has no fresh variants"),
+        ({"generalization": generalization(induced_false_rejects=None)}, "lacks induced_false"),
+        ({"generalization": generalization(caught_by_repair=3)}, "counts are inconsistent"),
+    ],
+)
+def test_g8_fails_on_a_bad_e4_summary(tmp_path: Path, change: dict[str, Any], message: str) -> None:
+    case = e4_case()
+    case.e4["b1"].update(change)
+    r = g8(tmp_path, case)
+    assert not r.ok
+    assert message in r.evidence
+    assert r.evidence.startswith("artifacts/e4/b1: ")
+
+
+@pytest.mark.parametrize(
+    ("bench", "key", "value", "message"),
+    [
+        ("b2", "patch", "outbound/patches/missing.patch", "public patch 'outbound/patches/missing"),
+        ("b2", "patch", "outbound/patches/../../README.md", "missing under outbound/patches/"),
+        ("b2", "public", "yes", "public is not true or false"),
+        ("b2", "benchmark", "b1", "names another benchmark"),
+        ("b1", "patch", "private/outbound/patches/other.patch", "not in outbound/patches/MANIFEST"),
+        ("b1", "validation_log", "outbound/patches/b2-t0.validation.json", "not in outbound"),
+        ("b1", "task_hash", "t0", "repaired without task_hash"),
+    ],
+)
+def test_g8_checks_where_patches_and_logs_live(
+    tmp_path: Path, bench: str, key: str, value: Any, message: str
+) -> None:
+    case = e4_case()
+    case.e4[bench]["repaired"][0][key] = value
+    r = g8(tmp_path, case)
+    assert not r.ok
+    assert message in r.evidence
+
+
+def test_g8_requires_accepted_logs_for_the_right_task(tmp_path: Path) -> None:
+    case = e4_case()
+    case.public[PUB_LOG] = dump({"accepted": False, "task_hash": H_B2_T0})
+    r = g8(tmp_path / "public", case)
+    assert not r.ok
+    assert 'validation log outbound/patches/b2-t0.validation.json does not say "accepted": true' in (
+        r.evidence
+    )
+    case = e4_case()
+    case.private[PRIV_LOG] = dump({"accepted": "true", "task_hash": H_B1_T0})
+    r = g8(tmp_path / "private", case)
+    assert not r.ok
+    assert f'validation log {PRIV_LOG} does not say "accepted": true' in r.evidence
+    case = e4_case()
+    case.public[PUB_LOG] = dump({"accepted": True, "task_hash": H_B1_T0})
+    r = g8(tmp_path / "other", case)
+    assert not r.ok
+    assert "is for another task" in r.evidence
+
+
+def test_g8_verifies_private_hashes_in_the_origin(tmp_path: Path) -> None:
+    case = e4_case()
+    case.manifest = {
+        "files": [{"path": p, "sha256": sha(t + "edited")} for p, t in case.private.items()]
+    }
+    r = g8(tmp_path / "stale", case)
+    assert not r.ok
+    assert "private patch manifest: " in r.evidence
+    assert "sha256 mismatch" in r.evidence
+    case = e4_case()
+    del case.private[PRIV_PATCH]
+    case.manifest = {"files": [{"path": PRIV_PATCH, "sha256": "0" * 64}]}
+    r = g8(tmp_path / "gone", case)
+    assert not r.ok
+    assert f"{PRIV_PATCH}: missing" in r.evidence
+
+
+def test_g8_fails_when_a_private_patch_is_tracked(tmp_path: Path) -> None:
+    r = g8(tmp_path, e4_case(), track=[PRIV_PATCH])
+    assert not r.ok
+    assert f"private patch {PRIV_PATCH} is tracked" in r.evidence
+
+
+def test_g8_fails_without_audits(tmp_path: Path) -> None:
+    ctx = sc.Ctx(origin=tmp_path, work=tmp_path / "work", fast=True)
+    ctx.clone = tmp_path
+    r = sc.g8_repair(ctx)
+    assert not r.ok
+    assert "no audited benchmarks" in r.evidence
+
+
+# =========================================================================== G9 (E5)
+
+E5_TASKS = [sha(f"b1:e5-{i}") for i in range(8)]
+
+
+def e5_row(model: str, task_hash: str, trial: int, original: Any, repaired: Any) -> dict[str, Any]:
+    return {
+        "model": model,
+        "task_hash": task_hash,
+        "trial": trial,
+        "original_pass": original,
+        "repaired_pass": repaired,
+    }
+
+
+def e5_rows() -> list[dict[str, Any]]:
+    """m-a passes everything until the repair rejects tasks 0 to 4; m-b passes tasks 0 to 5
+    under both graders; m-c passes tasks 0 to 3 until the repair rejects task 0.
+    Pass flips 12/36; rank changes 2 (m-a vs m-b and m-a vs m-c)."""
+    rows = []
+    for i, h in enumerate(E5_TASKS):
+        for trial in (0, 1):
+            rows.append(e5_row("m-a", h, trial, True, i > 4))
+            rows.append(e5_row("m-b", h, trial, i <= 5, i <= 5))
+            rows.append(e5_row("m-c", h, trial, i <= 3, 1 <= i <= 3))
+    return rows
+
+
+def flips_of(rows: Sequence[Mapping[str, Any]]) -> float | None:
+    passed = [r for r in rows if r["original_pass"]]
+    return sum(1 for r in passed if not r["repaired_pass"]) / len(passed) if passed else None
+
+
+def ranks_of(rows: Sequence[Mapping[str, Any]], models: Sequence[str]) -> float | None:
+    rates: dict[str, tuple[Fraction, Fraction]] = {}
+    for m in models:
+        mine = [r for r in rows if r["model"] == m]
+        if not mine:
+            return None
+        o = sum(1 for r in mine if r["original_pass"])
+        p = sum(1 for r in mine if r["repaired_pass"])
+        rates[m] = (Fraction(o, len(mine)), Fraction(p, len(mine)))
+
+    def sign(x: Fraction) -> int:
+        return (x > 0) - (x < 0)
+
+    changed = 0
+    for i, a in enumerate(models):
+        for b in models[i + 1 :]:
+            before = sign(rates[a][0] - rates[b][0])
+            after = sign(rates[a][1] - rates[b][1])
+            changed += before != after
+    return float(changed)
+
+
+def e5_summary(rows: Sequence[Mapping[str, Any]], seed: int = SEED) -> dict[str, Any]:
+    """The task-cluster bootstrap of the module docstring, written out plainly."""
+    tasks = sorted({str(r["task_hash"]) for r in rows})
+    models = sorted({str(r["model"]) for r in rows})
+    by_task = {t: [r for r in rows if r["task_hash"] == t] for t in tasks}
+
+    def pooled(idx: Sequence[int]) -> list[Mapping[str, Any]]:
+        return [r for i in idx for r in by_task[tasks[i]]]
+
+    def flips(idx: Sequence[int]) -> float | None:
+        return flips_of(pooled(idx))
+
+    def ranks(idx: Sequence[int]) -> float | None:
+        return ranks_of(pooled(idx), models)
+
+    doc: dict[str, Any] = {
+        "ran": True,
+        "benchmark": "b1",
+        "bootstrap": {"seed": seed, "B": REPS, "alpha": 0.05},
+        "provenance": PROV,
+    }
+    for key, stat, s in (("pass_flips", flips, seed), ("rank_changes", ranks, seed + 1)):
+        ci = sc.bootstrap_ci(len(tasks), stat, s, REPS)
+        doc[key] = {"point": stat(list(range(len(tasks)))), "ci": list(ci) if ci else []}
+    return doc
+
+
+def g9_files(rows: Sequence[Mapping[str, Any]] | None = None) -> Files:
+    data = e5_rows() if rows is None else list(rows)
+    files = audit_files(BENCHES[:1])
+    files["artifacts/e5/b1/rows.jsonl"] = jsonl(data)
+    files["artifacts/e5/b1/summary.json"] = dump(e5_summary(data) if data else {})
+    files["docs/cards/b1.md"] = "# b1 grader card\n\nFalse-accept task rate 0.333 over 3 tasks.\n"
+    files["docs/cards/b1.json"] = dump({"benchmark": "b1", "false_accept_task_rate": 0.333})
+    return files
+
+
+def e5_doc(files: Files) -> dict[str, Any]:
+    text = files["artifacts/e5/b1/summary.json"]
+    assert text is not None
+    doc: dict[str, Any] = json.loads(text)
+    return doc
+
+
+def g9(tmp: Path, files: Files) -> sc.Result:
+    return sc.g9_impact_and_cards(build(tmp, [("e5", files)]))
+
+
+def test_g9_passes_with_recomputed_flips_and_rank_changes(tmp_path: Path) -> None:
+    files = g9_files()
+    doc = e5_doc(files)
+    assert doc["pass_flips"]["point"] == pytest.approx(1 / 3)
+    assert doc["rank_changes"]["point"] == 2.0
+    r = g9(tmp_path, files)
+    assert r.ok, r.evidence
+    assert "E5 recomputed: b1: pass_flips 0.333 [" in r.evidence
+    assert "rank_changes 2.000 [" in r.evidence
+    assert "over 8 tasks and 3 models; 1 cards, aggregates only" in r.evidence
+
+
+def test_g9_reviewer_b5_empty_intervals(tmp_path: Path) -> None:
+    """g8g9_vacuous.py: ran, provenance, and empty interval lists, nothing else."""
+    files = g9_files()
+    vacuous = {"ran": True, "provenance": PROV, "pass_flips": {"ci": []}, "rank_changes": {"ci": []}}
+    files["artifacts/e5/b1/summary.json"] = dump(vacuous)
+    r = g9(tmp_path / "vacuous", files)
+    assert not r.ok
+    assert "artifacts/e5/b1/summary.json has no bootstrap block" in r.evidence
+    files["artifacts/e5/b1/summary.json"] = dump({**vacuous, "bootstrap": e5_doc(g9_files())["bootstrap"]})
+    r = g9(tmp_path / "nopoint", files)
+    assert not r.ok
+    assert "artifacts/e5/b1 pass_flips point None differs" in r.evidence
+
+
+@pytest.mark.parametrize(
+    ("key", "field", "value", "message"),
+    [
+        ("pass_flips", "point", 0.25, "pass_flips point 0.25 differs from the recomputed 0.333"),
+        ("rank_changes", "point", 1, "rank_changes point 1 differs from the recomputed 2.000"),
+        ("rank_changes", "ci", [0, 3, 4], "rank_changes interval [0, 3, 4] differs"),
+        ("pass_flips", "ci", ["0", "1"], "pass_flips interval ['0', '1'] differs"),
+    ],
+)
+def test_g9_compares_stated_estimates(
+    tmp_path: Path, key: str, field: str, value: Any, message: str
+) -> None:
+    files = g9_files()
+    doc = e5_doc(files)
+    doc[key][field] = value
+    files["artifacts/e5/b1/summary.json"] = dump(doc)
+    r = g9(tmp_path, files)
+    assert not r.ok
+    assert message in r.evidence
+
+
+def test_g9_requires_each_interval_to_contain_its_point(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    files = g9_files()
+    doc = e5_doc(files)
+    for key in ("pass_flips", "rank_changes"):
+        doc[key]["ci"] = [2.5, 3.0]
+    files["artifacts/e5/b1/summary.json"] = dump(doc)
+
+    def fixed(*args: Any, **kwargs: Any) -> tuple[float, float]:
+        return 2.5, 3.0
+
+    monkeypatch.setattr(sc, "bootstrap_ci", fixed)
+    r = g9(tmp_path, files)
+    assert not r.ok
+    assert "artifacts/e5/b1 pass_flips interval does not contain its point" in r.evidence
+
+
+@pytest.mark.parametrize(
+    ("rows", "message"),
+    [
+        ([{**e5_rows()[0], "original_pass": "true"}, *e5_rows()[1:]], "must be true or false"),
+        ([{**e5_rows()[0], "repaired_pass": None}, *e5_rows()[1:]], "must be true or false"),
+        ([{**e5_rows()[0], "trial": True}, *e5_rows()[1:]], "a row has no trial"),
+        ([{**e5_rows()[0], "model": ""}, *e5_rows()[1:]], "a row has no model"),
+        ([{**e5_rows()[0], "task_hash": "e5-0"}, *e5_rows()[1:]], "a row has no task_hash"),
+        ([*e5_rows(), e5_rows()[0]], "repeats a (model, task, trial) row"),
+        ([r for r in e5_rows() if r["model"] == "m-a"], "need at least two models (found 1)"),
+        ([{**r, "original_pass": False} for r in e5_rows()], "pass_flips undefined"),
+        ([], "rows.jsonl missing or empty"),
+    ],
+)
+def test_g9_validates_rows(tmp_path: Path, rows: list[dict[str, Any]], message: str) -> None:
+    files = g9_files()
+    files["artifacts/e5/b1/rows.jsonl"] = jsonl(rows)
+    r = g9(tmp_path, files)
+    assert not r.ok
+    assert message in r.evidence
+
+
+def test_g9_needs_an_e5_run_and_checks_every_one(tmp_path: Path) -> None:
+    files = g9_files()
+    files["artifacts/e5/b1/summary.json"] = dump({**e5_doc(files), "ran": False})
+    r = g9(tmp_path / "notrun", files)
+    assert not r.ok
+    assert "no E5 impact artifact that ran" in r.evidence
+    files = g9_files()
+    del files["artifacts/e5/b1/summary.json"]
+    assert not g9(tmp_path / "none", files).ok
+    files = g9_files()
+    files["artifacts/e5/b2/summary.json"] = dump({**e5_doc(files), "benchmark": "b2"})
+    r = g9(tmp_path / "second", files)
+    assert not r.ok
+    assert "artifacts/e5/b2/rows.jsonl missing or empty" in r.evidence
+    files = g9_files()
+    files["artifacts/e5/b1/summary.json"] = dump({**e5_doc(files), "bootstrap": {"seed": 1, "B": 999, "alpha": 0.05}})
+    assert "B=999 (< 1000)" in g9(tmp_path / "reps", files).evidence
+
+
+def test_g9_card_checks(tmp_path: Path) -> None:
+    files = g9_files()
+    del files["docs/cards/b1.json"]
+    r = g9(tmp_path / "missing", files)
+    assert not r.ok
+    assert "grader card for b1 missing" in r.evidence
+    for i, (text, card, ok) in enumerate(
+        [
+            ("task t0 accepts a broken solution", {"benchmark": "b1"}, False),
+            ("task t3 rejects its own reference", {"benchmark": "b1"}, False),
+            ("task t2 is fine", {"benchmark": "b1"}, True),
+            ("task t0 was fixed", {"benchmark": "b1", "fixed_upstream_tasks": ["t0"]}, True),
+            ("aggregate only", {"benchmark": "b1", "tasks": []}, False),
+        ]
+    ):
+        files = g9_files()
+        files["docs/cards/b1.md"] = f"# b1\n\n{text}\n"
+        files["docs/cards/b1.json"] = dump(card)
+        r = g9(tmp_path / str(i), files)
+        assert r.ok is ok, (text, r.evidence)
+
+
+# =========================================================================== G10
+
+GOOD_MAKE = (
+    "claimcheck:\n\t@echo 'claimcheck: README.md 3 numbers ok; docs/REPORT.md 5 numbers ok'\n"
+    "freshness:\n\t@echo 'freshness: README.md ok; docs/REPORT.md ok'\n"
+)
+
+
+def g10(tmp: Path, makefile: str, report: bool = True) -> sc.Result:
+    files: Files = {"Makefile": makefile, "README.md": "# graderproof\n"}
+    if report:
+        files["docs/REPORT.md"] = "# Report\n"
+    return sc.g10_claim_integrity(build(tmp, [("docs", files)]))
+
+
+def test_g10_passes_when_both_tools_report_on_both_documents(tmp_path: Path) -> None:
+    r = g10(tmp_path, GOOD_MAKE)
+    assert r.ok, r.evidence
+    assert "docs/REPORT.md 5 numbers ok" in r.evidence
+
+
+@pytest.mark.parametrize(
+    ("makefile", "report", "message"),
+    [
+        (GOOD_MAKE, False, "docs/REPORT.md missing"),
+        (GOOD_MAKE.replace("@echo 'claimcheck", "@exit 1; echo '"), True, "make claimcheck failed"),
+        (GOOD_MAKE.replace("; docs/REPORT.md ok'", "'"), True, "make freshness did not report on"),
+        ("claimcheck:\n\t@echo not built yet; exit 1\n", True, "make claimcheck failed"),
+    ],
+)
+def test_g10_fails(tmp_path: Path, makefile: str, report: bool, message: str) -> None:
+    r = g10(tmp_path, makefile, report)
+    assert not r.ok
+    assert message in r.evidence
+
+
+# =========================================================================== G11
+
+REAL_VERIFY = "python3 tools/prereg.py verify"
+NO_VERIFY = "true"  # a weakened target: G11's own checks must still catch every scenario
+E0_SCORE: Files = {
+    "artifacts/e0/results.json": dump({"schema": "graderproof.e0/1", "prereg": PREREG_E0})
+}
+
+
+def e0_run(confirmatory: Any = True, **change: Any) -> Files:
+    summary: dict[str, Any] = {
+        "schema": "graderproof.audit/1",
+        "prereg": PREREG_E0,
+        "model_store": "artifacts/model_calls/e0",
+        **change,
+    }
+    if confirmatory is not None:
+        summary["confirmatory"] = confirmatory
+    return {
+        "artifacts/model_calls/e0/requests/r1.json": dump({"items": ["opaque"]}),
+        "artifacts/e0/summary.json": dump(summary),
+        "artifacts/e0/tasks.jsonl": jsonl([{"task": "toybench:t1"}]),
+    }
+
+
+def audit_run(**change: Any) -> Files:
+    summary = {
+        "benchmark": "b1",
+        "confirmatory": True,
+        "prereg": PREREG_E1,
+        "model_store": "artifacts/model_calls/b1",
+        **change,
+    }
+    return {
+        "artifacts/model_calls/b1/requests/r1.json": dump({"items": ["opaque"]}),
+        "artifacts/audit/b1/summary.json": dump(summary),
+    }
+
+
+def g11_repo(tmp: Path, verify: str) -> Repo:
+    repo = Repo(tmp / "repo")
+    makefile = f"prereg-verify:\n\t{verify}\n"
+    tool = (TOOLS / "prereg.py").read_text(encoding="utf-8")
+    repo.commit("init", {"README.md": "x\n", "Makefile": makefile, "tools/prereg.py": tool})
+    return repo
+
+
+def freeze(repo: Repo, rel: str, text: str = "# Preregistration\n", commit: bool = True) -> None:
+    repo.write({rel: text})
+    prereg.freeze(repo.root / rel, repo=repo.root, now="2026-11-04T00:00:00Z")
+    if commit:
+        repo.commit(f"freeze {rel}")
+
+
+def g11(tmp: Path, repo: Repo) -> sc.Result:
+    return sc.g11_prereg_integrity(repo.ctx(tmp / "work"))
+
+
+def g11_correct(tmp: Path, verify: str) -> Repo:
+    repo = g11_repo(tmp, verify)
+    freeze(repo, PREREG_E0)
+    freeze(repo, PREREG_E1)
+    repo.commit("e0 run", e0_run())
+    repo.commit("audit", audit_run())
+    repo.commit("e0 score", E0_SCORE)
+    return repo
+
+
+BOTH = pytest.mark.parametrize("verify", [REAL_VERIFY, NO_VERIFY])
+
+
+@BOTH
+def test_g11_passes_when_preregistrations_come_first(tmp_path: Path, verify: str) -> None:
+    r = g11(tmp_path, g11_correct(tmp_path, verify))
+    assert r.ok, r.evidence
+    assert "2 preregistrations frozen; 3 confirmatory artifacts follow them" in r.evidence
+
+
+@BOTH
+def test_g11_reviewer_b3_e0_outputs_before_the_preregistration(tmp_path: Path, verify: str) -> None:
+    """g11_e0order.py: audit outputs (no confirmatory flag), then the freeze, then e0-score."""
+    repo = g11_repo(tmp_path, verify)
+    repo.commit("e0 run", e0_run(confirmatory=None, prereg=None))
+    freeze(repo, PREREG_E0)
+    freeze(repo, PREREG_E1)
+    repo.commit("audit", audit_run())
+    results = {"prereg": PREREG_E0, "confirmatory": False}
+    repo.commit("e0 score", {"artifacts/e0/results.json": dump(results)})
+    r = g11(tmp_path, repo)
+    assert not r.ok
+    if verify == NO_VERIFY:
+        assert "artifacts/e0/summary.json is not marked confirmatory" in r.evidence
+    else:
+        assert "make prereg-verify failed" in r.evidence
+    problems = " | ".join(prereg.verify(repo.root))
+    assert "was not committed before artifacts/e0/results.json" in problems
+
+
+@BOTH
+def test_g11_dates_e0_by_its_outputs_even_when_marked(tmp_path: Path, verify: str) -> None:
+    repo = g11_repo(tmp_path, verify)
+    repo.commit("e0 run", e0_run())
+    freeze(repo, PREREG_E0)
+    freeze(repo, PREREG_E1)
+    repo.commit("audit", audit_run())
+    repo.commit("e0 score", E0_SCORE)
+    r = g11(tmp_path, repo)
+    assert not r.ok
+    if verify == NO_VERIFY:
+        assert "prereg/0001-e0-tool-validity.md does not predate the data of" in r.evidence
+    else:
+        assert "make prereg-verify failed" in r.evidence
+
+
+@BOTH
+def test_g11_dates_e0_by_its_first_model_call(tmp_path: Path, verify: str) -> None:
+    repo = g11_repo(tmp_path, verify)
+    repo.commit("first call", {"artifacts/model_calls/e0/requests/r0.json": dump({"items": []})})
+    freeze(repo, PREREG_E0)
+    freeze(repo, PREREG_E1)
+    repo.commit("e0 run", e0_run())
+    repo.commit("audit", audit_run())
+    repo.commit("e0 score", E0_SCORE)
+    r = g11(tmp_path, repo)
+    assert not r.ok
+    assert verify == REAL_VERIFY or "artifacts/model_calls/e0" in r.evidence
+
+
+@BOTH
+def test_g11_dates_an_audit_by_its_named_model_store(tmp_path: Path, verify: str) -> None:
+    repo = g11_repo(tmp_path, verify)
+    freeze(repo, PREREG_E0)
+    repo.commit("b1 calls", {"artifacts/model_calls/b1/requests/r0.json": dump({"items": []})})
+    freeze(repo, PREREG_E1)
+    repo.commit("e0 run", e0_run())
+    repo.commit("audit", audit_run())
+    repo.commit("e0 score", E0_SCORE)
+    r = g11(tmp_path, repo)
+    assert not r.ok
+    assert verify == REAL_VERIFY or "prereg/0002-e1-e2-audit.md does not predate" in r.evidence
+
+
+@BOTH
+def test_g11_dates_data_moved_in_from_a_pilot(tmp_path: Path, verify: str) -> None:
+    repo = g11_repo(tmp_path, verify)
+    pilot = e0_run()["artifacts/e0/tasks.jsonl"]
+    repo.commit("pilot", {"artifacts/pilot/tasks.jsonl": pilot})
+    freeze(repo, PREREG_E0)
+    freeze(repo, PREREG_E1)
+    repo.commit("e0 run", {**e0_run(), "artifacts/pilot/tasks.jsonl": None})
+    repo.commit("audit", audit_run())
+    repo.commit("e0 score", E0_SCORE)
+    r = g11(tmp_path, repo)
+    assert not r.ok
+    assert verify == REAL_VERIFY or "does not predate the data of artifacts/e0" in r.evidence
+
+
+@BOTH
+def test_g11_fails_when_a_preregistration_is_edited(tmp_path: Path, verify: str) -> None:
+    repo = g11_correct(tmp_path, verify)
+    repo.commit("edit", {PREREG_E0: "# Preregistration, thresholds lowered\n"})
+    r = g11(tmp_path, repo)
+    assert not r.ok
+    assert verify == REAL_VERIFY or f"{PREREG_E0} has 2 commits" in r.evidence
+
+
+@BOTH
+def test_g11_fails_when_the_file_differs_from_its_frozen_hash(tmp_path: Path, verify: str) -> None:
+    repo = g11_repo(tmp_path, verify)
+    freeze(repo, PREREG_E0, commit=False)
+    repo.commit("freeze, edited first", {PREREG_E0: "# edited after freezing\n"})
+    freeze(repo, PREREG_E1)
+    repo.commit("e0 run", e0_run())
+    repo.commit("audit", audit_run())
+    repo.commit("e0 score", E0_SCORE)
+    r = g11(tmp_path, repo)
+    assert not r.ok
+    assert verify == REAL_VERIFY or "does not match its prereg/FROZEN.jsonl entry" in r.evidence
+
+
+@BOTH
+@pytest.mark.parametrize(
+    ("change", "message"),
+    [
+        ({"prereg": "prereg/FROZEN.jsonl"}, "cites no frozen preregistration"),
+        ({"prereg": "prereg/0009-missing.md"}, "cites no frozen preregistration"),
+        ({"prereg": None}, "cites no frozen preregistration"),
+        ({"model_store": "runs/model_calls/b1"}, "is not a directory under artifacts/"),
+        ({"model_store": "/abs/model_calls"}, "is not a directory under artifacts/"),
+        ({"model_store": "artifacts/../runs"}, "is not a directory under artifacts/"),
+    ],
+)
+def test_g11_checks_citations_and_model_stores(
+    tmp_path: Path, verify: str, change: dict[str, Any], message: str
+) -> None:
+    repo = g11_correct(tmp_path, verify)
+    repo.commit("bad citation", audit_run(**change))
+    r = g11(tmp_path, repo)
+    assert not r.ok
+    assert verify == REAL_VERIFY or message in r.evidence
+
+
+@BOTH
+def test_g11_requires_the_e0_summary_to_say_confirmatory(tmp_path: Path, verify: str) -> None:
+    repo = g11_correct(tmp_path, verify)
+    repo.commit("unmark", {"artifacts/e0/summary.json": dump({"prereg": PREREG_E0})})
+    r = g11(tmp_path, repo)
+    assert not r.ok
+    assert verify == REAL_VERIFY or "artifacts/e0/summary.json is not marked confirmatory" in r.evidence
+
+
+@BOTH
+def test_g11_fails_on_an_unreadable_summary(tmp_path: Path, verify: str) -> None:
+    repo = g11_correct(tmp_path, verify)
+    repo.commit("broken", {"artifacts/audit/b2/summary.json": "{not json"})
+    r = g11(tmp_path, repo)
+    assert not r.ok
+    assert verify == REAL_VERIFY or "artifacts/audit/b2/summary.json is not valid JSON" in r.evidence
+
+
+def test_g11_fails_on_empty_sets(tmp_path: Path) -> None:
+    repo = g11_repo(tmp_path / "none", NO_VERIFY)
+    assert "no preregistrations" in g11(tmp_path / "none", repo).evidence
+    repo = g11_repo(tmp_path / "noart", NO_VERIFY)
+    freeze(repo, PREREG_E0)
+    assert "no confirmatory artifacts" in g11(tmp_path / "noart", repo).evidence
+    repo = g11_repo(tmp_path / "real", REAL_VERIFY)
+    assert "make prereg-verify failed" in g11(tmp_path / "real", repo).evidence
+
+
+def test_g11_counts_a_preregistration_merged_from_a_branch_once(tmp_path: Path) -> None:
+    repo = g11_repo(tmp_path, REAL_VERIFY)
+    repo.git("checkout", "-q", "-b", "freeze-branch")
+    freeze(repo, PREREG_E0)
+    freeze(repo, PREREG_E1)
+    repo.git("checkout", "-q", "-")
+    repo.commit("main moves on", {"NOTES.md": "x\n"})
+    repo.git("merge", "-q", "--no-ff", "--no-edit", "freeze-branch")
+    repo.commit("e0 run", e0_run())
+    repo.commit("audit", audit_run())
+    repo.commit("e0 score", E0_SCORE)
+    r = g11(tmp_path, repo)
+    assert r.ok, r.evidence
+
+
+def test_reviewer_scripts_are_covered() -> None:
+    """Keep this list in step with the scratch scripts the reviewer ran."""
+    ported = {
+        "g5_falsepass.py": [
+            test_g5_reviewer_a_labels_and_hash_rewritten_after_the_run,
+            test_g5_reviewer_b_results_drop_misses_and_repeat_a_detection,
+            test_g5_reviewer_c_clean_flags_marked_real_without_adjudication,
+        ],
+        "g11_e0order.py": [test_g11_reviewer_b3_e0_outputs_before_the_preregistration],
+        "g8g9_vacuous.py": [test_g8_reviewer_b4_empty_repair_set, test_g9_reviewer_b5_empty_intervals],
+        "g7_mismatch.py": [test_g7_reviewer_n10_rejected_reference_is_not_scored],
+    }
+    assert all(callable(t) for tests in ported.values() for t in tests)
+
+
+def test_shutil_is_available_for_layout_copies() -> None:
+    assert shutil.which("git") is not None
+    assert isinstance(Callable, object)
+
