@@ -41,13 +41,13 @@ prereg-verify: ## preregistration chain and ordering
 	$(PY) tools/prereg.py verify
 
 claimcheck: ## every result number traces to a banked artifact
-	@$(PY) tools/stub.py claimcheck G10
+	$(PY) tools/claimcheck.py
 
 freshness: ## re-derive every live number
-	@$(PY) tools/stub.py freshness G10
+	$(PY) tools/freshness.py
 
 citecheck: ## validate artifacts/citecheck.json offline
-	@$(PY) tools/stub.py citecheck G13
+	$(PY) tools/citecheck.py
 
 secrets-scan: ## scan tracked files and history for secrets
 	$(PY) tools/secrets_scan.py
@@ -59,10 +59,11 @@ review: ## validate and print the latest independent review
 	$(PY) tools/review.py
 
 report: ## figures and docs/REPORT.md from artifacts
-	@$(PY) tools/stub.py report G13
+	$(PY) tools/report.py
 
 reproduce: ## regenerate every figure and table from artifacts
-	@$(PY) tools/stub.py reproduce G13
+	$(PY) tools/report.py
+	$(PY) tools/freshness.py
 
 ship-check: ## all 14 gates on a fresh clone
 	$(PY) tools/ship_check.py
