@@ -221,6 +221,15 @@ def test_classify_lines_modes_lists_and_unclosed_fences() -> None:
     assert opened == 2
     inline, opened = claimcheck.classify_lines("```inline``` 5\n")
     assert inline[0].mode == "prose" and opened is None
+    steps, opened = claimcheck.classify_lines(
+        "1. Install:\n   ```bash\n   make setup 40\n   ```\n   Then wait.\n2. Run:\n\n"
+        "10. Ten:\n    ```bash\n    make demo 3\n    ```\n11. Eleven.\n\n"
+        "Para.\n    ```bash\n    x 5\n"
+    )
+    assert opened is None
+    assert [ln.number for ln in steps if ln.mode == "skip"] == [2, 3, 4, 9, 10, 11]
+    assert {ln.number for ln in steps if ln.list_ok} == {1, 6, 8, 12}
+    assert steps[14].mode == "prose" and steps[15].mode == "prose"  # indented code, not a fence
 
 
 def test_reference_labels_and_normalize_label() -> None:
@@ -279,11 +288,12 @@ def test_excluded_contexts() -> None:
     text = (
         "Commit 843405b, hash 5e72198d1145ec73c16cb566f6bce69562623ac6b97ecef5a564a61137671be9.\n"
         "On 2026-10-23T01:58:11Z, 2026-10-23 12:30, 2026-11, and in 1999 and 2099.\n"
-        "Python 3.11 and 3.12, uv 0.11.32, version 2, Linux 6.18.44, and 1.2.3.\n"
+        "Python 3.11 and 3.12, uv 0.11.32, version 2, Linux 6.18.44, 1.2.3, Terminal-Bench 2.0.\n"
         "See section 8, sections 6 to 10, rules 1 and 11, steps 1-3, Figure 2, Table 3.\n"
         "Also §8, §§ 8, 9, appendix 2, line 14, items 1, 2, and 3.\n"
         "arXiv 2606.08960v2 and arXiv:2507.02825.\n"
         "Cited as [1] and [2][], with&#160;a space, built with 0.11.32.\n"
+        "## 0. Launch\n"
         "## 3. Results\n"
         "### 3.2 Setup\n"
         "\n"
@@ -316,6 +326,7 @@ def test_strict_cases_stay_checked() -> None:
         "abc1234defg 1234567\n"
         'A line 14,000 long, section 8%, [n](x "title 77"), [6] undefined, [5](x) text.\n'
         "[Note]: the rate is 0.31\n"
+        "### 0.31 of graders\n"
     )
     assert unbacked(text) == [
         "3",
@@ -344,6 +355,7 @@ def test_strict_cases_stay_checked() -> None:
         "77",
         "6",
         "5",
+        "0.31",
         "0.31",
     ]
 

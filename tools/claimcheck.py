@@ -57,11 +57,12 @@ NUMBER_FULL = re.compile(NUMBER_PATTERN)
 TOKEN_RE = re.compile(rf"(?<![^\W_])(?<!\.)(?<![^\W_]_)(?<![^\W\d_][-@]){NUMBER_PATTERN}")
 
 EXCLUDED_FENCES = frozenset({"bash", "sh", "shell", "console", "toml", "json", "yaml", "text"})
-FENCE_OPEN_RE = re.compile(r"^ {0,3}(?P<fence>`{3,}|~{3,})(?P<info>.*)$")
-FENCE_CLOSE_RE = re.compile(r"^ {0,3}(?P<fence>`{3,}|~{3,})[ \t]*$")
+# A fence may be indented up to 3 spaces, or more inside a list item (``10.`` items indent 4).
+FENCE_OPEN_RE = re.compile(r"^(?P<indent>[ \t]*)(?P<fence>`{3,}|~{3,})(?P<info>.*)$")
+FENCE_CLOSE_RE = re.compile(r"^(?P<indent>[ \t]*)(?P<fence>`{3,}|~{3,})[ \t]*$")
 HEADING_RE = re.compile(r"^ {0,3}#{1,6}(?:[ \t]|$)")
 HEADING_NUM_RE = re.compile(
-    r"^ {0,3}#{1,6}[ \t]+(?P<num>[1-9][0-9]*(?:\.[0-9]+)*)(?P<punct>[.)]?)(?=[ \t]|$)"
+    r"^ {0,3}#{1,6}[ \t]+(?P<num>(?:0|[1-9][0-9]*)(?:\.[0-9]+)*)(?P<punct>[.)]?)(?=[ \t]|$)"
 )
 ORDERED_RE = re.compile(r"^\s*(?:>\s*)*(?P<num>[0-9]{1,9})[.)](?=\s|$)")
 BULLET_RE = re.compile(r"^\s*(?:>\s*)*[-*+](?=\s)")
@@ -110,7 +111,7 @@ REF_RE = re.compile(
 )
 _VERSIONED = (
     r"python|cpython|pypy|uv|ruff|mypy|pytest-cov|pytest|hatchling|docker|bubblewrap|bwrap|"
-    r"ubuntu|debian|linux|macos|node\.js|git|versions|version|releases|release"
+    r"ubuntu|debian|linux|macos|node\.js|git|terminal-bench|versions|version|releases|release"
 )
 VERSION_RE = re.compile(
     rf"(?i)(?<![\w-])(?:{_VERSIONED})\s+v?[0-9]+(?:\.[0-9]+)*"
@@ -229,12 +230,13 @@ def classify_lines(text: str) -> tuple[list[Line], int | None]:
     """Document lines with their reading mode, and the line that opens a fence never closed.
 
     Fences follow CommonMark: a block closes with a run of the same character at least as
-    long as the opening one. An ordered-list marker counts as one after a blank line or a
+    long as the opening one. A fence opened inside a list item may be indented further and
+    leaves the list open. An ordered-list marker counts as one after a blank line or a
     heading, inside a list, or anywhere when it is 1 (only a list starting at 1 may
     interrupt a paragraph).
     """
     lines: list[Line] = []
-    fence: tuple[str, int, int] | None = None  # character, length, opening line
+    fence: tuple[str, int, int, bool] | None = None  # character, length, line, inside a list
     fence_mode = "skip"
     in_list = False
     boundary = True  # no paragraph is open, so any number may start an ordered list
@@ -244,18 +246,24 @@ def classify_lines(text: str) -> tuple[list[Line], int | None]:
             close = FENCE_CLOSE_RE.match(line)
             if (
                 close
+                and (fence[3] or len(close.group("indent").expandtabs(4)) <= 3)
                 and close.group("fence")[0] == fence[0]
                 and len(close.group("fence")) >= fence[1]
             ):
+                in_list, boundary, prev_blank = fence[3], True, False
                 fence = None
-                in_list, boundary, prev_blank = False, True, False
                 lines.append(Line(number, line, "skip", False))
             else:
                 lines.append(Line(number, line, fence_mode, False))
             continue
         opened = FENCE_OPEN_RE.match(line)
-        if opened and not (opened.group("fence")[0] == "`" and "`" in opened.group("info")):
-            fence = (opened.group("fence")[0], len(opened.group("fence")), number)
+        if (
+            opened
+            and (in_list or len(opened.group("indent").expandtabs(4)) <= 3)
+            and not (opened.group("fence")[0] == "`" and "`" in opened.group("info"))
+        ):
+            in_item = in_list and bool(opened.group("indent"))
+            fence = (opened.group("fence")[0], len(opened.group("fence")), number, in_item)
             words = opened.group("info").split()
             fence_mode = "skip" if words and words[0].lower() in EXCLUDED_FENCES else "code"
             lines.append(Line(number, line, "skip", False))
@@ -377,8 +385,11 @@ def scan_line(
     if ordered:
         list_marker = ordered.start("num")
     heading = HEADING_NUM_RE.match(masked) if prose else None
-    if heading and (heading.group("punct") or "." in heading.group("num")):
-        heading_number = heading.start("num")
+    if heading:
+        num = heading.group("num")
+        # "## 3. Results", "### 3.2 Setup", "## 0. Launch"; never "## 3 tasks" or "## 0.31 ..."
+        if (heading.group("punct") or "." in num) and not (num.startswith("0") and "." in num):
+            heading_number = heading.start("num")
     return Scan(masked, tokens, markers, spans, directive, problems, list_marker, heading_number)
 
 
