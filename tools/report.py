@@ -6,7 +6,8 @@ from a committed script reading a banked artifact. docs/claims/spec.json declare
 any numbers (docs/claims/README.md has examples):
 
 * ``claims``: ``{KEY: {"artifact": "artifacts/<file>.json", "path": PATH, "format": FMT}}``,
-  with an optional ``note``. PATH is dotted keys (``e1.rate.ci.0``); an integer component
+  with an optional ``note``. The artifact is a JSON file, or a JSON Lines file (``.jsonl``)
+  read as the list of its records. PATH is dotted keys (``e1.rate.ci.0``); an integer component
   indexes a list (negative counts from the end); an optional suffix ``|len`` gives the length
   of a list or object and ``|count:field=value`` the number of objects in a list whose
   ``field`` equals ``value`` (read as JSON when it parses, such as ``true`` or ``3``, else as
@@ -25,9 +26,10 @@ It resolves every claim into docs/claims/registry.json (``{KEY: {"value", "artif
 tools/svgchart.py, writes artifacts/figures/manifest.json (``[{"path", "sha256",
 "generator"}]``, only when a figure exists or the file already does), and renders each
 template, replacing ``{{claim:KEY}}`` with ``VALUE<!--claim:KEY-->`` and ``{{figure:NAME}}``
-with the figure's Markdown image link relative to the output. Nothing is written unless every
-step succeeds. With no template yet it says so and succeeds. Output depends only on the spec,
-the templates, and the artifacts.
+with the figure's Markdown image link relative to the output. A placeholder that does not
+render as a number token (for example one attached to the word before it) is an error.
+Nothing is written unless every step succeeds. With no template yet it says so and succeeds.
+Output depends only on the spec, the templates, and the artifacts.
 """
 
 from __future__ import annotations
@@ -61,7 +63,7 @@ CLAIM_FIELDS = {"artifact", "path", "format", "note"}
 FIGURE_FIELDS = {"title", "alt", "axis_label", "domain", "tick_format", "bars"}
 BAR_FIELDS = {"label", "value", "lo", "hi"}
 NAME_RE = re.compile(r"[a-z0-9]+(?:[-_][a-z0-9]+)*")
-ARTIFACT_RE = re.compile(r"artifacts/[A-Za-z0-9_.@=+-]+(?:/[A-Za-z0-9_.@=+-]+)*\.json")
+ARTIFACT_RE = re.compile(r"artifacts/[A-Za-z0-9_.@=+-]+(?:/[A-Za-z0-9_.@=+-]+)*\.jsonl?")
 INDEX_RE = re.compile(r"-?[0-9]+")
 PLACEHOLDER_RE = re.compile(r"\{\{([^{}]*)\}\}")
 NEAR_MISS_RE = re.compile(r"\s*(?:claims?|figures?)\s*:", re.I)
@@ -316,7 +318,7 @@ def parse_claim(key: str, raw: Any) -> tuple[ClaimSpec | None, list[str]]:
     if not (isinstance(artifact, str) and isinstance(path, str) and isinstance(fmt, str)):
         return None, [*problems, f"{where}: artifact, path, and format must all be strings"]
     if not ARTIFACT_RE.fullmatch(artifact) or not safe_relpath(artifact):
-        problems.append(f"{where}: artifact must be a .json file under artifacts/ (no . or ..)")
+        problems.append(f"{where}: artifact must be a .json or .jsonl file under artifacts/")
     selector: Selector | None = None
     try:
         check_format(fmt)
@@ -479,16 +481,32 @@ def load_spec(root: Path) -> tuple[Spec, list[str]]:
 
 
 def load_artifact(root: Path, rel: str) -> tuple[Any, str] | str:
-    """(parsed JSON, SHA-256 of the bytes) of an artifact, or the reason it cannot be read."""
+    """(parsed JSON, SHA-256 of the bytes) of an artifact, or the reason it cannot be read.
+
+    A ``.jsonl`` artifact is the list of its records, one JSON value per non-blank line.
+    """
     path = root / rel
     if not path.is_file():
         return f"{rel} missing"
     blob = path.read_bytes()
     try:
-        data = json.loads(blob.decode("utf-8"))
-    except (UnicodeDecodeError, ValueError) as exc:
-        return f"{rel} is not valid JSON: {exc}"
-    return data, hashlib.sha256(blob).hexdigest()
+        text = blob.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        return f"{rel} is not UTF-8: {exc}"
+    if not rel.endswith(".jsonl"):
+        try:
+            return json.loads(text), hashlib.sha256(blob).hexdigest()
+        except ValueError as exc:
+            return f"{rel} is not valid JSON: {exc}"
+    records: list[Any] = []
+    for i, line in enumerate(text.splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            records.append(json.loads(line))
+        except ValueError as exc:
+            return f"{rel}:{i} is not valid JSON: {exc}"
+    return records, hashlib.sha256(blob).hexdigest()
 
 
 def resolve_claims(root: Path, spec: Spec) -> tuple[dict[str, Claim], list[str]]:
@@ -622,6 +640,18 @@ def render(
         return m.group(0)
 
     out = PLACEHOLDER_RE.sub(sub, text)
+    found, malformed = claimcheck.claim_occurrences(out)
+    problems += [f"{template}:{p}" for p in malformed]
+    for occ in found:
+        claim = claims.get(occ.key)
+        if claim is None:
+            problems.append(f"{template}:{occ.line}: marker for unknown claim {occ.key}")
+        elif occ.shown != claim.value:
+            shown = "no number token" if occ.shown is None else occ.shown
+            problems.append(
+                f"{template}:{occ.line}: claim {occ.key} renders as {shown}, not "
+                f"{claim.value} (keep the placeholder apart from letters and digits before it)"
+            )
     if problems:
         return None, problems
     out = out.rstrip("\n") + "\n\n" + BANNER.format(template=template) + "\n"

@@ -8,17 +8,20 @@ maps a template to. Every number token in them must be one of:
 (a) a claim: immediately followed by ``<!--claim:KEY-->``, where the value of KEY in
     docs/claims/registry.json (written by ``make report`` from the artifact) equals the
     token text exactly;
-(b) in an excluded context: a URL or Markdown link target, an inline code span, a fenced
-    code block whose info string is bash, sh, shell, console, toml, json, yaml, or text,
-    a hex string of 7 or more characters, an ISO date, a year 1900 to 2099, a version
-    (v1.0, Python 3.12, 1.2.3), an identifier with letters attached (G7, E0, x86_64,
-    SHA-256), an ordered-list marker, a numbered heading, an arXiv id, a footnote label,
-    or a reference such as "section 8", "rule 15", or "steps 1 to 3";
-(c) listed in docs/claims/allowlist.tsv (number, context regex that must match the line,
-    reason) as a design parameter that is not a result.
+(b) in an excluded context: a URL or Markdown link target, a reference link label or
+    definition, a footnote label, an HTML character reference, an inline code span, a
+    fenced code block whose info string is bash, sh, shell, console, toml, json, yaml, or
+    text, a hex string of 7 or more characters, an ISO date, a year 1900 to 2099, a
+    version (v1.0, Python 3.12, 1.2.3), an identifier with letters attached (G7, E0,
+    x86_64, SHA-256), an ordered-list marker, a numbered heading, an arXiv id, or a
+    reference such as "section 8", "rule 15", or "steps 1 to 3";
+(c) listed in docs/claims/allowlist.tsv (number, context regex, reason) as a design
+    parameter that is not a result: a match of the regex on the same line must contain
+    the number and reach beyond it.
 
 A line that ends with ``<!-- claimcheck:ignore-line REASON -->`` is exempt from the number
-check; the reason is required. Claim markers are checked on every line. The rules are
+check; the reason is required. Claim markers are checked on every line, and a fenced code
+block that is never closed fails (it would hide the rest of the file). The rules are
 documented with examples in docs/claims/README.md.
 
 Output: one line per document, ``claimcheck: <file> OK (<n> claims, <m> allowlisted)``, or
@@ -33,7 +36,7 @@ import argparse
 import json
 import re
 import sys
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -65,10 +68,20 @@ BULLET_RE = re.compile(r"^\s*(?:>\s*)*[-*+](?=\s)")
 
 COMMENT_RE = re.compile(r"<!--(.*?)-->")
 URL_RE = re.compile(r"https?://[^\s)>\]\"'`]+")  # the same pattern as tools/ship_check.py
-LINK_DEST_RE = re.compile(r"\]\((?:[^()\s]|\([^()\s]*\))*(?:\s+(?:\"[^\"]*\"|'[^']*'))?\s*\)")
+_TITLE = r"(?:\"[^\"]*\"|'[^']*'|\([^()]*\))"
+# An inline link or image target: only the destination is masked; a title stays checked.
+LINK_DEST_RE = re.compile(
+    rf"\]\((?P<dest><[^<>\n]*>|(?:[^()\s]|\([^()\s]*\))*)(?:\s+{_TITLE})?\s*\)"
+)
 REF_LABEL_RE = re.compile(r"\]\[[^\]]*\]")
+SHORTCUT_RE = re.compile(r"\[(?P<label>[^\[\]]+)\](?:\[\])?(?![(\[:])")
 FOOTNOTE_RE = re.compile(r"\[\^[^\]\s]+\]:?")
-REF_DEF_RE = re.compile(r"^ {0,3}\[(?!\^)[^\]]+\]:\s*\S")
+# A link reference definition (never rendered); a line that only looks like one is prose.
+REF_DEF_RE = re.compile(
+    r"^ {0,3}\[(?!\^)(?P<label>[^\[\]]+)\]:[ \t]*(?P<dest><[^<>\n]*>|\S+)"
+    rf"(?:[ \t]+{_TITLE})?[ \t]*$"
+)
+ENTITY_RE = re.compile(r"&#(?:[0-9]{1,7}|[xX][0-9a-fA-F]{1,6});")
 
 HEX_RE = re.compile(r"(?<![\w.])(?=[0-9a-fA-F]*[a-fA-F])[0-9a-fA-F]{7,}(?!\w)")
 DATE_RE = re.compile(
@@ -212,9 +225,16 @@ def code_spans(line: str) -> list[tuple[int, int]]:
     return spans
 
 
-def iter_lines(text: str) -> Iterator[Line]:
-    """Document lines with their reading mode (fenced code and ordered lists tracked)."""
-    fence: tuple[str, int] | None = None
+def classify_lines(text: str) -> tuple[list[Line], int | None]:
+    """Document lines with their reading mode, and the line that opens a fence never closed.
+
+    Fences follow CommonMark: a block closes with a run of the same character at least as
+    long as the opening one. An ordered-list marker counts as one after a blank line or a
+    heading, inside a list, or anywhere when it is 1 (only a list starting at 1 may
+    interrupt a paragraph).
+    """
+    lines: list[Line] = []
+    fence: tuple[str, int, int] | None = None  # character, length, opening line
     fence_mode = "skip"
     in_list = False
     boundary = True  # no paragraph is open, so any number may start an ordered list
@@ -229,47 +249,72 @@ def iter_lines(text: str) -> Iterator[Line]:
             ):
                 fence = None
                 in_list, boundary, prev_blank = False, True, False
-                yield Line(number, line, "skip", False)
+                lines.append(Line(number, line, "skip", False))
             else:
-                yield Line(number, line, fence_mode, False)
+                lines.append(Line(number, line, fence_mode, False))
             continue
         opened = FENCE_OPEN_RE.match(line)
         if opened and not (opened.group("fence")[0] == "`" and "`" in opened.group("info")):
-            fence = (opened.group("fence")[0], len(opened.group("fence")))
+            fence = (opened.group("fence")[0], len(opened.group("fence")), number)
             words = opened.group("info").split()
             fence_mode = "skip" if words and words[0].lower() in EXCLUDED_FENCES else "code"
-            yield Line(number, line, "skip", False)
+            lines.append(Line(number, line, "skip", False))
             continue
         if not line.strip():
             boundary, prev_blank = True, True
-            yield Line(number, line, "prose", False)
+            lines.append(Line(number, line, "prose", False))
             continue
         if HEADING_RE.match(line):
             in_list, boundary, prev_blank = False, True, False
-            yield Line(number, line, "prose", False)
+            lines.append(Line(number, line, "prose", False))
             continue
         ordered = ORDERED_RE.match(line)
         if ordered:
             ok = in_list or boundary or int(ordered.group("num")) == 1
             in_list = in_list or ok
             boundary, prev_blank = False, False
-            yield Line(number, line, "prose", ok)
+            lines.append(Line(number, line, "prose", ok))
             continue
         if BULLET_RE.match(line):
             in_list = True
         elif prev_blank and not line[0].isspace():
             in_list = False
         boundary, prev_blank = False, False
-        yield Line(number, line, "prose", False)
+        lines.append(Line(number, line, "prose", False))
+    return lines, (fence[2] if fence is not None else None)
 
 
-def scan_line(text: str, mode: str = "prose", list_ok: bool = False) -> Scan:
-    """Mask code spans, markers, and URLs on a line; find tokens and excluded spans."""
+def normalize_label(label: str) -> str:
+    """A link reference label as CommonMark compares them: case and inner spacing ignored."""
+    return " ".join(label.split()).casefold()
+
+
+def reference_labels(lines: Sequence[Line]) -> frozenset[str]:
+    """Labels of the link reference definitions among ``lines`` (normalized)."""
+    found = set()
+    for line in lines:
+        m = REF_DEF_RE.match(line.text) if line.mode == "prose" else None
+        if m:
+            found.add(normalize_label(m.group("label")))
+    return frozenset(found)
+
+
+def scan_line(
+    text: str, mode: str = "prose", list_ok: bool = False, labels: frozenset[str] = frozenset()
+) -> Scan:
+    """Mask code spans, markers, URLs, and link syntax on a line; find tokens and excluded spans.
+
+    ``labels`` are the document's link reference labels: a shortcut reference such as
+    ``[3]`` is masked only when a definition ``[3]: URL`` exists.
+    """
     chars = list(text)
     prose = mode == "prose"
 
     def mask(a: int, b: int) -> None:
         chars[a:b] = " " * (b - a)
+
+    def current() -> str:
+        return "".join(chars)
 
     if prose:
         for a, b in code_spans(text):
@@ -277,7 +322,7 @@ def scan_line(text: str, mode: str = "prose", list_ok: bool = False) -> Scan:
     markers: list[Marker] = []
     problems: list[str] = []
     directive: str | None = None
-    for m in COMMENT_RE.finditer("".join(chars)):
+    for m in COMMENT_RE.finditer(current()):
         body, stripped = m.group(1), m.group(1).strip()
         if body.startswith("claim:"):
             key = body[len("claim:") :]
@@ -300,13 +345,21 @@ def scan_line(text: str, mode: str = "prose", list_ok: bool = False) -> Scan:
             else:
                 directive = reason.strip()
             mask(m.start(), m.end())
-    if prose and REF_DEF_RE.match("".join(chars)):
-        mask(0, len(chars))  # a link reference definition is not rendered
-    patterns = [URL_RE, LINK_DEST_RE, REF_LABEL_RE, FOOTNOTE_RE] if prose else [URL_RE]
-    for pattern in patterns:
-        for m in pattern.finditer("".join(chars)):
-            mask(m.start(), m.end())
-    masked = "".join(chars)
+    definition = REF_DEF_RE.match(current()) if prose else None
+    if definition:
+        mask(0, definition.end("dest"))  # label and destination are never rendered
+    for m in URL_RE.finditer(current()):
+        mask(m.start(), m.end())
+    if prose:
+        for m in LINK_DEST_RE.finditer(current()):
+            mask(m.start(), m.end("dest"))
+        for m in SHORTCUT_RE.finditer(current()):
+            if normalize_label(m.group("label")) in labels:
+                mask(m.start(), m.end())
+        for pattern in (REF_LABEL_RE, FOOTNOTE_RE, ENTITY_RE):
+            for m in pattern.finditer(current()):
+                mask(m.start(), m.end())
+    masked = current()
     tokens = [Token(m.group(0), m.start(), m.end()) for m in TOKEN_RE.finditer(masked)]
     spans = [
         (m.start(), m.end(), why)
@@ -330,9 +383,13 @@ def scan_line(text: str, mode: str = "prose", list_ok: bool = False) -> Scan:
 
 
 def excluded(token: Token, scan: Scan) -> str | None:
-    """Why ``token`` is not a result number, or None if it must be backed."""
+    """Why ``token`` is not a result number, or None if it must be backed.
+
+    An excluded span must contain the whole token: ``line 14`` is a reference, but the
+    ``14,000`` in ``line 14,000`` is checked.
+    """
     for a, b, why in scan.spans:
-        if token.start < b and a < token.end:
+        if a <= token.start and token.end <= b:
             return why
     if token.start == scan.list_marker:
         return "ordered-list marker"
@@ -345,11 +402,19 @@ def excluded(token: Token, scan: Scan) -> str | None:
     return None
 
 
-def allowlisted(token: str, line: str, entries: Sequence[AllowEntry]) -> AllowEntry | None:
-    """The allowlist entry that covers ``token`` on ``line``, if any."""
+def allowlisted(token: Token, line: str, entries: Sequence[AllowEntry]) -> AllowEntry | None:
+    """The allowlist entry that covers ``token`` on ``line``, if any.
+
+    The entry's number must equal the token text, and a match of its context regex on the
+    line must contain the token and reach beyond it, so the regex names real context.
+    """
     for entry in entries:
-        if entry.number == token and entry.context.search(line):
-            return entry
+        if entry.number != token.text:
+            continue
+        for m in entry.context.finditer(line):
+            inside = m.start() <= token.start and token.end <= m.end()
+            if inside and m.end() - m.start() > len(token.text):
+                return entry
     return None
 
 
@@ -445,10 +510,12 @@ def check_text(
 ) -> FileReport:
     """Check every number token and claim marker in a document."""
     report = FileReport(rel)
-    for line in iter_lines(text):
+    lines, unclosed = classify_lines(text)
+    labels = reference_labels(lines)
+    for line in lines:
         if line.mode == "skip":
             continue
-        scan = scan_line(line.text, line.mode, line.list_ok)
+        scan = scan_line(line.text, line.mode, line.list_ok, labels)
         where = f"{rel}:{line.number}"
         report.problems += [f"{where}: {p}" for p in scan.problems]
         by_end = {t.end: t for t in scan.tokens}
@@ -486,7 +553,7 @@ def check_text(
                 if verbose:
                     report.details.append(f"{where}: {token.text} excluded ({why})")
                 continue
-            entry = allowlisted(token.text, line.text, allowlist)
+            entry = allowlisted(token, line.text, allowlist)
             if entry is not None:
                 report.allowlisted += 1
                 if verbose:
@@ -495,6 +562,11 @@ def check_text(
                     )
                 continue
             report.problems.append(f"{where}: unbacked number {token.text}")
+    if unclosed is not None:
+        report.problems.append(
+            f"{rel}:{unclosed}: this fenced code block is never closed, "
+            "so the rest of the file would be code"
+        )
     return report
 
 
@@ -502,10 +574,12 @@ def claim_occurrences(text: str) -> tuple[list[Occurrence], list[str]]:
     """Every claim marker in a document with the number before it; malformed markers."""
     found: list[Occurrence] = []
     problems: list[str] = []
-    for line in iter_lines(text):
+    lines, _ = classify_lines(text)
+    labels = reference_labels(lines)
+    for line in lines:
         if line.mode == "skip":
             continue
-        scan = scan_line(line.text, line.mode, line.list_ok)
+        scan = scan_line(line.text, line.mode, line.list_ok, labels)
         by_end = {t.end: t for t in scan.tokens}
         for marker in scan.markers:
             token = by_end.get(marker.start)
@@ -529,6 +603,8 @@ def run(root: Path, verbose: bool = False) -> tuple[list[str], int]:
             continue
         report = check_text(path.read_text(encoding="utf-8"), rel, registry, allow, verbose)
         out += [f"claimcheck: {d}" for d in report.details]
+        if report.ignored_lines:
+            out.append(f"claimcheck: {rel}: {report.ignored_lines} lines exempt by {DIRECTIVE}")
         if report.problems:
             failed = True
             out += [f"claimcheck: {p}" for p in report.problems]
@@ -543,6 +619,7 @@ def run(root: Path, verbose: bool = False) -> tuple[list[str], int]:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Command line: check the repository (or ``--root``) and print the result."""
     ap = argparse.ArgumentParser(description="every result number traces to a banked artifact")
     ap.add_argument("--root", type=Path, default=REPO, help="repository root (default: this one)")
     ap.add_argument("--verbose", action="store_true", help="print how every token was classified")

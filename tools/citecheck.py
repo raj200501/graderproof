@@ -17,8 +17,9 @@ reads artifacts/citecheck.json, which the citation-checker subagent writes
    a ``page_title``, and a ``claimed.url`` or ``final_url`` equal to it, ignoring a trailing
    slash.
 
-Output: ``citecheck: <n> references verified in README.md and docs/REPORT.md`` (and the cards,
-when there are any), or the unverified references and schema problems, then
+Output: ``citecheck: <n> references verified in README.md and docs/REPORT.md``, where n counts
+the distinct URLs of those two documents exactly as tools/ship_check.py does, preceded by a
+line for the cards when there are any; or the unverified references and schema problems, then
 ``citecheck: FAIL`` and exit status 1. A missing README.md or docs/REPORT.md fails.
 """
 
@@ -237,10 +238,14 @@ def run(root: Path) -> tuple[list[str], int]:
     if problems or unverified:
         out.append("citecheck: FAIL")
         return out, 1
-    scope = "README.md and docs/REPORT.md"
+    main_urls = {u for rel in REQUIRED_DOCS for u in cited_urls(texts[rel])}
     if cards:
-        scope = f"README.md, docs/REPORT.md, and {len(cards)} grader cards under docs/cards/"
-    out.append(f"citecheck: {len(urls)} references verified in {scope}")
+        card_urls = {u for rel in cards for u in cited_urls(texts[rel])}
+        out.append(
+            f"citecheck: {len(card_urls)} references verified in "
+            f"{len(cards)} grader cards under docs/cards/"
+        )
+    out.append(f"citecheck: {len(main_urls)} references verified in README.md and docs/REPORT.md")
     return out, 0
 
 

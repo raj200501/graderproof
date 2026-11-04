@@ -58,10 +58,10 @@ budget: ## cash and cap usage
 review: ## validate and print the latest independent review
 	$(PY) tools/review.py
 
-report: ## claim registry, figures, and documents from artifacts (docs/claims/spec.json)
+report: ## figures and docs/REPORT.md from artifacts
 	$(PY) tools/report.py
 
-reproduce: ## make report, then make freshness (experiments are not rerun)
+reproduce: ## regenerate every figure and table from artifacts
 	$(PY) tools/report.py
 	$(PY) tools/freshness.py
 

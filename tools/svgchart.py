@@ -5,8 +5,9 @@ tools/report.py draws the figures under docs/figures/ with :func:`horizontal_bar
 
 Design: one series, so one neutral bar color and no legend (the title names what is
 plotted); text in a neutral ink, never in the bar color; solid hairline gridlines; bars
-14px thick (at most 24px) with a 4px rounded data end and a square end at the baseline;
-the value printed at each bar's tip. The background is transparent. An image cannot know
+14px thick (at most 24px) that grow from zero (the axis always includes 0), with a 4px
+rounded data end and a square end at the baseline; the value printed at each bar's tip;
+each bar carries a ``<title>`` tooltip. The background is transparent. An image cannot know
 the page theme, so there is no ``prefers-color-scheme`` switch: every color is a mid-tone
 gray that reads on light and dark pages. Ink ``#797979`` has WCAG contrast 4.35 on both
 ``#ffffff`` and ``#0d1117`` (the best one color can do on both); bars ``#8c8c8c`` reach at
@@ -179,6 +180,8 @@ def check_bars(bars: Sequence[Bar], domain: tuple[float, float] | None) -> None:
             raise ValueError(f"bar {b.label!r}: a value lies outside the domain {list(domain)}")
     if domain is not None and not domain[0] < domain[1]:
         raise ValueError("domain must be [low, high] with low < high")
+    if domain is not None and not domain[0] <= 0 <= domain[1]:
+        raise ValueError("bars grow from zero, so the domain must include 0")
 
 
 def horizontal_bars(
@@ -198,23 +201,23 @@ def horizontal_bars(
     lo, hi = domain if domain is not None else auto_domain(bars)
     label_w = max(text_width(b.label, 12) for b in bars)
     value_w = max(text_width(b.value_text, 12) for b in bars)
-    left = min(max(label_w + 16, 60.0), 280.0)
+    left = max(label_w + 16, 60.0)
     right = max(value_w + 14, 40.0)
     plot_w = width - left - right
     if plot_w < 120:
         raise ValueError("labels leave too little room for the plot; shorten them")
     plot_bottom = PLOT_TOP + BAND * len(bars)
     height = plot_bottom + (44 if axis_label else 26)
-    base = 0.0 if lo <= 0 <= hi else lo
 
     def x(v: float) -> float:
         return left + (v - lo) / (hi - lo) * plot_w
 
-    desc = "; ".join(
+    summaries = [
         f"{b.label}: {b.value_text}"
         + (f" (interval {b.lo_text} to {b.hi_text})" if b.lo is not None else "")
         for b in bars
-    )
+    ]
+    desc = "; ".join(summaries)
     out = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{num(height)}"'
         f' viewBox="0 0 {width} {num(height)}" role="img"'
@@ -232,7 +235,7 @@ def horizontal_bars(
             f'<line x1="{num(gx)}" y1="{num(PLOT_TOP)}" x2="{num(gx)}" y2="{num(plot_bottom)}"/>'
         )
     out.append("</g>")
-    bx = math.floor(x(base)) + 0.5
+    bx = math.floor(x(0.0)) + 0.5
     out.append(
         f'<line x1="{num(bx)}" y1="{num(PLOT_TOP)}" x2="{num(bx)}" y2="{num(plot_bottom)}"'
         f' stroke="{INK}" stroke-width="1" stroke-opacity="0.6"/>'
@@ -241,10 +244,13 @@ def horizontal_bars(
     texts: list[str] = []
     for i, b in enumerate(bars):
         cy = PLOT_TOP + BAND * (i + 0.5)
-        x0, x1 = x(base), x(b.value)
+        x0, x1 = x(0.0), x(b.value)
         span = (min(x0, x1), max(x0, x1)) if abs(x1 - x0) >= 0.5 else None
         if span is not None:
-            marks.append(f'<path d="{bar_path(x0, x1, cy - THICKNESS / 2, THICKNESS)}"/>')
+            marks.append(
+                f'<path d="{bar_path(x0, x1, cy - THICKNESS / 2, THICKNESS)}">'
+                f"<title>{esc(summaries[i])}</title></path>"
+            )
         tip = max(x0, x1)
         if b.lo is not None and b.hi is not None:
             marks += whisker(x(b.lo), x(b.hi), cy, span)
