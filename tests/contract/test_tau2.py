@@ -573,6 +573,17 @@ def test_natural_order_of_ids() -> None:
     ]
 
 
+def test_hidden_paths_are_the_ones_bubblewrap_hides() -> None:
+    box = BwrapSandbox(hidden=[Path("/home/someone")])
+    paths = [
+        Path("/tmp/work/tau2/src"),
+        Path("/home/someone/graderproof/runs/tau2/venv/bin/python"),
+        Path("/srv/graderproof/runs/tau2/src"),
+    ]
+    assert t2.hidden_paths(box, paths) == paths[:2]
+    assert t2.hidden_paths(LocalSandbox(), paths) == []
+
+
 def test_tau2_env_keeps_the_venv_link(tmp_path: Path) -> None:
     target = tmp_path / "base-python"
     target.write_text("")
@@ -731,6 +742,9 @@ def test_main_check(
     monkeypatch.setattr(t2, "best_sandbox", lambda: None)
     assert t2.main(args) == 1
     assert "no write-isolating sandbox" in capsys.readouterr().err
+    monkeypatch.setattr(t2, "best_sandbox", BwrapSandbox)
+    assert t2.main(args) == 1  # tmp_path is under /tmp, which bubblewrap replaces
+    assert f"{tmp_path} would be hidden inside bwrap" in capsys.readouterr().err
     passing = (0, json.dumps({"reward": 1.0, "passed": True, "crosscheck_reward": 1.0}), "")
     sandbox = ScriptedSandbox({"7": passing, "69": passing, TELECOM_ID: passing})
     monkeypatch.setattr(t2, "best_sandbox", lambda: sandbox)

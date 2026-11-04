@@ -58,7 +58,7 @@ from graderproof.adapters import tau2_driver as driver
 from graderproof.adapters.toybench import ToybenchAdapter
 from graderproof.core import Determinism, Task, canonical_json, sha256_text
 from graderproof.run import Runner
-from graderproof.sandbox import Sandbox, best_sandbox
+from graderproof.sandbox import BwrapSandbox, Sandbox, best_sandbox
 
 BENCHMARK = "tau2"
 REPO_URL = "https://github.com/sierra-research/tau2-bench.git"
@@ -746,10 +746,28 @@ def crosscheck_mismatches(checks: Sequence[ReferenceCheck]) -> list[str]:
     return [c.task_id for c in checks if c.crosscheck_reward != c.reward]
 
 
+def hidden_paths(sandbox: Sandbox, paths: Sequence[Path]) -> list[Path]:
+    """The ``paths`` that would not be visible inside ``sandbox``.
+
+    bubblewrap mounts an empty ``/tmp`` and hides the directories in its ``hidden`` list
+    (the home directory by default), and the toybench adapter binds only the task's own
+    directories back, so the tau2 checkout and venv must live elsewhere.
+    """
+    if not isinstance(sandbox, BwrapSandbox):
+        return []
+    hidden = [Path("/tmp"), *sandbox.hidden]
+    return [p for p in paths if any(p.absolute().is_relative_to(h) for h in hidden)]
+
+
 def _cmd_check(args: argparse.Namespace) -> int:
     sandbox = best_sandbox()
     if sandbox is None:
         print("tau2: no write-isolating sandbox (bubblewrap) works here", file=sys.stderr)
+        return 1
+    hidden = hidden_paths(sandbox, [args.root, args.python])
+    if hidden:
+        where = ", ".join(map(str, hidden))
+        print(f"tau2: {where} would be hidden inside {sandbox.name}; move it", file=sys.stderr)
         return 1
     commit = source_commit(args.root)
     if commit != PINNED_COMMIT:

@@ -64,8 +64,9 @@ uv run python -m graderproof.adapters.tau2 check runs/tau2/tasks --root runs/tau
   plus `conversion.json` (per domain: the base count, the converted ids, and the original
   ids left out because their reward needs an LLM judge). It refuses an `OUT` that holds
   task directories it would not write, because the toybench loader would load them too.
-* `check TASKS --root SRC --python PY` checks that the checkout is at the pinned commit
-  and that the pinned files match, then grades every unmodified reference `--repeat` times
+* `check TASKS --root SRC --python PY` checks that both paths are visible inside
+  bubblewrap (see below), that the checkout is at the pinned commit, and that the pinned
+  files match, then grades every unmodified reference `--repeat` times
   through `graderproof.run.Runner.precheck` with `ToybenchAdapter(extra_env=...)` and
   bubblewrap, `--jobs` tasks at a time. It prints each task's determinism class and
   reward, a per-domain summary that lists by id every task that is not a stable reward of
@@ -91,7 +92,13 @@ graderproof audit runs/tau2/tasks --sandbox bwrap \
 
 or, in Python, `ToybenchAdapter(extra_env=tau2_env(root, python))`. Give absolute paths.
 `GP_TAU2_PYTHON` must be the venv's own `bin/python` link, not the interpreter it points
-to, or the venv's packages are not found. Setting `GP_TAU2_CROSSCHECK=1` as well makes the
+to, or the venv's packages are not found. Both paths must also be visible inside the
+sandbox: bubblewrap mounts an empty `/tmp` and hides the home directory (the `hidden`
+list of `BwrapSandbox`), and the toybench adapter binds back only the task's own
+directories, so the checkout and the venv must lie under neither. `runs/tau2/` qualifies
+here because this repository is not under the home directory; on a machine where it is,
+put them elsewhere. `check` refuses hidden paths with a message; `graderproof audit` does
+not check them, and every execution would then fail. Setting `GP_TAU2_CROSSCHECK=1` as well makes the
 grader also run v1.0.1's `evaluate_simulation` and print its reward. The tasks are
 `third_party`, so the Runner refuses a sandbox that does not isolate writes. Each
 execution starts two sandboxed processes that each import tau2 and load a domain database,
