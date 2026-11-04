@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from graderproof.stats import binomial_tail_ge  # noqa: E402
+from graderproof.stats import binomial_tail_ge
 
 
 def critical_count(n: int, p0: float, level: float) -> int:
