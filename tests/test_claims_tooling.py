@@ -360,6 +360,24 @@ def test_strict_cases_stay_checked() -> None:
     ]
 
 
+def test_digits_hidden_from_the_token_pattern_fail() -> None:
+    zero, three, one, arabic_three = chr(0xFF10), chr(0xFF13), chr(0xFF11), chr(0x0663)
+    line = f"Rate &#48;.&#51;&#49;, &#x33;, {zero}.{three}{one}, {arabic_three} "
+    rep = check(line + "<!-- claimcheck:ignore-line even here -->\n")
+    assert rep.ignored_lines == 1
+    assert rep.problems == [
+        "D.md:1: character reference &#48; renders a digit",
+        "D.md:1: character reference &#51; renders a digit",
+        "D.md:1: character reference &#49; renders a digit",
+        "D.md:1: character reference &#x33; renders a digit",
+        f"D.md:1: digits {zero!r} outside 0-9 (write numbers with 0-9)",
+        f"D.md:1: digits {three + one!r} outside 0-9 (write numbers with 0-9)",
+        f"D.md:1: digits {arabic_three!r} outside 0-9 (write numbers with 0-9)",
+    ]
+    superscript_two = chr(0x00B2)
+    assert check(f"Superscript tau{superscript_two} and a space&#160;here.\n").problems == []
+
+
 def test_excluded_and_allowlisted_helpers() -> None:
     scan = claimcheck.scan_line("1. In 2026, x 7")
     tok = {t.text: t for t in scan.tokens}

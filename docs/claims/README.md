@@ -99,7 +99,7 @@ It reads README.md, docs/REPORT.md, docs/cards/*.md, and any other existing outp
 
 1. **A claim:** immediately followed by `<!--claim:KEY-->`, where the registry value of KEY equals the token text exactly. A marker that follows no number, names an unknown key, or disagrees with the registry fails.
 2. **In an excluded context** (the context must contain the whole token, so the `14,000` in `line 14,000` is checked):
-   - a URL, the destination of a Markdown link or image, a reference-style link label (`[text][3]`), a shortcut reference whose label is defined in the same file (`[3]` with a line `[3]: https://...`), the label and destination of a link reference definition, a footnote label (`[^1]`), or an HTML character reference (`&#160;`);
+   - a URL, the destination of a Markdown link or image, a reference-style link label (`[text][3]`), a shortcut reference whose label is defined in the same file (`[3]` with a line `[3]: https://...`), the label and destination of a link reference definition, a footnote label (`[^1]`), or an HTML character reference (`&#160;`; one that renders a digit, such as `&#51;`, fails);
    - an inline code span, or a fenced code block whose info string is `bash`, `sh`, `shell`, `console`, `toml`, `json`, `yaml`, or `text` (other fences, such as `python` or `mermaid`, are checked; a fence inside a list item may be indented and leaves the list open, so the next item's number is still a list marker);
    - a hex string of 7 or more characters with at least one letter (commit ids, hashes);
    - an ISO date or date-time (`2026-11-04`, `2026-11`, `2026-11-04T01:58:11Z`) or a year from 1900 to 2099;
@@ -113,7 +113,7 @@ It reads README.md, docs/REPORT.md, docs/cards/*.md, and any other existing outp
 
 A line that ends with `<!-- claimcheck:ignore-line REASON -->` is exempt from the number check; claim markers on it are still checked. The reason is required, and the comment must end the line. The output counts exempt lines per document.
 
-A fenced code block that is never closed fails, because it would turn the rest of the file into code.
+A fenced code block that is never closed fails, because it would turn the rest of the file into code. Digits outside 0-9 (fullwidth digits, other scripts) and character references that render a digit fail on every line, exempt lines included, because they would show a number that the token rule cannot see.
 
 Watch for these, which are checked on purpose: numbers in table cells, HTML attributes, ordinary HTML comments, and link titles (`[x](url "title 3")`); a number with letters after it (`3x`, `7B`, `2nd`); a number in italics (`_0.42_`); the text of a link (`[5](url)`), a shortcut reference with no definition (`[6]`), and a line that only looks like a definition (`[Note]: the rate is 0.31`); paths in prose or link text (put them in backticks). Spelled-out numbers ("three tasks") are not detected, so write result numbers as digits through claims. `python3 tools/claimcheck.py --verbose` prints how every token was classified.
 

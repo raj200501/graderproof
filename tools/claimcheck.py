@@ -9,20 +9,21 @@ maps a template to. Every number token in them must be one of:
     docs/claims/registry.json (written by ``make report`` from the artifact) equals the
     token text exactly;
 (b) in an excluded context: a URL or Markdown link target, a reference link label or
-    definition, a footnote label, an HTML character reference, an inline code span, a
-    fenced code block whose info string is bash, sh, shell, console, toml, json, yaml, or
-    text, a hex string of 7 or more characters, an ISO date, a year 1900 to 2099, a
-    version (v1.0, Python 3.12, 1.2.3), an identifier with letters attached (G7, E0,
-    x86_64, SHA-256), an ordered-list marker, a numbered heading, an arXiv id, or a
-    reference such as "section 8", "rule 15", or "steps 1 to 3";
+    definition, a footnote label, an HTML character reference (one that renders a digit
+    fails), an inline code span, a fenced code block whose info string is bash, sh,
+    shell, console, toml, json, yaml, or text, a hex string of 7 or more characters, an
+    ISO date, a year 1900 to 2099, a version (v1.0, Python 3.12, 1.2.3), an identifier
+    with letters attached (G7, E0, x86_64, SHA-256), an ordered-list marker, a numbered
+    heading, an arXiv id, or a reference such as "section 8", "rule 15", or "steps 1 to 3";
 (c) listed in docs/claims/allowlist.tsv (number, context regex, reason) as a design
     parameter that is not a result: a match of the regex on the same line must contain
     the number and reach beyond it.
 
 A line that ends with ``<!-- claimcheck:ignore-line REASON -->`` is exempt from the number
-check; the reason is required. Claim markers are checked on every line, and a fenced code
-block that is never closed fails (it would hide the rest of the file). The rules are
-documented with examples in docs/claims/README.md.
+check; the reason is required. Claim markers are checked on every line, and so are digits
+outside 0-9 and character references that render digits (both fail). A fenced code block
+that is never closed fails (it would hide the rest of the file). The rules are documented
+with examples in docs/claims/README.md.
 
 Output: one line per document, ``claimcheck: <file> OK (<n> claims, <m> allowlisted)``, or
 its problems with line numbers; then ``claimcheck: FAIL`` and exit status 1 if anything
@@ -33,6 +34,7 @@ number token was classified.
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import re
 import sys
@@ -83,6 +85,7 @@ REF_DEF_RE = re.compile(
     rf"(?:[ \t]+{_TITLE})?[ \t]*$"
 )
 ENTITY_RE = re.compile(r"&#(?:[0-9]{1,7}|[xX][0-9a-fA-F]{1,6});")
+OTHER_DIGITS_RE = re.compile(r"(?:(?![0-9])\d)+")  # decimal digits outside 0-9
 
 HEX_RE = re.compile(r"(?<![\w.])(?=[0-9a-fA-F]*[a-fA-F])[0-9a-fA-F]{7,}(?!\w)")
 DATE_RE = re.compile(
@@ -364,10 +367,18 @@ def scan_line(
         for m in SHORTCUT_RE.finditer(current()):
             if normalize_label(m.group("label")) in labels:
                 mask(m.start(), m.end())
-        for pattern in (REF_LABEL_RE, FOOTNOTE_RE, ENTITY_RE):
+        for m in ENTITY_RE.finditer(current()):
+            if html.unescape(m.group(0)).isdecimal():
+                problems.append(f"character reference {m.group(0)} renders a digit")
+            mask(m.start(), m.end())
+        for pattern in (REF_LABEL_RE, FOOTNOTE_RE):
             for m in pattern.finditer(current()):
                 mask(m.start(), m.end())
     masked = current()
+    problems += [
+        f"digits {m.group(0)!r} outside 0-9 (write numbers with 0-9)"
+        for m in OTHER_DIGITS_RE.finditer(masked)
+    ]
     tokens = [Token(m.group(0), m.start(), m.end()) for m in TOKEN_RE.finditer(masked)]
     spans = [
         (m.start(), m.end(), why)
