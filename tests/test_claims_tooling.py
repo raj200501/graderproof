@@ -2,13 +2,15 @@
 mutation tests that run report, claimcheck, freshness, and citecheck together.
 
 Every test builds its own temporary repository layout. The artifact in it is synthetic
-(labeled as such) and exists only to exercise the tools; it is not a result.
+(labeled as such) and exists only to exercise the tools; it is not a result. The helpers
+here are shared with the other tests/test_claims_*.py files.
 """
 
 from __future__ import annotations
 
 import json
 import re
+import runpy
 import shutil
 import subprocess
 import sys
@@ -60,7 +62,12 @@ FIGURE: dict[str, Any] = {
     "domain": [0, 1],
     "tick_format": "{:.0%}",
     "bars": [
-        {"label": "Example", "value": "example.rate", "lo": "example.rate_lo", "hi": "example.rate_hi"}
+        {
+            "label": "Example",
+            "value": "example.rate",
+            "lo": "example.rate_lo",
+            "hi": "example.rate_hi",
+        }
     ],
 }
 TEMPLATES: dict[str, str | None] = {
@@ -76,6 +83,7 @@ ALLOW = (
     "40\tat least 40 tasks\tpreregistered minimum sample size (design parameter)\n"
 )
 TOOLS = ("claimcheck.py", "freshness.py", "report.py", "svgchart.py", "citecheck.py")
+ARXIV = "https://arxiv.org/abs/2606.08960"
 
 
 def put(root: Path, rel: str, text: str) -> Path:
@@ -142,6 +150,14 @@ def edit(path: Path, old: str, new: str, count: int = 1) -> None:
     path.write_text(text.replace(old, new, count), encoding="utf-8")
 
 
+def copy_tools(root: Path) -> None:
+    """Copy the Makefile and the claim tools into a layout, so its make targets run there."""
+    shutil.copy(REPO / "Makefile", root / "Makefile")
+    (root / "tools").mkdir(exist_ok=True)
+    for name in TOOLS:
+        shutil.copy(REPO / "tools" / name, root / "tools" / name)
+
+
 def check(text: str, registry: dict[str, str] | None = None) -> claimcheck.FileReport:
     """claimcheck on one text with no allowlist."""
     return claimcheck.check_text(text, "D.md", registry or {}, [])
@@ -164,18 +180,21 @@ def test_number_tokens_and_attachment() -> None:
         "3456",
         "1,000,000",
     ]
+    assert [m.group(0) for m in claimcheck.TOKEN_RE.finditer("0.10-0.45")] == ["0.10", "0.45"]
     assert claimcheck.NUMBER_FULL.fullmatch("-12.5%")
     assert not claimcheck.NUMBER_FULL.fullmatch("12 tasks")
 
 
 def test_code_spans() -> None:
-    assert claimcheck.code_spans("a `x` b ``y ` z`` c") == [(2, 5), (8, 18)]
-    assert claimcheck.code_spans("unclosed ` tick and ``mismatch`") == []
+    assert claimcheck.code_spans("a `x` b ``y ` z`` c") == [(2, 5), (8, 17)]
+    # a run of one backtick closes at the next run of exactly one, skipping longer runs
+    assert claimcheck.code_spans("one ` tick and ``double`") == [(4, 24)]
+    assert claimcheck.code_spans("a ` b ``c") == []
     assert claimcheck.code_spans("`a` `b`") == [(0, 3), (4, 7)]
     assert claimcheck.code_spans("no code") == []
 
 
-def test_iter_lines_modes_and_lists() -> None:
+def test_classify_lines_modes_lists_and_unclosed_fences() -> None:
     text = (
         "```bash\n1\n```\n"
         "```python\n2\n```\n"
@@ -187,30 +206,52 @@ def test_iter_lines_modes_and_lists() -> None:
         "para again\n\nnext para\n7. still prose\n"
         "## Heading\n5. after a heading\n"
     )
-    lines = {ln.number: ln for ln in claimcheck.iter_lines(text)}
+    found, unclosed = claimcheck.classify_lines(text)
+    assert unclosed is None
+    lines = {ln.number: ln for ln in found}
     assert [lines[i].mode for i in (1, 2, 3)] == ["skip", "skip", "skip"]
     assert [lines[i].mode for i in (4, 5, 6)] == ["skip", "code", "skip"]
-    assert [lines[i].mode for i in (8, 9, 10, 11)] == ["skip", "skip", "skip", "skip"]
-    assert [lines[i].mode for i in (13, 14, 15)] == ["code", "code", "skip"]
+    assert [lines[i].mode for i in (7, 8, 9, 10, 11)] == ["skip"] * 5
+    assert [lines[i].mode for i in (12, 13, 14, 15)] == ["skip", "code", "code", "skip"]
     ok = {n for n, ln in lines.items() if ln.list_ok}
-    assert {16, 17, 19, 25, 31} <= ok
-    assert 23 not in ok and 29 not in ok
-    unclosed = list(claimcheck.iter_lines("```text\n1\n2\n"))
-    assert [ln.mode for ln in unclosed] == ["skip", "skip", "skip"]
-    inline = list(claimcheck.iter_lines("```inline``` 5\n"))
-    assert inline[0].mode == "prose"
+    assert ok == {16, 17, 19, 25, 31}
+    assert lines[22].text == "12. not a list" and lines[29].text == "7. still prose"
+    unclosed_lines, opened = claimcheck.classify_lines("intro\n```text\n1\n2\n")
+    assert [ln.mode for ln in unclosed_lines] == ["prose", "skip", "skip", "skip"]
+    assert opened == 2
+    inline, opened = claimcheck.classify_lines("```inline``` 5\n")
+    assert inline[0].mode == "prose" and opened is None
+
+
+def test_reference_labels_and_normalize_label() -> None:
+    assert claimcheck.normalize_label("  Foo \t Bar ") == "foo bar"
+    lines, _ = claimcheck.classify_lines(
+        "[1]: https://example.org/1\n"
+        '[Two  Words]: <https://example.org/2> "Title"\n'
+        "[^3]: a footnote, not a link definition\n"
+        "[Note]: the rate is 0.31\n"
+        "```text\n[4]: https://example.org/4\n```\n"
+    )
+    assert claimcheck.reference_labels(lines) == frozenset({"1", "two words"})
 
 
 def test_scan_line_masks_and_markers() -> None:
-    line = "x `9` 0.25<!--claim:a.b--> [t](p/9 \"T 9\") [r][9] [^9] https://h/9 <b 9>"
+    line = 'x `9` 0.25<!--claim:a.b--> [t](p/9 "T 9") [r][9] [^9] https://h/9 <b 9>'
     scan = claimcheck.scan_line(line)
-    assert [t.text for t in scan.tokens] == ["0.25", "9"]
+    assert [t.text for t in scan.tokens] == ["0.25", "9", "9"]
     assert scan.markers == [claimcheck.Marker("a.b", 10, 26)]
-    assert "9" not in scan.masked[: scan.tokens[1].start]
-    ref = claimcheck.scan_line("[7]: https://example.org/7 \"Title 9\"")
-    assert ref.tokens == []
-    code = claimcheck.scan_line("`7` https://x/7 [t](8)", mode="code")
-    assert [t.text for t in code.tokens] == ["7", "8"]
+    assert '"T 9"' in scan.masked  # a link title is shown on hover, so it is checked
+    assert "p/9" not in scan.masked and "[9]" not in scan.masked
+    ref = claimcheck.scan_line('[7]: https://example.org/7 "Title 9"')
+    assert [t.text for t in ref.tokens] == ["9"]
+    fake = claimcheck.scan_line("[7]: the rate is 0.31")
+    assert [t.text for t in fake.tokens] == ["7", "0.31"]
+    cited = claimcheck.scan_line("See [3], [4][], [5], and [3](x).", labels=frozenset({"3", "4"}))
+    assert [t.text for t in cited.tokens] == ["5", "3"]
+    entity = claimcheck.scan_line("a&#160;b &#x41; and &#8211; 7")
+    assert [t.text for t in entity.tokens] == ["7"]
+    code = claimcheck.scan_line("`7` https://x/7 [t](8) &#160;", mode="code")
+    assert [t.text for t in code.tokens] == ["7", "8", "160"]
 
 
 def test_scan_line_directives_and_malformed_markers() -> None:
@@ -242,13 +283,16 @@ def test_excluded_contexts() -> None:
         "See section 8, sections 6 to 10, rules 1 and 11, steps 1-3, Figure 2, Table 3.\n"
         "Also §8, §§ 8, 9, appendix 2, line 14, items 1, 2, and 3.\n"
         "arXiv 2606.08960v2 and arXiv:2507.02825.\n"
+        "Cited as [1] and [2][], with&#160;a space.\n"
         "## 3. Results\n"
         "### 3.2 Setup\n"
+        "\n"
+        "[1]: https://arxiv.org/abs/2606.08960\n"
+        "[2]: <https://example.org/2>\n"
     )
     assert unbacked(text) == []
-    whys = {d.rsplit("(", 1)[-1].rstrip(")") for d in claimcheck.check_text(
-        text, "D.md", {}, [], verbose=True
-    ).details}
+    details = claimcheck.check_text(text, "D.md", {}, [], verbose=True).details
+    whys = {d.rsplit("(", 1)[-1].rstrip(")") for d in details}
     assert whys == {
         "hex string",
         "date",
@@ -267,9 +311,11 @@ def test_strict_cases_stay_checked() -> None:
         "section 8 and 40 tasks; Python 3.12 and 40 tasks; steps 0.5.\n"
         "A paragraph that wraps\n"
         "12. here is not a list marker.\n"
-        "<!-- hidden 99 --> <img width=\"600\"> | 1 | 2 |\n"
+        '<!-- hidden 99 --> <img width="600"> | 1 | 2 |\n'
         "```python\nx = 456\n```\n"
         "abc1234defg 1234567\n"
+        'A line 14,000 long, section 8%, [n](x "title 77"), [6] undefined, [5](x) text.\n'
+        "[Note]: the rate is 0.31\n"
     )
     assert unbacked(text) == [
         "3",
@@ -281,7 +327,6 @@ def test_strict_cases_stay_checked() -> None:
         "23",
         "7",
         "2",
-        "1950",
         "20",
         "2100",
         "40",
@@ -294,6 +339,12 @@ def test_strict_cases_stay_checked() -> None:
         "2",
         "456",
         "1234567",
+        "14,000",
+        "8%",
+        "77",
+        "6",
+        "5",
+        "0.31",
     ]
 
 
@@ -302,12 +353,24 @@ def test_excluded_and_allowlisted_helpers() -> None:
     tok = {t.text: t for t in scan.tokens}
     assert claimcheck.excluded(tok["2026"], scan) == "year"
     assert claimcheck.excluded(tok["7"], scan) is None
+    assert claimcheck.excluded(tok["1"], scan) is None  # not a list line
     listed = claimcheck.scan_line("1. In 2026", list_ok=True)
     assert claimcheck.excluded(listed.tokens[0], listed) == "ordered-list marker"
+    partial = claimcheck.scan_line("a line 14,000 long")
+    assert claimcheck.excluded(partial.tokens[0], partial) is None
     entry = claimcheck.AllowEntry("40", re.compile(r"at least 40"), "target", 2)
-    assert claimcheck.allowlisted("40", "at least 40 tasks", [entry]) is entry
-    assert claimcheck.allowlisted("40", "exactly 40 tasks", [entry]) is None
-    assert claimcheck.allowlisted("41", "at least 40 tasks", [entry]) is None
+    line = "at least 40 tasks"
+    token = claimcheck.scan_line(line).tokens[0]
+    assert claimcheck.allowlisted(token, line, [entry]) is entry
+    other = "exactly 40 tasks"
+    assert claimcheck.allowlisted(claimcheck.scan_line(other).tokens[0], other, [entry]) is None
+    assert claimcheck.allowlisted(claimcheck.Token("41", 9, 11), "at least 41", [entry]) is None
+    bare = claimcheck.AllowEntry("40", re.compile("40"), "names no context", 3)
+    assert claimcheck.allowlisted(token, line, [bare]) is None
+    both = "at least 40 tasks; 40 failed"
+    first, second = claimcheck.scan_line(both).tokens
+    assert claimcheck.allowlisted(first, both, [bare, entry]) is entry
+    assert claimcheck.allowlisted(second, both, [bare, entry]) is None
 
 
 # ---------------------------------------------------------------- loading
@@ -395,6 +458,8 @@ def test_check_text_claims_and_problems() -> None:
         "Two markers 0.25<!--claim:a--><!--claim:a--> and a bare 0.5.\n"
         "Ignored 12 of 12 <!-- claimcheck:ignore-line quoted --> \n"
         "Ignored but stale 0.24<!--claim:a--> <!-- claimcheck:ignore-line quoted -->\n"
+        "```text\n"
+        "never closed 9\n"
     )
     rep = claimcheck.check_text(text, "D.md", registry, [], verbose=True)
     assert rep.claims == 4
@@ -407,6 +472,9 @@ def test_check_text_claims_and_problems() -> None:
     assert "D.md:3: unbacked number 0.5" in problems
     assert "D.md:5: 0.24 is marked as claim a" in problems
     assert "D.md:4" not in problems
+    assert rep.problems[-1] == (
+        "D.md:6: this fenced code block is never closed, so the rest of the file would be code"
+    )
     assert any("line ignored (quoted)" in d for d in rep.details)
     assert any("claim a" in d for d in rep.details)
 
@@ -420,7 +488,8 @@ def test_check_text_allowlist_counts() -> None:
 
 
 def test_claim_occurrences() -> None:
-    text = "a 0.25<!--claim:a--> b<!--claim:b--> `0.1<!--claim:c-->`\n```text\n1<!--claim:d-->\n```\n"
+    text = "a 0.25<!--claim:a--> b<!--claim:b--> `0.1<!--claim:c-->`\n"
+    text += "```text\n1<!--claim:d-->\n```\n"
     text += "bad 1<!-- claim:e -->\n"
     found, problems = claimcheck.claim_occurrences(text)
     assert found == [claimcheck.Occurrence(1, "a", "0.25"), claimcheck.Occurrence(1, "b", None)]
@@ -436,13 +505,16 @@ def test_run_and_main(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Non
     put_json(root, claimcheck.REGISTRY, {"a": {"value": "0.25"}})
     put(root, claimcheck.ALLOWLIST, "number\tcontext\treason\n")
     put(root, "README.md", "# t\nRate 0.25<!--claim:a-->.\n")
-    put(root, "docs/REPORT.md", "# r\nNo numbers.\n")
-    put(root, "docs/cards/x.md", "card 7\n")
+    put(root, "docs/REPORT.md", "# r\nQuoted 12 <!-- claimcheck:ignore-line verbatim -->\n")
+    ignored = "A 1 <!-- claimcheck:ignore-line q -->\n"
+    put(root, "docs/cards/x.md", "card 7\n" + ignored * 2)
     out, rc = claimcheck.run(root)
     assert rc == 1
     assert out == [
         "claimcheck: README.md OK (1 claims, 0 allowlisted)",
+        "claimcheck: docs/REPORT.md: 1 line exempt by claimcheck:ignore-line",
         "claimcheck: docs/REPORT.md OK (0 claims, 0 allowlisted)",
+        "claimcheck: docs/cards/x.md: 2 lines exempt by claimcheck:ignore-line",
         "claimcheck: docs/cards/x.md:1: unbacked number 7",
         "claimcheck: docs/cards/x.md FAIL (1 problems)",
         "claimcheck: FAIL",
@@ -452,6 +524,16 @@ def test_run_and_main(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Non
     assert claimcheck.main(["--root", str(root), "--verbose"]) == 0
     printed = capsys.readouterr().out
     assert "claimcheck: README.md:2: 0.25 claim a" in printed
+
+
+@pytest.mark.parametrize("tool", ["claimcheck.py", "freshness.py", "citecheck.py", "report.py"])
+def test_tools_run_as_scripts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, tool: str) -> None:
+    for root, code in ((built(tmp_path), 0), (tmp_path / "empty", 1)):
+        root.mkdir(exist_ok=True)
+        monkeypatch.setattr(sys, "argv", [tool, "--root", str(root)])
+        with pytest.raises(SystemExit) as stop:
+            runpy.run_path(str(REPO / "tools" / tool), run_name="__main__")
+        assert stop.value.code == code, (tool, root)
 
 
 # ---------------------------------------------------------------- end to end
@@ -467,7 +549,9 @@ def test_example_template_renders_and_passes(tmp_path: Path) -> None:
     out, rc = claimcheck.run(root)
     assert rc == 0, out
     assert out == [
+        "claimcheck: README.md: 1 line exempt by claimcheck:ignore-line",
         "claimcheck: README.md OK (7 claims, 2 allowlisted)",
+        "claimcheck: docs/REPORT.md: 1 line exempt by claimcheck:ignore-line",
         "claimcheck: docs/REPORT.md OK (7 claims, 2 allowlisted)",
     ]
     out, rc = freshness.run(root)
@@ -495,10 +579,25 @@ def test_mutation_marker_value_differs_from_registry(tmp_path: Path) -> None:
     edit(root / "README.md", "0.25<!--claim:example.rate-->", "0.26<!--claim:example.rate-->")
     out, rc = claimcheck.run(root)
     assert rc == 1
-    assert any("0.26 is marked as claim example.rate, whose registry value is 0.25" in o for o in out)
+    wanted = "0.26 is marked as claim example.rate, whose registry value is 0.25"
+    assert any(wanted in o for o in out)
     out, rc = freshness.run(root)
     assert rc == 1
     assert any("claim example.rate shows 0.26, but" in o for o in out)
+
+
+def test_mutation_registry_and_document_edited_together(tmp_path: Path) -> None:
+    """A number typed into both the registry and the documents passes claimcheck only."""
+    root = built(tmp_path)
+    edit(root / claimcheck.REGISTRY, '"value": "0.25"', '"value": "0.20"')
+    for doc in ("README.md", "docs/REPORT.md"):
+        edit(root / doc, "0.25<!--claim:example.rate-->", "0.20<!--claim:example.rate-->", -1)
+    assert claimcheck.run(root)[1] == 0
+    out, rc = freshness.run(root)
+    assert rc == 1
+    wanted = f"docs/claims/registry.json has 0.20, but {ARTIFACT} now gives 0.25"
+    assert any(wanted in o for o in out)
+    assert "freshness: README.md FAIL (3 stale or unknown; run make report)" in out
 
 
 def test_mutation_stale_artifact_fails_freshness(tmp_path: Path) -> None:
@@ -513,8 +612,9 @@ def test_mutation_stale_artifact_fails_freshness(tmp_path: Path) -> None:
     assert f"claim example.rate: {ARTIFACT} changed after docs/claims/registry.json" in text
     assert "docs/figures/example.svg is stale" in text
     assert "README.md is not the current rendering" in text
-    assert "claim example.rate shows 0.25, but artifacts/example/summary.json now gives 0.30" in text
+    assert f"claim example.rate shows 0.25, but {ARTIFACT} now gives 0.30" in text
     assert claimcheck.run(root)[1] == 0  # the registry still agrees with the documents
+    assert report.run(root)[1] == 0 and freshness.run(root)[1] == 0  # make reproduce repairs it
 
 
 def test_mutation_artifact_change_without_value_change(tmp_path: Path) -> None:
@@ -527,10 +627,21 @@ def test_mutation_artifact_change_without_value_change(tmp_path: Path) -> None:
     assert "freshness: README.md OK (7 live claims)" in out
 
 
+def test_mutation_missing_artifact(tmp_path: Path) -> None:
+    root = built(tmp_path)
+    (root / ARTIFACT).unlink()
+    out, rc = freshness.run(root)
+    assert rc == 1
+    assert f"freshness: claim example.rate: {ARTIFACT} missing" in out
+    out, rc = report.run(root)
+    assert rc == 1 and out[-1] == "report: FAIL (nothing written)"
+
+
 def test_mutation_unknown_claim_key(tmp_path: Path) -> None:
     root = built(tmp_path)
     readme = root / "README.md"
-    readme.write_text(readme.read_text(encoding="utf-8") + "Odd 0.25<!--claim:example.nope-->\n", "utf-8")
+    odd = "Odd 0.25<!--claim:example.nope-->\n"
+    readme.write_text(readme.read_text(encoding="utf-8") + odd, "utf-8")
     out, rc = claimcheck.run(root)
     assert rc == 1 and any("unknown claim example.nope" in o for o in out)
     out, rc = freshness.run(root)
@@ -540,31 +651,41 @@ def test_mutation_unknown_claim_key(tmp_path: Path) -> None:
     assert rc == 1 and any("unknown claim 'example.nope'" in o for o in out)
 
 
+def test_mutation_figure_edited_by_hand(tmp_path: Path) -> None:
+    root = built(tmp_path)
+    edit(root / "docs/figures/example.svg", ">0.25<", ">0.20<")
+    out, rc = freshness.run(root)
+    assert rc == 1
+    assert (
+        "freshness: docs/figures/example.svg is stale: it is not what the artifacts give now"
+        in (out)
+    )
+
+
 def test_mutation_allowlist_entry_without_reason(tmp_path: Path) -> None:
     root = built(tmp_path)
-    put(root, claimcheck.ALLOWLIST, ALLOW.replace("(design parameter)\n", "\n").replace(
-        "preregistered minimum sample size", ""
-    ))
+    no_reason = ALLOW.replace("preregistered minimum sample size (design parameter)", "")
+    put(root, claimcheck.ALLOWLIST, no_reason)
     out, rc = claimcheck.run(root)
     assert rc == 1
-    assert any("allowlist.tsv:4: reason missing for 40" in o for o in out)
+    assert "claimcheck: docs/claims/allowlist.tsv:4: reason missing for 40" in out
+    assert any(re.fullmatch(r"claimcheck: README\.md:\d+: unbacked number 40", o) for o in out)
 
 
 def test_mutation_unverified_reference(tmp_path: Path) -> None:
-    url = "https://arxiv.org/abs/2606.08960"
-    doc = EXAMPLE + f"\nRelated work: {url}.\n"
-    root = built(tmp_path, readme=doc, entries=[citation(url)])
+    doc = EXAMPLE + f"\nRelated work: {ARXIV}.\n"
+    root = built(tmp_path, readme=doc, entries=[citation(ARXIV)])
     assert citecheck.run(root)[0] == [
         "citecheck: 1 references verified in README.md and docs/REPORT.md"
     ]
     put_json(
         root,
         citecheck.CITECHECK,
-        {"schema": citecheck.SCHEMA, "entries": [citation(url, "unreachable")]},
+        {"schema": citecheck.SCHEMA, "entries": [citation(ARXIV, "unreachable")]},
     )
     out, rc = citecheck.run(root)
     assert rc == 1
-    assert out[0].startswith(f"citecheck: unverified reference {url} (README.md:")
+    assert out[0].startswith(f"citecheck: unverified reference {ARXIV} (README.md:")
     assert "entry ref is unreachable" in out[0] and out[-1] == "citecheck: FAIL"
 
 
@@ -576,17 +697,15 @@ def test_mutation_missing_document(tmp_path: Path, missing: str) -> None:
         out, rc = tool.run(root)
         assert rc == 1, tool.__name__
         assert any(f"{missing} missing" in o for o in out), (tool.__name__, out)
+        assert out[-1].endswith("FAIL"), (tool.__name__, out)
 
 
 def test_make_targets_drive_the_tools(tmp_path: Path) -> None:
     root = make_layout(tmp_path)
-    shutil.copy(REPO / "Makefile", root / "Makefile")
-    for name in TOOLS:
-        shutil.copy(REPO / "tools" / name, root / "tools" / name if (root / "tools").is_dir()
-                    else (root / "tools").mkdir() or root / "tools" / name)
+    copy_tools(root)
+    targets = ["report", "claimcheck", "freshness", "citecheck", "reproduce"]
     run = subprocess.run(
-        ["make", "-s", "report", "claimcheck", "freshness", "citecheck", "reproduce",
-         f"PY={sys.executable}"],
+        ["make", "-s", *targets, f"PY={sys.executable}"],
         cwd=root,
         capture_output=True,
         text=True,
@@ -596,6 +715,7 @@ def test_make_targets_drive_the_tools(tmp_path: Path) -> None:
     for doc in ("README.md", "docs/REPORT.md"):
         assert f"claimcheck: {doc} OK" in run.stdout
         assert f"freshness: {doc} OK" in run.stdout
+    assert "citecheck: 0 references verified in README.md and docs/REPORT.md" in run.stdout
     edit(root / "README.md", "0.25<!--claim:example.rate-->", "0.20<!--claim:example.rate-->")
     for target in ("claimcheck", "freshness"):
         failed = subprocess.run(
@@ -608,13 +728,15 @@ def test_make_targets_drive_the_tools(tmp_path: Path) -> None:
         assert failed.returncode != 0 and f"{target}: FAIL" in failed.stdout
 
 
-def test_ship_check_g10_and_readme_checks_accept_a_compliant_layout(tmp_path: Path) -> None:
+def test_ship_check_gates_accept_a_compliant_layout(tmp_path: Path) -> None:
     readme = (
         "# graderproof\n\n"
         "In a synthetic example, graders accepted {{claim:example.rate}} of broken solutions "
         "(95% CI {{claim:example.rate_lo}} to {{claim:example.rate_hi}}).\n\n"
         "{{figure:example}}\n\n"
-        "| Benchmark | False-accept task rate |\n|---|---|\n| Example | {{claim:example.rate}} |\n\n"
+        "| Benchmark | False-accept task rate |\n"
+        "|---|---|\n"
+        "| Example | {{claim:example.rate}} |\n\n"
         "## Quickstart\n\n```bash\nmake demo\n```\n\n"
         "## What it is and is not\n\nA measurement tool.\n\n"
         "## Key results\n\nSee [the artifact](artifacts/example/summary.json) and "
@@ -622,25 +744,34 @@ def test_ship_check_g10_and_readme_checks_accept_a_compliant_layout(tmp_path: Pa
         "## How it works\n\n```mermaid\nflowchart LR\n  A --> B\n```\n\n"
         "## Use it on your own benchmark\n\nWrite an adapter.\n\n"
         "## Reproduce\n\n`make reproduce`\n\n## Limitations\n\nSynthetic.\n\n"
-        "## Responsible disclosure\n\nPrivate.\n\n## Related work\n\nNone.\n\n"
+        "## Responsible disclosure\n\nPrivate.\n\n"
+        f"## Related work\n\nSee {ARXIV}.\n\n"
         "## Citation\n\nSee CITATION.cff.\n\n## License\n\nMIT.\n"
     )
-    root = built(tmp_path, readme=readme)
-    shutil.copy(REPO / "Makefile", root / "Makefile")
-    (root / "tools").mkdir()
-    for name in TOOLS:
-        shutil.copy(REPO / "tools" / name, root / "tools" / name)
+    root = built(tmp_path, readme=readme, entries=[citation(ARXIV)])
+    copy_tools(root)
     assert ship_check.readme_problems(root) == ""
     ctx = ship_check.Ctx(origin=root, work=tmp_path / "work", fast=True, clone=root)
     result = ship_check.g10_claim_integrity(ctx)
     assert result.ok, result.evidence
+    assert ship_check.cited_urls(root) == [ARXIV]
+    assert ship_check.citecheck_problems(root, ship_check.cited_urls(root)) == ""
+    assert citecheck.run(root) == (
+        ["citecheck: 1 references verified in README.md and docs/REPORT.md"],
+        0,
+    )
     edit(root / "README.md", "0.10<!--claim:example.rate_lo-->", "0.11<!--claim:example.rate_lo-->")
     assert not ship_check.g10_claim_integrity(ctx).ok
+    assert report.run(root)[1] == 0
+    edit(root / "docs/figures/example.svg", ">0.25<", ">0.20<")
+    assert (
+        ship_check.readme_problems(root) == "headline figure is not the one make report generated"
+    )
 
 
 def test_citecheck_finds_the_same_urls_as_ship_check(tmp_path: Path) -> None:
     text = (
-        "See https://arxiv.org/abs/2606.08960. and <https://example.org/a>, "
+        f"See {ARXIV}. and <https://example.org/a>, "
         "`https://example.org/code` and https://github.com/raj200501/graderproof/x "
         "and https://github.com/raj200501/graderproof.git\n"
     )

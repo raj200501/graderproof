@@ -604,7 +604,9 @@ def run(root: Path, verbose: bool = False) -> tuple[list[str], int]:
         report = check_text(path.read_text(encoding="utf-8"), rel, registry, allow, verbose)
         out += [f"claimcheck: {d}" for d in report.details]
         if report.ignored_lines:
-            out.append(f"claimcheck: {rel}: {report.ignored_lines} lines exempt by {DIRECTIVE}")
+            n = report.ignored_lines
+            noun = "line" if n == 1 else "lines"
+            out.append(f"claimcheck: {rel}: {n} {noun} exempt by {DIRECTIVE}")
         if report.problems:
             failed = True
             out += [f"claimcheck: {p}" for p in report.problems]

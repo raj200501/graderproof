@@ -533,8 +533,12 @@ def resolve_claims(root: Path, spec: Spec) -> tuple[dict[str, Claim], list[str]]
 
 
 def text_numbers(text: str, where: str, allow: Sequence[claimcheck.AllowEntry]) -> list[str]:
-    """Unbacked numbers in a figure string (figures may only show numbers from claims)."""
-    found = claimcheck.check_text(text, where, {}, allow).problems
+    """Unbacked numbers in a figure string (figures may only show numbers from claims).
+
+    The string is read as the middle of a sentence, so a leading ``1.`` or ``#`` is not
+    taken for a list marker or a heading.
+    """
+    found = claimcheck.check_text(f"x {text}", where, {}, allow).problems
     return [p.replace(f"{where}:1: ", f"{where}: ", 1) for p in found]
 
 
@@ -644,13 +648,16 @@ def render(
     problems += [f"{template}:{p}" for p in malformed]
     for occ in found:
         claim = claims.get(occ.key)
-        if claim is None:
-            problems.append(f"{template}:{occ.line}: marker for unknown claim {occ.key}")
+        where = f"{template}:{occ.line}"
+        if occ.key not in spec.claims:
+            problems.append(f"{where}: marker for unknown claim {occ.key} (declare it in {SPEC})")
+        elif claim is None:
+            problems.append(f"{where}: marker for claim {occ.key}, which did not resolve")
         elif occ.shown != claim.value:
             shown = "no number token" if occ.shown is None else occ.shown
             problems.append(
-                f"{template}:{occ.line}: claim {occ.key} renders as {shown}, not "
-                f"{claim.value} (keep the placeholder apart from letters and digits before it)"
+                f"{where}: claim {occ.key} renders as {shown}, not {claim.value} "
+                "(keep the placeholder apart from letters and digits before it)"
             )
     if problems:
         return None, problems
