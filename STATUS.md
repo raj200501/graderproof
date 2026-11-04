@@ -1,4 +1,4 @@
-goal_turn: 3
+goal_turn: 4
 STATE: ACTIVE
 
 # graderproof status
@@ -7,7 +7,7 @@ Updated 2026-11-04 04:00 UTC. History lives in docs/LOG.md.
 
 ## Gates (from `python tools/ship_check.py --fast`; only a full run counts)
 
-Fast check on a27b76e (2026-11-04): **5/14**.
+Fast check on 3655051 (2026-11-04, with the stricter gate checks merged): **5/14**.
 
 | Gate | State | Evidence or blocker |
 |---|---|---|
