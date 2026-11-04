@@ -84,3 +84,15 @@ Each benchmark is pinned to a commit or release recorded in docs/DATA.md with it
 ## D19 (2026-10-23) Adapters convert to the toybench execution format
 
 Each public benchmark adapter converts tasks into toybench task directories (generated under `runs/`, reproducible from a pinned checkout) and reuses the toybench execution path, so caching, sandboxing, requirement checks, and variant operators are shared. A new task kind `data` covers benchmarks whose solution is data (a tool-call list or a function call): `support/run_solution.sh` turns the solution files into an outcome in the workspace (`.gp/state.json`, `.gp/trajectory.json`), and the grader is a driver that calls the benchmark's own grading code from the pinned checkout. For BFCL there is no separate reference solution; the reference is built from the first acceptable value of every required argument in `possible_answer`, which is grader data, so requirement extraction is told to rely on the question and function documentation only.
+
+## D20 (2026-10-23) Commits are authored as Raj
+
+Raj asked that every commit count toward his GitHub contributions. This checkout sets `git config user.name "Raj Kashikar"` and `git config user.email "65059626+raj200501@users.noreply.github.com"` (repository level, so it overrides the container's global identity). No `GIT_AUTHOR_*` or `GIT_COMMITTER_*` variable is set here; if one appears, commits pass `--author="Raj Kashikar <65059626+raj200501@users.noreply.github.com>"` instead. Every commit keeps the `Co-Authored-By: Claude` and `Claude-Session` trailers. Existing commits are never rewritten or force-pushed. The first commit under this rule (8bba7eb) was verified with `git log -1 --format='%an <%ae>'`.
+
+## D21 (2026-10-23) GitHub Actions runs only for main
+
+Raj's private-repository Actions minutes are limited. `.github/workflows/ci.yml` runs only on pushes to `main`, pull requests into `main`, and manual `workflow_dispatch`; never on pushes to `claude/` branches and never on a schedule. It has a concurrency group with `cancel-in-progress: true` and `timeout-minutes: 10` on its job, and stays lean (setup, `make ci`, secrets scan; no model downloads or experiments). No other workflow is added. `make ci` is run locally and must pass before every push, so nothing that reaches GitHub fails. One push (8bba7eb) skipped this check at Raj's explicit request. G3 (CI parity) is unaffected: the workflow still runs `make ci` on Python 3.11 and 3.12.
+
+## D22 (2026-11-04) Interrupted adapter and planting agents
+
+Raj stopped the session on 2026-10-23 while three adapter agents (HumanEval, BFCL, tau2-bench) and the E0 planting agent were running. Their git worktrees kept partial, uncommitted work: a HumanEval adapter module with contract tests and fixtures, and BFCL fixtures. The planting agent wrote nothing (no `toybench/` directory, no labels). On restart the partial adapters are finished and verified from their worktrees rather than discarded; the planting agent is started again from scratch with the same instructions, because a partial planted set cannot be trusted to be complete or consistent with its labels.
