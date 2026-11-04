@@ -195,7 +195,8 @@ def test_figure_text_and_parse_domain() -> None:
         assert "without [ or ]" in report.figure_text(bad, "alt", "W", True)[1][0]
     assert report.parse_domain(None, "W") == (None, [])
     assert report.parse_domain([0, 1], "W") == ((0.0, 1.0), [])
-    for bad_domain in ([1, 0], [0], [True, 1], [0, float("inf")], "x", [0, "1"]):
+    assert report.parse_domain([-1, 0.5], "W") == ((-1.0, 0.5), [])
+    for bad_domain in ([1, 0], [0], [True, 1], [0, float("inf")], "x", [0, "1"], [0.5, 1]):
         assert report.parse_domain(bad_domain, "W")[1], bad_domain
 
 

@@ -18,8 +18,9 @@ any numbers (docs/claims/README.md has examples):
   a family (``cards/*.md.in`` to ``docs/cards/*.md``). OUTPUT ``null`` marks an example that
   is never rendered. A template that no entry maps is an error.
 * ``figures``: ``{NAME: {"title", "bars": [{"label", "value": KEY, "lo": KEY, "hi": KEY}]}}``
-  with optional ``alt``, ``axis_label``, ``domain`` ([low, high]), and ``tick_format``. Every
-  plotted number is a declared claim, and figure text may hold no unbacked number.
+  with optional ``alt``, ``axis_label``, ``domain`` ([low, high] including 0), and
+  ``tick_format``. Every plotted number is a declared claim, and figure text may hold no
+  unbacked number.
 
 It resolves every claim into docs/claims/registry.json (``{KEY: {"value", "artifact",
 "path", "artifact_sha256"}}``), draws each figure to docs/figures/NAME.svg with
@@ -364,7 +365,7 @@ def figure_text(value: Any, what: str, where: str, required: bool) -> tuple[str 
 
 
 def parse_domain(value: Any, where: str) -> tuple[tuple[float, float] | None, list[str]]:
-    """``[low, high]`` with low < high, or None."""
+    """``[low, high]`` with low < high that includes 0 (bars grow from zero), or None."""
     if value is None:
         return None, []
     ok = (
@@ -373,9 +374,13 @@ def parse_domain(value: Any, where: str) -> tuple[tuple[float, float] | None, li
         and all(isinstance(v, int | float) and not isinstance(v, bool) for v in value)
         and all(math.isfinite(v) for v in value)
         and value[0] < value[1]
+        and value[0] <= 0 <= value[1]
     )
     if not ok:
-        return None, [f"{where}: domain must be [low, high] with finite numbers, low < high"]
+        return None, [
+            f"{where}: domain must be [low, high] with finite numbers, low < high, "
+            "and include 0 (bars grow from zero)"
+        ]
     return (float(value[0]), float(value[1])), []
 
 
