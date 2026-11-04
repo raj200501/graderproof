@@ -178,12 +178,25 @@ def test_read_problems_plain_and_gzip(gz_sample: Path) -> None:
             '"entry_point": "f"}',
             "safe directory name",
         ),
+        (
+            '{"task_id": "HumanEval/1", "prompt": "\\ud800", "canonical_solution": "", '
+            '"test": "", "entry_point": "f"}',
+            "field prompt cannot be written as UTF-8",
+        ),
+        ('{"task_id": "HumanEval/1",', "bad.jsonl:2: not a UTF-8 JSON line"),
     ],
 )
 def test_read_problems_rejects_bad_records(tmp_path: Path, line: str, message: str) -> None:
     path = tmp_path / "bad.jsonl"
-    path.write_text(line + "\n", encoding="utf-8")
+    path.write_text("\n" + line + "\n", encoding="utf-8")
     with pytest.raises(ValueError, match=message):
+        humaneval.read_problems(path)
+
+
+def test_read_problems_rejects_bytes_that_are_not_utf8(tmp_path: Path) -> None:
+    path = tmp_path / "latin1.jsonl"
+    path.write_bytes(b'{"task_id": "caf\xe9"}\n')
+    with pytest.raises(ValueError, match=r"latin1.jsonl:1: not a UTF-8 JSON line"):
         humaneval.read_problems(path)
 
 
@@ -254,7 +267,7 @@ def test_reference_solution_is_prompt_plus_canonical() -> None:
         "def check(candidate):\n    assert candidate(''' x ''')\n",
         "def check(candidate):\n    assert candidate('\\\\')  # ends with a quote'",
         "def check(candidate):\r\n    assert candidate(1)\r\n",
-        "def check(candidate):\n    assert candidate('\ud800')\n",
+        "def check(candidate):\n    assert candidate('" + chr(0) + "')\n",
         "def check(candidate):\n    assert candidate('caf" + chr(0xE9) + "') == 4\n",
         "x = 1\n\\",
     ],
@@ -284,6 +297,10 @@ def test_grader_source_is_readable_and_carries_the_license() -> None:
     assert "type: ignore" not in source
     with pytest.raises(ValueError, match="safe directory name"):
         humaneval.grader_source({**rec, "task_id": "a b"})
+    with pytest.raises(ValueError, match="not an identifier"):  # it becomes check(<entry>)
+        humaneval.grader_source({**rec, "entry_point": "f); print('x'"})
+    with pytest.raises(ValueError, match="missing fields"):
+        humaneval.grader_source({"task_id": "HumanEval/51"})
 
 
 def test_grader_functions_have_upstream_syntax_trees() -> None:
@@ -370,6 +387,17 @@ def test_convert_refuses_stale_task_directories(gz_sample: Path, tmp_path: Path)
     (other / "task.toml").write_text('id = "HumanEval-999"\n')
     with pytest.raises(FileExistsError, match="HumanEval-999"):
         humaneval.convert(gz_sample, out)
+
+
+def test_convert_refuses_task_ids_with_one_directory_name(tmp_path: Path) -> None:
+    first = by_id("HumanEval/23")
+    clash = {**first, "task_id": "HumanEval-23"}  # also gives the directory HumanEval-23
+    src = tmp_path / "clash.jsonl"
+    src.write_text(json.dumps(first) + "\n" + json.dumps(clash) + "\n", encoding="utf-8")
+    out = tmp_path / "out"
+    with pytest.raises(ValueError, match="both give the directory name 'HumanEval-23'"):
+        humaneval.convert(src, out)
+    assert not out.exists()  # refused before anything was written
 
 
 def test_converted_tasks_load_as_third_party_module_tasks(
@@ -501,6 +529,8 @@ def differential_cases() -> list[tuple[str, str, float]]:
         ref + "\nimport os\nos._exit(0)\n",
         prompt + "    return float(input())\n",
         prompt + "    return len(open('solution.py').read())\n",
+        ref + "\nraise ValueError('caf\\u00e9 \\U0001f600')\n",
+        ref + "\nraise ValueError('\\ud800')\n",  # a lone surrogate must cross the pipe intact
     ):
         cases.append(("HumanEval/45", program, 3.0))
     cases.append(("HumanEval/45", prompt + "    while True:\n        pass\n", 0.3))

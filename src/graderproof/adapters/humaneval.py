@@ -19,7 +19,10 @@ standard I/O, and within :data:`CHECK_TIMEOUT_S` seconds executes the program, t
 test code, and ``check(<entry_point>)``, joined by newlines, in a fresh namespace. The
 result string is ``passed``, ``failed: <exception>``, or ``timed out``. The grader
 prints it as one JSON line and exits 0 exactly when it is ``passed``. It uses only the
-standard library and reads no file but ``solution.py``. See docs/adapters/humaneval.md.
+standard library and reads no file but ``solution.py``. Unlike upstream's
+``evaluate_functional_correctness()``, it does not have numpy, tqdm, and fire imported
+before it forks, so a program that imports numpy fails here and can pass there.
+docs/adapters/humaneval.md lists this and every other difference.
 
 Usage::
 
@@ -56,7 +59,7 @@ PINNED_COMMIT = "b9453e8f1865df0a0057a1383767caa400acfbcf"
 """The merge of openai/human-eval pull request #70 (the deprecation notice), committed
 2026-10-16; still the head of ``master`` on 2026-11-04. ``human_eval/execution.py`` last
 changed in commit 37c4dd6 (2025-01-16) and ``data/HumanEval.jsonl.gz`` in the first
-commit (2021-07-06)."""
+commit, 463c980 (authored 2021-07-06)."""
 DATA_PATH = "data/HumanEval.jsonl.gz"
 DATA_SHA256 = "b796127e635a67f93fb35c04f4cb03cf06f38c8072ee7cee8833d7bee06979ef"
 """SHA-256 of ``data/HumanEval.jsonl.gz`` at :data:`PINNED_COMMIT` (164 problems)."""
@@ -157,7 +160,7 @@ def unsafe_execute(program: str, timeout: float, conn):
             result = "timed out"
         except BaseException as e:
             result = f"failed: {e}"
-        conn.send_bytes(result.encode("utf-8", "replace"))
+        conn.send_bytes(result.encode("utf-8", "surrogatepass"))
 
         # Needed for cleaning up.
         shutil.rmtree = rmtree
@@ -176,8 +179,8 @@ def check_correctness(program: str, timeout: float) -> str:
     result = []
     if receiver.poll(timeout + 1):
         try:
-            result.append(receiver.recv_bytes().decode("utf-8", "replace"))
-        except (EOFError, OSError):
+            result.append(receiver.recv_bytes().decode("utf-8", "surrogatepass"))
+        except (EOFError, OSError, UnicodeDecodeError):
             pass
     p.join(timeout=max(0.0, deadline - time.monotonic()))
     if p.is_alive():
@@ -376,6 +379,11 @@ def _check_problem(record: object, where: str) -> dict[str, str]:
     if not all(isinstance(record[f], str) for f in FIELDS):
         raise ValueError(f"{where}: every field must be a string")
     problem = {f: str(record[f]) for f in FIELDS}
+    for f, text in problem.items():
+        try:
+            text.encode("utf-8")
+        except UnicodeEncodeError as exc:
+            raise ValueError(f"{where}: field {f} cannot be written as UTF-8 ({exc})") from exc
     task_dir_name(problem["task_id"])
     if not problem["entry_point"].isidentifier():
         raise ValueError(f"{where}: entry_point {problem['entry_point']!r} is not an identifier")
@@ -385,8 +393,9 @@ def _check_problem(record: object, where: str) -> dict[str, str]:
 def read_problems(path: Path) -> list[dict[str, str]]:
     """HumanEval problems from a ``.jsonl.gz`` or plain ``.jsonl`` file, in file order.
 
-    Blank lines are skipped, as in ``human_eval.data.stream_jsonl``. Raises ValueError
-    on a malformed record or a duplicate ``task_id``.
+    Blank lines are skipped, as in ``human_eval.data.stream_jsonl``. Raises ValueError,
+    naming the line, on a line that is not UTF-8 JSON, a malformed record, or a duplicate
+    ``task_id``.
     """
     data = path.read_bytes()
     if data[:2] == GZIP_MAGIC:
@@ -394,10 +403,14 @@ def read_problems(path: Path) -> list[dict[str, str]]:
     problems: list[dict[str, str]] = []
     seen: set[str] = set()
     for n, raw in enumerate(data.split(b"\n"), start=1):
-        line = raw.decode("utf-8")
-        if not line.strip():
-            continue
-        problem = _check_problem(json.loads(line), f"{path}:{n}")
+        try:
+            line = raw.decode("utf-8")
+            if not line.strip():
+                continue
+            record = json.loads(line)
+        except ValueError as exc:
+            raise ValueError(f"{path}:{n}: not a UTF-8 JSON line ({exc})") from exc
+        problem = _check_problem(record, f"{path}:{n}")
         if problem["task_id"] in seen:
             raise ValueError(f"{path}:{n}: duplicate task_id {problem['task_id']!r}")
         seen.add(problem["task_id"])
@@ -464,9 +477,13 @@ def _comment(text: str) -> str:
 
 
 def grader_source(problem: Mapping[str, str]) -> str:
-    """``grader/grade.py``: HumanEval's ``check_correctness`` with the test code verbatim."""
-    task_id, ep = problem["task_id"], problem["entry_point"]
-    task_dir_name(task_id)
+    """``grader/grade.py``: HumanEval's ``check_correctness`` with the test code verbatim.
+
+    Raises ValueError on a malformed problem; in particular the entry point must be an
+    identifier, because the grader runs ``check(<entry_point>)`` as code.
+    """
+    checked = _check_problem(dict(problem), "grader_source")
+    task_id, ep = checked["task_id"], checked["entry_point"]
     doc = (
         f'"""HumanEval grader for {task_id}, generated by graderproof.adapters.humaneval.\n\n'
         "Reproduces check_correctness() of human_eval/execution.py in openai/human-eval at\n"
@@ -491,7 +508,7 @@ def grader_source(problem: Mapping[str, str]) -> str:
         f"SOLUTION_FILE = {SOLUTION_FILE!r}\n"
         f"TIMEOUT = {CHECK_TIMEOUT_S!r}\n"
         f"MAX_RESULT_CHARS = {MAX_RESULT_CHARS!r}\n"
-        f"TEST = {_py_literal(problem['test'])}\n"
+        f"TEST = {_py_literal(checked['test'])}\n"
     )
     return doc + notice + _GRADER_IMPORTS + constants + _GRADER_BODY
 
@@ -558,11 +575,21 @@ def write_task(problem: Mapping[str, str], out_dir: Path) -> Path:
 def convert(jsonl_gz_path: Path, out_dir: Path) -> list[Path]:
     """Convert every problem in a HumanEval data file; returns the task directories.
 
-    Raises FileExistsError if ``out_dir`` already holds task directories that are not
-    problems of this file, because the toybench loader would pick them up too.
+    Raises ValueError if two task ids give the same directory name, and
+    FileExistsError if ``out_dir`` already holds task directories that are not problems
+    of this file, because the toybench loader would pick them up too. Both checks run
+    before anything is written.
     """
     problems = read_problems(jsonl_gz_path)
-    names = {task_dir_name(p["task_id"]) for p in problems}
+    names: dict[str, str] = {}
+    for p in problems:
+        name = task_dir_name(p["task_id"])
+        if name in names:
+            raise ValueError(
+                f"{jsonl_gz_path}: task ids {names[name]!r} and {p['task_id']!r} "
+                f"both give the directory name {name!r}"
+            )
+        names[name] = p["task_id"]
     out_dir.mkdir(parents=True, exist_ok=True)
     stale = sorted(
         d.name for d in out_dir.iterdir() if (d / "task.toml").exists() and d.name not in names
