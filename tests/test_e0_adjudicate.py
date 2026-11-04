@@ -33,7 +33,9 @@ def row(tid: str, fa: bool = False, fr: bool = False) -> dict[str, Any]:
 
 
 def var(vid: str, kind: str, passed: bool, counted: bool = True) -> dict[str, Any]:
-    witness = {"broken": [{"requirement": "R1", "detail": "x"}]} if kind == "violating" else None
+    witness: dict[str, Any] | None = None
+    if kind == "violating":
+        witness = {"broken": [{"requirement": "R1", "detail": "x"}]}
     if kind == "preserving":
         witness = {"held": ["R1"]}
     return {
