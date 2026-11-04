@@ -5,7 +5,8 @@ Procedure (docs/BUILD_BRIEF.md section 10.1 step 9):
 
 1. In the original checkout, check the parts of G14 about the working tree and
    ``private/``, and verify private hash manifests (``outbound/patches/MANIFEST.json``)
-   against the files under ``private/``.
+   against the files under ``private/``. Of a private JSON file only its ``accepted``
+   and ``task_hash`` fields are read (for G8); nothing private is printed.
 2. Make a fresh clone of HEAD in a temporary directory and run every other check there.
    Banked artifacts are verified (presence, provenance, hashes, preregistration links,
    thresholds) and statistics are recomputed from them. No experiment is run and no
@@ -17,28 +18,90 @@ per gate, then ``SHIP-CHECK: PASS 14/14`` or ``SHIP-CHECK: FAIL <passed>/14``. W
 ``--fast`` the slow ``make ci`` reruns are skipped (G3 is derived from the G1, G2, and
 G4 steps instead) and the last line is ``SHIP-CHECK-FAST (does not count): <passed>/14``.
 
-A gate whose property ranges over a set (preregistrations, headline variants,
-references, benchmarks) fails when the set is empty: an empty set proves nothing.
+A gate whose property ranges over a set (preregistrations, confirmatory artifacts,
+headline variants, surviving variants, repaired tasks, references, benchmarks) fails
+when the set is empty: an empty set proves nothing (DECISIONS.md D6).
 
-Artifact contracts checked here (later iterations may tighten them, never loosen):
+Rules shared by every gate:
 
-* E0 ``artifacts/e0/results.json``: ``labels_path``, ``labels_sha256_path``,
-  ``bootstrap {seed, B, alpha}``, ``tasks [{task, planted, slice, detected, flagged,
-  adjudicated_real}]``, ``recall`` and ``precision`` as ``{point, ci: [lo, hi]}``,
-  ``provenance``. Labels file: ``{"tasks": {<task>: {"planted": bool, "slice": str}}}``.
-  A detection is a flag in the planted direction; precision counts as false positives
-  the flags that are neither detections nor adjudicated real weaknesses.
-* Audits ``artifacts/audit/<benchmark>/``: ``summary.json`` (``benchmark``,
-  ``category``, ``confirmatory``, ``prereg``, ``substitute_for``,
-  ``n_tasks_population``, ``n_sampled``, ``bootstrap``, ``e1.false_accept_task_rate``,
-  ``e2.false_reject_task_rate``, ``provenance``), ``tasks.jsonl`` (``task_hash``,
-  ``flaky``), ``variants.jsonl`` (``variant_id``, ``task_hash``, ``kind``,
-  ``counted_in_headline``, ``witness_sha256``, ``validations [{validator, verdict}]``,
-  ``grader_passed``).
-* E4 ``artifacts/e4/summary.json``: ``ran``, ``repaired [{task_hash, benchmark,
-  public, patch, validation_log}]``, ``generalization {n_fresh_variants, ...}``.
-* E5 ``artifacts/e5/<benchmark>/summary.json``: ``ran``, ``pass_flips``,
-  ``rank_changes``, each with ``ci``.
+* Flags are JSON booleans: ``"true"``, ``1``, and ``null`` never count as true.
+  Statistics are JSON numbers, never booleans.
+* A bootstrap block is ``{"seed": int, "B": int >= 1000, "alpha": 0.05}`` (95% intervals).
+* A task is **scorable** when its tasks.jsonl row has ``determinism == "stable_pass"``
+  (D26). A variant is **counted** when ``counted_in_headline`` is true and
+  ``grader_passed`` is exactly true or false. A scorable task has a **false accept**
+  when a counted violating variant has ``grader_passed: true`` (a **surviving**
+  variant), and a **false reject** when a counted preserving variant has
+  ``grader_passed: false``. Tasks that are not scorable have neither.
+* A commit **predates** a set of directories when it is a proper ancestor of every
+  commit that added a file under them: every add anywhere in the history (merges
+  included), and the original add of every file there now, following renames.
+* A preregistration citation is a path ``prereg/NNNN-<slug>.md`` of a file that is
+  committed exactly once and frozen in ``prereg/FROZEN.jsonl`` with its SHA-256.
+
+Artifact contracts (later iterations may tighten them, never loosen):
+
+* Audit tables, in ``artifacts/audit/<benchmark>/`` and ``artifacts/e0/``:
+  ``tasks.jsonl`` has one row per task with ``task_hash`` (64 hex, unique) and
+  ``determinism`` (``stable_pass``, ``stable_fail``, or ``flaky``). Its flags
+  ``false_accept``, ``false_reject``, ``reference_rejected`` (``determinism ==
+  "stable_fail"``) and ``flaky`` (``determinism == "flaky"``) are optional for audits
+  and required for E0, and must equal their recomputation. ``variants.jsonl`` rows:
+  ``variant_id``, ``task_hash`` (of a task in tasks.jsonl), ``kind`` (``violating`` or
+  ``preserving``), ``counted_in_headline``, ``witness_sha256``, ``validations
+  [{validator, verdict}]``, ``grader_passed``.
+* E0 (G5) uses pinned paths only; nothing about where things are is read from
+  results.json. Labels ``toybench/labels.json`` = ``{"tasks": {<id>: {"planted":
+  bool, "slice": "in_list" | "clean" | "extra", "weakness_type": ..., "direction":
+  "accept" | "reject" | null}}}`` with ``planted == (slice != "clean")`` and a
+  direction on every planted task. ``toybench/labels.sha256`` holds the labels' SHA-256
+  as its first token; exactly one commit touches it, that commit predates
+  ``artifacts/e0/`` and ``artifacts/model_calls/e0/``, and ``toybench/tasks/`` is
+  unchanged between it and HEAD. ``artifacts/e0/tasks.jsonl`` rows also carry ``task``
+  = ``<benchmark>:<id>`` (one benchmark, one row per label, ``task_hash`` = SHA-256 of
+  ``task``). ``artifacts/e0/adjudication.json`` = ``{"tasks": {<id>: {"real": bool,
+  ...}}}`` holds an entry for every counted task that is flagged but not detected.
+  ``artifacts/e0/results.json``: ``bootstrap``, ``recall`` and ``precision`` as
+  ``{point, ci: [lo, hi], n}``, ``tasks [{task: <id>, planted, slice, ...}]`` with one
+  row per label (``detected``, ``flagged``, and ``adjudicated_real``, when present,
+  must equal the recomputation), ``provenance``. Definitions (D23): flagged =
+  false_accept or false_reject; detected = planted and (direction ``accept``:
+  false_accept; ``reject``: false_reject), so a rejected or flaky reference is never a
+  flag or a detection; adjudicated real = flagged, not detected, and the entry's
+  ``real`` is true. Counted tasks are those whose slice is not ``extra``, in ascending
+  id order. Recall = detected / planted; precision = detected / (detected + false
+  positives), where a false positive is flagged, not detected, and not adjudicated
+  real; ``n`` = the number of counted tasks. Every counted miss (planted, not
+  detected) appears in ``docs/E0_MISSES.md`` as a whole token.
+* Audits (G7) ``artifacts/audit/<benchmark>/summary.json``: ``benchmark``,
+  ``category``, ``confirmatory``, ``prereg``, ``substitute_for``, ``model_store``,
+  ``n_tasks_population``, ``n_sampled``, ``bootstrap``, ``e1.false_accept_task_rate``
+  and ``e2.false_reject_task_rate`` as ``{point, ci, n}`` over the scorable tasks in
+  tasks.jsonl order, ``provenance``.
+* E4 (G8) ``artifacts/e4/<benchmark>/summary.json`` (``<benchmark>`` is the audit's
+  directory name; schema ``graderproof.e4/1``): ``ran``, ``benchmark`` (the audit's
+  ``benchmark``), ``repaired [{task_hash, benchmark, public, patch, validation_log}]``,
+  ``unrepaired [{task_hash, reason}]``, ``generalization {ran, n_fresh_variants,
+  survivors_original, caught_by_repair, survivors_repaired, induced_false_rejects,
+  ...}``, ``provenance``. The repaired and unrepaired task hashes are, together and
+  without repeats, exactly the audit's scorable tasks with a surviving variant. Public
+  patches and logs are tracked under ``outbound/patches/``; private ones live under
+  ``private/outbound/patches/`` and are listed in ``outbound/patches/MANIFEST.json``.
+  Every validation log is a JSON object with ``"accepted": true`` and the entry's
+  ``task_hash``.
+* E5 (G9) ``artifacts/e5/<benchmark>/summary.json``: ``ran``, ``bootstrap``,
+  ``pass_flips {point, ci}``, ``rank_changes {point, ci}``, ``provenance``; and
+  ``rows.jsonl`` with ``{model, task_hash, trial, original_pass, repaired_pass}``
+  (booleans; one row per model, task, and trial). pass_flips = rows with
+  original_pass and not repaired_pass, over rows with original_pass. rank_changes =
+  the number of model pairs (at least two models) whose sign of (pass rate of model i
+  minus that of model j, over all rows) differs between original and repaired grading,
+  compared exactly. Each interval must contain its point.
+* Confirmatory artifacts (G11): every ``artifacts/**/summary.json`` with
+  ``"confirmatory": true``, ``artifacts/e0/summary.json`` (which must say so), and
+  ``artifacts/e0/results.json``. Each cites ``"prereg"``, and that preregistration's
+  commit predates the artifact's directory, the directory named by its
+  ``model_store`` field (under ``artifacts/``), and for E0 ``artifacts/model_calls/e0/``.
 * Review ``artifacts/review/latest.json`` (schema in tools/review.py).
 * Citations ``artifacts/citecheck.json`` (schema in .claude/agents/citation-checker.md).
 * Figures ``artifacts/figures/manifest.json``: ``[{path, sha256}]`` written by make report.
@@ -49,12 +112,16 @@ whose statistic is undefined (zero denominator) are dropped; the interval is the
 ``floor(alpha/2 * m)`` and ``ceil((1 - alpha/2) * m) - 1`` order statistics of the ``m``
 kept replicates. graderproof's own statistics must use the identical procedure. When one
 artifact carries two intervals, the second uses ``seed + 1`` (E0: recall ``seed``,
-precision ``seed + 1``; audits: E1 ``seed``, E2 ``seed + 1``).
+precision ``seed + 1``; audits: E1 ``seed``, E2 ``seed + 1``; E5: pass flips ``seed``,
+rank changes ``seed + 1``). For E5 the resampled units are the distinct ``task_hash``
+values in ascending order, and a replicate's statistic is computed over all rows of
+every drawn task (a task drawn twice contributes its rows twice).
 """
 
 from __future__ import annotations
 
 import argparse
+import functools
 import hashlib
 import json
 import math
@@ -67,17 +134,43 @@ import sys
 import tempfile
 import time
 import tomllib
+from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 ORIGIN = Path(__file__).resolve().parent.parent
 EM_DASH = chr(0x2014)
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
+PREREG_RE = re.compile(r"^prereg/\d{4}-[a-z0-9][a-z0-9-]*\.md$")
 COVERAGE_MIN = 85.0
+ALPHA = 0.05
+MIN_REPLICATES = 1000
+DETERMINISM = ("stable_pass", "stable_fail", "flaky")
+KINDS = ("violating", "preserving")
 E0_MIN = 0.90
 E0_MIN_TASKS = 60
+E0_LABELS = "toybench/labels.json"
+E0_LABELS_SHA256 = "toybench/labels.sha256"
+E0_TASKS = "toybench/tasks"
+E0_DIR = "artifacts/e0"
+E0_MODEL_STORE = "artifacts/model_calls/e0"
+E0_SUMMARY = "artifacts/e0/summary.json"
+E0_RESULTS = "artifacts/e0/results.json"
+E0_ADJUDICATION = "artifacts/e0/adjudication.json"
+E0_MISSES = "docs/E0_MISSES.md"
+E0_SLICES = ("in_list", "clean", "extra")
+E0_DIRECTIONS = ("accept", "reject")
+TOKEN_CHARS = "A-Za-z0-9_-"
+E4_SCHEMA = "graderproof.e4/1"
+E4_GENERALIZATION = (
+    "n_fresh_variants",
+    "survivors_original",
+    "caught_by_repair",
+    "survivors_repaired",
+    "induced_false_rejects",
+)
 AUDIT_MIN_BENCHMARKS = 3
 AUDIT_MIN_SAMPLE = 40
 DEMO_MAX_S = 180.0
@@ -121,6 +214,39 @@ class Result:
 
     ok: bool
     evidence: str
+
+
+class GateError(Exception):
+    """A gate condition that does not hold; the message is the gate's evidence."""
+
+
+def need(cond: bool, message: str) -> None:
+    """Raise :class:`GateError` with ``message`` unless ``cond`` holds."""
+    if not cond:
+        raise GateError(message)
+
+
+def gate(check: Callable[[Ctx], Result]) -> Callable[[Ctx], Result]:
+    """Turn a :class:`GateError` raised inside a gate into a failing :class:`Result`."""
+
+    @functools.wraps(check)
+    def run(ctx: Ctx) -> Result:
+        try:
+            return check(ctx)
+        except GateError as exc:
+            return Result(False, str(exc))
+
+    return run
+
+
+def is_int(x: Any) -> bool:
+    """A JSON integer (booleans excluded)."""
+    return isinstance(x, int) and not isinstance(x, bool)
+
+
+def is_num(x: Any) -> bool:
+    """A finite JSON number (booleans excluded)."""
+    return isinstance(x, int | float) and not isinstance(x, bool) and math.isfinite(x)
 
 
 @dataclass
@@ -221,6 +347,17 @@ def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def load_obj(path: Path, rel: str) -> dict[str, Any]:
+    """A JSON object from ``path``; raises :class:`GateError` if missing, unparsable, or not one."""
+    need(path.is_file(), f"{rel} missing")
+    try:
+        doc = load_json(path)
+    except (OSError, ValueError) as exc:
+        raise GateError(f"{rel} is not valid JSON ({one_line(str(exc), 60)})") from None
+    need(isinstance(doc, dict), f"{rel} is not a JSON object")
+    return dict(doc)
+
+
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
     """Parse a JSON-lines file (missing file means no rows)."""
     if not path.exists():
@@ -228,15 +365,37 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [json.loads(ln) for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip()]
 
 
-def first_commit(repo: Path, path: str) -> str | None:
-    """The commit that first added ``path`` (a file or directory), or None."""
-    rc, out = git(repo, "log", "--diff-filter=A", "--format=%H", "--reverse", "--", path)
-    lines = out.splitlines() if rc == 0 else []
-    return lines[0] if lines else None
+def read_rows(path: Path, rel: str) -> list[dict[str, Any]]:
+    """JSON-lines rows that must all be objects (missing file means no rows)."""
+    try:
+        rows = read_jsonl(path)
+    except (OSError, ValueError) as exc:
+        raise GateError(f"{rel} is not valid JSON lines ({one_line(str(exc), 60)})") from None
+    need(all(isinstance(r, dict) for r in rows), f"{rel} has a row that is not a JSON object")
+    return rows
+
+
+def rel_to(root: Path, path: Path) -> str:
+    """``path`` relative to ``root``, POSIX style."""
+    return path.relative_to(root).as_posix()
+
+
+def clean_rel(value: Any, prefix: str) -> str | None:
+    """``value`` if it is a canonical relative POSIX path under ``prefix``, else None."""
+    if not isinstance(value, str) or not value or "\\" in value:
+        return None
+    p = PurePosixPath(value)
+    if p.is_absolute() or ".." in p.parts or p.as_posix() != value:
+        return None
+    return value if value.startswith(prefix) and value != prefix.rstrip("/") else None
 
 
 def commits_touching(repo: Path, path: str) -> list[str]:
-    """Every commit that changed ``path``, newest first."""
+    """Every commit that changed ``path``, newest first.
+
+    git's default history simplification is used on purpose: a branch merged without
+    changes of its own is not a second commit of the file.
+    """
     rc, out = git(repo, "log", "--format=%H", "--", path)
     return out.splitlines() if rc == 0 and out else []
 
@@ -249,16 +408,39 @@ def strictly_before(repo: Path, a: str, b: str) -> bool:
     return rc == 0
 
 
-def earliest_commit(repo: Path, paths: Iterable[str]) -> str | None:
-    """Of the first-add commits of ``paths``, the one that is an ancestor of all others."""
-    commits = [c for c in (first_commit(repo, p) for p in paths) if c]
-    if not commits:
-        return None
-    best = commits[0]
-    for c in commits[1:]:
-        if strictly_before(repo, c, best):
-            best = c
-    return best
+def data_commits(repo: Path, dirs: Sequence[str]) -> list[str]:
+    """Every commit that brought a file into ``dirs``.
+
+    That is every commit adding a file under them anywhere in the history (side
+    branches and merges included), plus, for each file there at HEAD, the commit that
+    first added it under any earlier name (renames followed), so data cannot be dated
+    by the commit that moved it.
+    """
+    if not dirs:
+        return []
+    found: list[str] = []
+    rc, out = git(
+        repo, "log", "--full-history", "-m", "--diff-filter=A", "--format=%H", "--", *dirs
+    )
+    if rc == 0:
+        found += out.splitlines()
+    rc, names = git(repo, "ls-tree", "-r", "-z", "--name-only", "HEAD", "--", *dirs)
+    for name in names.split("\0") if rc == 0 else []:
+        if name:
+            rc, out = git(repo, "log", "--follow", "--diff-filter=A", "--format=%H", "--", name)
+            found += out.splitlines() if rc == 0 else []
+    return list(dict.fromkeys(c for c in found if c))
+
+
+def not_after(repo: Path, anchor: str, commits: Iterable[str]) -> str | None:
+    """The first of ``commits`` that ``anchor`` is not a proper ancestor of, or None."""
+    return next((c for c in commits if not strictly_before(repo, anchor, c)), None)
+
+
+def has_token(text: str, token: str) -> bool:
+    """Whether ``token`` occurs in ``text`` with no identifier character on either side."""
+    pattern = rf"(?<![{TOKEN_CHARS}]){re.escape(token)}(?![{TOKEN_CHARS}])"
+    return re.search(pattern, text) is not None
 
 
 def one_line(text: str, limit: int = 160) -> str:
@@ -281,9 +463,12 @@ def fmt(x: float) -> str:
 # ------------------------------------------------------------------------ statistics
 
 
+Statistic = Callable[[Sequence[int]], float | None]
+
+
 def bootstrap_ci(
     n: int,
-    stat: Callable[[Sequence[int]], float | None],
+    stat: Statistic,
     seed: int,
     replicates: int,
     alpha: float = 0.05,
@@ -317,8 +502,8 @@ def ratio(num: int, den: int) -> float | None:
 
 
 def close(a: Any, b: float, tol: float = 1e-9) -> bool:
-    """Whether an artifact number ``a`` equals a recomputed ``b``."""
-    return isinstance(a, int | float) and abs(float(a) - b) <= tol
+    """Whether an artifact number ``a`` equals a recomputed ``b`` (booleans never do)."""
+    return is_num(a) and abs(float(a) - b) <= tol
 
 
 def close_ci(a: Any, b: tuple[float, float] | None, tol: float = 1e-9) -> bool:
@@ -332,10 +517,45 @@ def close_ci(a: Any, b: tuple[float, float] | None, tol: float = 1e-9) -> bool:
     )
 
 
-def bootstrap_params(obj: Mapping[str, Any]) -> tuple[int, int, float]:
-    """(seed, B, alpha) from an artifact's ``bootstrap`` block."""
-    b = obj.get("bootstrap") or {}
-    return int(b["seed"]), int(b["B"]), float(b.get("alpha", 0.05))
+def bootstrap_params(obj: Mapping[str, Any], what: str = "artifact") -> tuple[int, int, float]:
+    """(seed, B, alpha) from an artifact's ``bootstrap`` block; raises :class:`GateError`.
+
+    The block must hold integer ``seed`` and ``B`` with ``B >= MIN_REPLICATES`` and
+    ``alpha == 0.05``, so every interval is a 95% interval with enough replicates.
+    """
+    b: Any = obj.get("bootstrap")
+    need(isinstance(b, Mapping), f"{what} has no bootstrap block")
+    seed, reps, alpha = b.get("seed"), b.get("B"), b.get("alpha")
+    need(is_int(seed) and is_int(reps), f"{what} bootstrap seed and B must be integers")
+    need(reps >= MIN_REPLICATES, f"{what} bootstrap B={reps} (< {MIN_REPLICATES})")
+    need(is_num(alpha) and alpha == ALPHA, f"{what} bootstrap alpha is not {ALPHA}")
+    return int(seed), int(reps), float(alpha)
+
+
+def check_estimate(
+    stated: Any,
+    point: float,
+    ci: tuple[float, float] | None,
+    n: int | None,
+    what: str,
+) -> None:
+    """Raise :class:`GateError` unless ``stated`` ``{point, ci, n}`` equals the recomputation."""
+    need(isinstance(stated, Mapping), f"{what} missing")
+    need(
+        close(stated.get("point"), point),
+        f"{what} point {stated.get('point')!r} differs from the recomputed {fmt(point)}",
+    )
+    need(ci is not None, f"{what} interval cannot be recomputed (every replicate undefined)")
+    need(
+        close_ci(stated.get("ci"), ci),
+        f"{what} interval {stated.get('ci')!r} differs from the recomputed "
+        f"[{fmt(ci[0]) if ci else '?'}, {fmt(ci[1]) if ci else '?'}]",
+    )
+    if n is not None:
+        need(
+            is_int(stated.get("n")) and stated.get("n") == n,
+            f"{what} n {stated.get('n')!r} differs from the {n} tasks recomputed",
+        )
 
 
 def provenance_ok(obj: Mapping[str, Any]) -> list[str]:
@@ -361,31 +581,59 @@ def check_origin(ctx: Ctx) -> None:
 
 
 def verify_manifest(repo: Path) -> dict[str, Any]:
-    """Verify outbound/patches/MANIFEST.json entries against files under private/."""
+    """Verify outbound/patches/MANIFEST.json entries against files under private/.
+
+    Returns ``present``, ``entries`` (path to SHA-256), ``problems``, and ``logs``: for
+    each listed JSON file whose hash matches, its ``accepted`` and ``task_hash`` fields
+    (None when absent or of the wrong type). Nothing else is read from private files.
+    """
     path = repo / "outbound" / "patches" / "MANIFEST.json"
     rc, _ = git(repo, "ls-files", "--error-unmatch", "outbound/patches/MANIFEST.json")
+    empty: dict[str, Any] = {"present": False, "entries": {}, "problems": [], "logs": {}}
     if not path.exists() or rc != 0:
-        return {"present": False, "entries": {}, "problems": []}
+        return empty
     problems: list[str] = []
     entries: dict[str, str] = {}
+    logs: dict[str, dict[str, Any]] = {}
     try:
         data = load_json(path)
-        rows = data.get("files", []) if isinstance(data, Mapping) else []
-    except ValueError as exc:
-        return {"present": True, "entries": {}, "problems": [f"MANIFEST.json invalid: {exc}"]}
+    except (OSError, ValueError) as exc:
+        return {**empty, "present": True, "problems": [f"MANIFEST.json invalid: {exc}"]}
+    rows = data.get("files") if isinstance(data, Mapping) else None
+    if not isinstance(rows, list):
+        return {**empty, "present": True, "problems": ["MANIFEST.json has no files list"]}
     for row in rows:
+        if not isinstance(row, Mapping):
+            problems.append("MANIFEST.json has an entry that is not an object")
+            continue
         rel = str(row.get("path", ""))
         want = str(row.get("sha256", ""))
-        if not rel.startswith("private/outbound/patches/"):
+        if clean_rel(rel, "private/outbound/patches/") is None:
             problems.append(f"{rel}: not under private/outbound/patches/")
             continue
         f = repo / rel
-        if not f.exists():
+        if not f.is_file():
             problems.append(f"{rel}: missing")
-        elif sha256_file(f) != want:
+        elif not HEX64.match(want) or sha256_file(f) != want:
             problems.append(f"{rel}: sha256 mismatch")
+        elif rel.endswith(".json"):
+            logs[rel] = log_facts(f)
         entries[rel] = want
-    return {"present": True, "entries": entries, "problems": problems}
+    return {"present": True, "entries": entries, "problems": problems, "logs": logs}
+
+
+def log_facts(path: Path) -> dict[str, Any]:
+    """``accepted`` and ``task_hash`` of a repair validation log (None when unusable)."""
+    try:
+        doc = load_json(path)
+    except (OSError, ValueError):
+        doc = None
+    doc = doc if isinstance(doc, Mapping) else {}
+    accepted, task_hash = doc.get("accepted"), doc.get("task_hash")
+    return {
+        "accepted": accepted if isinstance(accepted, bool) else None,
+        "task_hash": task_hash if isinstance(task_hash, str) else None,
+    }
 
 
 def make_clone(ctx: Ctx) -> None:
@@ -516,17 +764,132 @@ def g2_static_quality(ctx: Ctx) -> Result:
     )
 
 
+# Flags that --strict turns on, plus checks that are on by default; setting any of them
+# to false (globally or for a module) weakens the package check.
+MYPY_STRICT_FLAGS = (
+    "warn_unused_configs",
+    "disallow_any_generics",
+    "disallow_subclassing_any",
+    "disallow_untyped_calls",
+    "disallow_untyped_defs",
+    "disallow_incomplete_defs",
+    "check_untyped_defs",
+    "disallow_untyped_decorators",
+    "warn_redundant_casts",
+    "warn_unused_ignores",
+    "warn_return_any",
+    "no_implicit_reexport",
+    "strict_equality",
+    "extra_checks",
+    "strict_concatenate",
+    "strict_optional",
+    "no_implicit_optional",
+    "warn_no_return",
+    "warn_unreachable",
+)
+# Options whose true value loosens checking.
+MYPY_LOOSENING_FLAGS = (
+    "ignore_errors",
+    "implicit_optional",
+    "implicit_reexport",
+    "allow_untyped_globals",
+    "allow_untyped_defs",
+    "allow_untyped_calls",
+    "allow_incomplete_defs",
+    "allow_untyped_decorators",
+    "allow_any_generics",
+    "allow_subclassing_any",
+)
+MYPY_INLINE_RE = re.compile(r"^\s*#\s*mypy\s*:", re.M)
+FILE_IGNORE_RE = re.compile(r"^\s*#\s*type\s*:\s*ignore", re.M)
+
+
+def mypy_loosened(cfg: Mapping[str, Any]) -> str:
+    """The first option in a mypy config table that weakens checking, or empty."""
+    for key in MYPY_LOOSENING_FLAGS:
+        if cfg.get(key) is True:
+            return f"{key} = true"
+    for key in MYPY_STRICT_FLAGS:
+        if cfg.get(key) is False:
+            return f"{key} = false"
+    if cfg.get("disable_error_code"):
+        return "disable_error_code"
+    if str(cfg.get("follow_imports", "normal")) in ("skip", "silent"):
+        return f"follow_imports = {cfg.get('follow_imports')}"
+    return ""
+
+
+def affects_package(pattern: Any) -> bool:
+    """Whether a mypy override module pattern can match a ``graderproof`` module."""
+    first = str(pattern).split(".", 1)[0]
+    return first == "graderproof" or "*" in first
+
+
 def mypy_weakening(clone: Path) -> str:
-    """Config that would make mypy --strict pass vacuously."""
+    """Config or source comments that would make mypy --strict pass vacuously.
+
+    Checked: extra config files; in ``[tool.mypy]`` and in overrides that can match the
+    package, any option that loosens checking or turns a strict check off,
+    ``disable_error_code``, and ``follow_imports`` skip or silent; an ``exclude`` that
+    matches a package path; and in ``src/``, inline ``# mypy:`` configuration comments,
+    file-level ``# type: ignore`` lines, and ``no_type_check``.
+    """
+    for name in ("mypy.ini", ".mypy.ini", "setup.cfg"):
+        if (clone / name).exists():
+            return f"extra mypy config file {name}"
     with (clone / "pyproject.toml").open("rb") as fh:
         mypy = tomllib.load(fh).get("tool", {}).get("mypy", {})
-    if mypy.get("ignore_errors"):
-        return "ignore_errors"
-    for ov in mypy.get("overrides", []):
-        if ov.get("ignore_errors"):
-            return f"ignore_errors override for {ov.get('module')}"
-    if (clone / "mypy.ini").exists() or (clone / "setup.cfg").exists():
-        return "extra mypy config file"
+    why = mypy_loosened(mypy)
+    if why:
+        return why
+    for ov in mypy.get("overrides", []) or []:
+        if not isinstance(ov, Mapping):
+            return "malformed mypy override"
+        mods = ov.get("module", [])
+        mods = [mods] if isinstance(mods, str) else list(mods)
+        why = mypy_loosened(ov)
+        if why and any(affects_package(m) for m in mods):
+            return f"{why} in the override for {mods}"
+    exclude = mypy.get("exclude")
+    if exclude:
+        hit = excluded_package_path(clone, [exclude] if isinstance(exclude, str) else exclude)
+        if hit:
+            return f"exclude matches {hit}"
+    return inline_weakening(clone)
+
+
+def excluded_package_path(clone: Path, patterns: Iterable[Any]) -> str:
+    """The first package file or directory a mypy ``exclude`` regex matches, or empty."""
+    root = clone / "src" / "graderproof"
+    paths = ["src/graderproof/"]
+    for p in sorted(root.rglob("*")) if root.exists() else []:
+        rel = rel_to(clone, p)
+        paths.append(rel + "/" if p.is_dir() else rel)
+    for pat in patterns:
+        try:
+            rx = re.compile(str(pat))
+        except re.error:
+            return f"(unparsable pattern {pat!r})"
+        hit = next((p for p in paths if rx.search(p)), "")
+        if hit:
+            return hit
+    return ""
+
+
+def inline_weakening(clone: Path) -> str:
+    """Inline mypy configuration, file-level type ignores, or no_type_check in src/."""
+    src = clone / "src"
+    for p in sorted(src.rglob("*.py")) if src.exists() else []:
+        text = p.read_text(encoding="utf-8")
+        rel = rel_to(clone, p)
+        for rx, what in (
+            (MYPY_INLINE_RE, "inline # mypy: comment"),
+            (FILE_IGNORE_RE, "file-level type ignore"),
+            (re.compile(r"\bno_type_check\b"), "no_type_check"),
+        ):
+            m = rx.search(text)
+            if m:
+                return f"{what} at {rel}:{text.count(chr(10), 0, m.start()) + 1}"
     return ""
 
 
@@ -656,80 +1019,290 @@ def g4_offline_demo(ctx: Ctx) -> Result:
     return Result(True, f"{step.seconds:.0f}s under {iso_name}, no ledger change, matches golden")
 
 
+@dataclass(frozen=True)
+class TaskRow:
+    """One tasks.jsonl row with its indicators recomputed from variants.jsonl."""
+
+    row: Mapping[str, Any]
+    task_hash: str
+    determinism: str
+    false_accept: bool
+    false_reject: bool
+
+    @property
+    def scorable(self) -> bool:
+        """The grader passes the reference stably (D26)."""
+        return self.determinism == "stable_pass"
+
+
+def is_counted(v: Mapping[str, Any]) -> bool:
+    """A variant that counts: in the headline set with a stable grader verdict."""
+    return v.get("counted_in_headline") is True and isinstance(v.get("grader_passed"), bool)
+
+
+def audit_table(adir: Path, where: str, require_flags: bool = False) -> list[TaskRow]:
+    """Validated tasks.jsonl rows with false accepts and false rejects recomputed.
+
+    Raises :class:`GateError` when a row is malformed, a task repeats, a variant names an
+    unknown task or kind, or a stated flag differs from its recomputation (flags are
+    optional unless ``require_flags``). See the module docstring for the definitions.
+    """
+    tasks = read_rows(adir / "tasks.jsonl", f"{where}/tasks.jsonl")
+    variants = read_rows(adir / "variants.jsonl", f"{where}/variants.jsonl")
+    need(bool(tasks), f"{where}/tasks.jsonl missing or empty")
+    seen: set[str] = set()
+    for t in tasks:
+        h = t.get("task_hash")
+        need(isinstance(h, str) and HEX64.match(h) is not None, f"{where}: a task lacks task_hash")
+        need(h not in seen, f"{where}/tasks.jsonl lists task {str(h)[:12]} twice")
+        seen.add(str(h))
+        need(
+            t.get("determinism") in DETERMINISM,
+            f"{where}: task {str(h)[:12]} has determinism {t.get('determinism')!r}",
+        )
+    by_task: dict[str, list[dict[str, Any]]] = {}
+    for v in variants:
+        h = v.get("task_hash")
+        need(h in seen, f"{where}/variants.jsonl has a variant of unknown task {str(h)[:12]}")
+        need(v.get("kind") in KINDS, f"{where}: variant kind {v.get('kind')!r} not in {KINDS}")
+        by_task.setdefault(str(h), []).append(v)
+    out: list[TaskRow] = []
+    for t in tasks:
+        h, det = str(t["task_hash"]), str(t["determinism"])
+        vs = [v for v in by_task.get(h, []) if is_counted(v)]
+        scorable = det == "stable_pass"
+        fa = scorable and any(v["kind"] == "violating" and v["grader_passed"] is True for v in vs)
+        fr = scorable and any(v["kind"] == "preserving" and v["grader_passed"] is False for v in vs)
+        expected = {
+            "false_accept": fa,
+            "false_reject": fr,
+            "reference_rejected": det == "stable_fail",
+            "flaky": det == "flaky",
+        }
+        for key, want in expected.items():
+            if require_flags or key in t:
+                need(
+                    t.get(key) is want,
+                    f"{where}: task {h[:12]} {key} is {t.get(key)!r}; recomputed from "
+                    f"determinism and variants.jsonl it is {want}",
+                )
+        out.append(TaskRow(t, h, det, fa, fr))
+    return out
+
+
+@dataclass(frozen=True)
+class E0Task:
+    """One labeled toybench task with graderproof's recomputed flags."""
+
+    id: str
+    planted: bool
+    slice: str
+    flagged: bool
+    detected: bool
+    real: bool
+
+    @property
+    def counted(self) -> bool:
+        """Counted in recall and precision (the extra slice is reported beside them)."""
+        return self.slice != "extra"
+
+
+def e0_labels(c: Path) -> dict[str, dict[str, Any]]:
+    """The committed labels, after checking their hash, its single commit, and its date."""
+    labels_path, hash_path = c / E0_LABELS, c / E0_LABELS_SHA256
+    need(labels_path.is_file(), f"{E0_LABELS} missing")
+    need(hash_path.is_file(), f"{E0_LABELS_SHA256} missing")
+    touching = commits_touching(c, E0_LABELS_SHA256)
+    need(
+        len(touching) == 1,
+        f"{E0_LABELS_SHA256} has {len(touching)} commits (must be committed exactly once)",
+    )
+    hash_commit = touching[0]
+    tokens = hash_path.read_text(encoding="utf-8").split()
+    need(
+        bool(tokens) and HEX64.match(tokens[0]) is not None, f"{E0_LABELS_SHA256} holds no SHA-256"
+    )
+    need(sha256_file(labels_path) == tokens[0], f"{E0_LABELS} does not match {E0_LABELS_SHA256}")
+    data = data_commits(c, [E0_DIR, E0_MODEL_STORE])
+    need(bool(data), f"no committed E0 data under {E0_DIR}/ or {E0_MODEL_STORE}/")
+    bad = not_after(c, hash_commit, data)
+    need(
+        bad is None,
+        f"{E0_LABELS_SHA256} was not committed before the E0 data (commit {str(bad)[:12]} adds "
+        f"files under {E0_DIR}/ or {E0_MODEL_STORE}/)",
+    )
+    rc, tracked = git(c, "ls-tree", "-r", "--name-only", hash_commit, "--", E0_TASKS)
+    need(rc == 0 and bool(tracked), f"{E0_TASKS}/ was not committed with or before the labels hash")
+    rc, changed = git(c, "diff", "--name-only", hash_commit, "HEAD", "--", E0_TASKS)
+    need(
+        rc == 0 and not changed,
+        f"{E0_TASKS}/ changed after the labels hash commit: {changed.splitlines()[:2]}",
+    )
+    try:
+        doc = load_json(labels_path)
+    except ValueError:
+        raise GateError(f"{E0_LABELS} is not valid JSON") from None
+    tasks: Any = doc.get("tasks") if isinstance(doc, Mapping) else None
+    need(isinstance(tasks, Mapping) and bool(tasks), f"{E0_LABELS} has no tasks")
+    labels: dict[str, dict[str, Any]] = {}
+    for tid, lab in tasks.items():
+        need(isinstance(lab, Mapping), f"label {tid} is not an object")
+        planted, sl = lab.get("planted"), lab.get("slice")
+        need(isinstance(planted, bool), f"label {tid}: planted is not true or false")
+        need(sl in E0_SLICES, f"label {tid}: slice {sl!r} not in {E0_SLICES}")
+        need(planted == (sl != "clean"), f"label {tid}: planted={planted} contradicts slice {sl}")
+        need(
+            not planted or lab.get("direction") in E0_DIRECTIONS,
+            f"label {tid}: planted without direction accept or reject",
+        )
+        labels[str(tid)] = dict(lab)
+    return labels
+
+
+def e0_flags(c: Path, labels: Mapping[str, Any]) -> dict[str, TaskRow]:
+    """artifacts/e0/tasks.jsonl rows by label id: one per label, flags recomputed."""
+    rows = audit_table(c / E0_DIR, E0_DIR, require_flags=True)
+    by_id: dict[str, TaskRow] = {}
+    benchmarks: set[str] = set()
+    for r in rows:
+        key = r.row.get("task")
+        need(
+            isinstance(key, str) and ":" in key,
+            f"{E0_DIR}/tasks.jsonl has a row without task '<benchmark>:<id>'",
+        )
+        bench, tid = str(key).split(":", 1)
+        benchmarks.add(bench)
+        need(
+            r.task_hash == sha256_text(str(key)), f"{E0_DIR}: task_hash of {key} is not its SHA-256"
+        )
+        need(tid not in by_id, f"{E0_DIR}/tasks.jsonl lists task {tid} twice")
+        by_id[tid] = r
+    need(len(benchmarks) == 1, f"{E0_DIR}/tasks.jsonl names {len(benchmarks)} benchmarks")
+    missing, extra = sorted(set(labels) - set(by_id)), sorted(set(by_id) - set(labels))
+    need(
+        not missing and not extra,
+        f"{E0_DIR}/tasks.jsonl and {E0_LABELS} differ: unaudited {missing[:3]}, "
+        f"unlabeled {extra[:3]}",
+    )
+    return by_id
+
+
+def e0_adjudication(c: Path, labels: Mapping[str, Any]) -> dict[str, bool]:
+    """Rulings from artifacts/e0/adjudication.json: label id to ``real`` (a JSON boolean)."""
+    doc = load_obj(c / E0_ADJUDICATION, E0_ADJUDICATION)
+    tasks: Any = doc.get("tasks")
+    need(isinstance(tasks, Mapping), f"{E0_ADJUDICATION} has no tasks object")
+    out: dict[str, bool] = {}
+    for tid, entry in tasks.items():
+        need(tid in labels, f"{E0_ADJUDICATION} rules on unlabeled task {tid}")
+        real = entry.get("real") if isinstance(entry, Mapping) else None
+        need(isinstance(real, bool), f"{E0_ADJUDICATION}: real for {tid} is not true or false")
+        out[str(tid)] = bool(real)
+    return out
+
+
+def e0_scores(
+    labels: Mapping[str, Mapping[str, Any]],
+    flags: Mapping[str, TaskRow],
+    rulings: Mapping[str, bool],
+) -> list[E0Task]:
+    """Every labeled task in ascending id order with flags, detection, and adjudication (D23)."""
+    out = []
+    for tid in sorted(labels):
+        lab, t = labels[tid], flags[tid]
+        planted, direction = bool(lab["planted"]), lab.get("direction")
+        detected = planted and (
+            (direction == "accept" and t.false_accept) or (direction == "reject" and t.false_reject)
+        )
+        flagged = t.false_accept or t.false_reject
+        real = flagged and not detected and rulings.get(tid) is True
+        out.append(E0Task(tid, planted, str(lab["slice"]), flagged, detected, real))
+    return out
+
+
+def e0_rows_match(res: Mapping[str, Any], scores: Sequence[E0Task]) -> None:
+    """results.json lists every labeled task once, consistent with the recomputation."""
+    rows: Any = res.get("tasks")
+    need(isinstance(rows, list), f"{E0_RESULTS} has no tasks list")
+    by_id = {s.id: s for s in scores}
+    seen: set[str] = set()
+    for r in rows:
+        tid = r.get("task") if isinstance(r, Mapping) else None
+        need(isinstance(tid, str) and tid in by_id, f"{E0_RESULTS} has a row for unlabeled {tid!r}")
+        need(tid not in seen, f"{E0_RESULTS} lists task {tid} twice")
+        seen.add(str(tid))
+        s = by_id[str(tid)]
+        need(
+            r.get("planted") is s.planted and r.get("slice") == s.slice,
+            f"{E0_RESULTS} row {tid} disagrees with the committed labels",
+        )
+        for key, want in (
+            ("detected", s.detected),
+            ("flagged", s.flagged),
+            ("adjudicated_real", s.real),
+        ):
+            need(
+                key not in r or r[key] is want,
+                f"{E0_RESULTS} row {tid}: {key} is {r.get(key)!r}, recomputed {want}",
+            )
+    missing = sorted(set(by_id) - seen)
+    need(not missing, f"{E0_RESULTS} lacks labeled tasks {missing[:3]}")
+
+
+def e0_statistics(tasks: Sequence[E0Task]) -> tuple[Statistic, Statistic]:
+    """Recall and precision over resampled task indices (see the module docstring)."""
+
+    def tp(idx: Sequence[int]) -> int:
+        return sum(1 for i in idx if tasks[i].detected)
+
+    def recall(idx: Sequence[int]) -> float | None:
+        return ratio(tp(idx), sum(1 for i in idx if tasks[i].planted))
+
+    def precision(idx: Sequence[int]) -> float | None:
+        fp = sum(1 for i in idx if tasks[i].flagged and not tasks[i].detected and not tasks[i].real)
+        return ratio(tp(idx), tp(idx) + fp)
+
+    return recall, precision
+
+
+@gate
 def g5_tool_validity(ctx: Ctx) -> Result:
     """E0 recall and precision >= 0.90 with 95% intervals; misses explained."""
     c = ctx.clone
-    res_path = c / "artifacts" / "e0" / "results.json"
-    if not res_path.exists():
-        return Result(False, "artifacts/e0/results.json missing (E0 not run)")
-    res = load_json(res_path)
+    need((c / E0_RESULTS).is_file(), f"{E0_RESULTS} missing (E0 not run)")
+    res = load_obj(c / E0_RESULTS, E0_RESULTS)
     missing = provenance_ok(res)
-    if missing:
-        return Result(False, f"E0 results lack provenance fields {missing}")
-    labels_path = c / str(res.get("labels_path", ""))
-    hash_path = c / str(res.get("labels_sha256_path", ""))
-    if not labels_path.is_file() or not hash_path.is_file():
-        return Result(False, "toybench labels or labels hash file missing")
-    committed = hash_path.read_text().split()[0] if hash_path.read_text().split() else ""
-    if sha256_file(labels_path) != committed:
-        return Result(False, "toybench labels do not match their committed hash")
-    hash_commit = first_commit(c, str(res["labels_sha256_path"]))
-    e0_files = [p.relative_to(c).as_posix() for p in (c / "artifacts" / "e0").rglob("*")]
-    first_run = earliest_commit(c, [f for f in e0_files if (c / f).is_file()])
-    if not hash_commit or not first_run or not strictly_before(c, hash_commit, first_run):
-        return Result(False, "labels hash was not committed before the first E0 artifact")
-    labels = load_json(labels_path).get("tasks", {})
-    rows = [r for r in res.get("tasks", []) if r.get("slice") != "extra"]
-    for r in res.get("tasks", []):
-        lab = labels.get(r.get("task"))
-        if lab is None or bool(lab.get("planted")) != bool(r.get("planted")):
-            return Result(False, f"E0 task {r.get('task')} disagrees with the committed labels")
-        if lab.get("slice") != r.get("slice"):
-            return Result(False, f"E0 task {r.get('task')} slice disagrees with the labels")
-    if len(rows) < E0_MIN_TASKS:
-        return Result(False, f"E0 has {len(rows)} counted tasks (< {E0_MIN_TASKS})")
-    planted = [bool(r.get("planted")) for r in rows]
-    detected = [bool(r.get("detected")) and p for r, p in zip(rows, planted, strict=True)]
-    flagged = [bool(r.get("flagged")) or d for r, d in zip(rows, detected, strict=True)]
-    real = [bool(r.get("adjudicated_real")) for r in rows]
-
-    def tp_of(idx: Sequence[int]) -> int:
-        return sum(1 for i in idx if detected[i])
-
-    def rec(idx: Sequence[int]) -> float | None:
-        return ratio(tp_of(idx), sum(1 for i in idx if planted[i]))
-
-    def prec(idx: Sequence[int]) -> float | None:
-        fp = sum(1 for i in idx if flagged[i] and not detected[i] and not real[i])
-        return ratio(tp_of(idx), tp_of(idx) + fp)
-
-    all_idx = list(range(len(rows)))
-    r_pt, p_pt = rec(all_idx), prec(all_idx)
-    if r_pt is None or p_pt is None:
-        return Result(False, "E0 recall or precision undefined")
-    seed, b, alpha = bootstrap_params(res)
-    r_ci = bootstrap_ci(len(rows), rec, seed, b, alpha)
-    p_ci = bootstrap_ci(len(rows), prec, seed + 1, b, alpha)
-    stated_r, stated_p = res.get("recall", {}), res.get("precision", {})
-    if not (close(stated_r.get("point"), r_pt) and close(stated_p.get("point"), p_pt)):
-        return Result(False, "E0 stated recall/precision differ from recomputation")
-    if not (close_ci(stated_r.get("ci"), r_ci) and close_ci(stated_p.get("ci"), p_ci)):
-        return Result(False, "E0 stated intervals differ from recomputation")
-    misses = [
-        str(r["task"]) for r, p, d in zip(rows, planted, detected, strict=True) if p and not d
-    ]
-    misses_doc = c / "docs" / "E0_MISSES.md"
-    if not misses_doc.exists():
-        return Result(False, "docs/E0_MISSES.md missing")
-    doc = misses_doc.read_text(encoding="utf-8")
-    unexplained = [m for m in misses if m not in doc]
+    need(not missing, f"E0 results lack provenance fields {missing}")
+    labels = e0_labels(c)
+    flags = e0_flags(c, labels)
+    rulings = e0_adjudication(c, labels)
+    scores = e0_scores(labels, flags, rulings)
+    e0_rows_match(res, scores)
+    counted = [s for s in scores if s.counted]
+    need(len(counted) >= E0_MIN_TASKS, f"E0 has {len(counted)} counted tasks (< {E0_MIN_TASKS})")
+    pending = [s.id for s in counted if s.flagged and not s.detected and s.id not in rulings]
+    need(not pending, f"flags without a ruling in {E0_ADJUDICATION}: {pending[:3]}")
+    seed, b, alpha = bootstrap_params(res, E0_RESULTS)
+    recall, precision = e0_statistics(counted)
+    idx = list(range(len(counted)))
+    r_pt, p_pt = recall(idx), precision(idx)
+    need(r_pt is not None and p_pt is not None, "E0 recall or precision undefined")
+    assert r_pt is not None and p_pt is not None
+    r_ci = bootstrap_ci(len(counted), recall, seed, b, alpha)
+    p_ci = bootstrap_ci(len(counted), precision, seed + 1, b, alpha)
+    check_estimate(res.get("recall"), r_pt, r_ci, len(counted), "E0 recall")
+    check_estimate(res.get("precision"), p_pt, p_ci, len(counted), "E0 precision")
     assert r_ci is not None and p_ci is not None
+    misses = [s.id for s in counted if s.planted and not s.detected]
+    need((c / E0_MISSES).is_file(), f"{E0_MISSES} missing")
+    doc = (c / E0_MISSES).read_text(encoding="utf-8")
+    unexplained = [m for m in misses if not has_token(doc, m)]
     ev = (
         f"recall {fmt(r_pt)} [{fmt(r_ci[0])}, {fmt(r_ci[1])}], precision {fmt(p_pt)} "
-        f"[{fmt(p_ci[0])}, {fmt(p_ci[1])}], n={len(rows)}, {len(misses)} misses"
+        f"[{fmt(p_ci[0])}, {fmt(p_ci[1])}], n={len(counted)}, {len(misses)} misses, "
+        f"{sum(s.real for s in counted)} adjudicated real"
     )
-    if unexplained:
-        return Result(False, f"{ev}; unexplained misses {unexplained[:3]}")
+    need(not unexplained, f"{ev}; misses not in {E0_MISSES}: {unexplained[:3]}")
     return Result(r_pt >= E0_MIN and p_pt >= E0_MIN, f"{ev} (min {E0_MIN})")
 
 
@@ -746,61 +1319,54 @@ def all_variant_files(clone: Path) -> list[Path]:
     return sorted((clone / "artifacts").rglob("variants.jsonl"))
 
 
+def validations_of(row: Mapping[str, Any]) -> list[tuple[str, Any]]:
+    """(validator, verdict) pairs of a variant; entries without a validator name are dropped."""
+    vals = row.get("validations")
+    out: list[tuple[str, Any]] = []
+    for v in vals if isinstance(vals, list) else []:
+        if isinstance(v, Mapping) and isinstance(v.get("validator"), str) and v["validator"]:
+            out.append((str(v["validator"]), v.get("verdict")))
+    return out
+
+
+@gate
 def g6_validation_integrity(ctx: Ctx) -> Result:
     """Every headline variant has two agreeing validations and a witness."""
-    files = all_variant_files(ctx.clone)
-    rows = [r for f in files for r in read_jsonl(f)]
-    headline = [r for r in rows if r.get("counted_in_headline")]
-    if not headline:
-        return Result(False, "no headline variants banked (artifacts/**/variants.jsonl)")
+    c = ctx.clone
+    rows = [r for f in all_variant_files(c) for r in read_rows(f, rel_to(c, f))]
+    headline = [r for r in rows if r.get("counted_in_headline") is True]
+    need(bool(headline), "no headline variants banked (artifacts/**/variants.jsonl)")
     bad_val = bad_wit = 0
     for r in headline:
-        verdicts: dict[str, Any] = {}
-        for v in r.get("validations", []):
-            verdicts[str(v.get("validator"))] = v.get("verdict")
-        if len(verdicts) < 2 or set(verdicts.values()) != {r.get("kind")}:
+        vals = validations_of(r)
+        if (
+            r.get("kind") not in KINDS
+            or len({name for name, _ in vals}) < 2
+            or {verdict for _, verdict in vals} != {r.get("kind")}
+        ):
             bad_val += 1
-        if not HEX64.match(str(r.get("witness_sha256", ""))):
+        if not (isinstance(r.get("witness_sha256"), str) and HEX64.match(r["witness_sha256"])):
             bad_wit += 1
-    judged = [
-        r for r in rows if len({str(v.get("validator")) for v in r.get("validations", [])}) >= 2
-    ]
-    agree = sum(1 for r in judged if len({v.get("verdict") for v in r.get("validations", [])}) == 1)
-    excluded = len(rows) - len(headline)
-    rate = agree / len(judged) if judged else 0.0
+    judged = agree = unsure = 0
+    for r in rows:
+        vals = validations_of(r)
+        if len({name for name, _ in vals}) < 2:
+            continue
+        if all(verdict in KINDS for _, verdict in vals):
+            judged += 1
+            agree += len({verdict for _, verdict in vals}) == 1
+        else:
+            unsure += 1
+    rate = agree / judged if judged else 0.0
     ev = (
-        f"{len(headline)} headline variants; agreement {fmt(rate)} ({agree}/{len(judged)}); "
-        f"excluded {excluded}; lacking two agreeing validations {bad_val}; "
-        f"lacking witness {bad_wit}"
+        f"{len(headline)} headline variants; agreement {fmt(rate)} ({agree}/{judged} with label "
+        f"verdicts); {unsure} unsure; excluded {len(rows) - len(headline)}; lacking two "
+        f"agreeing validations {bad_val}; lacking witness {bad_wit}"
     )
     return Result(bad_val == 0 and bad_wit == 0, ev)
 
 
-def task_indicators(adir: Path) -> tuple[list[dict[str, Any]], list[bool], list[bool]] | str:
-    """Per-task false-accept and false-reject indicators recomputed from variants.
-
-    Flaky tasks are excluded from both rates (they are reported separately). A variant
-    counts only with ``counted_in_headline`` and a stable verdict (``grader_passed`` is
-    ``true`` or ``false``; ``null`` means the grader was unstable on it).
-    """
-    tasks = read_jsonl(adir / "tasks.jsonl")
-    variants = read_jsonl(adir / "variants.jsonl")
-    if not tasks:
-        return "tasks.jsonl missing or empty"
-    by_task: dict[str, list[dict[str, Any]]] = {}
-    for v in variants:
-        by_task.setdefault(str(v.get("task_hash")), []).append(v)
-    kept = [t for t in tasks if not t.get("flaky")]
-    fa, fr = [], []
-    for t in kept:
-        vs = [v for v in by_task.get(str(t.get("task_hash")), []) if v.get("counted_in_headline")]
-        fa.append(any(v.get("kind") == "violating" and v.get("grader_passed") is True for v in vs))
-        fr.append(
-            any(v.get("kind") == "preserving" and v.get("grader_passed") is False for v in vs)
-        )
-    return kept, fa, fr
-
-
+@gate
 def g7_confirmatory_audit(ctx: Ctx) -> Result:
     """E1 and E2 as preregistered on >= 3 benchmarks, with intervals; substitutes justified."""
     c = ctx.clone
@@ -812,11 +1378,13 @@ def g7_confirmatory_audit(ctx: Ctx) -> Result:
         (c / "DECISIONS.md").read_text(encoding="utf-8") if (c / "DECISIONS.md").exists() else ""
     )
     for d in dirs:
-        s = load_json(d / "summary.json")
-        name = str(s.get("benchmark", d.name))
-        why = audit_problems(c, d, s, decisions)
-        if why:
-            problems.append(f"{name}: {why}")
+        where = rel_to(c, d)
+        try:
+            s = load_obj(d / "summary.json", f"{where}/summary.json")
+            name = str(s.get("benchmark", d.name))
+            audit_check(c, d, s, decisions)
+        except GateError as exc:
+            problems.append(f"{d.name}: {exc}")
             continue
         good.append(name)
         categories.add(str(s.get("category", "")))
@@ -834,50 +1402,45 @@ def g7_confirmatory_audit(ctx: Ctx) -> Result:
     )
 
 
-def audit_problems(c: Path, d: Path, s: Mapping[str, Any], decisions: str) -> str:
-    """Why one benchmark audit does not meet G7, or empty if it does."""
+def audit_check(c: Path, d: Path, s: Mapping[str, Any], decisions: str) -> None:
+    """Raise :class:`GateError` unless one benchmark audit meets G7."""
+    where = rel_to(c, d)
     missing = provenance_ok(s)
-    if missing:
-        return f"provenance lacks {missing}"
-    if not s.get("confirmatory"):
-        return "not marked confirmatory"
-    prereg = str(s.get("prereg", ""))
-    if not prereg.startswith("prereg/") or not (c / prereg).is_file():
-        return "cites no existing preregistration"
-    pop, n = int(s.get("n_tasks_population", 0)), int(s.get("n_sampled", 0))
-    if n < min(AUDIT_MIN_SAMPLE, pop) or pop <= 0:
-        return f"sample {n} below min(40, population {pop})"
-    ind = task_indicators(d)
-    if isinstance(ind, str):
-        return ind
-    _, fa, fr = ind
-    total = len(read_jsonl(d / "tasks.jsonl"))
-    if total != n:
-        return f"tasks.jsonl has {total} tasks, summary says {n}"
-    seed, b, alpha = bootstrap_params(s)
+    need(not missing, f"provenance lacks {missing}")
+    need(s.get("confirmatory") is True, "not marked confirmatory")
+    prereg = s.get("prereg")
+    need(
+        isinstance(prereg, str) and PREREG_RE.match(prereg) is not None and (c / prereg).is_file(),
+        "cites no existing preregistration (prereg/NNNN-<slug>.md)",
+    )
+    pop: Any = s.get("n_tasks_population")
+    n: Any = s.get("n_sampled")
+    need(is_int(pop) and is_int(n), "n_tasks_population and n_sampled must be integers")
+    need(
+        pop > 0 and min(AUDIT_MIN_SAMPLE, pop) <= n <= pop,
+        f"sample {n} outside [min({AUDIT_MIN_SAMPLE}, population {pop}), population]",
+    )
+    table = audit_table(d, where)
+    need(len(table) == n, f"tasks.jsonl has {len(table)} tasks, summary says {n}")
+    scorable = [t for t in table if t.scorable]
+    seed, b, alpha = bootstrap_params(s, "summary.json")
     for key, sub, vals, offset in (
-        ("e1", "false_accept_task_rate", fa, 0),
-        ("e2", "false_reject_task_rate", fr, 1),
+        ("e1", "false_accept_task_rate", [t.false_accept for t in scorable], 0),
+        ("e2", "false_reject_task_rate", [t.false_reject for t in scorable], 1),
     ):
-        stated = (s.get(key) or {}).get(sub) or {}
         point = ratio(sum(vals), len(vals))
-        if point is None:
-            return f"{key} has no non-flaky tasks"
+        need(point is not None, f"{key} has no scorable tasks")
+        assert point is not None
         ci = bootstrap_ci(len(vals), mean_of(vals), seed + offset, b, alpha)
-        if not close(stated.get("point"), point) or not close_ci(stated.get("ci"), ci):
-            return f"{key} {sub} differs from recomputation"
+        check_estimate((s.get(key) or {}).get(sub), point, ci, len(vals), f"{key} {sub}")
     sub_for = s.get("substitute_for")
     if sub_for:
-        did = str((sub_for or {}).get("decision", ""))
-        if not did or did not in decisions:
-            return "substitution not justified in DECISIONS.md"
+        did = str(sub_for.get("decision", "")) if isinstance(sub_for, Mapping) else ""
+        need(bool(did) and did in decisions, "substitution not justified in DECISIONS.md")
         dec_commit = first_commit_containing(c, "DECISIONS.md", did)
-        art_commit = earliest_commit(
-            c, [p.relative_to(c).as_posix() for p in d.rglob("*") if p.is_file()]
-        )
-        if not dec_commit or not art_commit or not strictly_before(c, dec_commit, art_commit):
-            return f"substitution decision {did} not committed before data collection"
-    return ""
+        need(dec_commit is not None, f"substitution decision {did} not committed")
+        bad = not_after(c, str(dec_commit), data_commits(c, data_dirs(where, s)))
+        need(bad is None, f"substitution decision {did} not committed before data collection")
 
 
 def mean_of(values: Sequence[bool]) -> Callable[[Sequence[int]], float | None]:
@@ -896,98 +1459,331 @@ def first_commit_containing(repo: Path, path: str, needle: str) -> str | None:
     return lines[0] if lines else None
 
 
+@gate
 def g8_repair(ctx: Ctx) -> Result:
-    """E4 with generalization batch; every repaired task has a patch and validation log."""
+    """E4 with generalization batch; every surviving task repaired or explained; logs accepted."""
     c = ctx.clone
-    man = ctx.origin_facts.get("manifest", {})
-    if man.get("problems"):
-        return Result(False, f"private patch manifest: {man['problems'][0]}")
-    path = c / "artifacts" / "e4" / "summary.json"
-    if not path.exists():
-        return Result(False, "artifacts/e4/summary.json missing (E4 not run)")
-    s = load_json(path)
-    missing = provenance_ok(s)
-    if missing or not s.get("ran"):
-        return Result(False, f"E4 not marked ran or lacks provenance {missing}")
-    gen = s.get("generalization") or {}
-    if int(gen.get("n_fresh_variants", 0)) <= 0:
-        return Result(False, "no post-repair generalization batch")
-    repaired = s.get("repaired") or []
-    entries = man.get("entries", {})
-    pub = priv = 0
-    for r in repaired:
-        for key in ("patch", "validation_log"):
-            rel = str(r.get(key, ""))
-            if r.get("public"):
-                if not rel.startswith("outbound/patches/") or not (c / rel).is_file():
-                    return Result(
-                        False, f"public {key} {rel or '?'} missing under outbound/patches/"
-                    )
-            else:
-                if not rel.startswith("private/outbound/patches/") or rel not in entries:
-                    return Result(False, f"private {key} {rel or '?'} not in MANIFEST.json")
-                if (c / rel).exists():
-                    return Result(False, f"private {key} {rel} is tracked")
-        pub += bool(r.get("public"))
-        priv += not r.get("public")
+    man = ctx.origin_facts.get("manifest") or {}
+    need(not man.get("problems"), f"private patch manifest: {(man.get('problems') or ['?'])[0]}")
+    audits = {d.name: d for d in audit_dirs(c)}
+    need(bool(audits), "no audited benchmarks (artifacts/audit/*/summary.json)")
+    survivors: dict[str, set[str]] = {}
+    names: dict[str, str] = {}
+    for name, d in audits.items():
+        where = rel_to(c, d)
+        s = load_obj(d / "summary.json", f"{where}/summary.json")
+        names[name] = str(s.get("benchmark", name))
+        survivors[name] = {t.task_hash for t in audit_table(d, where) if t.false_accept}
+    total = sum(len(v) for v in survivors.values())
+    need(total > 0, "no surviving variants in any audit (nothing to repair)")
+    root = c / "artifacts" / "e4"
+    found = {p.parent.name: p for p in sorted(root.glob("*/summary.json"))} if root.is_dir() else {}
+    counts = Counter[str]()
+    for name in sorted(set(found) | {n for n, s in survivors.items() if s}):
+        where = f"artifacts/e4/{name}"
+        need(
+            name in found,
+            f"{where}/summary.json missing ({len(survivors.get(name, ()))} tasks with "
+            "surviving variants)",
+        )
+        s = load_obj(found[name], f"{where}/summary.json")
+        counts.update(e4_check(c, where, s, names.get(name, name), survivors.get(name), man))
+    need(counts["repaired"] > 0, "no task repaired in any benchmark (no generalization batch)")
     return Result(
         True,
-        f"E4 ran; {len(repaired)} repaired ({pub} public, {priv} private, hashes verified); "
-        f"generalization batch {gen.get('n_fresh_variants')} variants",
+        f"E4 ran on {len(found)} benchmarks; {total} tasks with surviving variants: "
+        f"{counts['repaired']} repaired ({counts['public']} public, {counts['private']} "
+        f"private, hashes verified, logs accepted), {counts['unrepaired']} unrepaired with "
+        f"reasons; generalization {counts['fresh']} fresh variants",
     )
 
 
+def e4_check(
+    c: Path,
+    where: str,
+    s: Mapping[str, Any],
+    bench: str,
+    expected: set[str] | None,
+    man: Mapping[str, Any],
+) -> Counter[str]:
+    """Raise :class:`GateError` unless an E4 summary meets G8; returns counts for evidence."""
+    need(s.get("schema") == E4_SCHEMA, f"{where}: schema is not {E4_SCHEMA}")
+    need(s.get("ran") is True, f"{where}: not marked ran")
+    missing = provenance_ok(s)
+    need(not missing, f"{where}: provenance lacks {missing}")
+    need(s.get("benchmark") == bench, f"{where}: benchmark {s.get('benchmark')!r} is not {bench!r}")
+    repaired: Any = s.get("repaired")
+    unrepaired: Any = s.get("unrepaired")
+    need(isinstance(repaired, list), f"{where}: repaired is not a list")
+    need(isinstance(unrepaired, list), f"{where}: unrepaired is not a list")
+    counts = Counter[str]()
+    listed: list[str] = []
+    for r in repaired:
+        need(isinstance(r, Mapping), f"{where}: a repaired entry is not an object")
+        h = r.get("task_hash")
+        need(
+            isinstance(h, str) and HEX64.match(h) is not None,
+            f"{where}: repaired without task_hash",
+        )
+        need(
+            r.get("benchmark") == bench, f"{where}: repaired {str(h)[:12]} names another benchmark"
+        )
+        public = r.get("public")
+        need(
+            isinstance(public, bool), f"{where}: repaired {str(h)[:12]} public is not true or false"
+        )
+        for key in ("patch", "validation_log"):
+            repair_file(c, where, str(h), key, r.get(key), bool(public), man)
+        listed.append(str(h))
+        counts.update(["repaired", "public" if public else "private"])
+    for u in unrepaired:
+        need(isinstance(u, Mapping), f"{where}: an unrepaired entry is not an object")
+        h, reason = u.get("task_hash"), u.get("reason")
+        need(
+            isinstance(h, str) and HEX64.match(h) is not None,
+            f"{where}: unrepaired without task_hash",
+        )
+        need(
+            isinstance(reason, str) and bool(reason.strip()),
+            f"{where}: unrepaired {str(h)[:12]} has no reason",
+        )
+        listed.append(str(h))
+        counts["unrepaired"] += 1
+    twice = [h for h, k in Counter(listed).items() if k > 1]
+    need(not twice, f"{where}: task {twice[0][:12] if twice else ''} listed more than once")
+    if expected is not None:
+        lacking, extra = sorted(expected - set(listed)), sorted(set(listed) - expected)
+        need(
+            not lacking,
+            f"{where}: {len(lacking)} tasks with surviving variants are neither repaired nor "
+            f"listed unrepaired (first {lacking[0][:12] if lacking else ''})",
+        )
+        need(
+            not extra,
+            f"{where}: {len(extra)} listed tasks have no surviving variant in the audit "
+            f"(first {extra[0][:12] if extra else ''})",
+        )
+    if counts["repaired"]:
+        gen = s.get("generalization")
+        need(
+            isinstance(gen, Mapping) and gen.get("ran") is True,
+            f"{where}: no post-repair generalization batch",
+        )
+        assert isinstance(gen, Mapping)
+        for key in E4_GENERALIZATION:
+            need(is_int(gen.get(key)) and gen[key] >= 0, f"{where}: generalization lacks {key}")
+        fresh = int(gen["n_fresh_variants"])
+        need(fresh > 0, f"{where}: the generalization batch has no fresh variants")
+        need(
+            gen["caught_by_repair"] <= gen["survivors_original"] <= fresh
+            and gen["survivors_repaired"] <= fresh
+            and gen["induced_false_rejects"] <= fresh,
+            f"{where}: generalization counts are inconsistent",
+        )
+        counts["fresh"] += fresh
+    return counts
+
+
+def repair_file(
+    c: Path,
+    where: str,
+    task_hash: str,
+    key: str,
+    value: Any,
+    public: bool,
+    man: Mapping[str, Any],
+) -> None:
+    """Raise :class:`GateError` unless a repair's patch or validation log is where G8 wants it."""
+    if public:
+        rel = clean_rel(value, "outbound/patches/")
+        need(
+            rel is not None and (c / rel).is_file(),
+            f"{where}: public {key} {value!r} missing under outbound/patches/",
+        )
+        facts = log_facts(c / str(rel)) if key == "validation_log" else {}
+    else:
+        rel = clean_rel(value, "private/outbound/patches/")
+        need(
+            rel is not None and rel in (man.get("entries") or {}),
+            f"{where}: private {key} {value!r} not in outbound/patches/MANIFEST.json",
+        )
+        need(not (c / str(rel)).exists(), f"{where}: private {key} {rel} is tracked")
+        facts = (man.get("logs") or {}).get(rel, {}) if key == "validation_log" else {}
+    if key == "validation_log":
+        need(
+            facts.get("accepted") is True,
+            f'{where}: validation log {rel} does not say "accepted": true',
+        )
+        need(
+            facts.get("task_hash") == task_hash,
+            f"{where}: validation log {rel} is for another task",
+        )
+
+
+@dataclass(frozen=True)
+class E5Row:
+    """One re-graded result: a model's trial on a task under both graders."""
+
+    model: str
+    task_hash: str
+    trial: int | str
+    original: bool
+    repaired: bool
+
+
+def e5_rows(path: Path, where: str) -> list[E5Row]:
+    """Validated rows.jsonl of one E5 benchmark."""
+    rows = read_rows(path, f"{where}/rows.jsonl")
+    need(bool(rows), f"{where}/rows.jsonl missing or empty")
+    out: list[E5Row] = []
+    for r in rows:
+        model, h, o, p = (
+            r.get("model"),
+            r.get("task_hash"),
+            r.get("original_pass"),
+            r.get("repaired_pass"),
+        )
+        trial: Any = r.get("trial")
+        need(isinstance(model, str) and bool(model), f"{where}: a row has no model")
+        need(isinstance(h, str) and HEX64.match(h) is not None, f"{where}: a row has no task_hash")
+        need(
+            is_int(trial) or (isinstance(trial, str) and bool(trial)),
+            f"{where}: a row has no trial",
+        )
+        need(
+            isinstance(o, bool) and isinstance(p, bool),
+            f"{where}: original_pass and repaired_pass must be true or false",
+        )
+        out.append(E5Row(str(model), str(h), trial, bool(o), bool(p)))
+    keys = Counter((r.model, r.task_hash, r.trial) for r in out)
+    need(max(keys.values()) == 1, f"{where}/rows.jsonl repeats a (model, task, trial) row")
+    return out
+
+
+def sign(x: int) -> int:
+    """-1, 0, or 1."""
+    return (x > 0) - (x < 0)
+
+
+def e5_statistics(rows: Sequence[E5Row]) -> tuple[int, int, Statistic, Statistic]:
+    """(tasks, models, pass flips, rank changes) over resampled task indices.
+
+    Tasks are the distinct ``task_hash`` values in ascending order; a statistic over
+    indices ``idx`` uses all rows of every drawn task, once per draw. Pass rates are
+    compared exactly (integer cross-multiplication).
+    """
+    tasks = sorted({r.task_hash for r in rows})
+    models = sorted({r.model for r in rows})
+    tpos = {t: i for i, t in enumerate(tasks)}
+    mpos = {m: j for j, m in enumerate(models)}
+    orig = [0] * len(tasks)
+    flips = [0] * len(tasks)
+    runs = [[0] * len(tasks) for _ in models]
+    passed_o = [[0] * len(tasks) for _ in models]
+    passed_r = [[0] * len(tasks) for _ in models]
+    for r in rows:
+        i, j = tpos[r.task_hash], mpos[r.model]
+        orig[i] += r.original
+        flips[i] += r.original and not r.repaired
+        runs[j][i] += 1
+        passed_o[j][i] += r.original
+        passed_r[j][i] += r.repaired
+
+    def pass_flips(idx: Sequence[int]) -> float | None:
+        return ratio(sum(flips[i] for i in idx), sum(orig[i] for i in idx))
+
+    def rank_changes(idx: Sequence[int]) -> float | None:
+        draws = Counter(idx)
+        totals = [
+            tuple(
+                sum(arr[i] * k for i, k in draws.items())
+                for arr in (runs[j], passed_o[j], passed_r[j])
+            )
+            for j in range(len(models))
+        ]
+        if any(n == 0 for n, _, _ in totals):
+            return None
+        changed = 0
+        for a in range(len(models)):
+            for b in range(a + 1, len(models)):
+                na, oa, ra = totals[a]
+                nb, ob, rb = totals[b]
+                changed += sign(oa * nb - ob * na) != sign(ra * nb - rb * na)
+        return float(changed)
+
+    return len(tasks), len(models), pass_flips, rank_changes
+
+
+def e5_check(c: Path, edir: Path, s: Mapping[str, Any]) -> str:
+    """Raise :class:`GateError` unless one E5 benchmark recomputes; returns its evidence."""
+    where = rel_to(c, edir)
+    missing = provenance_ok(s)
+    need(not missing, f"{where}: provenance lacks {missing}")
+    seed, b, alpha = bootstrap_params(s, f"{where}/summary.json")
+    rows = e5_rows(edir / "rows.jsonl", where)
+    n_tasks, n_models, pass_flips, rank_changes = e5_statistics(rows)
+    need(n_models >= 2, f"{where}: rank changes need at least two models (found {n_models})")
+    idx = list(range(n_tasks))
+    out = []
+    for key, stat, offset in (("pass_flips", pass_flips, 0), ("rank_changes", rank_changes, 1)):
+        point = stat(idx)
+        need(point is not None, f"{where}: {key} undefined (no row passes the original grader)")
+        assert point is not None
+        ci = bootstrap_ci(n_tasks, stat, seed + offset, b, alpha)
+        check_estimate(s.get(key), point, ci, None, f"{where} {key}")
+        assert ci is not None
+        need(ci[0] <= point <= ci[1], f"{where} {key} interval does not contain its point")
+        out.append(f"{key} {fmt(point)} [{fmt(ci[0])}, {fmt(ci[1])}]")
+    return f"{edir.name}: {', '.join(out)} over {n_tasks} tasks and {n_models} models"
+
+
+@gate
 def g9_impact_and_cards(ctx: Ctx) -> Result:
-    """E5 on >= 1 benchmark; a grader card per audited benchmark, aggregates only."""
+    """E5 on >= 1 benchmark, recomputed; a grader card per audited benchmark, aggregates only."""
     c = ctx.clone
-    e5 = (
-        sorted((c / "artifacts" / "e5").glob("*/summary.json"))
-        if (c / "artifacts" / "e5").exists()
-        else []
-    )
-    ran = []
-    for p in e5:
-        s = load_json(p)
-        if s.get("ran") and not provenance_ok(s):
-            flips, ranks = s.get("pass_flips") or {}, s.get("rank_changes") or {}
-            if isinstance(flips.get("ci"), list) and isinstance(ranks.get("ci"), list):
-                ran.append(p.parent.name)
-    if not ran:
-        return Result(False, "no E5 impact artifact with intervals (artifacts/e5/*/summary.json)")
+    root = c / "artifacts" / "e5"
+    ran: list[str] = []
+    for p in sorted(root.glob("*/summary.json")) if root.is_dir() else []:
+        s = load_obj(p, rel_to(c, p))
+        if s.get("ran") is True:
+            ran.append(e5_check(c, p.parent, s))
+    need(bool(ran), "no E5 impact artifact that ran (artifacts/e5/<benchmark>/summary.json)")
     dirs = audit_dirs(c)
-    if not dirs:
-        return Result(False, "no audited benchmarks to card")
+    need(bool(dirs), "no audited benchmarks to card")
     for d in dirs:
-        bench = str(load_json(d / "summary.json").get("benchmark", d.name))
+        bench = str(load_obj(d / "summary.json", rel_to(c, d)).get("benchmark", d.name))
         md, js = c / "docs" / "cards" / f"{bench}.md", c / "docs" / "cards" / f"{bench}.json"
-        if not md.exists() or not js.exists():
-            return Result(False, f"grader card for {bench} missing (docs/cards/{bench}.md/.json)")
-        card = load_json(js)
+        need(
+            md.exists() and js.exists(),
+            f"grader card for {bench} missing (docs/cards/{bench}.md/.json)",
+        )
+        card = load_obj(js, rel_to(c, js))
         leak = card_leak(bench, card, md.read_text(encoding="utf-8"), d)
-        if leak:
-            return Result(False, f"card {bench}: {leak}")
-    return Result(True, f"E5 ran on {ran}; {len(dirs)} cards, aggregates only")
+        need(not leak, f"card {bench}: {leak}")
+    return Result(True, f"E5 recomputed: {'; '.join(ran)}; {len(dirs)} cards, aggregates only")
 
 
 TASK_KEYS = {"tasks", "task_ids", "variants", "witnesses", "surviving_variants"}
 
 
 def card_leak(bench: str, card: Mapping[str, Any], md: str, adir: Path) -> str:
-    """Task-level detail for unfixed tasks in a card, or empty."""
+    """Task-level detail for unfixed tasks in a card, or empty.
+
+    Sensitive tasks are those with a false accept or false reject and those whose
+    reference the grader rejects or is flaky on, unless listed as fixed upstream.
+    """
     bad = TASK_KEYS & set(card)
     if bad:
         return f"task-level keys {sorted(bad)}"
     fixed = {sha256_text(f"{bench}:{t}") for t in card.get("fixed_upstream_tasks", [])}
-    ind = task_indicators(adir)
-    if isinstance(ind, str):
-        return ind
-    kept, fa, fr = ind
-    flagged = {
-        str(t.get("task_hash")) for t, a, r in zip(kept, fa, fr, strict=True) if a or r
+    sensitive = {
+        t.task_hash
+        for t in audit_table(adir, adir.name)
+        if t.false_accept or t.false_reject or not t.scorable
     } - fixed
     text = md + json.dumps(card)
     for tok in set(re.findall(r"[A-Za-z0-9_\-./:]+", text)):
-        if sha256_text(f"{bench}:{tok}") in flagged or tok in flagged:
+        if sha256_text(f"{bench}:{tok}") in sensitive or tok in sensitive:
             return "names a flagged task not fixed upstream"
     return ""
 
@@ -1009,44 +1805,89 @@ def g10_claim_integrity(ctx: Ctx) -> Result:
     return Result(True, "; ".join(out))
 
 
+def data_dirs(where: str, s: Mapping[str, Any]) -> list[str]:
+    """Directories whose files date a confirmatory artifact (see the module docstring)."""
+    dirs = [where]
+    store = s.get("model_store")
+    if store not in (None, ""):
+        store_rel = clean_rel(str(store).rstrip("/"), "artifacts/")
+        need(
+            isinstance(store, str) and store_rel is not None,
+            f"{where}: model_store {store!r} is not a directory under artifacts/",
+        )
+        dirs.append(str(store_rel))
+    if where == E0_DIR or where.startswith(E0_DIR + "/"):
+        dirs.append(E0_MODEL_STORE)
+    return list(dict.fromkeys(dirs))
+
+
 def confirmatory_artifacts(clone: Path) -> list[Path]:
-    """Every summary.json under artifacts/ marked confirmatory."""
+    """Every summary.json under artifacts/ marked confirmatory, plus the E0 files.
+
+    An unreadable summary.json is included so that G11 fails on it rather than skip it.
+    """
     found = []
     for p in sorted((clone / "artifacts").rglob("summary.json")):
         try:
-            if load_json(p).get("confirmatory"):
-                found.append(p)
-        except ValueError:
+            doc = load_json(p)
+        except (OSError, ValueError):
+            found.append(p)
             continue
+        if rel_to(clone, p) == E0_SUMMARY or (isinstance(doc, Mapping) and doc.get("confirmatory")):
+            found.append(p)
+    if (clone / E0_RESULTS).is_file():
+        found.append(clone / E0_RESULTS)
     return found
 
 
+def frozen_hashes(clone: Path) -> dict[str, str]:
+    """File name to SHA-256 from prereg/FROZEN.jsonl (empty if missing or unreadable)."""
+    try:
+        rows = read_jsonl(clone / "prereg" / "FROZEN.jsonl")
+    except (OSError, ValueError):
+        return {}
+    return {str(e.get("file")): str(e.get("sha256")) for e in rows if isinstance(e, Mapping)}
+
+
+@gate
 def g11_prereg_integrity(ctx: Ctx) -> Result:
-    """make prereg-verify, prereg commits predate artifacts, no prereg edited after freeze."""
+    """make prereg-verify; prereg commits predate the data; no prereg edited after freeze."""
     c = ctx.clone
     step = ctx.run("prereg-verify", ["make", "-s", "prereg-verify"], timeout=600)
-    if step.rc != 0:
-        return Result(False, f"make prereg-verify failed: {tail(step.out)}")
-    preregs = sorted((c / "prereg").glob("[0-9][0-9][0-9][0-9]-*.md"))
-    if not preregs:
-        return Result(False, "no preregistrations")
-    for p in preregs:
-        rel = p.relative_to(c).as_posix()
-        if len(commits_touching(c, rel)) != 1:
-            return Result(False, f"{rel} changed after it was frozen")
+    need(step.rc == 0, f"make prereg-verify failed: {tail(step.out)}")
+    preregs = sorted(
+        rel_to(c, p) for p in (c / "prereg").glob("*.md") if PREREG_RE.match(rel_to(c, p))
+    )
+    need(bool(preregs), "no preregistrations")
+    frozen = frozen_hashes(c)
+    commit_of: dict[str, str] = {}
+    for rel in preregs:
+        commits = commits_touching(c, rel)
+        need(len(commits) == 1, f"{rel} has {len(commits)} commits (changed after it was frozen?)")
+        need(
+            frozen.get(PurePosixPath(rel).name) == sha256_file(c / rel),
+            f"{rel} does not match its prereg/FROZEN.jsonl entry",
+        )
+        commit_of[rel] = commits[0]
     arts = confirmatory_artifacts(c)
-    if not arts:
-        return Result(False, "no confirmatory artifacts")
+    need(bool(arts), "no confirmatory artifacts")
     for a in arts:
-        s = load_json(a)
-        prereg = str(s.get("prereg", ""))
-        if not (c / prereg).is_file() or not prereg.startswith("prereg/"):
-            return Result(False, f"{a.relative_to(c).as_posix()} cites no preregistration")
-        pc = first_commit(c, prereg)
-        files = [p.relative_to(c).as_posix() for p in a.parent.rglob("*") if p.is_file()]
-        ac = earliest_commit(c, files)
-        if not pc or not ac or not strictly_before(c, pc, ac):
-            return Result(False, f"{prereg} does not predate {a.parent.relative_to(c).as_posix()}")
+        rel = rel_to(c, a)
+        s = load_obj(a, rel)
+        if rel == E0_SUMMARY:
+            need(s.get("confirmatory") is True, f"{rel} is not marked confirmatory")
+        cited = s.get("prereg")
+        need(cited in commit_of, f"{rel} cites no frozen preregistration (prereg/NNNN-<slug>.md)")
+        where = PurePosixPath(rel).parent.as_posix()
+        dirs = data_dirs(where, s)
+        data = data_commits(c, dirs)
+        need(bool(data), f"{rel}: nothing committed under {dirs}")
+        bad = not_after(c, commit_of[str(cited)], data)
+        need(
+            bad is None,
+            f"{cited} does not predate the data of {rel} (commit {str(bad)[:12]} adds files "
+            f"under {', '.join(dirs)})",
+        )
     return Result(
         True,
         f"{len(preregs)} preregistrations frozen; {len(arts)} confirmatory artifacts "
