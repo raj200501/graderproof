@@ -1,0 +1,306 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "c6ae12b727bd19b2c177384e42be7d02a2243febefb91aa74802cf7a59cb4b96",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "a181f23e6ce28a6235bbc8a64b26759e1338dc12d12ea8c7ac9e0248686bc490": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The index statement is accidentally repeated, so the script fails with an index already exists error.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The customers columns email and created_at are listed in swapped order.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    created_at TEXT NOT NULL,\n    email TEXT NOT NULL UNIQUE\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The orders foreign key reference is dropped from customer_id.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL,\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The index is given a shortened name, idx_orders_cust.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_cust ON orders(customer_id);\nEOF\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "An extra index on orders(status) is added.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nCREATE INDEX idx_orders_status ON orders(status);\nEOF\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Lowercase keywords, tabs for indentation, and no blank lines between statements.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\ncreate table customers (\n\tid integer primary key,\n\temail text not null unique,\n\tcreated_at text not null\n);\ncreate table orders (\n\tid integer primary key,\n\tcustomer_id integer not null references customers(id),\n\ttotal_cents integer not null,\n\tstatus text not null default 'pending'\n);\ncreate index idx_orders_customer on orders(customer_id);\nEOF\n"
+          }
+        },
+        {
+          "description": "The foreign key is declared as a table-level FOREIGN KEY constraint after the columns.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL,\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending',\n    FOREIGN KEY (customer_id) REFERENCES customers(id)\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+          }
+        },
+        {
+          "description": "Uses IF NOT EXISTS, a single-line layout, and a PRAGMA foreign_keys line that creates no objects.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nprintf '%s\\n' \"PRAGMA foreign_keys = ON;\" \"CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL);\" \"CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), total_cents INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending');\" \"CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);\" > schema.sql\n"
+          }
+        },
+        {
+          "description": "Wraps the statements in an explicit transaction with CRLF-free trailing blank lines and a leading SQL comment.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\n-- orders service schema\nBEGIN TRANSACTION;\n\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\n\nCOMMIT;\n\nEOF\n"
+          }
+        }
+      ]
+    },
+    "a1c9fb2c9022ec31a1f2d1570274e815831cbfe546e1d22da1a4a72eb5d0be9a": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The backup copy step is skipped, so nginx.conf.orig is never written.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "A cleanup sed also strips trailing whitespace from every line of nginx.conf, altering lines beyond the two requested.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" | sed -e 's/[ \\t]*$//' -e 's/^\\t/    /' > nginx.conf\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses cp -p for the backup and in-place sed substitutions instead of bash string replacement.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -p -- nginx.conf nginx.conf.orig\nsed -i -e 's/worker_connections 1024;/worker_connections 4096;/' -e 's/keepalive_timeout 65;/keepalive_timeout 30;/' nginx.conf\n"
+          }
+        },
+        {
+          "description": "Uses cat for the backup and a single awk pass writing to a temp file that replaces nginx.conf.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat nginx.conf > nginx.conf.orig\nawk '{ sub(/worker_connections 1024;/, \"worker_connections 4096;\"); sub(/keepalive_timeout 65;/, \"keepalive_timeout 30;\"); print }' nginx.conf.orig > nginx.conf.tmp\nmv nginx.conf.tmp nginx.conf\n"
+          }
+        }
+      ]
+    },
+    "a749069371764e852585b3334d2639404996882f6269f0bf582d324f423227f6": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The refill is requested at the wrong pharmacy, PH-OAK, while the message still names Elm Street.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-OAK\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The notification message omits the pharmacy name Elm Street.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup tomorrow after 14:00.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The patient is notified before the refill is requested.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "A second prescription, RX-1002, is also refilled.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1002\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Adds a read-only list_pharmacies call before the refill.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"list_pharmacies\", \"args\": {}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Skips the read-only list_prescriptions call and uses different argument key order and message wording.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"request_refill\", \"args\": {\"pharmacy_id\": \"PH-ELM\", \"rx_id\": \"RX-1001\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"message\": \"Hello, prescription RX-1001 is being refilled and can be picked up at the Elm Street pharmacy.\", \"patient_id\": \"P-5512\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact single-line JSON formatting with no trailing newline and a shorter message.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"list_prescriptions\",\"args\":{\"patient_id\":\"P-5512\"}},{\"tool\":\"request_refill\",\"args\":{\"rx_id\":\"RX-1001\",\"pharmacy_id\":\"PH-ELM\"}},{\"tool\":\"notify_patient\",\"args\":{\"patient_id\":\"P-5512\",\"message\":\"RX-1001 is ready at Elm Street.\"}}]"
+          }
+        },
+        {
+          "description": "Calls list_pharmacies and list_prescriptions both before the refill and uses a longer message with the required identifiers.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_pharmacies\", \"args\": {}},\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Good news: we requested the refill for prescription RX-1001 at the Elm Street pharmacy. You can pick it up tomorrow afternoon.\"}}\n]\n"
+          }
+        }
+      ]
+    },
+    "a8739f693f08108b084de7eaae06e5be158c001280f2a6650feb7a370f60a29a": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The backup is written with the last line of hosts cut off, so it is not an unchanged copy.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nhead -n -1 hosts > hosts.bak\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The appended line uses a single space between the address and the name.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\nprintf '10.20.0.15 build-cache.internal\\n' >> hosts\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The appended line has no trailing newline.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\nprintf '10.20.0.15  build-cache.internal' >> hosts\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The edit is applied to hosts before the backup is taken, so the backup contains the new line.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts\ncp -- hosts hosts.bak\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses cp -p for the backup and echo with tee -a to append.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -p -- hosts hosts.bak\necho '10.20.0.15  build-cache.internal' | tee -a hosts > /dev/null\n"
+          }
+        },
+        {
+          "description": "Copies with cat and appends via a here-document.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat hosts > hosts.bak\ncat >> hosts <<'EOF'\n10.20.0.15  build-cache.internal\nEOF\n"
+          }
+        },
+        {
+          "description": "Backs up with dd and syncs it, then appends with printf using an explicit tab-free two-space format argument.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ndd if=hosts of=hosts.bak status=none\nsync hosts.bak\nprintf '%s  %s\\n' 10.20.0.15 build-cache.internal >> hosts\n"
+          }
+        }
+      ]
+    },
+    "a9a7c1d97fd3c78dd18688155a10c3c6b3bc718265de4ed5d482d86605022219": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The shebang names sh instead of bash, which the task does not allow.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env sh\nset -eu\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The script counts lines with wc -l instead of words.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -l < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+          }
+        },
+        {
+          "requirement": "R1",
+          "description": "The script is written to bin/wordcount.sh instead of bin/wordcount.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount.sh <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount.sh\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses the /bin/bash shebang and a pure bash read loop that counts words without wc.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/bin/bash\nset -euo pipefail\ncount=0\nwhile read -r -a words || [ \"${#words[@]}\" -gt 0 ]; do\n  count=$((count + ${#words[@]}))\n  words=()\ndone < \"$1\"\necho \"$count\"\nEOF\nchmod +x bin/wordcount\n"
+          }
+        },
+        {
+          "description": "Uses command substitution with echo, and quotes the file argument with a default check.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -eu\nn=$(wc -w < \"${1:?usage: wordcount FILE}\")\necho $n\nEOF\nchmod +x bin/wordcount\n"
+          }
+        },
+        {
+          "description": "Uses cat piped into wc -w with printf, stripping padding with tr.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nn=$(cat -- \"$1\" | wc -w | tr -d '[:space:]')\nprintf '%d\\n' \"$n\"\nexit 0\nEOF\nchmod 755 bin/wordcount\n"
+          }
+        }
+      ]
+    },
+    "b20808fda577e1dc8435672390b70a83bc57e00f138a807b0d6b7ab68512d19b": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The final head keeps only four lines instead of five.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 4\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The lowercase folding step is dropped, so capitalized occurrences are counted separately and the counts are wrong.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The secondary sort key is reversed, so ties are broken in reverse alphabetical order.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2r |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses awk to count words and sort, with the same output.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr '[:upper:]' '[:lower:]' | awk 'NF { c[$1]++ } END { for (w in c) print w, c[w] }' | sort -k2,2nr -k1,1 | head -n 5\n"
+          }
+        },
+        {
+          "description": "Uses grep -o to extract words and sort -rn with an explicit tie-break key.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ngrep -o '[A-Za-z]\\+' speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1 -nr -k2,2 | awk '{ print $2 \" \" $1 }' | head -n 5\n"
+          }
+        },
+        {
+          "description": "Uses sed to turn non-letters into newlines and sort -t with a numeric reverse key, printing via awk.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\nsed 's/[^A-Za-z]/\\n/g' speech.txt | tr '[:upper:]' '[:lower:]' | grep -v '^$' | sort | uniq -c | sort -k1,1nr -k2,2 | head -n 5 | while read -r count word; do\n  echo \"$word $count\"\ndone\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

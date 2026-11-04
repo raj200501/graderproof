@@ -1,0 +1,233 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "e2cb94d16a3689ca747340ca8c22054c76eb37c91b0918c918fdea6ac61d6cb3",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "898b9d9fb49dfe27231940c78ff2cdf2342c5bf600abeca5f53713b8045e7888": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Priority is negated in the sort key so the highest number comes first.",
+          "files": {"taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (-task[\"priority\"], due is None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    return sorted(tasks, key=_key)\n"}
+        },
+        {
+          "requirement": "R3",
+          "description": "The None check is inverted so tasks without a due date come before dated ones.",
+          "files": {"taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due is not None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    return sorted(tasks, key=_key)\n"}
+        },
+        {
+          "requirement": "R4",
+          "description": "Titles are compared case-insensitively by lowercasing them in the key.",
+          "files": {"taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due is None, due or \"\", task[\"title\"].lower())\n\n\ndef sort_tasks(tasks):\n    return sorted(tasks, key=_key)\n"}
+        },
+        {
+          "requirement": "R5",
+          "description": "The result is rebuilt with only the title, priority and due keys, dropping other keys.",
+          "files": {"taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due is None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    ordered = sorted(tasks, key=_key)\n    return [\n        {\"title\": t[\"title\"], \"priority\": t[\"priority\"], \"due\": t[\"due\"]}\n        for t in ordered\n    ]\n"}
+        },
+        {
+          "requirement": "R6",
+          "description": "The input list is sorted in place and returned instead of a new list.",
+          "files": {"taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due is None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    tasks.sort(key=_key)\n    return tasks\n"}
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses a sentinel date string that sorts after any valid ISO date instead of a None flag.",
+          "files": {"taskqueue.py": "def sort_tasks(tasks):\n    return sorted(\n        tasks,\n        key=lambda t: (\n            t[\"priority\"],\n            t[\"due\"] if t[\"due\"] is not None else \"9999-99-99\",\n            t[\"title\"],\n        ),\n    )\n"}
+        },
+        {
+          "description": "Copies the list and applies several stable sorts from the least to the most significant key.",
+          "files": {"taskqueue.py": "def sort_tasks(tasks):\n    result = list(tasks)\n    result.sort(key=lambda t: t[\"title\"])\n    result.sort(key=lambda t: t[\"due\"] or \"\")\n    result.sort(key=lambda t: t[\"due\"] is None)\n    result.sort(key=lambda t: t[\"priority\"])\n    return result\n"}
+        },
+        {
+          "description": "Groups tasks by priority and sorts dated and undated tasks separately before concatenating.",
+          "files": {"taskqueue.py": "def sort_tasks(tasks):\n    result = []\n    for p in sorted({t[\"priority\"] for t in tasks}):\n        group = [t for t in tasks if t[\"priority\"] == p]\n        dated = sorted(\n            (t for t in group if t[\"due\"] is not None),\n            key=lambda t: (t[\"due\"], t[\"title\"]),\n        )\n        undated = sorted(\n            (t for t in group if t[\"due\"] is None),\n            key=lambda t: t[\"title\"],\n        )\n        result.extend(dated)\n        result.extend(undated)\n    return result\n"}
+        }
+      ]
+    },
+    "8c3d7d63e3f17244d8e25ed2a031c0176ceeda76dc97195cbd71a862456f8be4": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The range upper bound is high instead of high + 1, so the last port is never found.",
+          "files": {"ports.py": "def pick_port(used, low, high):\n    for port in range(low, high):\n        if port not in used:\n            return port\n    return None\n"}
+        },
+        {
+          "requirement": "R4",
+          "description": "When no port is free the function returns high instead of None.",
+          "files": {"ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port not in used:\n            return port\n    return high\n"}
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Searches downward from high to low instead of upward.",
+          "files": {"ports.py": "def pick_port(used, low, high):\n    for port in range(high, low - 1, -1):\n        if port not in used:\n            return port\n    return None\n"}
+        },
+        {
+          "description": "Builds the set of free ports and returns the smallest, or None when empty.",
+          "files": {"ports.py": "def pick_port(used, low, high):\n    free = set(range(low, high + 1)) - set(used)\n    if not free:\n        return None\n    return min(free)\n"}
+        },
+        {
+          "description": "Uses next() with a generator and a None default.",
+          "files": {"ports.py": "def pick_port(used, low, high):\n    return next((p for p in range(low, high + 1) if p not in used), None)\n"}
+        }
+      ]
+    },
+    "9563c4f6af36ba5193a9d30376cfbc095079db9fb3f5bf59e2732a372848039f": {
+      "violating": [
+        {
+          "requirement": "R3",
+          "description": "The final check tests divisibility by 5 instead of 10, so some failing checksums pass.",
+          "files": {"luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 5 == 0\n"}
+        },
+        {
+          "requirement": "R4",
+          "description": "Only spaces are removed as separators, so dashes make the input invalid.",
+          "files": {"luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"}
+        },
+        {
+          "requirement": "R5",
+          "description": "The lower length bound is 11 instead of 12, so 11-digit numbers are accepted.",
+          "files": {"luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 11 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"}
+        },
+        {
+          "requirement": "R6",
+          "description": "str.isdigit() replaces the ASCII digit check, so non-ASCII digits such as Arabic-Indic ones are accepted.",
+          "files": {"luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or not digits.isdigit():\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"}
+        },
+        {
+          "requirement": "R7",
+          "description": "Doubling starts at the rightmost digit instead of the second from the right.",
+          "files": {"luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 0:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"}
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Strips separators with a generator, checks digits with isascii and isdigit, and sums digit pairs with divmod.",
+          "files": {"luhn.py": "def luhn_valid(number):\n    digits = \"\".join(ch for ch in number if ch not in \" -\")\n    if not 12 <= len(digits) <= 19:\n        return False\n    if not (digits.isascii() and digits.isdigit()):\n        return False\n    total = 0\n    for i, ch in enumerate(digits[::-1]):\n        d = int(ch)\n        if i % 2:\n            tens, ones = divmod(d * 2, 10)\n            d = tens + ones\n        total += d\n    return total % 10 == 0\n"}
+        },
+        {
+          "description": "Uses regular expressions for cleaning and validation and sums odd and even positions with slices.",
+          "files": {"luhn.py": "import re\n\n\ndef luhn_valid(number):\n    cleaned = re.sub(r\"[ -]\", \"\", number)\n    if re.fullmatch(r\"[0-9]{12,19}\", cleaned) is None:\n        return False\n    nums = [int(c) for c in cleaned]\n    odd = sum(nums[-1::-2])\n    even = sum(sum(divmod(d * 2, 10)) for d in nums[-2::-2])\n    return (odd + even) % 10 == 0\n"}
+        },
+        {
+          "description": "Uses a lookup table for doubled digits and translate to drop separators.",
+          "files": {"luhn.py": "_DOUBLED = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9]\n\n\ndef luhn_valid(number):\n    digits = number.translate({ord(\" \"): None, ord(\"-\"): None})\n    if len(digits) < 12 or len(digits) > 19:\n        return False\n    for ch in digits:\n        if ch < \"0\" or ch > \"9\":\n            return False\n    total = 0\n    flip = False\n    for ch in reversed(digits):\n        d = ord(ch) - 48\n        total += _DOUBLED[d] if flip else d\n        flip = not flip\n    return total % 10 == 0\n"}
+        }
+      ]
+    },
+    "996abe0f1ffe01eda8a9e03b83e780a4f907fc2dc3448027ec84e2bed00fbcc9": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The hour multiplier is 360 instead of 3600.",
+          "files": {"durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 86400, \"h\": 360, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([0-9]+)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.strip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        while pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"}
+        },
+        {
+          "requirement": "R3",
+          "description": "Only a single space is skipped between components, so two or more spaces are rejected.",
+          "files": {"durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([0-9]+)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.strip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        if pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"}
+        },
+        {
+          "requirement": "R4",
+          "description": "The number pattern disallows a leading zero, so values such as 05m are rejected.",
+          "files": {"durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([1-9][0-9]*|0)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.strip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        while pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"}
+        },
+        {
+          "requirement": "R6",
+          "description": "Only trailing spaces are stripped, so input with leading spaces raises ValueError.",
+          "files": {"durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([0-9]+)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.rstrip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        while pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"}
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Parses the whole string with one anchored regular expression with optional groups per unit.",
+          "files": {"durations.py": "import re\n\n_PATTERN = re.compile(\n    r\" *(?:([0-9]+)d)? *(?:([0-9]+)h)? *(?:([0-9]+)m)? *(?:([0-9]+)s)? *\"\n)\n_MULTIPLIERS = (86400, 3600, 60, 1)\n\n\ndef parse_duration(text):\n    match = _PATTERN.fullmatch(text)\n    if match is None or all(g is None for g in match.groups()):\n        raise ValueError(\"invalid duration: %r\" % (text,))\n    return sum(\n        int(g) * mult\n        for g, mult in zip(match.groups(), _MULTIPLIERS)\n        if g is not None\n    )\n"}
+        },
+        {
+          "description": "Validates the shape with a regex, then extracts components with findall and checks unit order with a list.",
+          "files": {"durations.py": "import re\n\n\ndef parse_duration(text):\n    s = text.strip(\" \")\n    if re.fullmatch(r\"(?:[0-9]+[dhms] *)+\", s) is None:\n        raise ValueError(\"invalid duration: %r\" % (text,))\n    parts = re.findall(r\"([0-9]+)([dhms])\", s)\n    order = [\"d\", \"h\", \"m\", \"s\"]\n    positions = [order.index(unit) for _, unit in parts]\n    if positions != sorted(set(positions)):\n        raise ValueError(\"units out of order or repeated: %r\" % (text,))\n    factor = {\"d\": 24 * 60 * 60, \"h\": 60 * 60, \"m\": 60, \"s\": 1}\n    return sum(int(num) * factor[unit] for num, unit in parts)\n"}
+        }
+      ]
+    },
+    "9e5efee08af90eb9b89c3bcb282f1953b59d0a7068c373e286cc88156c6dfb44": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "L-501 is not renewed; only L-503 is.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n]\n"}
+        },
+        {
+          "requirement": "R2",
+          "description": "L-503 is renewed twice by a repeated call.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n]\n"}
+        },
+        {
+          "requirement": "R3",
+          "description": "L-502, which has a hold by another member, is renewed as well.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-502\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n]\n"}
+        },
+        {
+          "requirement": "R4",
+          "description": "L-504, due after the cutoff, is also renewed.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-504\"}}\n]\n"}
+        },
+        {
+          "requirement": "R5",
+          "description": "The list_loans call is skipped and the renewals are made directly.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n]\n"}
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Renews L-503 before L-501.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}}\n]\n"}
+        },
+        {
+          "description": "Calls list_loans a second time at the end to verify the result, with compact JSON formatting.",
+          "files": {"trajectory.json": "[{\"tool\":\"list_loans\",\"args\":{\"member_id\":\"M-1209\"}},{\"tool\":\"renew_loan\",\"args\":{\"loan_id\":\"L-501\"}},{\"tool\":\"renew_loan\",\"args\":{\"loan_id\":\"L-503\"}},{\"tool\":\"list_loans\",\"args\":{\"member_id\":\"M-1209\"}}]\n"}
+        },
+        {
+          "description": "Lists loans twice before renewing, with the same two renewals afterwards.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n]\n"}
+        }
+      ]
+    },
+    "a0fe68f7cf0abe5b40dcaac502bbdffdd038190336c3afe95a6d0637e056418a": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The reservation is created without the wheelchair access note.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"\"}}\n]\n"}
+        },
+        {
+          "requirement": "R2",
+          "description": "The create_reservation call is repeated, making two new reservations.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n]\n"}
+        },
+        {
+          "requirement": "R3",
+          "description": "An existing reservation, R-501, is cancelled after booking.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}},\n  {\"tool\": \"cancel_reservation\", \"args\": {\"reservation_id\": \"R-501\"}}\n]\n"}
+        }
+      ],
+      "preserving": [
+        {
+          "description": "The same single booking with the argument keys in a different order.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"party_size\": 4, \"time\": \"19:30\", \"date\": \"2026-11-14\"}},\n  {\"tool\": \"create_reservation\", \"args\": {\"notes\": \"wheelchair access\", \"party_size\": 4, \"time\": \"19:30\", \"date\": \"2026-11-14\", \"phone\": \"+44 20 7946 0321\", \"name\": \"Priya Raman\"}}\n]\n"}
+        },
+        {
+          "description": "Adds a read-only list_reservations call after the booking, in compact JSON formatting.",
+          "files": {"trajectory.json": "[{\"tool\":\"check_availability\",\"args\":{\"date\":\"2026-11-14\",\"time\":\"19:30\",\"party_size\":4}},{\"tool\":\"create_reservation\",\"args\":{\"name\":\"Priya Raman\",\"phone\":\"+44 20 7946 0321\",\"date\":\"2026-11-14\",\"time\":\"19:30\",\"party_size\":4,\"notes\":\"wheelchair access\"}},{\"tool\":\"list_reservations\",\"args\":{\"date\":\"2026-11-14\"}}]\n"}
+        },
+        {
+          "description": "Lists the day's reservations first instead of checking availability, then books once.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_reservations\", \"args\": {\"date\": \"2026-11-14\"}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n]\n"}
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

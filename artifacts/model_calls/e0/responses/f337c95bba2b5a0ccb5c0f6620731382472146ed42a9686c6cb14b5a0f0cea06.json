@@ -1,0 +1,329 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "f337c95bba2b5a0ccb5c0f6620731382472146ed42a9686c6cb14b5a0f0cea06",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "6ad0242b535ed85d3e607d05a88e3ae6edd7b8cd143a602c45a6ec8fcdfcfb95": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The event title is capitalised as 'Q4 Budget Review' instead of 'Q4 budget review'.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 Budget Review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The event ends at 14:45 instead of 14:30.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:45\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Priya Nair is left out of the attendee list.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\"]}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "After creating the event, the trajectory also adds an attendee to an existing event by mistake.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}},\n  {\"tool\": \"add_attendees\", \"args\": {\"event_id\": \"EV-1\", \"emails\": [\"priya.nair@example.com\"]}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Compact single-line JSON with reordered keys in each call and no trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"args\": {\"date\": \"2026-11-12\"}, \"tool\": \"list_events\"}, {\"args\": {\"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"], \"date\": \"2026-11-12\", \"end\": \"14:30\", \"start\": \"14:00\", \"title\": \"Q4 budget review\"}, \"tool\": \"create_event\"}]"
+          }
+        },
+        {
+          "description": "Attendees are listed in a different order.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"priya.nair@example.com\", \"lena.ortiz@example.com\", \"sam.cho@example.com\"]}}\n]\n"
+          }
+        },
+        {
+          "description": "Skips the read-only list_events call and creates the event directly.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n]\n"
+          }
+        },
+        {
+          "description": "Looks up each person with find_person first (read-only), then lists events and creates the event.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_person\", \"args\": {\"name\": \"Lena Ortiz\"}},\n  {\"tool\": \"find_person\", \"args\": {\"name\": \"Sam Cho\"}},\n  {\"tool\": \"find_person\", \"args\": {\"name\": \"Priya Nair\"}},\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n]\n"
+          }
+        }
+      ]
+    },
+    "6d616480807a0e4a20b813e7a936f76c4b4f54241a4044cc229a3a5971a46c3d": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Uppercase letters are kept as-is because the lowercasing step is skipped.",
+          "files": {
+            "slug.py": "import re\n\n_OTHER = re.compile(r\"[^A-Za-z0-9]+\")\n\n\ndef slugify(title):\n    return _OTHER.sub(\"-\", title).strip(\"-\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The pattern lacks the + so each other character becomes its own dash instead of one dash per run.",
+          "files": {
+            "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The final strip of leading and trailing dashes is forgotten.",
+          "files": {
+            "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered)\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Returns None instead of the empty string when the slug is empty.",
+          "files": {
+            "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    slug = _OTHER.sub(\"-\", lowered).strip(\"-\")\n    return slug or None\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Single-pass character loop instead of a regex, emitting a dash only between alphanumeric runs.",
+          "files": {
+            "slug.py": "def slugify(title):\n    out = []\n    pending = False\n    for ch in title:\n        if \"A\" <= ch <= \"Z\":\n            ch = chr(ord(ch) + 32)\n        if (\"a\" <= ch <= \"z\") or (\"0\" <= ch <= \"9\"):\n            if pending and out:\n                out.append(\"-\")\n            pending = False\n            out.append(ch)\n        else:\n            pending = True\n    return \"\".join(out)\n"
+          }
+        },
+        {
+          "description": "Uses an ASCII-only translate table for lowercasing and a regex with explicit ranges.",
+          "files": {
+            "slug.py": "import re\nimport string\n\n_LOWER = str.maketrans(string.ascii_uppercase, string.ascii_lowercase)\n_RUN = re.compile(\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    text = title.translate(_LOWER)\n    return _RUN.sub(\"-\", text).strip(\"-\")\n"
+          }
+        }
+      ]
+    },
+    "6ef5bc2ac5a70fd0a55d668a597d0a09063f9a3a3d691777e90eebc5304869ca": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The cancellation is scheduled for period_end instead of immediately.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"period_end\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The refund amount is 7000 cents instead of 700.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 7000}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The refund is issued before the cancellation.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "A neighbouring subscription SUB-3318 is also cancelled by a mistyped id.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3318\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "A second, extra refund of 100 cents is issued after the correct one.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 100}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Compact one-line JSON with reordered argument keys and no trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"args\": {\"sub_id\": \"SUB-3381\"}, \"tool\": \"get_subscription\"}, {\"args\": {\"when\": \"immediately\", \"sub_id\": \"SUB-3381\"}, \"tool\": \"cancel_subscription\"}, {\"args\": {\"amount_cents\": 700, \"sub_id\": \"SUB-3381\"}, \"tool\": \"issue_refund\"}]"
+          }
+        },
+        {
+          "description": "Omits the read-only get_subscription lookup.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n]\n"
+          }
+        },
+        {
+          "description": "Adds a read-only get_subscription check after the refund to confirm the final state.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}}\n]\n"
+          }
+        }
+      ]
+    },
+    "7100e86dcce06899e9d740a17d965e4768f5b3a2fd2c5ba1fdf90b62555ac4ac": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The chmod +x step is skipped so bin/countlines is not executable.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The generated script has no shebang line.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\nchmod +x bin/countlines\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "With globstar enabled the glob also matches .log files in subdirectories.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob globstar\nfiles=()\nfor f in \"$1\"/**/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\nchmod +x bin/countlines\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "When no .log files are found the script exits without printing anything instead of printing 0.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  exit 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\nchmod +x bin/countlines\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "The line count is computed with perl, which is not bash or coreutils.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | perl -ne '$n++ while /\\n/g; END { print $n + 0, \"\\n\" }'\nfi\nEOF\nchmod +x bin/countlines\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses the #!/bin/bash shebang and sums per-file wc -l counts in an arithmetic loop.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/bin/bash\nset -euo pipefail\ntotal=0\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    n=$(wc -l < \"$f\")\n    total=$((total + n))\n  fi\ndone\nprintf '%d\\n' \"$total\"\nEOF\nchmod +x bin/countlines\n"
+          }
+        },
+        {
+          "description": "Counts newline characters with tr and wc -c over the concatenated files, printing a trimmed integer.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\ndir=\"$1\"\ntotal=0\nshopt -s nullglob\nfor f in \"$dir\"/*.log; do\n  [ -f \"$f\" ] || continue\n  c=$(tr -cd '\\n' < \"$f\" | wc -c)\n  total=$((total + c))\ndone\necho \"$total\"\nEOF\nchmod +x bin/countlines\n"
+          }
+        }
+      ]
+    },
+    "71bb88ee2efa4bdd81c7b62d12ade4f205a54a416df76a5ebb88857cb70cb42b": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The summary includes an extra key, avg_price, beyond the four required keys.",
+          "files": {
+            "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n    \"avg_price\": round(revenue / sum(units.values()), 2),\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "orders reports the number of distinct products instead of the number of orders.",
+          "files": {
+            "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(units),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "units skips the first order, an off-by-one in the slice.",
+          "files": {
+            "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(o[\"quantity\"] for o in orders[1:]),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "revenue is rounded to 1 decimal place instead of 2.",
+          "files": {
+            "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 1),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "top_product is the product with the most orders rather than the largest total quantity.",
+          "files": {
+            "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\ncounts = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    counts[order[\"product\"]] += 1\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": counts.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Writes pretty-printed JSON with sorted keys and no trailing newline.",
+          "files": {
+            "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh, indent=2, sort_keys=True)\n"
+          }
+        },
+        {
+          "description": "Uses a plain dict, math.fsum for revenue, max() for the top product, and a different key order.",
+          "files": {
+            "solve.py": "import json\nimport math\n\nrows = [json.loads(line) for line in open(\"orders.jsonl\", encoding=\"utf-8\") if line.strip()]\n\ntotals = {}\nfor row in rows:\n    totals[row[\"product\"]] = totals.get(row[\"product\"], 0) + row[\"quantity\"]\n\nsummary = {\n    \"top_product\": max(totals, key=totals.get),\n    \"revenue\": round(math.fsum(r[\"quantity\"] * r[\"unit_price\"] for r in rows), 2),\n    \"units\": sum(r[\"quantity\"] for r in rows),\n    \"orders\": len(rows),\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary, separators=(\",\", \":\")))\n"
+          }
+        },
+        {
+          "description": "Same logic written with a manual accumulation loop and the JSON printed with spaces and a CRLF-free trailing newline pair.",
+          "files": {
+            "solve.py": "import json\n\nn_orders = 0\nn_units = 0\nrevenue = 0.0\nper_product = {}\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        line = line.strip()\n        if not line:\n            continue\n        rec = json.loads(line)\n        n_orders += 1\n        n_units += rec[\"quantity\"]\n        revenue += rec[\"quantity\"] * rec[\"unit_price\"]\n        per_product[rec[\"product\"]] = per_product.get(rec[\"product\"], 0) + rec[\"quantity\"]\n\nbest = sorted(per_product.items(), key=lambda kv: kv[1], reverse=True)[0][0]\nsummary = {\"orders\": n_orders, \"units\": n_units, \"revenue\": round(revenue, 2), \"top_product\": best}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary, indent=4) + \"\\n\\n\")\n"
+          }
+        }
+      ]
+    },
+    "7619281e02fe68cd880e47569e9f4b0ce7488283ae063171bb2b034951aa1007": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The transfer call is duplicated, so two transfers are made instead of exactly one.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The amount is 2500 cents (a dropped zero) instead of 25000.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 2500, \"memo\": \"holiday fund\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The memo is shortened to 'holiday' instead of 'holiday fund'.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Compact one-line JSON with reordered argument keys and no trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"args\": {\"customer_id\": \"C-118\"}, \"tool\": \"list_accounts\"}, {\"args\": {\"memo\": \"holiday fund\", \"amount_cents\": 25000, \"to_account\": \"ACC-3302\", \"from_account\": \"ACC-3301\"}, \"tool\": \"transfer\"}]"
+          }
+        },
+        {
+          "description": "Omits the read-only list_accounts call.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Adds read-only get_balance checks on both accounts before the single transfer.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3302\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

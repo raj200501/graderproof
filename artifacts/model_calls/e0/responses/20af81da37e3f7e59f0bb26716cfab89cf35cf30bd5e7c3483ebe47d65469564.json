@@ -1,0 +1,245 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "20af81da37e3f7e59f0bb26716cfab89cf35cf30bd5e7c3483ebe47d65469564",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "7a61e8561a68e4be0c081c93e3ff3dbd062304d6d8a80fb537c5a3713798250e": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The loop skips the last CSV row, so one row is missing from the output.",
+          "files": {"solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows[:-1]:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"}
+        },
+        {
+          "requirement": "R3",
+          "description": "The id is written as the CSV string instead of an integer.",
+          "files": {"solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": row[\"id\"],\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"}
+        },
+        {
+          "requirement": "R4",
+          "description": "The name joins first and last name without the separating space.",
+          "files": {"solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s%s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"}
+        },
+        {
+          "requirement": "R5",
+          "description": "The email is copied as written without lowercasing.",
+          "files": {"solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"],\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"}
+        },
+        {
+          "requirement": "R6",
+          "description": "The signup date is assembled as YYYY-DD-MM, swapping month and day.",
+          "files": {"solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, day, month),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"}
+        },
+        {
+          "requirement": "R7",
+          "description": "Each record carries an extra key holding the raw CSV date.",
+          "files": {"solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n            \"signup_date\": row[\"signup_date\"],\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"}
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Compact JSON separators (no spaces after commas and colons).",
+          "files": {"solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record, separators=(\",\", \":\")) + \"\\n\")\n"}
+        },
+        {
+          "description": "Keys written in sorted order and non-ASCII characters left unescaped.",
+          "files": {"solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n            \"email\": row[\"email\"].lower(),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"id\": int(row[\"id\"]),\n        }\n        fh.write(json.dumps(record, sort_keys=True, ensure_ascii=False) + \"\\n\")\n"}
+        },
+        {
+          "description": "Uses datetime for date conversion, an f-string for the name, and csv.reader with positional columns.",
+          "files": {"solve.py": "import csv\nimport json\nfrom datetime import datetime\n\nlines = []\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    reader = csv.reader(fh)\n    next(reader)\n    for uid, first, last, email, date in reader:\n        signup = datetime.strptime(date, \"%m/%d/%Y\").strftime(\"%Y-%m-%d\")\n        lines.append(\n            json.dumps(\n                {\"id\": int(uid), \"name\": f\"{first} {last}\", \"email\": email.lower(), \"signup\": signup}\n            )\n        )\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\".join(line + \"\\n\" for line in lines))\n"}
+        }
+      ]
+    },
+    "7df27bb6bc2bb56c81570bc6ac9ab72ad0fb4c58cfcd61d440e3d48ae44ecc52": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The cutoff is 2026-09-30 so the log dated 2026-09-30 is not archived.",
+          "files": {"solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ \"$day\" < \"2026-09-30\" ]]; then\n    mv -- \"$f\" logs/archive/\n  fi\ndone\n"}
+        },
+        {
+          "requirement": "R2",
+          "description": "Files are copied into the archive instead of moved, so originals remain in logs/.",
+          "files": {"solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ \"$day\" < \"2026-10-01\" ]]; then\n    cp -- \"$f\" logs/archive/\n  fi\ndone\n"}
+        },
+        {
+          "requirement": "R3",
+          "description": "Moved files are renamed to drop the app- prefix.",
+          "files": {"solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ \"$day\" < \"2026-10-01\" ]]; then\n    mv -- \"$f\" \"logs/archive/$name\"\n  fi\ndone\n"}
+        },
+        {
+          "requirement": "R4",
+          "description": "The comparison is inclusive, so the 2026-10-01 log is also archived.",
+          "files": {"solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ \"$day\" < \"2026-10-02\" ]]; then\n    mv -- \"$f\" logs/archive/\n  fi\ndone\n"}
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses basename and a test bracket with verbose mv and mv -t.",
+          "files": {"solve.sh": "#!/usr/bin/env bash\nset -eu\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  day=$(basename \"$f\" .log)\n  day=${day#app-}\n  if [ \"$day\" \\< \"2026-10-01\" ]; then\n    mv -t logs/archive -- \"$f\"\n  fi\ndone\n"}
+        },
+        {
+          "description": "Collects the matching files into an array and moves them with one mv call (guarded for the empty case).",
+          "files": {"solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nold=()\nfor f in logs/app-*.log; do\n  day=${f##*/app-}\n  day=${day%.log}\n  if [[ \"$day\" < \"2026-10-01\" ]]; then\n    old+=(\"$f\")\n  fi\ndone\nif [ \"${#old[@]}\" -gt 0 ]; then\n  mv -- \"${old[@]}\" logs/archive/\nfi\n"}
+        }
+      ]
+    },
+    "80a983f5c4a87e51d0d042dd79d60e3ff45ea72d24564a3fbf8904af746bbd56": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "LR-301 is rejected instead of approved.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-301\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"}
+        },
+        {
+          "requirement": "R2",
+          "description": "LR-302 is rejected with a different reason text.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"not enough leave\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"}
+        },
+        {
+          "requirement": "R3",
+          "description": "LR-303 is rejected because the balance is treated as needing to exceed the days requested (off-by-one).",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-303\", \"reason\": \"insufficient balance\"}}\n]\n"}
+        },
+        {
+          "requirement": "R4",
+          "description": "LR-301 is approved a second time, a duplicate approval.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"}
+        },
+        {
+          "requirement": "R5",
+          "description": "The non-pending request LR-288 is also rejected.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-288\", \"reason\": \"insufficient balance\"}}\n]\n"}
+        },
+        {
+          "requirement": "R6",
+          "description": "The last pending request, LR-303, is never processed.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}}\n]\n"}
+        }
+      ],
+      "preserving": [
+        {
+          "description": "All balances are checked first, then the decisions are applied.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"}
+        },
+        {
+          "description": "Requests are processed in reverse order.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}}\n]\n"}
+        },
+        {
+          "description": "Same calls with compact formatting and keys in a different order inside each call.",
+          "files": {"trajectory.json": "[{\"args\":{\"status\":\"pending\"},\"tool\":\"list_requests\"},{\"args\":{\"employee_id\":\"E-77\"},\"tool\":\"get_balance\"},{\"args\":{\"request_id\":\"LR-301\"},\"tool\":\"approve_request\"},{\"args\":{\"employee_id\":\"E-81\"},\"tool\":\"get_balance\"},{\"args\":{\"reason\":\"insufficient balance\",\"request_id\":\"LR-302\"},\"tool\":\"reject_request\"},{\"args\":{\"employee_id\":\"E-90\"},\"tool\":\"get_balance\"},{\"args\":{\"request_id\":\"LR-303\"},\"tool\":\"approve_request\"}]\n"}
+        }
+      ]
+    },
+    "814b9f61286022e5d797009583de535c84584ab1c01ebb4b453ffe45eea486df": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The pool_size line in [database] is left unchanged.",
+          "files": {"solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"}
+        },
+        {
+          "requirement": "R2",
+          "description": "The timeout line is inserted before the url line instead of after it.",
+          "files": {"solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n    out.append(line)\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"}
+        },
+        {
+          "requirement": "R3",
+          "description": "The section check is dropped so pool_size in [reports] is also changed to 20.",
+          "files": {"solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"}
+        },
+        {
+          "requirement": "R4",
+          "description": "Trailing newlines are stripped before writing, so the file no longer ends with a newline.",
+          "files": {"solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out).rstrip(\"\\n\"))\n"}
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Reads lines with their endings preserved and edits them without splitting and rejoining the whole text.",
+          "files": {"solve.py": "with open(\"app.ini\", encoding=\"utf-8\", newline=\"\") as fh:\n    lines = fh.readlines()\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\" + line[len(line.rstrip(\"\\r\\n\")):]\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\\n\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.writelines(out)\n"}
+        },
+        {
+          "description": "Finds the section ranges first, then edits by index and inserts the new line afterwards.",
+          "files": {"solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nsection = None\nurl_index = None\nfor i, line in enumerate(lines):\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n        continue\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        lines[i] = \"pool_size = 20\"\n    elif section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        url_index = i\n\nif url_index is not None:\n    lines.insert(url_index + 1, \"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(lines))\n"}
+        }
+      ]
+    },
+    "82fb46003467749e4111268e872d3f5b3bb5f6fcfbc568de4003427ba44d52c8": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The trajectory looks up the bookings but never calls cancel_booking.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}}\n]\n"}
+        },
+        {
+          "requirement": "R2",
+          "description": "BK-4470 is cancelled in addition to BK-4471.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4470\"}}\n]\n"}
+        },
+        {
+          "requirement": "R3",
+          "description": "The other customer's booking BK-4502 is cancelled in addition to BK-4471.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4502\"}}\n]\n"}
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Cancels BK-4471 directly without the lookup call.",
+          "files": {"trajectory.json": "[\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n]\n"}
+        },
+        {
+          "description": "Same two calls in compact single-line JSON.",
+          "files": {"trajectory.json": "[{\"tool\":\"find_bookings\",\"args\":{\"customer_name\":\"Lin Zhao\"}},{\"tool\":\"cancel_booking\",\"args\":{\"booking_id\":\"BK-4471\"}}]"}
+        },
+        {
+          "description": "Looks up the bookings twice before cancelling, which changes nothing in the state.",
+          "files": {"trajectory.json": "[\n  {\"args\": {\"customer_name\": \"Lin Zhao\"}, \"tool\": \"find_bookings\"},\n  {\"args\": {\"customer_name\": \"Lin Zhao\"}, \"tool\": \"find_bookings\"},\n  {\"args\": {\"booking_id\": \"BK-4471\"}, \"tool\": \"cancel_booking\"}\n]\n"}
+        }
+      ]
+    },
+    "8581102271bb6f6ed0740466a4d869df36f4d202ea111145e69d95482e9acf50": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The leading question mark is no longer removed, so the first key keeps a ? prefix.",
+          "files": {"urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"}
+        },
+        {
+          "requirement": "R3",
+          "description": "Pairs are split on every = and only the second piece is used, so values containing = are truncated.",
+          "files": {"urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        parts = pair.split(\"=\")\n        key = parts[0]\n        value = parts[1] if len(parts) > 1 else \"\"\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"}
+        },
+        {
+          "requirement": "R4",
+          "description": "Empty pairs are not skipped, so an empty key mapped to an empty string appears (including for an empty query).",
+          "files": {"urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"}
+        },
+        {
+          "requirement": "R5",
+          "description": "The first value for a repeated key is kept instead of the last.",
+          "files": {"urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result.setdefault(unquote_plus(key), unquote_plus(value))\n    return result\n"}
+        },
+        {
+          "requirement": "R6",
+          "description": "Keys are used as written without decoding, only values are decoded.",
+          "files": {"urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[key] = unquote_plus(value)\n    return result\n"}
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses urllib.parse.parse_qsl with keep_blank_values after removing the leading question mark.",
+          "files": {"urlquery.py": "from urllib.parse import parse_qsl\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    return dict(parse_qsl(qs, keep_blank_values=True))\n"}
+        },
+        {
+          "description": "Manual decoding: plus to space via replace, then unquote, with a dict comprehension over a generator of split pairs.",
+          "files": {"urlquery.py": "from urllib.parse import unquote\n\n\ndef _decode(text):\n    return unquote(text.replace(\"+\", \" \"))\n\n\ndef parse_query(qs):\n    qs = qs[1:] if qs[:1] == \"?\" else qs\n    pairs = (p.split(\"=\", 1) for p in qs.split(\"&\") if p)\n    return {_decode(p[0]): _decode(p[1] if len(p) > 1 else \"\") for p in pairs}\n"}
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

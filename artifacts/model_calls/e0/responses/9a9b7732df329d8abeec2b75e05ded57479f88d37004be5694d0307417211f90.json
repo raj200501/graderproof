@@ -1,0 +1,243 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "9a9b7732df329d8abeec2b75e05ded57479f88d37004be5694d0307417211f90",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "59b064eebb4490fcc2d0857ec54a3ef2e22fa29decad603c6cbbf8b564cb3962": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The label call for M-07 is skipped, although M-07 is still archived.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "M-04 is labeled but the archive step for it is forgotten.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "M-03, a message from another sender, is also labeled invoices and archived.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-03\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-03\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The existing vendors label on M-04 is removed as part of the cleanup.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"remove_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"vendors\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "All labels are applied first, then all archives, in the same message set.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Messages are processed in reverse order with archive before label, in compact one-line JSON.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"list_messages\",\"args\":{}},{\"tool\":\"archive\",\"args\":{\"message_id\":\"M-07\"}},{\"tool\":\"add_label\",\"args\":{\"message_id\":\"M-07\",\"label\":\"invoices\"}},{\"tool\":\"archive\",\"args\":{\"message_id\":\"M-04\"}},{\"tool\":\"add_label\",\"args\":{\"message_id\":\"M-04\",\"label\":\"invoices\"}},{\"tool\":\"archive\",\"args\":{\"message_id\":\"M-02\"}},{\"tool\":\"add_label\",\"args\":{\"message_id\":\"M-02\",\"label\":\"invoices\"}}]"
+          }
+        }
+      ]
+    },
+    "5ef4358f009839c1d392a236272c458c465faf5e9709f1482f68a80145cf87bf": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The output file is named product.json instead of products.json.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"product.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The loop skips the last data row (off-by-one slice), leaving 4 objects.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows[:-1]:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The name is title-cased, so names such as \"Braided Cable, 2 m\" change to \"Braided Cable, 2 M\".",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"].title(),\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The price is kept as the CSV string instead of being converted to a number.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": row[\"price\"],\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "in_stock uses bool() of the column text, so every non-empty value including no becomes true.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": bool(row[\"in_stock\"].strip()),\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Compact JSON on one line with sorted keys and no trailing newline.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, separators=(\",\", \":\"), sort_keys=True)\n"
+          }
+        },
+        {
+          "description": "Uses csv.reader with positional columns, 4-space indent, and a different key order.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nproducts = []\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    reader = csv.reader(fh)\n    header = next(reader)\n    idx = {name: i for i, name in enumerate(header)}\n    for row in reader:\n        if not row:\n            continue\n        products.append(\n            {\n                \"in_stock\": row[idx[\"in_stock\"]].strip().lower() == \"yes\",\n                \"price\": float(row[idx[\"price\"]]),\n                \"name\": row[idx[\"name\"]],\n                \"sku\": row[idx[\"sku\"]],\n            }\n        )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=4)\n    fh.write(\"\\n\")\n"
+          }
+        }
+      ]
+    },
+    "603b70601045f508922412a469a233a11947cb6f35b334098ef30454b5226189": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "format_size truncates to one decimal instead of rounding halves up, so 1280 bytes gives 1.2 KiB.",
+          "files": {
+            "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 10) // size\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses bit shifts, divmod and str.format with the same integer rounding.",
+          "files": {
+            "sizes.py": "_UNITS = ((\"TiB\", 1 << 40), (\"GiB\", 1 << 30), (\"MiB\", 1 << 20), (\"KiB\", 1 << 10))\n\n\ndef format_size(n):\n    if n < 1024:\n        return str(n) + \" B\"\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 10 + size // 2) // size\n            whole, frac = divmod(tenths, 10)\n            return \"{}.{} {}\".format(whole, frac, name)\n    raise AssertionError(\"unreachable\")\n"
+          }
+        },
+        {
+          "description": "Scans the units in ascending order and keeps the largest that fits, then rounds with integer arithmetic.",
+          "files": {
+            "sizes.py": "UNITS = [(\"KiB\", 2 ** 10), (\"MiB\", 2 ** 20), (\"GiB\", 2 ** 30), (\"TiB\", 2 ** 40)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return f\"{n} B\"\n    unit, size = UNITS[0]\n    for candidate_unit, candidate_size in UNITS:\n        if n >= candidate_size:\n            unit, size = candidate_unit, candidate_size\n    tenths = (2 * n * 10 + size) // (2 * size)\n    return f\"{tenths // 10}.{tenths % 10} {unit}\"\n"
+          }
+        }
+      ]
+    },
+    "659c9cc9425f157a5355d9525048c047193f6d27cc3ac5015fbc953c2a6648a7": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The changelog is written to CHANGELOG.txt instead of CHANGELOG.md.",
+          "files": {
+            "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.txt\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The subject pattern no longer allows the optional ! marker, so feat! and fix! commits are dropped.",
+          "files": {
+            "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Types are matched by prefix, so a fixture commit is listed under Fixes.",
+          "files": {
+            "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if not match:\n            continue\n        kind = match.group(1)\n        if kind.startswith(\"feat\"):\n            sections[\"feat\"].append(match.group(3))\n        elif kind.startswith(\"fix\"):\n            sections[\"fix\"].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "No blank lines at all, and the file ends with a single trailing newline.",
+          "files": {
+            "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nlines = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        lines.append(title)\n        lines.extend(\"- \" + description for description in sections[kind])\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(lines) + \"\\n\")\n"
+          }
+        },
+        {
+          "description": "Parses each subject with str.partition instead of a regex and puts a blank line before each heading.",
+          "files": {
+            "solve.py": "features = []\nfixes = []\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().splitlines():\n        head, sep, description = line.partition(\": \")\n        if not sep:\n            continue\n        if head.endswith(\"!\"):\n            head = head[:-1]\n        kind = head.split(\"(\", 1)[0]\n        if kind == \"feat\":\n            features.append(description)\n        elif kind == \"fix\":\n            fixes.append(description)\n\nparts = []\nif features:\n    parts.append(\"\\n## Features\\n\" + \"\\n\".join(\"- \" + d for d in features) + \"\\n\")\nif fixes:\n    parts.append(\"\\n## Fixes\\n\" + \"\\n\".join(\"- \" + d for d in fixes) + \"\\n\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\".join(parts))\n"
+          }
+        }
+      ]
+    },
+    "665e7a352c7e64732dbf3c55aff71f9bb6a6269b62a4cd1be13866b8e89cfc0b": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The display name is set without the middle initial, as Maya Okafor.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The pronouns are set with a capital S, as She/her.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"She/her\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The title field of U-7781 is also rewritten.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"title\", \"value\": \"Senior Data Analyst\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The pronouns are also written to user U-7790.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7790\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Pronouns are set before the display name.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact JSON, with get_profile called again at the end to confirm the result.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"get_profile\",\"args\":{\"user_id\":\"U-7781\"}},{\"tool\":\"update_profile\",\"args\":{\"field\":\"display_name\",\"user_id\":\"U-7781\",\"value\":\"Maya R. Okafor\"}},{\"tool\":\"update_profile\",\"args\":{\"field\":\"pronouns\",\"user_id\":\"U-7781\",\"value\":\"she/her\"}},{\"tool\":\"get_profile\",\"args\":{\"user_id\":\"U-7781\"}}]"
+          }
+        }
+      ]
+    },
+    "686a601b7d247fa7edce7b8afada3993b5588e4f5e9fca55b9efdb7054e62399": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The acronym rule is dropped, so HTTPServer becomes httpserver instead of http_server.",
+          "files": {
+            "naming.py": "def _upper(ch):\n    return \"A\" <= ch <= \"Z\"\n\n\ndef _lower_or_digit(ch):\n    return \"a\" <= ch <= \"z\" or \"0\" <= ch <= \"9\"\n\n\ndef to_snake(name):\n    out = []\n    for i, ch in enumerate(name):\n        if i > 0 and _upper(ch):\n            prev = name[i - 1]\n            if _lower_or_digit(prev):\n                out.append(\"_\")\n        out.append(ch.lower())\n    return \"\".join(out)\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Implements both rules with a single regular expression substitution.",
+          "files": {
+            "naming.py": "import re\n\n_BOUNDARY = re.compile(r\"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])\")\n\n\ndef to_snake(name):\n    return _BOUNDARY.sub(\"_\", name).lower()\n"
+          }
+        },
+        {
+          "description": "Builds the result with lookups on a padded string and str.isupper checks instead of character ranges.",
+          "files": {
+            "naming.py": "def to_snake(name):\n    padded = \" \" + name + \" \"\n    pieces = []\n    for i in range(1, len(padded) - 1):\n        prev, ch, nxt = padded[i - 1], padded[i], padded[i + 1]\n        if i > 1 and ch.isupper():\n            if prev.islower() or prev.isdigit():\n                pieces.append(\"_\")\n            elif prev.isupper() and nxt.islower():\n                pieces.append(\"_\")\n        pieces.append(ch)\n    return \"\".join(pieces).lower()\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

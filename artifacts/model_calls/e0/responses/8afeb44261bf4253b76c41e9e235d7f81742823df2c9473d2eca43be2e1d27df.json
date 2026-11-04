@@ -1,0 +1,302 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "8afeb44261bf4253b76c41e9e235d7f81742823df2c9473d2eca43be2e1d27df",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "b2a4e9330d00fb6d663af0bf1316cb5492c1aa98b2d3b12351b232b1cfbd8bde": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The cancel_booking step is skipped, so the Tuesday booking remains.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The join_waitlist step is skipped, so the member is never added to the Thursday waitlist.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The member is also added to the Tuesday class waitlist, which should stay empty.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "The read-only list_classes call is omitted.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n]\n"
+          }
+        },
+        {
+          "description": "The waitlist join happens before the cancellation, and the argument keys are in a different order.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"class_id\": \"CL-THU-YOGA\", \"member_id\": \"G-208\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"class_id\": \"CL-TUE-YOGA\", \"member_id\": \"G-208\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact one-line JSON without a trailing newline, with list_classes called again at the end.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"list_classes\",\"args\":{}},{\"tool\":\"cancel_booking\",\"args\":{\"member_id\":\"G-208\",\"class_id\":\"CL-TUE-YOGA\"}},{\"tool\":\"join_waitlist\",\"args\":{\"member_id\":\"G-208\",\"class_id\":\"CL-THU-YOGA\"}},{\"tool\":\"list_classes\",\"args\":{}}]"
+          }
+        }
+      ]
+    },
+    "b31e16c23214a870f2cd009d60147aa225190703563a2e69ab826096a7d4266b": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The address drops the flat number and is not the exact required string.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The update is applied to the neighbouring order ORD-55121 instead of ORD-55120.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55121\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "The read-only get_order call is omitted.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Argument keys are in the opposite order and get_order is called after the update to confirm.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"update_shipping_address\", \"args\": {\"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\", \"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact JSON with no trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"get_order\",\"args\":{\"order_id\":\"ORD-55120\"}},{\"tool\":\"update_shipping_address\",\"args\":{\"order_id\":\"ORD-55120\",\"address\":\"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}]"
+          }
+        }
+      ]
+    },
+    "b5b662c75ed95926f3e1d5c92948f0126904b38d1a7ca3eaeaa91691d37afe69": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The last four digits are transposed (4812 instead of 4821) in verify_identity.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4812\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The refund is issued before the identity check is performed.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}},\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The refund amount is 6449 cents, a typo for 6499.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6449, \"reason\": \"damaged\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The refund is submitted twice, producing a duplicate refund record.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "The read-only get_order call is omitted.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+          }
+        },
+        {
+          "description": "get_order is called before verify_identity (read-only), and argument keys are reordered.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"verify_identity\", \"args\": {\"last4\": \"4821\", \"customer_id\": \"C-8812\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"reason\": \"damaged\", \"amount_cents\": 6499, \"order_id\": \"ORD-90417\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact JSON with no trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"verify_identity\",\"args\":{\"customer_id\":\"C-8812\",\"last4\":\"4821\"}},{\"tool\":\"get_order\",\"args\":{\"order_id\":\"ORD-90417\"}},{\"tool\":\"issue_refund\",\"args\":{\"order_id\":\"ORD-90417\",\"amount_cents\":6499,\"reason\":\"damaged\"}}]"
+          }
+        }
+      ]
+    },
+    "bb02f2c2cba37c5513dffcd508e3c1e568b2868b15505e1b3963af64491c9be8": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The output is written to transpose.tsv instead of transposed.tsv.",
+          "files": {
+            "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transpose.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Rows are split on any whitespace, so cells containing spaces are broken into several cells.",
+          "files": {
+            "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split() for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The last output row is not terminated by a newline.",
+          "files": {
+            "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\\n\".join(\"\\t\".join(column) for column in columns))\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The input file is rewritten after reading, with a trailing tab stripped from the first line.",
+          "files": {
+            "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    text = fh.read()\nrows = [line.split(\"\\t\") for line in text.split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\nwith open(\"matrix.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\\n\".join(\"\\t\".join(row) for row in rows))\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses explicit index loops and a single joined write instead of zip.",
+          "files": {
+            "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nrows = []\nfor line in lines:\n    if line != \"\":\n        rows.append(line.split(\"\\t\"))\n\nwidth = len(rows[0]) if rows else 0\nout = []\nfor j in range(width):\n    out.append(\"\\t\".join(rows[i][j] for i in range(len(rows))) + \"\\n\")\n\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\".join(out))\n"
+          }
+        },
+        {
+          "description": "Uses the csv module with a tab delimiter and no quoting, writing newline-terminated rows.",
+          "files": {
+            "solve.py": "import csv\n\nwith open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [row for row in csv.reader(fh, delimiter=\"\\t\", quoting=csv.QUOTE_NONE) if row]\n\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    writer = csv.writer(fh, delimiter=\"\\t\", quoting=csv.QUOTE_NONE, quotechar=None, lineterminator=\"\\n\")\n    for column in zip(*rows):\n        writer.writerow(column)\n"
+          }
+        }
+      ]
+    },
+    "bb4f3fdca39716f5377ff4ffff1b10d63e113016e949672df874bd9de68d1083": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The find_user lookup is skipped and the user ID is used directly.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The ticket is created with priority medium instead of high.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"medium\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The assign_ticket step is skipped, leaving the ticket unassigned.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The user lookup is done after the ticket is created.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "The existing ticket T-1000 is also assigned to netops.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1000\", \"team\": \"netops\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "The ticket is created twice, producing a duplicate T-1002.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Argument keys are reordered in every call.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"priority\": \"high\", \"category\": \"network\", \"title\": \"VPN disconnects every few minutes\", \"user_id\": \"U-204\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"team\": \"netops\", \"ticket_id\": \"T-1001\"}}\n]\n"
+          }
+        },
+        {
+          "description": "A read-only get_ticket call is added after assignment to confirm the result.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}},\n  {\"tool\": \"get_ticket\", \"args\": {\"ticket_id\": \"T-1001\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact JSON with no trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"find_user\",\"args\":{\"email\":\"ana.lima@example.com\"}},{\"tool\":\"create_ticket\",\"args\":{\"user_id\":\"U-204\",\"title\":\"VPN disconnects every few minutes\",\"category\":\"network\",\"priority\":\"high\"}},{\"tool\":\"assign_ticket\",\"args\":{\"ticket_id\":\"T-1001\",\"team\":\"netops\"}}]"
+          }
+        }
+      ]
+    },
+    "bbf853e256902a2948387ac9b9089809cec392078df87ec3f77ad826f1533e42": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Three-letter month abbreviations are no longer accepted, only full month names.",
+          "files": {
+            "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "DD/MM/YYYY is read month first, so the day and month are swapped.",
+          "files": {
+            "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        month, day, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "YYYY.MM.DD is read as year, day, month, so the last two fields are swapped.",
+          "files": {
+            "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, day, month = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Input is no longer stripped, so surrounding spaces cause a ValueError.",
+          "files": {
+            "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses a month lookup dictionary and a single function with nested regex matching instead of module-level patterns.",
+          "files": {
+            "dateparse.py": "import re\nfrom datetime import date\n\nMONTH_NUMBERS = {}\nfor _index, _name in enumerate(\n    [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\",\n     \"september\", \"october\", \"november\", \"december\"],\n    1,\n):\n    MONTH_NUMBERS[_name] = _index\n    MONTH_NUMBERS[_name[:3]] = _index\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    m = re.fullmatch(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\", s)\n    if m:\n        month = MONTH_NUMBERS.get(m.group(1).lower())\n        if month is None:\n            raise ValueError(\"unknown month: %r\" % m.group(1))\n        y, mo, d = int(m.group(3)), month, int(m.group(2))\n    else:\n        m = re.fullmatch(r\"(\\d{2})/(\\d{2})/(\\d{4})\", s)\n        if m:\n            d, mo, y = int(m.group(1)), int(m.group(2)), int(m.group(3))\n        else:\n            m = re.fullmatch(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\", s)\n            if not m:\n                raise ValueError(\"unrecognized date: %r\" % text)\n            y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))\n    return date(y, mo, d).isoformat()\n"
+          }
+        },
+        {
+          "description": "Gates formats with regexes, then uses datetime.strptime for the numeric formats and a month table for named months.",
+          "files": {
+            "dateparse.py": "import re\nfrom datetime import date, datetime\n\n_NAMES = (\"jan\", \"feb\", \"mar\", \"apr\", \"may\", \"jun\", \"jul\", \"aug\", \"sep\", \"oct\", \"nov\", \"dec\")\n_FULL = (\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\",\n         \"september\", \"october\", \"november\", \"december\")\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    named = re.fullmatch(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\", s)\n    if named:\n        word = named.group(1).lower()\n        if word in _FULL:\n            month = _FULL.index(word) + 1\n        elif word in _NAMES:\n            month = _NAMES.index(word) + 1\n        else:\n            raise ValueError(\"unknown month %r\" % word)\n        return date(int(named.group(3)), month, int(named.group(2))).isoformat()\n    if re.fullmatch(r\"\\d{2}/\\d{2}/\\d{4}\", s):\n        return datetime.strptime(s, \"%d/%m/%Y\").date().isoformat()\n    if re.fullmatch(r\"\\d{4}\\.\\d{2}\\.\\d{2}\", s):\n        return datetime.strptime(s, \"%Y.%m.%d\").date().isoformat()\n    raise ValueError(\"unrecognized date: %r\" % text)\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

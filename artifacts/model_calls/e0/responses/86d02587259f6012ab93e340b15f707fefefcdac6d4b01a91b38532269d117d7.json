@@ -1,0 +1,283 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "86d02587259f6012ab93e340b15f707fefefcdac6d4b01a91b38532269d117d7",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "d59141d2658d0fe50958352a5b940a45f17ffaf9b377da1f4e97b3beb1305d4c": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Dots are no longer in the set of removed characters, so numbers formatted with dots are rejected.",
+          "files": {
+            "phones.py": "_REMOVED = set(\" -()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The 11-digit country-code branch is missing, so 11-digit numbers starting with 1 are rejected.",
+          "files": {
+            "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Regex-based normalization with the same accepted and rejected inputs.",
+          "files": {
+            "phones.py": "import re\n\n\ndef normalize_phone(raw):\n    text = re.sub(r\"[ .\\-()]\", \"\", raw)\n    match = re.fullmatch(r\"\\+?1?([0-9]{10})\", text)\n    if match is None:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + match.group(1)\n"
+          }
+        },
+        {
+          "description": "Uses str.translate and isdigit/isascii checks instead of set membership.",
+          "files": {
+            "phones.py": "_TABLE = str.maketrans(\"\", \"\", \" .-()\")\n\n\ndef normalize_phone(raw):\n    text = raw.translate(_TABLE)\n    if text[:1] == \"+\":\n        text = text[1:]\n    if not (text.isascii() and text.isdigit()):\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text.startswith(\"1\"):\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1{}\".format(text)\n"
+          }
+        }
+      ]
+    },
+    "d854c1d6dd1040c9c6e131a664c2b5ce49d3971799f2d05259b4e74c813754a6": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The numeral is returned in lowercase letters.",
+          "files": {
+            "roman.py": "_VALUES = [\n    (1000, \"M\"), (900, \"CM\"), (500, \"D\"), (400, \"CD\"), (100, \"C\"), (90, \"XC\"),\n    (50, \"L\"), (40, \"XL\"), (10, \"X\"), (9, \"IX\"), (5, \"V\"), (4, \"IV\"), (1, \"I\"),\n]\n\n\ndef to_roman(n):\n    if not 1 <= n <= 3999:\n        raise ValueError(\"n must be between 1 and 3999\")\n    out = []\n    for value, letters in _VALUES:\n        count, n = divmod(n, value)\n        out.append(letters * count)\n    return \"\".join(out).lower()\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The 40 entry (XL) is missing from the table, so 40 is written as XXXX.",
+          "files": {
+            "roman.py": "_VALUES = [\n    (1000, \"M\"), (900, \"CM\"), (500, \"D\"), (400, \"CD\"), (100, \"C\"), (90, \"XC\"),\n    (50, \"L\"), (10, \"X\"), (9, \"IX\"), (5, \"V\"), (4, \"IV\"), (1, \"I\"),\n]\n\n\ndef to_roman(n):\n    if not 1 <= n <= 3999:\n        raise ValueError(\"n must be between 1 and 3999\")\n    out = []\n    for value, letters in _VALUES:\n        count, n = divmod(n, value)\n        out.append(letters * count)\n    return \"\".join(out)\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Digit-by-digit lookup tables instead of a greedy value list.",
+          "files": {
+            "roman.py": "_ONES = [\"\", \"I\", \"II\", \"III\", \"IV\", \"V\", \"VI\", \"VII\", \"VIII\", \"IX\"]\n_TENS = [\"\", \"X\", \"XX\", \"XXX\", \"XL\", \"L\", \"LX\", \"LXX\", \"LXXX\", \"XC\"]\n_HUNDREDS = [\"\", \"C\", \"CC\", \"CCC\", \"CD\", \"D\", \"DC\", \"DCC\", \"DCCC\", \"CM\"]\n_THOUSANDS = [\"\", \"M\", \"MM\", \"MMM\"]\n\n\ndef to_roman(n):\n    if n < 1 or n > 3999:\n        raise ValueError(\"n must be between 1 and 3999\")\n    return (\n        _THOUSANDS[n // 1000]\n        + _HUNDREDS[(n // 100) % 10]\n        + _TENS[(n // 10) % 10]\n        + _ONES[n % 10]\n    )\n"
+          }
+        },
+        {
+          "description": "Greedy subtraction loop with a while statement.",
+          "files": {
+            "roman.py": "_SYMBOLS = (\n    (1000, \"M\"), (900, \"CM\"), (500, \"D\"), (400, \"CD\"), (100, \"C\"), (90, \"XC\"),\n    (50, \"L\"), (40, \"XL\"), (10, \"X\"), (9, \"IX\"), (5, \"V\"), (4, \"IV\"), (1, \"I\"),\n)\n\n\ndef to_roman(n):\n    if n < 1 or n > 3999:\n        raise ValueError(\"n must be between 1 and 3999\")\n    result = \"\"\n    for value, letters in _SYMBOLS:\n        while n >= value:\n            result += letters\n            n -= value\n    return result\n"
+          }
+        }
+      ]
+    },
+    "dc815a91feef86df1cd6f77ded47cf5831c6b2d551792f56f8e503eaa185fc3f": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Off-by-one in the fit test: a word is added only if the line stays strictly under width.",
+          "files": {
+            "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) < width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Splits only on the space character, so tabs and newlines stay inside words.",
+          "files": {
+            "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split(\" \"):\n        if not word:\n            continue\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "A word longer than width is broken into width-sized chunks instead of kept whole.",
+          "files": {
+            "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n        while len(current) > width:\n            lines.append(current[:width])\n            current = current[width:]\n    if current:\n        lines.append(current)\n    return lines\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Each emitted line keeps a trailing space from the join step.",
+          "files": {
+            "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current + \" \")\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "The final non-empty guard is dropped, so text without words returns a list with one empty string.",
+          "files": {
+            "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    lines.append(current)\n    return lines\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Collects words per line in lists and joins them, using a regex to find words.",
+          "files": {
+            "wrap.py": "import re\n\n\ndef wrap(text, width):\n    lines = []\n    row = []\n    size = 0\n    for word in re.findall(r\"\\S+\", text):\n        if row and size + 1 + len(word) > width:\n            lines.append(\" \".join(row))\n            row = []\n            size = 0\n        size = size + len(word) if not row else size + 1 + len(word)\n        row.append(word)\n    if row:\n        lines.append(\" \".join(row))\n    return lines\n"
+          }
+        },
+        {
+          "description": "Same greedy algorithm using a word iterator and renamed variables.",
+          "files": {
+            "wrap.py": "def wrap(text, width):\n    result = []\n    line = None\n    for token in text.split():\n        if line is None:\n            line = token\n            continue\n        candidate = line + \" \" + token\n        if len(candidate) <= width:\n            line = candidate\n        else:\n            result.append(line)\n            line = token\n    if line is not None:\n        result.append(line)\n    return result\n"
+          }
+        }
+      ]
+    },
+    "dd0615213b45a8ce3196f23e25493cd507ddf3fde1088f61744d32a50a7d7fe8": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "verify_account is called with a transposed ZIP code (60641 instead of 60614).",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60641\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The plan change is scheduled before the account holder is verified.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The change is scheduled to the wrong plan name (standard instead of basic).",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"standard\", \"effective\": \"period_end\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The plan change is made with effective now instead of period_end.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"now\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "The note text does not contain the word downgrade.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested a move from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "An extra note is added to a different account (AC-4411).",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4411\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Same calls, but the note is written before the plan change is scheduled and uses upper case DOWNGRADE.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"DOWNGRADE from Pro to Basic requested by customer, effective at period end.\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}}\n]\n"
+          }
+        },
+        {
+          "description": "The optional get_account lookup is skipped and argument keys are listed in a different order, with compact formatting.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"verify_account\",\"args\":{\"zip_code\":\"60614\",\"account_id\":\"AC-4410\"}},{\"tool\":\"schedule_plan_change\",\"args\":{\"effective\":\"period_end\",\"plan\":\"basic\",\"account_id\":\"AC-4410\"}},{\"tool\":\"add_note\",\"args\":{\"text\":\"Plan downgrade to Basic scheduled for the end of the billing period.\",\"account_id\":\"AC-4410\"}}]"
+          }
+        },
+        {
+          "description": "get_account is called after scheduling to confirm the account, and the note wording differs.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Downgrade to Basic scheduled at period end after ZIP verification.\"}}\n]\n"
+          }
+        }
+      ]
+    },
+    "ded8ef98b259166383ec9a6e0e8713e66e29dd899b80b187823cabd86007585c": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "A matching value is counted once instead of once per earlier index, so repeated partners are undercounted.",
+          "files": {
+            "pairs.py": "from collections import Counter\n\n\ndef count_pairs(nums, target):\n    seen = Counter()\n    count = 0\n    for value in nums:\n        if seen[target - value] > 0:\n            count += 1\n        seen[value] += 1\n    return count\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The current element is added to the counter before looking up its partner, so an element can pair with itself.",
+          "files": {
+            "pairs.py": "from collections import Counter\n\n\ndef count_pairs(nums, target):\n    seen = Counter()\n    count = 0\n    for value in nums:\n        seen[value] += 1\n        count += seen[target - value]\n    return count\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Only the first 1000 elements are considered, so longer inputs give a wrong count.",
+          "files": {
+            "pairs.py": "from collections import Counter\n\n\ndef count_pairs(nums, target):\n    seen = Counter()\n    count = 0\n    for value in nums[:1000]:\n        count += seen[target - value]\n        seen[value] += 1\n    return count\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Brute-force double loop over index pairs.",
+          "files": {
+            "pairs.py": "def count_pairs(nums, target):\n    total = 0\n    n = len(nums)\n    for i in range(n):\n        for j in range(i + 1, n):\n            if nums[i] + nums[j] == target:\n                total += 1\n    return total\n"
+          }
+        },
+        {
+          "description": "Counts via a value-frequency table and combinatorics instead of a running counter.",
+          "files": {
+            "pairs.py": "from collections import Counter\n\n\ndef count_pairs(nums, target):\n    freq = Counter(nums)\n    total = 0\n    for value, times in freq.items():\n        other = target - value\n        if other == value:\n            total += times * (times - 1) // 2\n        elif value < other and other in freq:\n            total += times * freq[other]\n    return total\n"
+          }
+        },
+        {
+          "description": "Running dictionary with dict.get instead of Counter.",
+          "files": {
+            "pairs.py": "def count_pairs(nums, target):\n    counts = {}\n    result = 0\n    for x in nums:\n        result += counts.get(target - x, 0)\n        counts[x] = counts.get(x, 0) + 1\n    return result\n"
+          }
+        }
+      ]
+    },
+    "e03dd6153ff2f5f4b69b0cc733e0e0e7600c173ad692aca056e8e86bf07243a4": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Runs are capped at 9, so a run of 12 is emitted as 9a3a instead of 12a.",
+          "files": {
+            "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and j - i < 9 and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "encode skips whitespace characters instead of encoding them like other characters.",
+          "files": {
+            "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    s = \"\".join(ch for ch in s if not ch.isspace())\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The count pattern allows a leading zero, so decode accepts 0a and 03a instead of raising ValueError.",
+          "files": {
+            "rle.py": "import re\n\n_PAIR = re.compile(r\"([0-9]+)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "decode accepts only one or two digit counts, so long runs produced by encode (for example 100 repeats) cannot be decoded back.",
+          "files": {
+            "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]?)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "encode uses itertools.groupby; decode is unchanged.",
+          "files": {
+            "rle.py": "import re\nfrom itertools import groupby\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    return \"\".join(\"%d%s\" % (len(list(group)), char) for char, group in groupby(s))\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+          }
+        },
+        {
+          "description": "decode validates the whole string with one fullmatch and then expands with findall.",
+          "files": {
+            "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n_WHOLE = re.compile(r\"(?:[1-9][0-9]*[^0-9])*\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    n = len(s)\n    while i < n:\n        ch = s[i]\n        j = i + 1\n        while j < n and s[j] == ch:\n            j += 1\n        out.append(str(j - i) + ch)\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    if _WHOLE.fullmatch(code) is None:\n        raise ValueError(\"malformed run-length code\")\n    return \"\".join(ch * int(num) for num, ch in _PAIR.findall(code))\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

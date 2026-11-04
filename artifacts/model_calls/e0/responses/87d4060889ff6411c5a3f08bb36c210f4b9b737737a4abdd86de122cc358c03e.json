@@ -1,0 +1,257 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "87d4060889ff6411c5a3f08bb36c210f4b9b737737a4abdd86de122cc358c03e",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "1ea14d6ad427a8349b4a5d935ad3bf827deeb50315f1846cbdc054ff4ca24bca": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Rounds the mean to 1 decimal place instead of 2.",
+          "files": {
+            "ratings.py": "def average_rating(ratings):\n    return round(sum(ratings) / len(ratings), 1)\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses statistics.fmean for the mean, then rounds to 2 places.",
+          "files": {
+            "ratings.py": "from statistics import fmean\n\n\ndef average_rating(ratings):\n    return round(fmean(ratings), 2)\n"
+          }
+        },
+        {
+          "description": "Accumulates the total and count in an explicit loop before dividing and rounding.",
+          "files": {
+            "ratings.py": "def average_rating(ratings):\n    total = 0\n    count = 0\n    for value in ratings:\n        total += value\n        count += 1\n    mean = total / count\n    return round(mean, 2)\n"
+          }
+        }
+      ]
+    },
+    "22bdbc86941e25ba2d1c946dab3de6c1a038c96d62176c612de1550f65df5284": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Swaps month and day in the new name.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[3]}-${m[2]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Copies matching files instead of moving them, so the old names remain.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    cp -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Rewrites the file through command substitution, which strips trailing newlines from the contents.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    dest=\"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n    printf '%s' \"$(cat -- \"$path\")\" > \"$dest\"\n    rm -- \"$path\"\n  fi\ndone\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Enables case-insensitive matching so the lowercase img_ file is also renamed.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nocasematch\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Accepts .jpeg as well as .jpg, so the .jpeg file is renamed into the new format.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpe?g$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses a glob pattern and substring slicing instead of a regex match.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/IMG_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9].jpg; do\n  [[ -f \"$path\" ]] || continue\n  name=${path#photos/}\n  d=${name:4:8}\n  t=${name:13:6}\n  mv -- \"$path\" \"photos/${d:0:4}-${d:4:2}-${d:6:2}_${t:0:2}-${t:2:2}-${t:4:2}.jpg\"\ndone\n"
+          }
+        },
+        {
+          "description": "Works inside photos/ and uses grep and sed to test and build the new name.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd photos\nfor f in *; do\n  [[ -f $f ]] || continue\n  if printf '%s\\n' \"$f\" | grep -Eq '^IMG_[0-9]{8}_[0-9]{6}\\.jpg$'; then\n    new=$(printf '%s\\n' \"$f\" | sed -E 's/^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$/\\1-\\2-\\3_\\4-\\5-\\6.jpg/')\n    mv -- \"$f\" \"$new\"\n  fi\ndone\n"
+          }
+        }
+      ]
+    },
+    "243fa62ac001404072e80a8e986f7087ae71772f4cc22cb79eeca87958a3490a": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Truncates each group to its first two paths, giving a partial result for contents shared by three or more paths.",
+          "files": {
+            "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths)[:2] for paths in by_content.values() if len(paths) > 1]\n    return sorted(groups)\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Uses a threshold of at least one path, so unique contents also produce single-path groups.",
+          "files": {
+            "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 0]\n    return sorted(groups)\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Orders the groups by their last path instead of their first path.",
+          "files": {
+            "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n    return sorted(groups, key=lambda g: g[-1])\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Sorts entries by content then path and uses itertools.groupby.",
+          "files": {
+            "dupes.py": "from itertools import groupby\n\n\ndef duplicate_groups(files):\n    items = sorted(files.items(), key=lambda kv: (kv[1], kv[0]))\n    groups = []\n    for _, grp in groupby(items, key=lambda kv: kv[1]):\n        paths = [p for p, _ in grp]\n        if len(paths) > 1:\n            groups.append(paths)\n    groups.sort(key=lambda g: g[0])\n    return groups\n"
+          }
+        },
+        {
+          "description": "Iterates paths in sorted order so each bucket is already sorted, then orders buckets by first path.",
+          "files": {
+            "dupes.py": "def duplicate_groups(files):\n    owners = {}\n    for path in sorted(files):\n        owners.setdefault(files[path], []).append(path)\n    return sorted([v for v in owners.values() if len(v) > 1], key=lambda v: v[0])\n"
+          }
+        }
+      ]
+    },
+    "29312a402338b433d7e61a9c3b2759341ae2a3ae69d83514cc6c6eee5b1679a7": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Writes the output to total.csv instead of totals.csv.",
+          "files": {
+            "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"total.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Sorts customers case-insensitively instead of by plain string comparison.",
+          "files": {
+            "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals, key=str.lower):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Writes rows with plain string formatting so a customer name containing a comma is not quoted.",
+          "files": {
+            "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    fh.write(\"customer,total\\n\")\n    for customer in sorted(totals):\n        fh.write(\"%s,%.2f\\n\" % (customer, totals[customer]))\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Formats totals with one decimal place instead of two.",
+          "files": {
+            "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.1f\" % totals[customer]])\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses the csv module default CRLF line terminator instead of LF.",
+          "files": {
+            "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh)\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+          }
+        },
+        {
+          "description": "Uses plain dict accumulation, quantize for two places, and csv.DictWriter over sorted items.",
+          "files": {
+            "solve.py": "import csv\nfrom decimal import Decimal\n\nsums = {}\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        name = row[\"customer\"]\n        sums[name] = sums.get(name, Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.DictWriter(fh, fieldnames=[\"customer\", \"total\"], lineterminator=\"\\n\")\n    writer.writeheader()\n    for name, value in sorted(sums.items()):\n        writer.writerow({\"customer\": name, \"total\": format(value.quantize(Decimal(\"0.01\")), \"f\")})\n"
+          }
+        }
+      ]
+    },
+    "318057baa0253123b08fd8ba3bdf4ef271bcc79e014610bc7cff0ff7ecdf51f1": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Starts counting the day after start, so the start date is excluded.",
+          "files": {
+            "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first + timedelta(days=1)\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Only the first holiday in the iterable is honored.",
+          "files": {
+            "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in list(holidays)[:1]}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Swaps start and end when end is before start, so a reversed range returns a positive count.",
+          "files": {
+            "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    if last < first:\n        first, last = last, first\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Returns the count as a float instead of an integer.",
+          "files": {
+            "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return float(count)\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Counts over a range of ordinal day numbers with a generator sum.",
+          "files": {
+            "workdays.py": "from datetime import date\n\n\ndef business_days(start, end, holidays=()):\n    first = date.fromisoformat(start).toordinal()\n    last = date.fromisoformat(end).toordinal()\n    skip = {date.fromisoformat(h).toordinal() for h in holidays}\n    return sum(1 for n in range(first, last) if (n + 6) % 7 < 5 and n not in skip)\n"
+          }
+        },
+        {
+          "description": "Returns early for an empty range and filters a generated list of dates with isoweekday.",
+          "files": {
+            "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first = date.fromisoformat(start)\n    last = date.fromisoformat(end)\n    if last <= first:\n        return 0\n    holiday_set = {date.fromisoformat(h) for h in holidays}\n    days = (first + timedelta(days=i) for i in range((last - first).days))\n    return len([d for d in days if d.isoweekday() <= 5 and d not in holiday_set])\n"
+          }
+        }
+      ]
+    },
+    "35ed2bbe4e5878261147ebf1e505dc70302f10aea7744fdadf14dfdfc69f8888": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Skips the final step and never writes summary.json.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Sorts categories case-insensitively instead of by category name.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals, key=str.lower):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Counts expense rows instead of distinct categories in the categories field.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nrows = 0\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        rows += 1\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": rows, \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Writes summary.json with the keys in the other order, indented, and without a trailing newline.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"grand_total\": float(round(sum(totals.values()), 2)), \"categories\": len(totals)}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh, indent=2)\n"
+          }
+        },
+        {
+          "description": "Uses the csv default CRLF terminator, iterates sorted items, and quantizes the grand total with Decimal.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        name = row[\"category\"]\n        totals[name] = totals.get(name, Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh)\n    writer.writerow([\"category\", \"total\"])\n    for name, value in sorted(totals.items()):\n        writer.writerow([name, \"%.2f\" % value])\n\ngrand = sum(totals.values(), Decimal(\"0\")).quantize(Decimal(\"0.01\"))\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump({\"categories\": len(totals), \"grand_total\": float(grand)}, fh)\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

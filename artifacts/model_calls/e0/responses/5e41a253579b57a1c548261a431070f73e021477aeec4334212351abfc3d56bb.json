@@ -1,0 +1,324 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "5e41a253579b57a1c548261a431070f73e021477aeec4334212351abfc3d56bb",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "055f4b5d87202dff228c7e13936300837aa2c4b828aa8332482510cb1ac698ff": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The header row names the second column kwh_total instead of kwh.",
+          "files": {
+            "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh_total\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The last meter is skipped by an off-by-one slice, so only three rows are written.",
+          "files": {
+            "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings)[:-1]:\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Consumption is computed from the second earliest reading instead of the earliest one.",
+          "files": {
+            "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[1][1]])\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses the default CSV line terminator (CRLF) instead of LF.",
+          "files": {
+            "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh)\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+          }
+        },
+        {
+          "description": "Uses min and max by date and writes the file by hand with LF endings.",
+          "files": {
+            "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nlines = [\"meter,kwh\"]\nfor meter in sorted(readings):\n    first = min(readings[meter], key=lambda item: item[0])\n    last = max(readings[meter], key=lambda item: item[0])\n    lines.append(meter + \",\" + str(last[1] - first[1]))\nwith open(\"usage.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\\n\".join(lines) + \"\\n\")\n"
+          }
+        },
+        {
+          "description": "Writes the file without a trailing newline after the last row.",
+          "files": {
+            "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nlines = [\"meter,kwh\"]\nfor meter in sorted(readings):\n    series = sorted(readings[meter])\n    lines.append(f\"{meter},{series[-1][1] - series[0][1]}\")\nwith open(\"usage.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\\n\".join(lines))\n"
+          }
+        }
+      ]
+    },
+    "088161a1dd941e1a3e9e20d24b0a876f04b9c7204486b6183e7aeeaa21a01fb7": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Substitution costs 2 instead of 1, which turns the function into an indel-only distance.",
+          "files": {
+            "distance.py": "def levenshtein(a, b):\n    previous = list(range(len(b) + 1))\n    for i, ca in enumerate(a, start=1):\n        current = [i]\n        for j, cb in enumerate(b, start=1):\n            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + 2 * (ca != cb)))\n        previous = current\n    return previous[-1]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Characters are compared after lowercasing, so case differences are ignored.",
+          "files": {
+            "distance.py": "def levenshtein(a, b):\n    previous = list(range(len(b) + 1))\n    for i, ca in enumerate(a, start=1):\n        current = [i]\n        for j, cb in enumerate(b, start=1):\n            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (ca.lower() != cb.lower())))\n        previous = current\n    return previous[-1]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Strings are split into UTF-16 code units, so characters outside the BMP count as two.",
+          "files": {
+            "distance.py": "def _units(s):\n    data = s.encode(\"utf-16-le\")\n    return [data[i:i + 2] for i in range(0, len(data), 2)]\n\n\ndef levenshtein(a, b):\n    a = _units(a)\n    b = _units(b)\n    previous = list(range(len(b) + 1))\n    for i, ca in enumerate(a, start=1):\n        current = [i]\n        for j, cb in enumerate(b, start=1):\n            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (ca != cb)))\n        previous = current\n    return previous[-1]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Swaps arguments so the shorter string indexes the row, and renames variables.",
+          "files": {
+            "distance.py": "def levenshtein(a, b):\n    if len(a) < len(b):\n        a, b = b, a\n    row = list(range(len(b) + 1))\n    for i in range(1, len(a) + 1):\n        diagonal = row[0]\n        row[0] = i\n        for j in range(1, len(b) + 1):\n            above = row[j]\n            cost = 0 if a[i - 1] == b[j - 1] else 1\n            row[j] = min(above + 1, row[j - 1] + 1, diagonal + cost)\n            diagonal = above\n    return row[-1]\n"
+          }
+        },
+        {
+          "description": "Builds the full dynamic programming matrix instead of two rows.",
+          "files": {
+            "distance.py": "def levenshtein(a, b):\n    m, n = len(a), len(b)\n    d = [[0] * (n + 1) for _ in range(m + 1)]\n    for i in range(m + 1):\n        d[i][0] = i\n    for j in range(n + 1):\n        d[0][j] = j\n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if a[i - 1] == b[j - 1]:\n                d[i][j] = d[i - 1][j - 1]\n            else:\n                d[i][j] = 1 + min(d[i - 1][j], d[i][j - 1], d[i - 1][j - 1])\n    return d[m][n]\n"
+          }
+        }
+      ]
+    },
+    "097f9b3f711d531dcc427a4db235a3664920533ef442bdfa67cb7cafa5ed6ce3": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The verification code is never sent, only confirmed.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The confirmation uses a transposed code, 481561.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481561\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The transfer of the A12 ticket TKT-3 is skipped.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "The transfer of the A13 ticket TKT-4 is skipped.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "The first transfer happens before the verification is confirmed.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R8",
+          "description": "An extra transfer of TKT-5, owned by another account, is added at the end.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-5\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Transfers TKT-4 before TKT-3; both still happen after verification.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Omits the read-only list_tickets call.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Same calls with different JSON whitespace and argument key order.",
+          "files": {
+            "trajectory.json": "[{\"args\":{\"account_id\":\"TK-9035\"},\"tool\":\"list_tickets\"},{\"args\":{\"account_id\":\"TK-9035\"},\"tool\":\"send_verification_code\"},{\"args\":{\"code\":\"481516\",\"account_id\":\"TK-9035\"},\"tool\":\"confirm_verification\"},{\"args\":{\"recipient_email\":\"rafael.ortiz@example.com\",\"ticket_id\":\"TKT-3\"},\"tool\":\"transfer_ticket\"},{\"args\":{\"recipient_email\":\"rafael.ortiz@example.com\",\"ticket_id\":\"TKT-4\"},\"tool\":\"transfer_ticket\"}]"
+          }
+        }
+      ]
+    },
+    "0ae99bdab228513992e2ee78fa4eb879217f94989a068174793ab30adf198004": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The report object is wrapped in a JSON list instead of being written as an object.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump([report], fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The date is reformatted with slashes instead of the date from the file.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"].replace(\"-\", \"/\"),\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The store count is written as a string instead of an integer.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": str(len(rows)),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The total is rounded to 1 decimal place instead of 2.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 1),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "The timestamp format drops the trailing Z.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%S\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Writes compact JSON with no indentation and no trailing newline.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, separators=(\",\", \":\"))\n"
+          }
+        },
+        {
+          "requirement": null,
+          "description": "Writes keys in sorted order with the timestamp taken at write time.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n    \"date\": rows[0][\"date\"],\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=4, sort_keys=True)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "description": "Sums amounts with Decimal and converts the rounded result to a float.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\nfrom decimal import Decimal, ROUND_HALF_EVEN\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\ntotal = sum((Decimal(row[\"amount\"]) for row in rows), Decimal(0))\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": float(total.quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_EVEN)),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        }
+      ]
+    },
+    "0d6d764dbd18235eab3dc0e8540a0999dbb121ead9a38fb8f0c4545a260d922e": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The remove_item step is skipped so the mug stays in the cart.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The coupon step is skipped.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Checkout uses the address label home instead of office.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"home\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The coupon is applied after checkout instead of before it.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "The kettle KET-07 is also removed from the cart.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"KET-07\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Applies the coupon before removing the mug; both still precede checkout.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Omits the read-only view_cart call.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Same calls as the reference in compact JSON with a different argument key order.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"view_cart\",\"args\":{\"customer_id\":\"CU-310\"}},{\"tool\":\"remove_item\",\"args\":{\"sku\":\"MUG-02\",\"customer_id\":\"CU-310\"}},{\"tool\":\"apply_coupon\",\"args\":{\"code\":\"WINTER10\",\"customer_id\":\"CU-310\"}},{\"tool\":\"checkout\",\"args\":{\"address_label\":\"office\",\"customer_id\":\"CU-310\"}}]"
+          }
+        }
+      ]
+    },
+    "1bd90568a653779e6faac98a7136d9d255b0d70038e8bcc63b4a2cb48b3fd41d": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The empty string is reported as not balanced.",
+          "files": {
+            "brackets.py": "_PAIRS = {\")\": \"(\", \"]\": \"[\", \"}\": \"{\"}\n\n\ndef is_balanced(s):\n    if not s:\n        return False\n    stack = []\n    for ch in s:\n        if ch in \"([{\":\n            stack.append(ch)\n        elif ch in _PAIRS:\n            if not stack or stack.pop() != _PAIRS[ch]:\n                return False\n    return not stack\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Curly braces are not handled, so strings with only unbalanced braces count as balanced.",
+          "files": {
+            "brackets.py": "_PAIRS = {\")\": \"(\", \"]\": \"[\"}\n\n\ndef is_balanced(s):\n    stack = []\n    for ch in s:\n        if ch in \"([\":\n            stack.append(ch)\n        elif ch in _PAIRS:\n            if not stack or stack.pop() != _PAIRS[ch]:\n                return False\n    return not stack\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Unclosed openers left on the stack at the end are not detected.",
+          "files": {
+            "brackets.py": "_PAIRS = {\")\": \"(\", \"]\": \"[\", \"}\": \"{\"}\n\n\ndef is_balanced(s):\n    stack = []\n    for ch in s:\n        if ch in \"([{\":\n            stack.append(ch)\n        elif ch in _PAIRS:\n            if not stack or stack.pop() != _PAIRS[ch]:\n                return False\n    return True\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Any character that is not a bracket makes the function return False.",
+          "files": {
+            "brackets.py": "_PAIRS = {\")\": \"(\", \"]\": \"[\", \"}\": \"{\"}\n\n\ndef is_balanced(s):\n    stack = []\n    for ch in s:\n        if ch in \"([{\":\n            stack.append(ch)\n        elif ch in _PAIRS:\n            if not stack or stack.pop() != _PAIRS[ch]:\n                return False\n        else:\n            return False\n    return not stack\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Filters to bracket characters and repeatedly removes adjacent matched pairs.",
+          "files": {
+            "brackets.py": "def is_balanced(s):\n    rest = \"\".join(ch for ch in s if ch in \"()[]{}\")\n    while True:\n        reduced = rest.replace(\"()\", \"\").replace(\"[]\", \"\").replace(\"{}\", \"\")\n        if reduced == rest:\n            return rest == \"\"\n        rest = reduced\n"
+          }
+        },
+        {
+          "description": "Uses an opener-to-closer map and a stack of expected closers.",
+          "files": {
+            "brackets.py": "def is_balanced(s):\n    closers = {\"(\": \")\", \"[\": \"]\", \"{\": \"}\"}\n    expected = []\n    for ch in s:\n        if ch in closers:\n            expected.append(closers[ch])\n        elif ch in closers.values():\n            if not expected or expected.pop() != ch:\n                return False\n    return len(expected) == 0\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}
