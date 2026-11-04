@@ -1,0 +1,424 @@
+{
+  "note": "Verdicts of BFCL's ast_checker on the fixture records, recorded on 2026-11-04 by grading each trajectory through the converted fixture task under bubblewrap with the checker at source_commit. test_live_verdicts_match_recording re-derives them when GP_BFCL_ROOT is set. Trajectories are graderproof test inputs, not BFCL data.",
+  "source_commit": "6ea57973c7a6097fd7c5915698c54c17c5b1b6c8",
+  "checker_model": "gorilla-openfunctions-v2",
+  "cases": [
+    {
+      "id": "simple_python_94",
+      "category": "simple_python",
+      "case": "reference",
+      "trajectory": [
+        {
+          "tool": "update_user_info",
+          "args": {
+            "user_id": 43523,
+            "update_info": {
+              "name": "John Doe",
+              "email": "johndoe@email.com"
+            }
+          }
+        }
+      ],
+      "valid": true,
+      "error_type": null
+    },
+    {
+      "id": "simple_python_94",
+      "category": "simple_python",
+      "case": "user_id changed",
+      "trajectory": [
+        {
+          "tool": "update_user_info",
+          "args": {
+            "user_id": 43524,
+            "update_info": {
+              "name": "John Doe",
+              "email": "johndoe@email.com"
+            }
+          }
+        }
+      ],
+      "valid": false,
+      "error_type": "value_error:others"
+    },
+    {
+      "id": "simple_python_94",
+      "category": "simple_python",
+      "case": "name in lower case",
+      "trajectory": [
+        {
+          "tool": "update_user_info",
+          "args": {
+            "user_id": 43523,
+            "update_info": {
+              "name": "john doe",
+              "email": "johndoe@email.com"
+            }
+          }
+        }
+      ],
+      "valid": true,
+      "error_type": null
+    },
+    {
+      "id": "simple_python_94",
+      "category": "simple_python",
+      "case": "email key dropped",
+      "trajectory": [
+        {
+          "tool": "update_user_info",
+          "args": {
+            "user_id": 43523,
+            "update_info": {
+              "name": "John Doe"
+            }
+          }
+        }
+      ],
+      "valid": false,
+      "error_type": "value_error:dict_key"
+    },
+    {
+      "id": "simple_python_94",
+      "category": "simple_python",
+      "case": "optional database given",
+      "trajectory": [
+        {
+          "tool": "update_user_info",
+          "args": {
+            "user_id": 43523,
+            "update_info": {
+              "name": "John Doe",
+              "email": "johndoe@email.com"
+            },
+            "database": "CustomerInfo"
+          }
+        }
+      ],
+      "valid": true,
+      "error_type": null
+    },
+    {
+      "id": "parallel_29",
+      "category": "parallel",
+      "case": "reference",
+      "trajectory": [
+        {
+          "tool": "waste_calculation.calculate",
+          "args": {
+            "population": {
+              "adults": 2,
+              "children": 2,
+              "singles": 0
+            },
+            "location": "Los Angeles"
+          }
+        },
+        {
+          "tool": "waste_calculation.calculate",
+          "args": {
+            "population": {
+              "adults": 0,
+              "children": 0,
+              "singles": 1
+            },
+            "location": "New York"
+          }
+        }
+      ],
+      "valid": true,
+      "error_type": null
+    },
+    {
+      "id": "parallel_29",
+      "category": "parallel",
+      "case": "calls swapped",
+      "trajectory": [
+        {
+          "tool": "waste_calculation.calculate",
+          "args": {
+            "population": {
+              "adults": 0,
+              "children": 0,
+              "singles": 1
+            },
+            "location": "New York"
+          }
+        },
+        {
+          "tool": "waste_calculation.calculate",
+          "args": {
+            "population": {
+              "adults": 2,
+              "children": 2,
+              "singles": 0
+            },
+            "location": "Los Angeles"
+          }
+        }
+      ],
+      "valid": true,
+      "error_type": null
+    },
+    {
+      "id": "parallel_29",
+      "category": "parallel",
+      "case": "second call dropped",
+      "trajectory": [
+        {
+          "tool": "waste_calculation.calculate",
+          "args": {
+            "population": {
+              "adults": 2,
+              "children": 2,
+              "singles": 0
+            },
+            "location": "Los Angeles"
+          }
+        }
+      ],
+      "valid": false,
+      "error_type": "parallel_function_checker_no_order:wrong_count"
+    },
+    {
+      "id": "parallel_29",
+      "category": "parallel",
+      "case": "dots in the name replaced",
+      "trajectory": [
+        {
+          "tool": "waste_calculation_calculate",
+          "args": {
+            "population": {
+              "adults": 2,
+              "children": 2,
+              "singles": 0
+            },
+            "location": "Los Angeles"
+          }
+        },
+        {
+          "tool": "waste_calculation.calculate",
+          "args": {
+            "population": {
+              "adults": 0,
+              "children": 0,
+              "singles": 1
+            },
+            "location": "New York"
+          }
+        }
+      ],
+      "valid": false,
+      "error_type": "parallel_function_checker_no_order:cannot_find_match"
+    },
+    {
+      "id": "parallel_multiple_26",
+      "category": "parallel_multiple",
+      "case": "reference",
+      "trajectory": [
+        {
+          "tool": "bank.get_transaction_history",
+          "args": {
+            "account": "00125648",
+            "days": 7
+          }
+        },
+        {
+          "tool": "bank.calculate_balance",
+          "args": {
+            "account": "00125648"
+          }
+        }
+      ],
+      "valid": true,
+      "error_type": null
+    },
+    {
+      "id": "parallel_multiple_26",
+      "category": "parallel_multiple",
+      "case": "days as a string",
+      "trajectory": [
+        {
+          "tool": "bank.get_transaction_history",
+          "args": {
+            "account": "00125648",
+            "days": "7"
+          }
+        },
+        {
+          "tool": "bank.calculate_balance",
+          "args": {
+            "account": "00125648"
+          }
+        }
+      ],
+      "valid": false,
+      "error_type": "parallel_function_checker_no_order:cannot_find_match"
+    },
+    {
+      "id": "parallel_multiple_26",
+      "category": "parallel_multiple",
+      "case": "extra parameter currency",
+      "trajectory": [
+        {
+          "tool": "bank.get_transaction_history",
+          "args": {
+            "account": "00125648",
+            "days": 7
+          }
+        },
+        {
+          "tool": "bank.calculate_balance",
+          "args": {
+            "account": "00125648",
+            "currency": "USD"
+          }
+        }
+      ],
+      "valid": false,
+      "error_type": "parallel_function_checker_no_order:cannot_find_match"
+    },
+    {
+      "id": "live_simple_165-98-0",
+      "category": "live_simple",
+      "case": "reference",
+      "trajectory": [
+        {
+          "tool": "extractor.extract_information",
+          "args": {
+            "data": [
+              {
+                "name": "李雷",
+                "age": 18
+              },
+              {
+                "name": "李丽",
+                "age": 21
+              }
+            ]
+          }
+        }
+      ],
+      "valid": true,
+      "error_type": null
+    },
+    {
+      "id": "live_simple_165-98-0",
+      "category": "live_simple",
+      "case": "ages swapped",
+      "trajectory": [
+        {
+          "tool": "extractor.extract_information",
+          "args": {
+            "data": [
+              {
+                "name": "李雷",
+                "age": 21
+              },
+              {
+                "name": "李丽",
+                "age": 18
+              }
+            ]
+          }
+        }
+      ],
+      "valid": false,
+      "error_type": "value_error:dict_value"
+    },
+    {
+      "id": "live_simple_165-98-0",
+      "category": "live_simple",
+      "case": "optional schema given",
+      "trajectory": [
+        {
+          "tool": "extractor.extract_information",
+          "args": {
+            "data": [
+              {
+                "name": "李雷",
+                "age": 18
+              },
+              {
+                "name": "李丽",
+                "age": 21
+              }
+            ],
+            "schema": "personal_info"
+          }
+        }
+      ],
+      "valid": true,
+      "error_type": null
+    },
+    {
+      "id": "live_multiple_144-56-0",
+      "category": "live_multiple",
+      "case": "reference",
+      "trajectory": [
+        {
+          "tool": "get_sensor_readings_latest",
+          "args": {
+            "perPage": 100,
+            "metrics": [
+              "temperature"
+            ]
+          }
+        }
+      ],
+      "valid": true,
+      "error_type": null
+    },
+    {
+      "id": "live_multiple_144-56-0",
+      "category": "live_multiple",
+      "case": "required perPage omitted",
+      "trajectory": [
+        {
+          "tool": "get_sensor_readings_latest",
+          "args": {
+            "metrics": [
+              "temperature"
+            ]
+          }
+        }
+      ],
+      "valid": false,
+      "error_type": "simple_function_checker:missing_required"
+    },
+    {
+      "id": "live_multiple_144-56-0",
+      "category": "live_multiple",
+      "case": "perPage as the omission marker",
+      "trajectory": [
+        {
+          "tool": "get_sensor_readings_latest",
+          "args": {
+            "perPage": "",
+            "metrics": [
+              "temperature"
+            ]
+          }
+        }
+      ],
+      "valid": false,
+      "error_type": "type_error:simple"
+    },
+    {
+      "id": "live_multiple_144-56-0",
+      "category": "live_multiple",
+      "case": "the other function",
+      "trajectory": [
+        {
+          "tool": "get_sensor_alerts",
+          "args": {
+            "perPage": 100,
+            "triggerMetric": "temperature"
+          }
+        }
+      ],
+      "valid": false,
+      "error_type": "simple_function_checker:wrong_func_name"
+    }
+  ]
+}

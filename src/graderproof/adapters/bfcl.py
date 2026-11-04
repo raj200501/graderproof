@@ -135,6 +135,15 @@ def fetch(dest: Path, commit: str = PINNED_COMMIT, url: str = REPO_URL) -> Path:
     if _git(dest, "rev-parse", "--verify", "--quiet", "HEAD", check=False).stdout.strip() != commit:
         _git(dest, "fetch", "--quiet", "--depth", "1", "--filter=blob:none", "origin", commit)
         _git(dest, "checkout", "--quiet", "--detach", commit)
+    return verify_checkout(dest, commit)
+
+
+def verify_checkout(dest: Path, commit: str = PINNED_COMMIT) -> Path:
+    """The BFCL directory of the git checkout ``dest``, which must be at ``commit``.
+
+    Raises RuntimeError if ``HEAD`` is another commit or the BFCL data directory is
+    missing.
+    """
     head = _git(dest, "rev-parse", "HEAD").stdout.strip()
     if head != commit:
         raise RuntimeError(f"{dest}: HEAD is {head}, expected {commit}")
