@@ -57,8 +57,8 @@ Artifact contracts (later iterations may tighten them, never loosen):
   "accept" | "reject" | null}}}`` with ``planted == (slice != "clean")`` and a
   direction on every planted task. ``toybench/labels.sha256`` holds the labels' SHA-256
   as its first token; exactly one commit touches it, that commit predates
-  ``artifacts/e0/`` and ``artifacts/model_calls/e0/``, and ``toybench/tasks/`` is
-  unchanged between it and HEAD. ``artifacts/e0/tasks.jsonl`` rows also carry ``task``
+  ``artifacts/e0/`` and ``artifacts/model_calls/e0/``, and it already contains
+  ``toybench/tasks/`` exactly as at HEAD. ``artifacts/e0/tasks.jsonl`` rows also carry ``task``
   = ``<benchmark>:<id>`` (one benchmark, one row per label, ``task_hash`` = SHA-256 of
   ``task``). ``artifacts/e0/adjudication.json`` = ``{"tasks": {<id>: {"real": bool,
   ...}}}`` holds an entry for every counted task that is flagged but not detected.
@@ -865,7 +865,8 @@ def mypy_weakening(clone: Path) -> str:
     package, any option that loosens checking or turns a strict check off,
     ``disable_error_code``, and ``follow_imports`` skip or silent; an ``exclude`` that
     matches a package path; and in ``src/``, inline ``# mypy:`` configuration comments,
-    file-level ``# type: ignore`` lines, and ``no_type_check``.
+    type-ignore comments on a line of their own (at the top of a file they silence the
+    whole file), and ``no_type_check``.
     """
     for name in ("mypy.ini", ".mypy.ini", "setup.cfg"):
         if (clone / name).exists():
@@ -1096,7 +1097,10 @@ def audit_table(adir: Path, where: str, require_flags: bool = False) -> list[Tas
     by_task: dict[str, list[dict[str, Any]]] = {}
     for v in variants:
         h = v.get("task_hash")
-        need(h in seen, f"{where}/variants.jsonl has a variant of unknown task {str(h)[:12]}")
+        need(
+            isinstance(h, str) and h in seen,
+            f"{where}/variants.jsonl has a variant of unknown task {str(h)[:12]}",
+        )
         need(v.get("kind") in KINDS, f"{where}: variant kind {v.get('kind')!r} not in {KINDS}")
         by_task.setdefault(str(h), []).append(v)
     out: list[TaskRow] = []
@@ -1375,7 +1379,7 @@ def g6_validation_integrity(ctx: Ctx) -> Result:
         if (
             r.get("kind") not in KINDS
             or len({name for name, _ in vals}) < 2
-            or {verdict for _, verdict in vals} != {r.get("kind")}
+            or not all(verdict == r.get("kind") for _, verdict in vals)
         ):
             bad_val += 1
         if not (isinstance(r.get("witness_sha256"), str) and HEX64.match(r["witness_sha256"])):
@@ -1465,7 +1469,9 @@ def audit_check(c: Path, d: Path, s: Mapping[str, Any], decisions: str) -> None:
         need(point is not None, f"{key} has no scorable tasks")
         assert point is not None
         ci = bootstrap_ci(len(vals), mean_of(vals), seed + offset, b, alpha)
-        check_estimate((s.get(key) or {}).get(sub), point, ci, len(vals), f"{key} {sub}")
+        block = s.get(key)
+        stated = block.get(sub) if isinstance(block, Mapping) else None
+        check_estimate(stated, point, ci, len(vals), f"{key} {sub}")
     sub_for = s.get("substitute_for")
     if sub_for:
         did = str(sub_for.get("decision", "")) if isinstance(sub_for, Mapping) else ""
@@ -1564,6 +1570,10 @@ def e4_check(
         public = r.get("public")
         need(
             isinstance(public, bool), f"{where}: repaired {str(h)[:12]} public is not true or false"
+        )
+        need(
+            r.get("patch") != r.get("validation_log"),
+            f"{where}: repaired {str(h)[:12]} uses one file as patch and validation log",
         )
         for key in ("patch", "validation_log"):
             repair_file(c, where, str(h), key, r.get(key), bool(public), man)
@@ -1914,7 +1924,10 @@ def g11_prereg_integrity(ctx: Ctx) -> Result:
         if rel == E0_SUMMARY:
             need(s.get("confirmatory") is True, f"{rel} is not marked confirmatory")
         cited = s.get("prereg")
-        need(cited in commit_of, f"{rel} cites no frozen preregistration (prereg/NNNN-<slug>.md)")
+        need(
+            isinstance(cited, str) and cited in commit_of,
+            f"{rel} cites no frozen preregistration (prereg/NNNN-<slug>.md)",
+        )
         where = PurePosixPath(rel).parent.as_posix()
         dirs = data_dirs(where, s)
         data = data_commits(c, dirs)
