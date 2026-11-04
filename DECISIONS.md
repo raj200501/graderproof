@@ -96,3 +96,19 @@ Raj's private-repository Actions minutes are limited. `.github/workflows/ci.yml`
 ## D22 (2026-11-04) Interrupted adapter and planting agents
 
 Raj stopped the session on 2026-10-23 while three adapter agents (HumanEval, BFCL, tau2-bench) and the E0 planting agent were running. Their git worktrees kept partial, uncommitted work: a HumanEval adapter module with contract tests and fixtures, and BFCL fixtures. The planting agent wrote nothing (no `toybench/` directory, no labels). On restart the partial adapters are finished and verified from their worktrees rather than discarded; the planting agent is started again from scratch with the same instructions, because a partial planted set cannot be trusted to be complete or consistent with its labels.
+
+## D23 (2026-11-04) E0 detection and adjudication rules (review N5)
+
+A planted task counts as **detected** only through a witness-backed flag in its planted direction: a false accept for `accept` weaknesses, a false reject for `reject` weaknesses. A grader that rejects the reference or is flaky on it under graderproof's harness is reported separately and is never a detection, because the planter verified every reference with its own harness and a mismatch there is more likely an infrastructure difference than a found weakness. Such planted tasks count as misses; such clean tasks are not flags. Recall counting reference-level flags as detections for `timing` tasks is reported only as an exploratory line. **Adjudication** follows brief section 5 ("a flag on a clean task whose witness validates is adjudicated as a real weakness"): every flag that is not a detection is re-checked by an independent reviewer subagent that sees the task text, the grader, the flagged variant, and its witness, and rules only whether the witness validates (the variant really breaks, or really keeps, the requirement it names). A validating witness makes the flag a real weakness, reported separately and excluded from precision's false positives; a non-validating witness makes it a false positive. Precision without adjudication is reported beside it.
+
+## D24 (2026-11-04) Keeping the E0 labels out of the model channel (review N8)
+
+Model request items identify tasks by `task.key_hash`, never by name. The labels stay in `private/toybench/labels.json` during the run; the model-worker subagent has only Read and Write tools and is told to read only its request file. Compliance is audited, not assumed: after the run, every model-worker transcript is scanned for any read of a path other than its assigned request file, and a response from a worker that read anything else is discarded and re-requested. The audit result is banked with the E0 artifacts.
+
+## D25 (2026-11-04) Execution cache keys and confirmatory provenance (review N4, N6)
+
+Execution cache keys include a fingerprint of the graderproof package source, the sandbox backend and its version, the resource limits, and the adapter's `extra_env`, so a code or environment change never serves an old execution. Sandbox start failures are not cached. Confirmatory runs (`graderproof audit --confirmatory --prereg <file>`) refuse to start when the working tree has uncommitted changes under `src/`, `tools/`, `prereg/`, or the task directory, and record the package source fingerprint, the sandbox version, the model IDs that answered, and every path they used. E0 and each E1 benchmark use their own cache directory.
+
+## D26 (2026-11-04) Scorable tasks and validator agreement (review N10, N12)
+
+A task is scorable only when its grader passes the reference stably (`determinism = stable_pass`); rates, ship-check recomputation, and E4 survivor lists all use this one definition. Validator agreement is computed over variants whose validators all returned a label verdict (violating or preserving); variants with an `unsure` or evidence-free verdict are counted and reported separately and never count as agreement.
