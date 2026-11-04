@@ -92,17 +92,20 @@ graderproof audit runs/tau2/tasks --sandbox bwrap \
 
 or, in Python, `ToybenchAdapter(extra_env=tau2_env(root, python))`. Give absolute paths.
 `GP_TAU2_PYTHON` must be the venv's own `bin/python` link, not the interpreter it points
-to, or the venv's packages are not found. Both paths must also be visible inside the
-sandbox: bubblewrap mounts an empty `/tmp` and hides the home directory (the `hidden`
-list of `BwrapSandbox`), and the toybench adapter binds back only the task's own
-directories, so the checkout and the venv must lie under neither. `runs/tau2/` qualifies
-here because this repository is not under the home directory; on a machine where it is,
-put them elsewhere. `check` refuses hidden paths with a message; `graderproof audit` does
-not check them, and every execution would then fail. Setting `GP_TAU2_CROSSCHECK=1` as well makes the
-grader also run v1.0.1's `evaluate_simulation` and print its reward. The tasks are
-`third_party`, so the Runner refuses a sandbox that does not isolate writes. Each
-execution starts two sandboxed processes that each import tau2 and load a domain database,
-a few seconds each, so `timeout_s` is 120.
+to, or the venv's packages are not found. Setting `GP_TAU2_CROSSCHECK=1` as well makes
+the grader also run v1.0.1's `evaluate_simulation` and print its reward.
+
+Both paths must be visible inside the sandbox. bubblewrap mounts an empty `/tmp` and
+hides the home directory (the `hidden` list of `BwrapSandbox`), and the toybench adapter
+binds back only the task's own directories, so the checkout and the venv must lie under
+neither. `runs/tau2/` qualifies here because this repository is not under the home
+directory; on a machine where it is, put them elsewhere. `check` refuses hidden paths
+with a message; `graderproof audit` does not check them, and every execution would then
+fail.
+
+The tasks are `third_party`, so the Runner refuses a sandbox that does not isolate
+writes. Each execution starts two sandboxed processes that each import tau2 and load a
+domain database, a few seconds each, so `timeout_s` is 120.
 
 ## Selection and ids
 
@@ -178,8 +181,9 @@ no NL assertion appears in the task text.
   string, lowercased, is a substring of an assistant message that is lowercased with its
   commas removed) finds every one.
 * tau2's gold trajectories are not guaranteed correct: v1.0.1's environment evaluator
-  logs and skips a gold action that raises. `check` grades every reference before any
-  variant is considered.
+  logs and skips a gold action that raises. `check` grades every reference, and the
+  audit's precheck grades each reference again before any variant; only a stable pass is
+  scorable (D26).
 
 ## Solution run
 
@@ -203,8 +207,8 @@ no NL assertion appears in the task text.
 4. Each call `i` becomes an assistant message (a user message for `"requestor": "user"`)
    holding `ToolCall(id="call_<i>", name, arguments, requestor)`, followed by the live
    environment's tool message from `get_response`. A failing call (an unknown tool, bad
-   arguments, a policy error raised by the tool) gives an error tool message, as in a live
-   run, and later calls still run.
+   arguments, an error raised by the tool) gives an error tool message, as in a live run,
+   and later calls still run.
 5. A non-blank `final_message.txt` becomes a final assistant text message.
 6. `simulation.json` is a tau2 `SimulationRun` with termination reason `agent_stop`, the
    task's message history followed by the new messages, a fixed timestamp
@@ -241,9 +245,9 @@ calling its evaluators directly in the same order:
   without evaluation criteria gives 1.
 * `EnvironmentEvaluator`: a predicted environment replays the simulation's mutating calls
   (with `strict_replay`, a replayed call must return the recorded tool output) and a gold
-  environment replays the gold actions. `DB` is 1 if the agent and user database hashes of
-  both match; `ENV_ASSERTION` is the product of the environment assertions run on the
-  predicted environment.
+  environment replays the gold actions. `DB` is 1 if the two environments have equal agent
+  database hashes and equal user database hashes; `ENV_ASSERTION` is the product of the
+  environment assertions run on the predicted environment.
 * `ActionEvaluator`: every gold action must match some call in the simulation, with the
   same name and equal values on `compare_args` or, when that is unset, on the argument
   names of the call itself. Order and extra calls are ignored.
@@ -273,7 +277,8 @@ line: `tau2_driver.py replay --root ROOT --domain D --task task.json --calls cal
 the sandbox. `--lenient` sets `strict_replay=False`, as `tau2 evaluate-trajs` does when it
 re-grades. Replay re-executes the calls against the v1.0.1 tools, so tool outputs come
 from the pinned code, not from the recording; to grade a recorded `SimulationRun` as it
-is, use `tau2_driver.py grade --lenient --simulation FILE`.
+is, use `tau2_driver.py grade --root ROOT --domain D --task task.json --simulation FILE
+--lenient`.
 
 ## Tests
 
@@ -339,5 +344,10 @@ task that does not reach a stable reward of 1.0. Its output is not yet banked un
   whose reward needs an LLM judge are left out and counted, not approximated.
 * Each sandboxed process imports all of tau2 (its package `__init__` imports the agents,
   the orchestrator, and litellm). The venv must be byte-compiled ahead, as `venv` does.
+* graderproof's grader lint and root-cause coding read the files in `grader/`. Here these
+  are the generic driver, `grade.sh`, and the task record; tau2's evaluator code lives in
+  the checkout. Lint smells for these tasks therefore describe the driver rather than
+  tau2's checks, and the driver's module docstring and this document describe the checks
+  for the root-cause step.
 * Task-level findings for tau2-bench stay in `private/` (non-negotiable 14); only
   aggregates and hashes may be committed.
