@@ -27,8 +27,9 @@ COMMANDS: dict[str, str] = {
     "card": "write a one-page grader card for a benchmark",
     "demo": "run the offline demo on the bundled tasks",
     "models": "list pending model requests or ingest responses",
+    "e0-score": "score E0 toybench flags against the planted labels",
 }
-BUILT = {"audit", "demo", "models"}
+BUILT = {"audit", "demo", "models", "e0-score"}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -55,12 +56,29 @@ def build_parser() -> argparse.ArgumentParser:
                 "--sandbox", choices=["auto", "bwrap", "unshare", "local"], default="auto"
             )
             p.add_argument("--no-propose", action="store_true", help="skip model-proposed variants")
+            p.add_argument("--max-per-operator", type=int, default=6)
+            p.add_argument("--confirm-runs", type=int, default=2)
+            p.add_argument("--replicates", type=int, default=2000)
+            p.add_argument("--extract-batch", type=int, default=8, help="tasks per extraction call")
+            p.add_argument("--propose-batch", type=int, default=4, help="tasks per proposal call")
+            p.add_argument("--review-batch", type=int, default=25, help="variants per review call")
         if name in ("audit", "models", "demo"):
             p.add_argument("--store", type=Path, default=Path("artifacts/model_calls"))
             p.add_argument("--ledger", type=Path, default=Path("artifacts/usage/ledger.jsonl"))
             p.add_argument("--budget", type=Path, default=Path("budget.toml"))
         if name == "models":
             p.add_argument("action", choices=["pending", "ingest"])
+        if name == "e0-score":
+            p.add_argument("--audit", type=Path, default=Path("artifacts/e0"))
+            p.add_argument("--labels", type=Path, default=Path("toybench/labels.json"))
+            p.add_argument("--labels-sha256", type=Path, default=Path("toybench/labels.sha256"))
+            p.add_argument(
+                "--adjudication", type=Path, default=Path("artifacts/e0/adjudication.json")
+            )
+            p.add_argument("--prereg", default="prereg/0001-e0-tool-validity.md")
+            p.add_argument("--out", type=Path, default=Path("artifacts/e0/results.json"))
+            p.add_argument("--seed", type=int, required=True)
+            p.add_argument("--replicates", type=int, default=2000)
         if name == "demo":
             p.add_argument("--tasks", type=Path, default=Path("examples/demo"))
             p.add_argument("--check", type=Path, help="fail if the output differs from this file")
@@ -99,14 +117,21 @@ def cmd_audit(args: argparse.Namespace) -> int:
     adapter = ToybenchAdapter()
     tasks = adapter.load(Path(args.target))
     client = ModelClient(store=args.store, ledger=args.ledger, budget=args.budget)
-    config = AuditConfig(k=args.k, seed=args.seed, max_total=args.max_total)
+    config = AuditConfig(
+        k=args.k,
+        confirm_runs=args.confirm_runs,
+        seed=args.seed,
+        max_per_operator=args.max_per_operator,
+        max_total=args.max_total,
+        replicates=args.replicates,
+    )
     auditor = Auditor(
         adapter=adapter,
         runner=Runner(adapter, sandbox, cache_dir=args.cache),
-        extractor=RequirementExtractor(client),
-        reviewer=ModelReviewer(client),
+        extractor=RequirementExtractor(client, batch_size=args.extract_batch),
+        reviewer=ModelReviewer(client, batch_size=args.review_batch),
         config=config,
-        proposer=None if args.no_propose else ModelProposer(client),
+        proposer=None if args.no_propose else ModelProposer(client, batch_size=args.propose_batch),
     )
     try:
         results, evidence = auditor.run(tasks)
@@ -115,7 +140,25 @@ def cmd_audit(args: argparse.Namespace) -> int:
             print(f"pending {args.store / 'requests' / (h + '.json')}")
         print(f"graderproof audit: {len(exc.hashes)} model requests pending", file=sys.stderr)
         return PENDING
-    meta = {"benchmark": Path(args.target).name, "adapter": args.adapter, "sandbox": sandbox.name}
+    from graderproof.validate import EXTRACT_PROMPT_VERSION, REVIEW_PROMPT_VERSION
+    from graderproof.variants.model import PROPOSE_PROMPT_VERSION
+
+    meta = {
+        "benchmark": Path(args.target).name,
+        "adapter": args.adapter,
+        "sandbox": sandbox.name,
+        "model_store": args.store.as_posix(),
+        "prompts": {
+            "requirements": EXTRACT_PROMPT_VERSION,
+            "propose": None if args.no_propose else PROPOSE_PROMPT_VERSION,
+            "review": REVIEW_PROMPT_VERSION,
+        },
+        "batches": {
+            "requirements": args.extract_batch,
+            "propose": args.propose_batch,
+            "review": args.review_batch,
+        },
+    }
     summary = write_outputs(
         results,
         evidence,
@@ -179,6 +222,40 @@ def cmd_demo(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_e0_score(args: argparse.Namespace) -> int:
+    """``graderproof e0-score``: bank artifacts/e0/results.json from the audit and labels."""
+    from graderproof import e0
+    from graderproof.audit import AuditConfig, provenance
+
+    rows = [
+        json.loads(x) for x in (args.audit / "tasks.jsonl").read_text().splitlines() if x.strip()
+    ]
+    labels = json.loads(args.labels.read_text())["tasks"]
+    adjudication = json.loads(args.adjudication.read_text()) if args.adjudication.exists() else {}
+    scores = e0.task_scores(rows, labels, adjudication.get("tasks", {}))
+    pending = [
+        s.task for s in e0.needs_adjudication(scores) if s.task not in adjudication.get("tasks", {})
+    ]
+    if pending:
+        print(f"graderproof e0-score: flags awaiting adjudication: {pending}", file=sys.stderr)
+        return 1
+    result = {
+        "schema": "graderproof.e0/1",
+        "prereg": args.prereg,
+        "labels_path": args.labels.as_posix(),
+        "labels_sha256_path": args.labels_sha256.as_posix(),
+        "audit_dir": args.audit.as_posix(),
+        "bootstrap": {"seed": args.seed, "B": args.replicates, "alpha": 0.05},
+        **e0.score(scores, args.seed, args.replicates),
+        "tasks": [s.row() for s in scores],
+        "provenance": provenance(AuditConfig(seed=args.seed, replicates=args.replicates)),
+    }
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    print(json.dumps({k: result[k] for k in ("recall", "precision", "precision_unadjudicated")}))
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Entry point. Returns the process exit status."""
     parser = build_parser()
@@ -192,6 +269,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return cmd_models(args)
     if args.command == "demo":
         return cmd_demo(args)
+    if args.command == "e0-score":
+        return cmd_e0_score(args)
     print(f"graderproof {args.command}: not built yet", file=sys.stderr)
     return NOT_BUILT
 
