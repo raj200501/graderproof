@@ -64,6 +64,9 @@ def test_plan_greedy_cover_and_unrepairable() -> None:
     assert plan.uncovered == ("v3",)
     assert repair.plan_repair({"variants": [variant("x", ["R1"], passed=False)]}) is None
     assert not repair.repairable(Requirement.from_dict(req("R", "exit_code")))
+    flaky = {**evidence, "determinism": "flaky"}
+    assert repair.survivors(flaky) == [] and repair.plan_repair(flaky) is None
+    assert len(repair.survivors({**evidence, "determinism": "stable_pass"})) == 3
 
 
 def test_toml_entry_rewrite() -> None:

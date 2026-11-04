@@ -77,6 +77,17 @@ def _audit_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--confirmatory", action="store_true", help="a preregistered run")
     p.add_argument("--prereg", help="the preregistration this run follows (prereg/NNNN-*.md)")
     p.add_argument("--review-queue", type=Path, default=Path("private/review_queue"))
+    p.add_argument("--category", help="benchmark category, for example tool-use or coding")
+    p.add_argument(
+        "--substitute-for",
+        metavar="NAME=DECISION",
+        help="the benchmark this one replaces and the DECISIONS.md entry that justifies it",
+    )
+    p.add_argument(
+        "--sample",
+        type=Path,
+        help="committed sample file (tools/sample.py); the audit must cover exactly its tasks",
+    )
 
 
 def _repair_args(p: argparse.ArgumentParser) -> None:
@@ -159,6 +170,53 @@ def confirmatory_refusal(
     return ""
 
 
+def sample_check(sample: Path, benchmark: str, task_ids: Sequence[str]) -> tuple[int, str]:
+    """``(population, refusal)``: the frame size, and why the tasks differ from the sample.
+
+    ``sample`` is the output of tools/sample.py; ``refusal`` is empty when ``task_ids``
+    are exactly the sampled tasks of ``benchmark``.
+    """
+    try:
+        data = json.loads(sample.read_text(encoding="utf-8"))
+        entry = data["benchmarks"][benchmark]
+        expected = sorted(str(t) for t in entry["tasks"])
+        population = int(entry["frame"])
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        return 0, f"cannot read the sample of {benchmark!r} from {sample}: {exc}"
+    got = sorted(task_ids)
+    if got != expected:
+        missing = sorted(set(expected) - set(got))
+        extra = sorted(set(got) - set(expected))
+        return population, f"tasks differ from the sample: missing {missing[:3]}, extra {extra[:3]}"
+    return population, ""
+
+
+def task_refusal(
+    args: argparse.Namespace, task_ids: Sequence[str], third_party: bool
+) -> tuple[int, str]:
+    """``(population, refusal)`` for the loaded tasks.
+
+    With ``--sample`` the tasks must be exactly the committed sample of the target's
+    benchmark, and the population is the sample's frame; a confirmatory audit of a
+    third-party benchmark must name its sample.
+    """
+    if args.sample is not None:
+        return sample_check(args.sample, Path(args.target).name, task_ids)
+    if args.confirmatory and third_party:
+        return len(task_ids), "a confirmatory third-party audit needs --sample"
+    return len(task_ids), ""
+
+
+def parse_substitute(spec: str | None) -> dict[str, str] | None:
+    """``NAME=DECISION`` to ``{"benchmark": NAME, "decision": DECISION}`` (None if unset)."""
+    if not spec:
+        return None
+    name, sep, decision = spec.partition("=")
+    if not sep or not name or not decision:
+        raise SystemExit(f"--substitute-for expects NAME=DECISION, got {spec!r}")
+    return {"benchmark": name, "decision": decision}
+
+
 def parse_env(pairs: Sequence[str]) -> dict[str, str]:
     """``KEY=VALUE`` strings to a mapping."""
     out: dict[str, str] = {}
@@ -224,6 +282,11 @@ def cmd_audit(args: argparse.Namespace) -> int:
     adapter = ToybenchAdapter(extra_env=parse_env(args.env))
     tasks = adapter.load(Path(args.target))
     third_party = any(not t.metadata.get("trusted_local") for t in tasks)
+    substitute = parse_substitute(args.substitute_for)
+    population, refusal = task_refusal(args, [t.id for t in tasks], third_party)
+    if refusal:
+        print(f"graderproof audit: {refusal}", file=sys.stderr)
+        return 1
     client = ModelClient(store=args.store, ledger=args.ledger, budget=args.budget)
     config = AuditConfig(
         k=args.k,
@@ -256,6 +319,13 @@ def cmd_audit(args: argparse.Namespace) -> int:
         "confirmatory": bool(args.confirmatory),
         "prereg": args.prereg,
         "third_party": third_party,
+        "category": args.category,
+        "substitute_for": substitute,
+        "n_tasks_population": population,
+        "sample": None if args.sample is None else args.sample.as_posix(),
+        "sample_sha256": (
+            None if args.sample is None else hashlib.sha256(args.sample.read_bytes()).hexdigest()
+        ),
         "sandbox": sandbox.name,
         "sandbox_version": sandbox_version(sandbox.name),
         "models": client.served_models(),

@@ -18,6 +18,9 @@ from graderproof.cli import (
     confirmatory_refusal,
     main,
     parse_env,
+    parse_substitute,
+    sample_check,
+    task_refusal,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -159,3 +162,37 @@ def test_confirmatory_runs_need_a_prereg_and_a_clean_tree(
     assert parse_env(["A=1", "B=x=y"]) == {"A": "1", "B": "x=y"}
     with pytest.raises(SystemExit):
         parse_env(["novalue"])
+
+
+def test_sample_check_and_substitute(tmp_path: Path) -> None:
+    sample = tmp_path / "sample.json"
+    sample.write_text(json.dumps({"benchmarks": {"b": {"frame": 9, "tasks": ["x", "y"]}}}))
+    assert sample_check(sample, "b", ["y", "x"]) == (9, "")
+    population, refusal = sample_check(sample, "b", ["x", "z"])
+    assert population == 9 and "missing ['y']" in refusal and "extra ['z']" in refusal
+    assert "cannot read" in sample_check(sample, "other", ["x"])[1]
+    assert "cannot read" in sample_check(tmp_path / "nope.json", "b", [])[1]
+    assert parse_substitute(None) is None
+    assert parse_substitute("terminal-bench=D18") == {
+        "benchmark": "terminal-bench",
+        "decision": "D18",
+    }
+    with pytest.raises(SystemExit):
+        parse_substitute("terminal-bench")
+    ns = argparse.Namespace(sample=None, confirmatory=True, target="t")
+    assert task_refusal(ns, ["a"], third_party=True) == (
+        1,
+        "a confirmatory third-party audit needs --sample",
+    )
+    assert task_refusal(ns, ["a"], third_party=False) == (1, "")
+
+
+def test_audit_refuses_tasks_outside_the_sample(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    sample = tmp_path / "sample.json"
+    sample.write_text(json.dumps({"benchmarks": {"demo": {"frame": 5, "tasks": ["classify"]}}}))
+    args = ["audit", "examples/demo", "--sandbox", "local", "--sample", str(sample)]
+    args += ["--store", str(tmp_path / "store"), "--ledger", str(tmp_path / "l.jsonl")]
+    assert main(args) == 1
+    assert "tasks differ from the sample" in capsys.readouterr().err

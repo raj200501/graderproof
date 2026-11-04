@@ -91,7 +91,13 @@ def repairable(req: Requirement) -> bool:
 
 
 def survivors(evidence: Mapping[str, Any]) -> list[Mapping[str, Any]]:
-    """Counted violating variants the original grader accepts (false accepts)."""
+    """Counted violating variants the original grader accepts (false accepts).
+
+    Only scorable tasks (the grader passes the reference stably, DECISIONS.md D26) have
+    survivors; a task whose reference is rejected or flaky is not a repair target (D33).
+    """
+    if evidence.get("determinism", "stable_pass") != "stable_pass":
+        return []
     return [
         v
         for v in evidence.get("variants", [])
