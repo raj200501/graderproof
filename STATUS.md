@@ -1,47 +1,45 @@
-goal_turn: 4
+goal_turn: 5
 STATE: ACTIVE
 
 # graderproof status
 
-Updated 2026-11-04 04:00 UTC. History lives in docs/LOG.md.
+Updated 2026-11-11. History lives in docs/LOG.md.
 
 ## Gates (from `python tools/ship_check.py --fast`; only a full run counts)
 
-Fast check on 3655051 (2026-11-04, with the stricter gate checks merged): **5/14**.
+Fast check on da44920 (2026-11-11, before docs/REPORT.md was committed): **6/14**. The rows below give the state after this turn's commits; the final fast check is recorded in docs/LOG.md.
 
 | Gate | State | Evidence or blocker |
 |---|---|---|
-| G1 Build and tests | PASS | full suite passes; package line coverage above the 85% floor |
+| G1 Build and tests | PASS | 593 tests pass (8 skipped); core line coverage above the 85% floor |
 | G2 Static quality | PASS | ruff, ruff format, mypy --strict clean; every ignore has a reason |
 | G3 CI parity | PASS | ci.yml runs `make ci` on 3.11 and 3.12; parts pass |
-| G4 Offline demo | PASS | under `unshare -rn`, no ledger change, matches the re-recorded golden output |
-| G5 Tool validity | FAIL | E0 running under prereg 0001; 8 review batches left (daily cap) |
-| G6 Validation integrity | FAIL | no headline variants banked until E0 completes |
-| G7 Confirmatory audit | FAIL | three adapters merged or nearly (HumanEval, BFCL; tau2 finishing); prereg 0002 not frozen |
-| G8 Repair | FAIL | E4 runner built; waits for E1 survivors |
-| G9 Impact and cards | FAIL | E5 not run; no cards |
-| G10 Claim integrity | FAIL | claimcheck and freshness merged; no docs/REPORT.md yet |
-| G11 Preregistration | FAIL | prereg 0001 frozen (chain verifies); no confirmatory artifact yet |
-| G12 Independent review | FAIL | last review is BLOCK on df55c18; its five blocking issues are fixed in 2d8058f (package) and in the gate-fix worktree (ship-check) |
-| G13 Documentation | FAIL | README.md is still the brief; citecheck merged |
-| G14 Hygiene | PASS | secrets scan clean, cash 0, private/ untracked, tree clean |
+| G4 Offline demo | PASS | under `unshare -rn`, no ledger change, matches the golden output |
+| G5 Tool validity | FAIL | preregistered negative result: E0 recall is below the 0.90 threshold (H1 not met); precision met it (H2). Reported in README.md and docs/REPORT.md; a new planted set under a new preregistration is the only way to retest |
+| G6 Validation integrity | PASS | headline variants all have two agreeing validations and a witness; agreement and exclusions reported |
+| G7 Confirmatory audit | FAIL | E1/E2 (prereg 0002) frozen with its sample; not run (needs several days of calls at the daily cap) |
+| G8 Repair | FAIL | E4 done on toybench; G8 needs E4 on the audited benchmarks, which waits for E1 |
+| G9 Impact and cards | FAIL | E5 runner not built; toybench card only |
+| G10 Claim integrity | expected PASS | docs/REPORT.md committed; claimcheck and freshness pass on README.md, docs/REPORT.md, and the card |
+| G11 Preregistration | PASS | prereg 0001 and 0002 frozen and chained; confirmatory artifacts follow them |
+| G12 Independent review | FAIL | review of df55c18 was BLOCK (fixed since); its non-blocking issues are now in docs/REVIEW_LOG.md; today's review pending |
+| G13 Documentation | expected PASS | README.md follows section 11; docs/REPORT.md complete; citecheck verifies every reference |
+| G14 Hygiene | PASS on a clean tree | secrets scan clean, cash 0, private/ untracked |
 
 ## Now
 
-E0 (prereg 0001, frozen at 1629c30) runs from the frozen worktree `/home/user/graderproof-e0` (D28): extraction, proposals, the classical-variant reviews, and 4 of 12 batches for the model-proposed variants are answered; 8 review batches wait for the daily cap (reset 00:00 UTC). Every model-worker transcript passed the D24 audit. `tools/e0_adjudicate.py` (D34) is ready for the step after the audit.
-
-E1/E2 (prereg 0002, frozen at f63b2d9) runs from `/home/user/graderproof-e1`: all three adapters are merged (HumanEval D29, BFCL D31, tau2-bench D32), the sample is committed and reproduces exactly, and round 1 has produced 17 extraction requests (tau2 7, BFCL 5, HumanEval 5). Their model stores are private with public hash manifests (D35). The gate fixes for review B1 to B5 are merged (D33). The released tau2 trajectories for E5 are downloaded (git-ignored, hashes in `runs/e5/sources.json`).
+E0 is complete and scored as preregistered (prereg 0001): H2 (precision at least 0.90) holds, H1 (recall at least 0.90) does not; every miss is explained in docs/E0_MISSES.md. E4 on toybench is complete (repairs and the generalization batch). README.md, docs/REPORT.md, and the toybench grader card are rendered from artifacts by `make report`. E1/E2 (prereg 0002) is frozen with its sample committed and has not run: at the daily cap of 60 single calls it needs several days.
 
 ## Next three actions
 
-1. After the cap resets: the last 8 E0 review batches, then finish the E0 audit, `tools/e0_adjudicate.py`, `graderproof e0-score`, commit `toybench/labels.json` unchanged, and write docs/E0_MISSES.md; then the 17 E1 extraction calls and the E1 proposal batches.
-2. Build the E5 runner (released tau2 trajectories: repaired pass = original pass on the recorded run and the grafted checks on the replayed outcome) and the grader-card and report templates, while the audits wait on the cap. The E3 and E6 runners are built (cec7cbd).
-3. Run the milestone review once E0 is banked (one review run a day).
+1. Run E1/E2 from `/home/user/graderproof-e1` with `runs/e1_round.sh <benchmark> <label>` (17 extraction requests are built), answering requests with model-worker subagents and auditing their transcripts, within the daily cap.
+2. Then E3 (`tools/e3_rootcause.py`), E4 on the audited benchmarks, E5 (runner still to build; trajectories downloaded), E6 (`tools/e6_lint.py`), grader cards, and the README and report sections for them.
+3. A new planted set and preregistration to test the operators that E0's misses call for (post-write delays, CRLF and numeric-type preserving variants, list-element insertion, input tampering).
 
 ## Usage to date
 
-- cash_usd = 0. Single calls through the client wrapper: 9 on 2026-10-23 (demo); 60 on 2026-11-04 (5 demo re-recording, 55 E0), which is the daily cap at CAP_SHARE 0.2.
-- Subagent runs outside the wrapper: 1 citation check, 1 benchmark survey, 2 planting runs, 6 adapter runs (3 stopped, 3 resumed), 1 claim-tooling run, 1 gate-fix run, 1 milestone review.
+- cash_usd = 0. Single calls through the client wrapper: 9 on 2026-10-23 (demo); 60 on 2026-11-04 (demo re-recording and E0); 36 on 2026-11-11 (E0 completion, adjudication, E4 on toybench), all within the daily cap at CAP_SHARE 0.2.
+- Subagent runs outside the wrapper include the planters, the adapter, claim-tooling, and gate-fix agents, miss analysts, report-section writers, and milestone reviews.
 
 ## Needs Raj
 
@@ -52,9 +50,9 @@ E1/E2 (prereg 0002, frozen at f63b2d9) runs from `/home/user/graderproof-e1`: al
 
 ## Changed this turn
 
-- Fixed the pre-E0 review findings in the package (2d8058f), re-recorded the demo, recorded D27 and D28.
-- Committed the toybench tasks and the label hash (7fab903), froze prereg 0001 (1629c30), and started E0.
-- Merged the HumanEval adapter (D29: numpy preload), the claim tooling (D30), and the BFCL adapter (D31).
+- E0 finished, adjudicated (D34), and scored as preregistered; labels committed unchanged; worker transcripts audited.
+- E4 ran on toybench: repairs for every grader with a surviving variant, plus the generalization batch (D36).
+- README.md, docs/REPORT.md, docs/cards/toybench.md, docs/E0_MISSES.md, and two figures, all rendered from artifacts.
 
 ## Blocked
 

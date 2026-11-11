@@ -1,6 +1,6 @@
 # Grader card: toybench (synthetic)
 
-toybench is this project's own planted-ground-truth benchmark for E0 (prereg/0001): small tasks in three formats (shell or Python scripts, Python modules, tool-call trajectories), written by an independent planting agent. Some graders carry one planted weakness of a known type, some were written to be clean, and an extra slice carries weakness types outside the written list. Every number on this card is from synthetic, project-written tasks and says nothing about any public benchmark. Task-level details are public because toybench is ours.
+toybench is this project's own planted-ground-truth benchmark for E0 (`prereg/0001-e0-tool-validity.md`): small tasks in three formats (shell or Python scripts, Python modules, tool-call trajectories), written by an independent planting agent. Some graders carry one planted weakness of a known type, some were written to be clean, and an extra slice carries weakness types outside the written list. Every number on this card is from synthetic, project-written tasks and says nothing about any public benchmark. Task-level details are public because toybench is ours.
 
 | Measure | Value | Source |
 |---|---|---|

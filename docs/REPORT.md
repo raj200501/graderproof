@@ -1,0 +1,287 @@
+# graderproof: testing the graders of agent benchmarks
+
+Technical report. Every number in this document is rendered by `make report` from a banked artifact under `artifacts/` and checked by `make claimcheck` and `make freshness`; the preregistrations are in `prereg/`. Results on toybench are on synthetic, project-written tasks.
+
+## Abstract
+
+Agent benchmarks and RL environments trust their graders: a grader that accepts a broken solution inflates scores and rewards, and one that rejects a correct solution deflates them. graderproof measures both failure modes for any task that has a reference solution and a grading command. It generates spec-violating variants of the reference (mutation testing) and spec-preserving variants (metamorphic testing), counts a variant only when a deterministic requirement witness and an independent model review agree on its label, runs the grader on every counted variant in a sandbox with repeated runs for stability, and reports task-level false-accept and false-reject rates with task-clustered bootstrap intervals.
+
+Before auditing any public benchmark, we tested the tool itself in a preregistered experiment (E0) on toybench: 72<!--claim:e0.n_tasks--> small synthetic tasks written by an independent planting agent, with 32<!--claim:e0.n_planted--> graders carrying one planted weakness of a listed type and 32<!--claim:e0.n_clean--> graders meant to be clean, whose labels were hashed and committed before the first run. graderproof detected 26<!--claim:e0.n_detected--> of the 32<!--claim:e0.n_planted--> planted weaknesses: recall 0.81<!--claim:e0.recall--> (95% CI 0.68<!--claim:e0.recall_lo--> to 0.93<!--claim:e0.recall_hi-->), below the preregistered target of 0.90, at an adjudicated precision of 0.93<!--claim:e0.precision--> (95% CI 0.82<!--claim:e0.precision_lo--> to 1.00<!--claim:e0.precision_hi-->), above it. It detected every presence-not-content, exit-code-only, and outcome-only-process weakness and most loose-matching ones, and missed most timing weaknesses; each miss traces to a missing operator or an over-strict extracted requirement. An independent adjudicator also confirmed real, unintended weaknesses in 5<!--claim:e0.n_clean_real--> of the graders written to be clean. The confirmatory audit of tau2-bench, BFCL, and HumanEval (E1/E2) is preregistered with its sample committed and has not run yet.
+
+## 1. Introduction
+
+### 1.1 The grader is a single point of failure
+
+An agentic benchmark or an RL environment turns an agent's work into a verdict, and the grader produces it: a benchmark score averages grader verdicts, and an RL reward is a verdict fed back into training. Neither the leaderboard nor the optimizer asks whether a verdict was right, so a grader that is wrong on a task is wrong for every model scored and every policy trained on it, a single point of failure.
+
+A grader can be wrong in two directions. A **false accept** passes a solution that violates the task, for example because the grader checks that a file exists but not its content, trusts an exit code, or matches too loosely. It overstates capability, and in training it rewards the loophole; [Checking the Checkers](https://arxiv.org/abs/2610.17824) argues that verifier false positives a policy can learn to trigger can destabilize RL with verifiable rewards. A **false reject** fails a solution that satisfies the task, for example one that uses a key order the instructions leave open or wraps correct JSON in a code fence. It understates capability and, in training, punishes correct behavior. The two interact: tightening a grader to close a false accept can open a false reject, so a repair checked in one direction can make the other worse.
+
+graderproof measures both directions, task by task, with two methods from software testing. Mutation testing makes spec-violating variants of the reference solution, which the grader should reject (the share of validated ones it rejects is the task's mutation score); metamorphic testing makes spec-preserving variants, which it should accept.
+
+### 1.2 Research questions
+
+`docs/BUILD_BRIEF.md` section 3 poses these questions, restated plainly:
+
+- **RQ1 False accepts (E1).** On what share of each benchmark's tasks does the grader pass at least one validated spec-violating variant, and how are per-task mutation scores distributed?
+- **RQ2 False rejects (E2).** On what share does it fail at least one validated spec-preserving variant?
+- **RQ3 Root causes (E3).** Which grader patterns explain these errors: presence checked instead of content, exit-code-only checks, loose matching, outcome-only checks of a required process, brittle parsing, or timing?
+- **RQ4 Repair (E4).** Do synthesized checks raise mutation scores without adding false rejects, and do they catch violating variants generated after the repair?
+- **RQ5 Impact (E5).** When published per-task results are re-graded with repaired graders, or with flagged tasks excluded, how many pass or fail outcomes and model-pair orderings change?
+
+RQ6 (E6) asks whether static grader lint predicts low mutation scores. No direction is presumed: a grader found mostly adequate is reported as prominently as one that is not.
+
+### 1.3 Contributions
+
+**An instrument.** graderproof is a Python library and command line (`graderproof audit`, `graderproof repair`). For a task with a reference solution and a grading command, it generates violating and preserving variants (classical operators for Python, shell, and tool-call trajectories, and model proposals that break exactly one requirement or keep them all), runs the grader on each in a network-free bubblewrap sandbox, and reports per-task false-accept and false-reject indicators with evidence. Adapters for HumanEval, BFCL, and tau2-bench run each benchmark's own grading logic from a pinned commit.
+
+**A validity discipline.**
+
+- *Two agreeing validators per counted variant.* A deterministic witness built from requirements extracted from the task text (never the grader) and a blind model review must agree on a variant's label, and the grader's verdict on it must be stable over repeated runs; disagreements are excluded, queued for human review, and reported.
+- *Preregistered confirmatory analyses.* Hypotheses, thresholds, samples, and stopping rules are frozen under `prereg/` and hash-chained in `prereg/FROZEN.jsonl` before their data exist, and confirmatory runs execute from a worktree at the freezing commit.
+- *Banked artifacts with claim checking.* Every result number here is rendered by `make report` from an artifact under `artifacts/`; `make claimcheck` rejects unbacked numbers, and `make freshness` re-derives each one.
+- *Tool validity first.* E0 tests graderproof on synthetic tasks with planted ground truth, written by a separate agent that never read the operators or validators, with the labels' hash committed before the first run; it was scored before any public-benchmark audit produced a result.
+
+One caveat: the planter, requirement extractor, variant proposer, model reviewer, and adjudicator are all Claude Code subagents of one model family (`DECISIONS.md` D17).
+
+### 1.4 The E0 result, and what has not run
+
+E0 is complete and was scored as preregistered (`prereg/0001-e0-tool-validity.md`). Recall, 0.81<!--claim:e0.recall--> (95% CI 0.68<!--claim:e0.recall_lo--> to 0.93<!--claim:e0.recall_hi-->), missed its preregistered threshold of at least 0.90, so H1 is not supported; most misses are timing weaknesses (2<!--claim:e0.type.timing.detected--> of 5<!--claim:e0.type.timing.planted--> detected) and brittle-parsing weaknesses (3<!--claim:e0.type.brittle-parsing.detected--> of 5<!--claim:e0.type.brittle-parsing.planted--> detected). Precision, 0.93<!--claim:e0.precision--> (95% CI 0.82<!--claim:e0.precision_lo--> to 1.00<!--claim:e0.precision_hi-->), met the threshold, so H2 is supported, but its lower bound is below 0.90 and it rests on adjudication: an independent adjudicator, ruling only on whether each witness validates, confirmed 6<!--claim:e0.n_real--> flags that were not detections as real weaknesses, most in graders meant to be clean, and judged 2<!--claim:e0.n_fp--> to be false positives (precision before adjudication: 0.76<!--claim:e0.precision_raw-->). E4's repairs fixed every toybench grader with a surviving variant and generalized to fresh variants (section 5.5). E1 and E2 have not run, because a daily cap of sixty model calls spreads them over several days, and E3, E5, and E6 have no results yet.
+
+## 2. Related work
+
+### 2.1 Adversarial hardening
+
+[Hardening Agent Benchmarks with Adversarial Hacker-Fixer Loops](https://arxiv.org/abs/2606.08960) hardens benchmark tasks with a loop in which hacker agents try to exploit a grader and fixer agents patch it; its follow-up, [Scalable Weak-to-Strong Verifier Hardening for Agent Environments](https://arxiv.org/abs/2610.15924), scales verifier hardening for agent environments. Both measure success by what adversarial agents manage to exploit, so what they can find is bounded by how capable the attackers are. graderproof never runs an agent against a grader (non-negotiable 15 in `CLAUDE.md`): each variant is a deliberate edit of the reference solution or an alternative derived from the task text, and each counted flag rests on a witness that names the requirement a variant breaks, or shows that it keeps them all. graderproof's coverage is bounded instead by its operators, the requirements it extracts, and its validators; the E0 misses on synthetic toybench tasks, mostly timing and brittle-parsing weaknesses, show where those limits fall today.
+
+### 2.2 Audits of exploitable graders and verifier noise
+
+[Terminal Wrench](https://arxiv.org/abs/2604.17596) is a catalog of exploitable terminal tasks. [Auditing Reward Hackability in Code RL Training Environments](https://arxiv.org/abs/2606.16062) measures how often wrong patches pass in code RL training environments, on small samples of tasks and in the false-accept direction only. [Checking the Checkers](https://arxiv.org/abs/2610.17824) reviews verifier errors and argues that false positives a policy can learn destabilize RL with verifiable rewards. graderproof shares their concern with a different emphasis: it measures both error directions on the same tasks, reports task-level rates with task-clustered bootstrap intervals from a preregistered sample, and backs every counted flag with a witness checked against the task text. It also synthesizes repairs and accepts one only if it catches its targets without new false rejects (E4).
+
+### 2.3 Benchmark construction, test augmentation, and fenced answers
+
+[Establishing Best Practices for Building Rigorous Agentic Benchmarks](https://arxiv.org/abs/2507.02825) proposes the Agentic Benchmark Checklist, guidance for building agentic benchmarks rigorously. A checklist guides construction; graderproof measures the result, whether a finished grader rejects violations of its own task text and accepts what the text leaves open. The part of graderproof closest to a checklist is its static lint (RQ6), and E6 tests whether lint smells predict measured weakness. [EvalPlus](https://arxiv.org/abs/2305.01210) ("Is Your Code Generated by ChatGPT Really Correct?") augments the tests of classic code-generation benchmarks, strengthening unit-test graders in the false-accept direction. The author's earlier [Fencecheck](https://github.com/raj200501/arc-ttt-public) found that a Markdown code fence around a correct answer makes graders score it as zero; graderproof generalizes that false-reject finding into a family of preserving operators and adds the false-accept direction. graderproof treats the grader as a command, so one method covers file checks, state comparisons, trajectory checks, AST matchers, and test suites, in both directions.
+
+### 2.4 Benchmarks and harnesses
+
+The confirmatory audit (E1, E2) covers three benchmarks whose deterministic graders run without Docker. [tau2-bench](https://arxiv.org/abs/2506.07982) evaluates conversational agents in a dual-control environment; its graders compare final environment state and required outputs, and graderproof uses its deterministic reward components at v1.0.1 (D32). The [Berkeley Function Calling Leaderboard](https://proceedings.mlr.press/v267/patil25a.html) evaluates function calling; graderproof runs its AST checker on the Python categories (D31). HumanEval, from [Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374), grades programs with unit tests and stands in for Terminal-Bench 2.0 ([Terminal-Bench](https://arxiv.org/abs/2601.11868)), whose tasks suit graderproof but need a Docker daemon, which the build environment lacks; D18 recorded the substitution before any data was collected. [Harbor](https://github.com/harbor-framework/harbor), which runs such tasks in containers, and [Inspect Evals](https://github.com/UKGovernmentBEIS/inspect_evals), a library of evaluations, are harnesses graderproof aims to plug into; neither has an adapter yet. [AgentDojo](https://github.com/ethz-spylab/agentdojo) was considered for E1 for its deterministic utility checks (D18), but its adapter was not ready when the E1 preregistration was frozen.
+
+## 3. Method
+
+This section describes how graderproof turns a task into evidence about its grader, as implemented in `src/graderproof/`, citing the interpretations in `DECISIONS.md` by id. Measured values are reported in section 5; design parameters are those frozen in `prereg/0001-e0-tool-validity.md` and `prereg/0002-e1e2-audit.md`.
+
+### 3.1 Task model and adapters
+
+`src/graderproof/core.py` models a `Task` (task text, environment, reference solution files, grading command, metadata), a content-addressed `Variant` (an edited reference with a claimed kind, violating or preserving, and its operator, diff, witness, and validations), and a `GraderRun` per grader execution.
+
+All execution uses one local format, toybench (`src/graderproof/adapters/toybench.py`). A task is a directory with `task.toml`, `instruction.md`, `solution/`, `grader/` (exit status zero accepts), and optional `workspace/` and `support/`, and each execution starts in a fresh temporary directory. A solution is a script, an importable module, a tool-call trajectory run against a mock environment, or data that the benchmark's own code grades.
+
+Adapters convert public benchmarks deterministically from pinned commits into toybench directories (D19), each documented in `docs/adapters/` and tested on recorded fixtures. HumanEval problems become `module` tasks graded by a reproduction of upstream's `check_correctness()`. The eight Python AST categories of BFCL V4 become `data` tasks graded by BFCL's own `ast_checker`, with a reference built from the possible answer, which is grader data (D31); D19 asked extraction to use only the question and function documentation there, but the extraction prompt has no BFCL-specific instruction, so the extractor also sees that reference. The airline, retail, and telecom base tasks of tau2-bench at `v1.0.1` become `data` tasks, except retail tasks that need an LLM judge, which are left out: the gold actions are the reference, and tau2's own deterministic evaluators grade with strict replay (D32).
+
+### 3.2 Requirements
+
+A requirement is one obligation of the task text with typed checks (`src/graderproof/spec.py`). A model writes the requirements (`src/graderproof/validate.py`, prompt `requirements/v1`) from the task text, the reference solution, the initial workspace, and one reference run's outcome, never the grader. They cover outputs and their content, required steps, ordering, prohibited actions, and policies, and should be exactly as strict as the text: exact where a format is fixed, normalized or lenient otherwise. Function tasks get call probes on the text's examples and on further inputs, compared with the reference where the text gives no expected value.
+
+Typed checks cover files, standard output, the exit status, function-call results, equality with the reference's outcome, trajectory calls and their order, and final state; they are evaluated in-process on data collected from the sandbox. Malformed requirements are dropped when parsed, and a requirement is kept only if it holds on every reference run of the determinism pre-check (section 3.5).
+
+### 3.3 Variants
+
+Operators edit the reference and attach an intended label, a hypothesis until validated (`src/graderproof/variants/`); every variant comes from the reference and the task text, never from an adversarial search for what the grader misses.
+
+Classical violating operators (`violating.py`) make one edit per site and drop results that no longer parse. In Python they delete a statement, change a literal or file name, shift a comparison boundary or invert an equality, negate a condition, swap an arithmetic or boolean operator, return `None`, or skip a loop's last item; in shell they blank a command, increment an integer, or retarget or truncate an output; in trajectories they drop a call, swap adjacent calls that look dependent, or change an argument. A wrapper around a script's entry can also add or drop an output line.
+
+Preserving (metamorphic) operators (`preserving.py`) change what a task text usually leaves open. Through the same wrapper they toggle a trailing newline, add trailing spaces, reverse JSON key order or re-indent JSON, write integers as floats, or fence printed JSON, in a transform that names no operator or label (`wrap.py`). In process and implementation they rename locals, write `echo` as `printf`, swap independent adjacent calls, repeat a read-only lookup, or delay a script's start well inside its time limit.
+
+Model-proposed variants (`model.py`, prompt `propose/v1`) come from a model that sees the task text, the reference, and the requirement texts, never the grader or the checks: minimal edits that each break exactly one requirement, like a plausible mistake, and alternatives that keep every requirement in a form a strict checker might reject.
+
+Classical proposals are deduplicated and sampled under a seeded cap per operator and per task, part of it reserved for preserving variants so that a lone format variant is not lost by chance.
+
+### 3.4 Validation
+
+Every variant gets two rulings, and neither validator sees the grader (`src/graderproof/validate.py`). The deterministic witness evaluates the kept requirements on the reference and variant outcomes: a requirement that holds on the reference and fails on the variant witnesses a violation, and if all still hold, that is differential evidence of preservation. A witness is kept only when it supports the intended label. The model review (prompt `review/v1`) sees the task text, the reference, and the variant's diff and changed files, but not the operator name, the intended label, the witness, or the grader, and rules `violating`, `preserving`, or `unsure` against the task text alone.
+
+A variant is validated when both validators agree with its label, rejected when both agree on the other one (for a generated violating variant, an equivalent mutant, reported but not scored), and disagreed otherwise. An `unsure` verdict is not agreement (D26). Disagreed variants are excluded and queued in `private/review_queue/` for a human decision. A variant counts only with two agreeing validators, a witness, and a stable grader verdict.
+
+### 3.5 Execution
+
+Third-party code runs only in a sandbox (`src/graderproof/sandbox.py`). With no Docker daemon, that is bubblewrap (D16): a read-only root, a writable workspace only, no network, private PID, IPC, and UTS namespaces, a fresh `/tmp`, and the home and `private/` directories hidden (D28). Children get a scrubbed environment (a fixed `PATH`, `PYTHONHASHSEED=0`, no git configuration, no credentials) and limits on CPU time, memory, file size, and wall-clock time. Confirmatory runs refuse weaker backends and refuse uncommitted changes to code, preregistrations, or tasks (D25, D28).
+
+The determinism pre-check grades the unmodified reference three times and classifies the grader as a stable pass, a stable fail, or flaky; tasks whose grader does not pass the reference stably are reported separately, never dropped. Each variant then runs once, and a verdict that would raise a flag counts only if two confirmation runs agree with it. Executions are cached under a content address covering the task, the solution, the package source, the sandbox, and its limits (D25), so a code or environment change never serves an old execution.
+
+### 3.6 Scoring and statistics
+
+The task is the unit of analysis (`src/graderproof/score.py`), and a task is scorable only if its grader passes the reference in all three runs (D26). A scorable task has a false accept when its grader accepts a counted violating variant (a surviving variant) and a false reject when it rejects a counted preserving variant. The mutation score is the share of a task's counted violating variants that the grader rejects.
+
+Rates carry a percentile bootstrap 95% CI over tasks (`src/graderproof/stats.py`) by the procedure fixed in D8, which `tools/ship_check.py` reproduces to recompute every banked interval: `rng = random.Random(seed)`, each replicate draws n task indices with `rng.randrange(n)`, undefined replicates are dropped, and the bounds are the order statistics at `floor(alpha / 2 * m)` and `ceil((1 - alpha / 2) * m) - 1` of the m kept values. A second interval in one artifact uses `seed + 1`. The E1/E2 hypotheses are exact one-sided binomial tests of the number of flagged scorable tasks per benchmark against null rates frozen in `prereg/0002-e1e2-audit.md`, with Holm's correction across the three benchmarks within each family.
+
+### 3.7 Root causes, repairs, and lint
+
+Root causes (E3, `src/graderproof/rootcause.py`): two independent coders each give every flagged variant, and every rejecting or flaky reference, one code from the six patterns of RQ3 plus coverage-gap, over-specification, and an "other" code per direction. The rule-based coder uses the operator, the witness's check types, and lint smells; the model coder (prompt `rootcause/v1`) reads the task text, grader source, diff, and witness, but not the rule-based code. Agreement is reported as raw agreement and Cohen's kappa.
+
+Repairs (E4, `src/graderproof/repair.py`) graft requirement checks onto the grader. A greedy set cover picks, among the requirements the survivors' witnesses name, a set that catches every coverable survivor; requirements with exit-status checks are never used, since a grader cannot observe the solution's exit status. A standalone checker embeds them with graderproof's check code and a frozen reference snapshot, behind a wrapper that accepts only if the checker and the original grader both accept. A repair is accepted only if, in the sandbox, it passes the reference three times, still accepts every counted preserving variant the original accepted, rejects every target, and is deterministic. A post-repair batch, audited with a new variant seed and a second round of model proposals, then tests generalization on fresh variants absent from the original audit.
+
+Grader lint (E6, `src/graderproof/lint.py`) flags static smells in the grader and task text: existence-only and exit-code-only checks, membership tests, loose matching, whole-text comparison, agent-writable expected data, an unobserved required process, wall-clock dependence, and too few function checks. The lint score counts distinct smells, a triage signal rather than a finding.
+
+### 3.8 The model backend and its controls
+
+Every model call goes through one file-based, content-addressed client (`src/graderproof/models.py`, D17). A request's hash covers its purpose, prompt version, instructions, schema, and items. An ingested response is served, so a banked call is never re-run; otherwise the request is written to `<store>/requests/<hash>.json` and the audit pauses. Ingestion validates the response, enforces the daily cap in `budget.toml`, and logs each call, its plan-equivalent cost (zero cash), and the response's SHA-256 to `artifacts/usage/ledger.jsonl`; a response changed after ingestion is refused (D27).
+
+Headless Claude is unavailable because the cloud environment trips the billing guard (D2), so Claude Code subagents answer the requests (D17): a `model-worker` with only Read and Write tools, told to read only its request and write only its response. Items carry task key hashes or variant hashes, never task names (D24). After a run, `tools/transcript_audit.py` checks every worker transcript, and a response from a worker that touched any other file is discarded and requested again. Third-party model stores stay in `private/` with public hash manifests (D35). One subagent model fills every model role, so the two validators are independent in inputs, prompts, and method, not in model.
+
+## 4. Experiments
+
+### 4.1 E0: tool validity on planted ground truth
+
+E0 (`prereg/0001-e0-tool-validity.md`), now complete (section 5.1), tests whether graderproof finds planted grader weaknesses in both directions, with recall (H1) and precision (H2) each at least 0.90 as point estimates (gate G5).
+
+**An independent planter.** A separate Claude Code subagent wrote toybench from the prompt in `docs/e0/planter_prompt.md`, reading only `CLAUDE.md`, sections 3 and 5 of the build brief, and the toybench adapter. It was told not to read the operators, validators, requirement checks, tests, or examples, not to run graderproof, and to plant weaknesses the way real graders fail. It wrote 72<!--claim:e0.n_tasks--> small script, module, and trajectory tasks: 32<!--claim:e0.n_planted--> `in_list` tasks with one weakness of a section 3 type and a direction (`accept` or `reject`), 32<!--claim:e0.n_clean--> `clean` tasks meant to have no weakness, and 8<!--claim:e0.extra_n--> `extra` tasks with unlisted types, reported beside G5 but not counted.
+
+**The label hash came first.** The labels stayed in the git-ignored `private/` directory; their SHA-256 was committed with the tasks (7fab903) before the preregistration (1629c30) and before graderproof first ran on toybench. Until the run ended, the build session saw only per-slice and per-direction counts; the labels were then committed unchanged, and G5 checks them against the hash.
+
+**Frozen code, audited workers.** The audit ran once from a detached worktree at the preregistration commit (D28), with graders under bubblewrap (section 3.5). Model-worker subagents answered model requests through the client wrapper under the daily cap of sixty single calls (D15, D17), seeing tasks only by key hash (D24). `tools/transcript_audit.py` then checked that each worker read only its request file and wrote only its response file (a violation voids the response); the banked audit (`artifacts/e0/worker_audit.jsonl`) found no violation, and the same tool found no file read, search, or write by the planter outside its permitted paths.
+
+**Detection and adjudication (D23, D34).** A task is flagged by a counted false accept or false reject, and a planted task is detected only when flagged in its planted direction; a grader that rejects or is flaky on the reference is reported separately, never as a flag or a detection. Recall and precision use the 64<!--claim:e0.n_counted--> `in_list` and `clean` tasks. Each counted flag that is not a detection goes to an independent reviewer subagent that sees the task text, reference, grader, variant, verdict, and witness, but not the labels, and rules only whether the witness validates; one validating witness among the variants behind a flag, each ruled on separately, makes it a real weakness rather than a false positive (D34). Rulings stand, and precision before adjudication is reported beside the adjudicated value. Intervals are task bootstraps (two thousand replicates, 95% CI) with exploratory Clopper-Pearson intervals. No task is excluded, a failed hypothesis is reported as it is, and `docs/E0_MISSES.md` explains every miss.
+
+### 4.2 E1 and E2: confirmatory audit of public benchmarks
+
+E1 and E2 (`prereg/0002-e1e2-audit.md`) estimate the share of scorable tasks whose grader accepts at least one counted violating variant (E1) or rejects at least one counted preserving variant (E2). They have not run (section 5.6): at the daily cap they need several days of model calls, and no result exists. D18 chose three benchmarks before any data collection, each pinned to a commit or tag: [tau2-bench](https://arxiv.org/abs/2506.07982) v1.0.1 (tool use; airline, retail, and telecom base tasks without LLM-judged assertions; strata by domain), the [Berkeley Function Calling Leaderboard](https://proceedings.mlr.press/v267/patil25a.html) V4 (function calling; the eight Python AST categories; strata by category), and [HumanEval](https://arxiv.org/abs/2107.03374) (coding; three prompt-length strata).
+
+**Why HumanEval.** It replaces Terminal-Bench 2.0, which needs Docker (section 2.4, D18), as the closest Docker-free coding benchmark whose grader is a test suite run against a reference solution, the setting the classical operators target.
+
+**Frames and sample.** Adapters convert each benchmark deterministically (D19). The frame is the converted tasks minus the contract-test fixture tasks used to build the adapters (`prereg/0002-exclude.txt`); a task whose reference fails its own grader stays in the frame but is unscorable. `tools/sample.py` drew forty tasks per benchmark without replacement, with stratum quotas proportional to the frame and uniform draws within strata from a fixed seed; each audit accepts only the committed sample (`prereg/0002-sample.json`).
+
+**Hypotheses and power.** Per benchmark, H1: the task-level false-accept rate exceeds 0.10; H2: the task-level false-reject rate exceeds 0.05. Each is an exact one-sided binomial test with Holm correction across the three benchmarks at family-wise alpha 0.05, within each family; rates get task-bootstrap intervals (95% CI). A non-rejection is reported just as prominently, with its interval, as evidence that the grader is mostly adequate in that direction. The banked power calculation (`artifacts/prereg/power_e1e2.json`) shows that at forty tasks and the least favourable Holm level, each test reliably detects only true rates well above its null value; smaller excesses can go undetected.
+
+### 4.3 Secondary analyses: E3 to E6
+
+These are preregistered in `prereg/0002-e1e2-audit.md`; anything else is exploratory. E4 has run on toybench (section 5.5) and waits for E1 survivors on the public benchmarks; E3 and E6 have runners but no results; E5's runner is not written yet.
+
+- **E3 root causes:** a rule-based coder and a model coder independently code each counted variant the grader misjudged into the section 3 taxonomy (raw agreement and Cohen's kappa; disagreements listed, not resolved).
+- **E4 repair:** a repair for each scorable task with a surviving variant, accepted under the rules of section 3.7, and a fresh variant batch to test generalization.
+- **E5 impact:** released tau2-bench trajectories of eight models are re-graded on the sampled tasks with the original and repaired graders (pass flips and rank changes, with task-bootstrap intervals).
+- **E6 lint validity:** the AUC of the lint score for predicting a per-task mutation score below 0.8; H6 holds when its interval's lower bound exceeds 0.5. On tau2 the linter sees only graderproof's generic driver.
+
+## 5. Results
+
+### 5.1 E0: tool validity on planted ground truth (synthetic toybench)
+
+E0 ran exactly as preregistered in `prereg/0001-e0-tool-validity.md`, from a worktree frozen at the preregistration commit, and was scored by the preregistered command (`artifacts/e0/results.json`).
+
+| Outcome | Estimate | 95% CI (task bootstrap) | Exact interval (exploratory) | Preregistered target | Outcome |
+|---|---|---|---|---|---|
+| Recall (H1) | 0.81<!--claim:e0.recall--> | 0.68<!--claim:e0.recall_lo--> to 0.93<!--claim:e0.recall_hi--> | 0.64<!--claim:e0.recall_exact_lo--> to 0.93<!--claim:e0.recall_exact_hi--> | at least 0.90 | not met |
+| Precision, adjudicated (H2) | 0.93<!--claim:e0.precision--> | 0.82<!--claim:e0.precision_lo--> to 1.00<!--claim:e0.precision_hi--> | 0.76<!--claim:e0.precision_exact_lo--> to 0.99<!--claim:e0.precision_exact_hi--> | at least 0.90 | met |
+| Precision before adjudication | 0.76<!--claim:e0.precision_raw--> | 0.62<!--claim:e0.precision_raw_lo--> to 0.91<!--claim:e0.precision_raw_hi--> | | | reported beside H2 |
+
+![Recall and precision of graderproof on the planted toybench weaknesses, with 95% CI bootstrap intervals](figures/e0-headline.svg)
+
+graderproof detected 26<!--claim:e0.n_detected--> of 32<!--claim:e0.n_planted--> counted planted weaknesses and missed 6<!--claim:e0.n_misses-->. **H1 is not met**: the point estimate of recall is below the preregistered 0.90, and so is the upper end of the exact interval. As the preregistration requires, the result stands as it is; an improved tool will be tested on a newly planted set under a new preregistration, not by re-running this one. **H2 is met**: after adjudication, precision is above the 0.90 target, although the lower end of its interval is below it, which the preregistration treats as a limitation rather than a failure.
+
+### 5.2 Detection by weakness type
+
+| Weakness type | Planted | Detected | Share detected |
+|---|---|---|---|
+| presence-not-content | 6<!--claim:e0.type.presence-not-content.planted--> | 6<!--claim:e0.type.presence-not-content.detected--> | 1.00<!--claim:e0.type.presence-not-content.rate--> |
+| exit-code-only | 5<!--claim:e0.type.exit-code-only.planted--> | 5<!--claim:e0.type.exit-code-only.detected--> | 1.00<!--claim:e0.type.exit-code-only.rate--> |
+| outcome-only-process | 5<!--claim:e0.type.outcome-only-process.planted--> | 5<!--claim:e0.type.outcome-only-process.detected--> | 1.00<!--claim:e0.type.outcome-only-process.rate--> |
+| loose-matching | 6<!--claim:e0.type.loose-matching.planted--> | 5<!--claim:e0.type.loose-matching.detected--> | 0.83<!--claim:e0.type.loose-matching.rate--> |
+| brittle-parsing (false reject) | 5<!--claim:e0.type.brittle-parsing.planted--> | 3<!--claim:e0.type.brittle-parsing.detected--> | 0.60<!--claim:e0.type.brittle-parsing.rate--> |
+| timing | 5<!--claim:e0.type.timing.planted--> | 2<!--claim:e0.type.timing.detected--> | 0.40<!--claim:e0.type.timing.rate--> |
+| extra slice (unlisted types, not counted) | 8<!--claim:e0.extra_n--> | 5<!--claim:e0.extra_detected--> | 0.62<!--claim:e0.extra_rate--> |
+
+![Share of planted toybench weaknesses that graderproof detected, for each weakness type](figures/e0-by-type.svg)
+
+The split follows the operator families. Weaknesses that a mutation of the solution's content or control flow exposes (presence-not-content, exit-code-only) and weaknesses that a dropped or reordered tool call exposes (outcome-only-process) were all detected. Loose matching was detected except where the exposing change was an extra element in a list argument, which the trajectory argument operator does not make. Timing and brittle parsing were the weak spots. The only timing operator sleeps before the reference runs, so it never ages an output after it is written, never slows a script the grader times, and never reorders writes in a way that final file contents can show. The brittle-parsing misses needed preserving changes no operator makes (CRLF line endings, an integer where the grader formats a float), and in one case the right variant was generated but excluded, because the extracted requirement compared exact text and the two validators disagreed. `docs/E0_MISSES.md` traces every miss, including the extra-slice ones, to its cause and names the operator or check that would catch it.
+
+### 5.3 Adjudication, and real weaknesses in clean graders
+
+Every counted flag that was not a detection went to an independent adjudicator (a model worker that saw the task text, the reference, the grader, the variant, and the witness, but not the labels), which ruled only whether the witness holds up against the task text (D23, D34; `artifacts/e0/adjudication.json`). It ruled 6<!--claim:e0.n_real--> such flags real and 2<!--claim:e0.n_fp--> false positives. Of the 7<!--claim:e0.n_flagged_clean--> clean graders with a witness-backed flag, 5<!--claim:e0.n_clean_real--> were ruled real weaknesses: graders the planting agent intended to check exactly what the instructions require, but which accept a solution the instructions rule out or reject one they allow. This is the behavior graderproof is for, and it is also a caution for planted-label benchmarks: a "clean" label is a claim about a grader, not a fact.
+
+### 5.4 Validation integrity and cost
+
+1,362<!--claim:e0.n_headline--> variants counted in these results, each with two agreeing validations (the deterministic witness and the model review), a witness, and a stable grader verdict. Validator agreement over variants where both validators gave a label was 0.90<!--claim:e0.agreement-->; 289<!--claim:e0.n_excluded--> variants with disagreeing validators were excluded and queued, and 11<!--claim:e0.n_unsure--> variants with an unsure model verdict were never counted as agreement. The mean per-task mutation score was 0.88<!--claim:e0.mutation_mean-->. E0 used 64<!--claim:e0.n_calls--> model calls through the capped client wrapper, and every model-worker transcript was audited for file access (`artifacts/e0/worker_audit.jsonl`): none read anything but its own request.
+
+### 5.5 E4: repair and generalization on toybench (synthetic)
+
+E4 ran as preregistered in `prereg/0002-e1e2-audit.md`, from the frozen E1 worktree. Each toybench grader with a surviving violating variant got a repair under the acceptance rules of section 3.7 (`artifacts/e4/toybench/summary.json`).
+
+| E4 on toybench | Count |
+|---|---|
+| Graders with a surviving violating variant | 36<!--claim:e4.tb.with_survivors--> |
+| Repairs accepted | 36<!--claim:e4.tb.repaired--> |
+| Graders left unrepaired | 0<!--claim:e4.tb.unrepaired--> |
+| Fresh variants in the generalization batch (violating, preserving) | 188<!--claim:e4.tb.fresh--> (116<!--claim:e4.tb.fresh_violating-->, 72<!--claim:e4.tb.fresh_preserving-->) |
+| Fresh violating variants the original graders accept | 23<!--claim:e4.tb.survivors_original--> |
+| of which the repaired graders reject | 21<!--claim:e4.tb.caught--> |
+| Fresh violating variants the repaired graders still accept | 2<!--claim:e4.tb.survivors_repaired--> |
+| Fresh preserving variants the original graders accept | 65<!--claim:e4.tb.preserving_accepted--> |
+| of which the repaired graders reject (repair-induced false rejects) | 0<!--claim:e4.tb.induced_fr--> |
+
+The generalization batch is the test that matters: a repair built to reject known survivors could simply memorize them. The fresh batch used a new variant seed and a second round of model proposals, so none of its variants was seen when the repairs were built. The repaired graders rejected most fresh survivors and induced no false rejects on the fresh preserving variants. Because the repairs graft requirement checks, they inherit the requirements' blind spots: a survivor that breaks a requirement the extraction never wrote down passes the repaired grader too. These are repairs to synthetic graders, offered as patches in `outbound/patches/toybench/`; for third-party benchmarks the same command writes private patches for the maintainers.
+
+### 5.6 E1 and E2: not yet run
+
+The confirmatory audit of tau2-bench, BFCL, and HumanEval is preregistered (`prereg/0002-e1e2-audit.md`) with its stratified sample committed (`prereg/0002-sample.json`), its adapters verified against each benchmark's own evaluator, and its first requests built. It has not run, because the model-call budget of this build allows sixty calls a day and the audit needs several days of calls. This report therefore makes no claim about how often any public benchmark's grader accepts broken solutions or rejects correct ones.
+
+## 6. Limitations and threats to validity
+
+**toybench is synthetic and model-written.** E0's numbers come from 72<!--claim:e0.n_tasks--> synthetic, project-written tasks, not from a public benchmark. The tasks are small, each `in_list` task has one weakness, and a model chose what to plant from a list; real graders are larger and can fail in several ways at once. Even the labels are imperfect, since some graders meant to be clean have real weaknesses (section 5.3). E0 measures sensitivity to the listed types under favorable conditions, not performance on real benchmarks.
+
+**What the planter could see.** It could read the mission paragraph of `CLAUDE.md`, which says that graderproof runs graders on spec-violating and spec-preserving variants of the reference (review item N19, disclosed in the E0 preregistration). The paragraph names no operator, and the audit found no access to operators or validators, but knowing the method in outline could have shaped what was planted, in either direction.
+
+**One model family.** The planter, requirement extractor, variant proposer, model reviewer, and adjudicator are all Claude models run as Claude Code subagents, independent only procedurally (separate contexts and prompts; the extractor, proposer, and reviewer never see the grader, and only the planter saw the labels before scoring). Shared readings of a task could inflate agreement with the labels, and shared blind spots would hide a weakness from both. Precision rests on the adjudicator's rulings (section 5.3), so precision before adjudication (0.76<!--claim:e0.precision_raw-->) is reported for readers who discount them.
+
+**Requirement extraction can miss or over-specify.** A missed requirement leaves the variants that break it without a witness, so false accepts go uncounted. An over-specified one, such as exact text where the task leaves line endings open, makes a valid variant look violating; the validators disagree and the variant is excluded (section 5.4), protecting precision at the cost of recall. Process requirements are witnessed only if the outcome records them, and file write order is not recorded. BFCL references come from the grader's own possible answers (D19, D31), so they are not independent evidence of what a task requires.
+
+**Operator coverage is uneven.** E0 detected 2<!--claim:e0.type.timing.detected--> of 5<!--claim:e0.type.timing.planted--> timing and 3<!--claim:e0.type.brittle-parsing.detected--> of 5<!--claim:e0.type.brittle-parsing.planted--> brittle-parsing weaknesses, its two weakest types (section 5.2). The classical operators' only format and timing changes are a fixed list of output rewrites and one start delay, all on script tasks, so a grader that rejects a slower program, an equal value of another type, or another line ending is reachable only through model proposals. E1 and E2 will therefore tend to understate grader weaknesses of these two types.
+
+**Small samples.** E0 counts 64<!--claim:e0.n_counted--> tasks, 32<!--claim:e0.n_planted--> of them planted, so its intervals are wide (section 5.1). As the preregistration requires us to state, both lower bounds fall below 0.90, so even precision, which met its threshold as a point estimate, is not shown to be at least 0.90. At forty tasks per benchmark, E1 and E2 can reliably detect only large excesses over the null rates, and the worst-case half-width of a 95% CI exceeds both null rates.
+
+**Subagents, not pinned models.** Headless Claude is blocked here (D2), so Claude Code subagents answer model calls (D17) under the subagent alias `sonnet`, not a dated model version: the numbers replay exactly from the hash-checked banked responses (D27), but fresh calls need not reproduce them. Workers have file tools, so their isolation rests on the transcript audit, and an answer may depend on the rest of its batch.
+
+**The HumanEval substitution.** HumanEval tasks are single functions checked by small unit-test suites, which suit the classical Python operators; results on them say little about terminal tasks tested inside containers, and the generated grader reproduces upstream's harness with documented differences (D29).
+
+**tau2 confirmations are invisible (D32).** The airline and retail policies require the user's explicit "yes" before a write, but in tau2 that is a conversational turn, not a tool call, and trajectory operators edit only tool calls and their arguments. No variant can drop or move the confirmation and no witness can observe it, so E1 on tau2-bench is blind to this kind of outcome-only-process weakness.
+
+**What a false accept proves.** It shows that the grader passed a solution that, by a witness derived from the task text and an independent model review, breaks a stated requirement. It does not show that any agent exploited the gap, that the authors meant the requirement as the text reads, or how much published scores change, which is E5's question. A false reject likewise shows a grader stricter than its text, perhaps by unstated intent. An unflagged task is not shown adequate: graderproof flags only what its operators and extracted requirements reach.
+
+## 7. Ethics, disclosure, and reproducibility
+
+### 7.1 Defensive scope
+
+graderproof measures graders; it neither trains nor runs agents against them. Every variant is an edit of the reference solution or a model proposal derived from the task text, never the output of an agent searching for a way past the grader (non-negotiable 15 in `CLAUDE.md`), so each finding traces to one edit and one stated requirement, and nothing here helps an agent game a benchmark. Third-party graders and solutions run only in a write-isolating sandbox (bubblewrap here) with no network, a read-only root, credentials scrubbed from the environment, and the home and `private/` directories hidden. Tasks use mock tools and simulated databases, never real systems or credentials, and E5 re-grades released trajectories instead of running agents.
+
+### 7.2 Disclosure
+
+Task-level findings for third-party tasks not yet fixed upstream (task ids, surviving variants, witnesses) stay in the git-ignored `private/` directory; public artifacts carry only task hashes and aggregates (non-negotiable 14). This covers model calls too (D35): their requests contain the variants, so the third-party model stores live under `private/`. A tracked `MANIFEST.json` per store lists each request's hash, purpose, prompt version, item count, and request and response SHA-256, so calls can be counted and checked without revealing their content. The E0 store is public because toybench is this project's own benchmark. Grader cards for the third-party benchmarks will show only aggregates for unpatched tasks, treating tasks with a rejected or flaky reference as sensitive (D33). toybench patches are public in `outbound/patches/toybench/`; third-party patches stay under `private/outbound/patches/`, with only their hashes in `outbound/patches/MANIFEST.json`. Disclosure drafts and patches go to `outbound/` for the repository's maintainer to review and send; nothing is sent automatically, and the build agents never contact benchmark maintainers. Third-party data is fetched from pinned commits into the git-ignored `runs/` and not redistributed beyond small fixtures its licenses allow; `docs/DATA.md` records sources, licenses, and retrieval dates.
+
+### 7.3 Reproducibility
+
+- `make demo` runs the audit pipeline offline on bundled demo tasks from recorded model responses, with no network and no model calls, and compares its output with a committed golden file.
+- `make report` renders every number in `README.md` and `docs/REPORT.md` from a banked artifact under `artifacts/`, as declared in `docs/claims/spec.json`. `make claimcheck` fails on any number that is not a registered claim, an excluded context (an identifier or a date, for example), or an allowlisted design parameter; `make freshness` re-derives every live claim and fails if a document, figure, or artifact hash differs. `make reproduce` runs `make report` and then `make freshness`; it does not rerun experiments.
+- `make prereg-verify` checks that each preregistration was committed once, that `prereg/FROZEN.jsonl` chains their hashes, and that every confirmatory artifact cites a preregistration whose commit predates its data and model store.
+- `make citecheck` validates `artifacts/citecheck.json` offline.
+- `make ship-check` runs the fourteen gates of `tools/ship_check.py` on a fresh clone, recomputing every gate statistic, bootstrap intervals included, from banked rows with the standard library (D8, D33); it runs no experiment and calls no model. `make secrets-scan` and `make budget` check for secrets in tracked files, cash spent, and usage caps.
+
+Artifacts record the package source fingerprint, the commit, `git_dirty`, the sandbox version, and the answering model IDs (D25). Model responses are banked under the hash of their request, so when the sandboxed executions reproduce, rerunning the E0 audit from the frozen commit serves every answer from `artifacts/model_calls/e0` and the tracked ledger: it needs bubblewrap but no model call. The E1 and E2 stores will be private (D35), so readers will be able to count, date, and hash-check those calls against the manifests, but not replay the audits from this repository alone.
+
+## Appendix A. Decisions that bear on the results
+
+Every interpretation, substitution, and deviation was recorded in `DECISIONS.md` before it was acted on. The ones that shape what this report says:
+
+| Decision | What it fixed |
+|---|---|
+| D17 | Headless Claude was blocked by the cloud environment's billing guard, so model work is done by Claude Code subagents answering content-addressed request files through the capped client wrapper. |
+| D18, D19 | Terminal-Bench 2.0 needs Docker, which this environment lacks, so HumanEval substitutes for it; public benchmarks are converted into the toybench format from pinned commits. |
+| D22 | The first planting run was stopped before it wrote anything; the planter was restarted from scratch rather than resumed. |
+| D23 | A planted task counts as detected only through a witness-backed flag in its planted direction; a grader that rejects or is flaky on the reference is reported separately and is never a detection. |
+| D24 | Model request items carry task key hashes, never task names, and every model-worker transcript is audited for file access. |
+| D25, D26 | Execution cache keys cover the package source, the sandbox, and the limits; a task is scorable only when its reference passes stably; unsure verdicts never count as agreement. |
+| D28 | E0 ran from a git worktree frozen at the preregistration commit, with every `private/` directory hidden from the sandbox. |
+| D33 | ship-check recomputes every gate statistic from banked rows and dates confirmatory data against its preregistration. |
+| D34 | A flag that rests on several variants is adjudicated real when at least one of its witnesses validates; decided before any flag was seen. |
+| D35 | Model calls about unpatched third-party tasks stay in `private/`; only hash manifests are public. |
+| D36 | E4 on toybench reuses E0's banked requirement answers instead of re-requesting identical items. |
+
+No preregistered E0 analysis was changed after data collection, and there are no amendment files.
+
+<!-- generated by tools/report.py from docs/templates/REPORT.md.in; edit the template, then run make report -->
