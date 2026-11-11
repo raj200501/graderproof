@@ -1,0 +1,978 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "events": [
+    {
+     "kind": "refill",
+     "rx_id": "RX-1001",
+     "seq": 1
+    },
+    {
+     "kind": "notify",
+     "patient_id": "P-5512",
+     "seq": 2
+    }
+   ],
+   "notifications": [
+    {
+     "message": "Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.",
+     "patient_id": "P-5512"
+    }
+   ],
+   "pharmacies": {
+    "PH-ELM": "Elm Street Pharmacy",
+    "PH-HBR": "Harbour Road Pharmacy"
+   },
+   "prescriptions": {
+    "RX-1001": {
+     "drug": "atorvastatin 20 mg",
+     "patient_id": "P-5512",
+     "refills_left": 1
+    },
+    "RX-1002": {
+     "drug": "amoxicillin 500 mg",
+     "patient_id": "P-5512",
+     "refills_left": 0
+    },
+    "RX-1107": {
+     "drug": "atorvastatin 40 mg",
+     "patient_id": "P-6020",
+     "refills_left": 5
+    }
+   },
+   "refills": [
+    {
+     "pharmacy_id": "PH-ELM",
+     "rx_id": "RX-1001"
+    }
+   ]
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "patient_id": "P-5512"
+    },
+    "result": {
+     "ok": true,
+     "prescriptions": {
+      "RX-1001": {
+       "drug": "atorvastatin 20 mg",
+       "patient_id": "P-5512",
+       "refills_left": 2
+      },
+      "RX-1002": {
+       "drug": "amoxicillin 500 mg",
+       "patient_id": "P-5512",
+       "refills_left": 0
+      }
+     }
+    },
+    "tool": "list_prescriptions"
+   },
+   {
+    "args": {
+     "pharmacy_id": "PH-ELM",
+     "rx_id": "RX-1001"
+    },
+    "result": {
+     "ok": true,
+     "ready": "tomorrow after 14:00"
+    },
+    "tool": "request_refill"
+   },
+   {
+    "args": {
+     "message": "Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.",
+     "patient_id": "P-5512"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "notify_patient"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "pharmacy_id": "PH-ELM",
+      "rx_id": "RX-1001"
+     },
+     "tool": "request_refill",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": [
+      {
+       "pharmacy_id": "PH-ELM",
+       "rx_id": "RX-1001"
+      }
+     ],
+     "pointer": "/refills",
+     "type": "state_equals"
+    },
+    {
+     "equals": 1,
+     "pointer": "/prescriptions/RX-1001/refills_left",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Request a refill of prescription RX-1001 at pharmacy PH-ELM with request_refill."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "patient_id": "P-5512"
+     },
+     "tool": "notify_patient",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "P-5512",
+     "pointer": "/notifications/0/patient_id",
+     "type": "state_equals"
+    },
+    {
+     "equals": "Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.",
+     "pointer": "/notifications/0/message",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Notify patient P-5512 with notify_patient (the message must include the pharmacy name Elm Street and the prescription number RX-1001)."
+  },
+  {
+   "checks": [
+    {
+     "first": {
+      "args": {
+       "pharmacy_id": "PH-ELM",
+       "rx_id": "RX-1001"
+      },
+      "tool": "request_refill"
+     },
+     "then": {
+      "args": {
+       "patient_id": "P-5512"
+      },
+      "tool": "notify_patient"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Ordering: request the refill first, then notify the patient."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "rx_id": "RX-1002"
+     },
+     "tool": "request_refill",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "rx_id": "RX-1107"
+     },
+     "tool": "request_refill",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "pharmacy_id": "PH-HBR"
+     },
+     "tool": "request_refill",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": 0,
+     "pointer": "/prescriptions/RX-1002/refills_left",
+     "type": "state_equals"
+    },
+    {
+     "equals": 5,
+     "pointer": "/prescriptions/RX-1107/refills_left",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Do not request refills of any other prescription."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:rx-refill",
+ "task_hash": "a749069371764e852585b3334d2639404996882f6269f0bf582d324f423227f6",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,28 @@\n [\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\n+    \"tool\": \"list_prescriptions\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_prescriptions\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\"\n+    }\n+  },\n+  {\n+    \"tool\": \"request_refill\",\n+    \"args\": {\n+      \"rx_id\": \"RX-1001\",\n+      \"pharmacy_id\": \"PH-ELM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"notify_patient\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\",\n+      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_prescriptions\",\n    \"args\": {\n      \"patient_id\": \"P-5512\"\n    }\n  },\n  {\n    \"tool\": \"list_prescriptions\",\n    \"args\": {\n      \"patient_id\": \"P-5512\"\n    }\n  },\n  {\n    \"tool\": \"request_refill\",\n    \"args\": {\n      \"rx_id\": \"RX-1001\",\n      \"pharmacy_id\": \"PH-ELM\"\n    }\n  },\n  {\n    \"tool\": \"notify_patient\",\n    \"args\": {\n      \"patient_id\": \"P-5512\",\n      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "5001b594bca063ba6338b4e35b7891afc06cb6ecb06ba69b8e0b303203f6f663",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "rx-refill",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A duplicate read-only list_prescriptions call does not change state, and the refill and notify steps are intact.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "5001b594bca063ba6338b4e35b7891afc06cb6ecb06ba69b8e0b303203f6f663"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\n+    \"tool\": \"list_prescriptions\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"request_refill\",\n+    \"args\": {\n+      \"rx_id\": \"RX-1001\",\n+      \"pharmacy_id\": \"PH-ELM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"notify_patient\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\",\n+      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_prescriptions\",\n    \"args\": {\n      \"patient_id\": \"P-5512-x\"\n    }\n  },\n  {\n    \"tool\": \"request_refill\",\n    \"args\": {\n      \"rx_id\": \"RX-1001\",\n      \"pharmacy_id\": \"PH-ELM\"\n    }\n  },\n  {\n    \"tool\": \"notify_patient\",\n    \"args\": {\n      \"patient_id\": \"P-5512\",\n      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "47d83f68face1c4061b261e6ad7a3b948279e045f3f93974be4b1509b4427079",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "rx-refill",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list_prescriptions argument differs; the refill and notification are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\n+    \"tool\": \"list_prescriptions\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\"\n+    }\n+  },\n+  {\n+    \"tool\": \"request_refill\",\n+    \"args\": {\n+      \"rx_id\": \"RX-1001\",\n+      \"pharmacy_id\": \"PH-ELM-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"notify_patient\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\",\n+      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_prescriptions\",\n    \"args\": {\n      \"patient_id\": \"P-5512\"\n    }\n  },\n  {\n    \"tool\": \"request_refill\",\n    \"args\": {\n      \"rx_id\": \"RX-1001\",\n      \"pharmacy_id\": \"PH-ELM-x\"\n    }\n  },\n  {\n    \"tool\": \"notify_patient\",\n    \"args\": {\n      \"patient_id\": \"P-5512\",\n      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e12178ebb40534093616326411060556b474b295ea4b76d0fb7bfc5a9db038f7",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "rx-refill",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks request_refill",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Refill at pharmacy PH-ELM: request_refill uses pharmacy id PH-ELM-x, which is not the specified pharmacy.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks request_refill",
+       "state /refills = []",
+       "state /prescriptions/RX-1001/refills_left = 2"
+      ],
+      "requirement": "R1",
+      "text": "Request a refill of prescription RX-1001 at pharmacy PH-ELM with request_refill."
+     },
+     {
+      "failed": [
+       "order request_refill < notify_patient: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: request the refill first, then notify the patient."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e12178ebb40534093616326411060556b474b295ea4b76d0fb7bfc5a9db038f7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\n+    \"tool\": \"list_prescriptions\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\"\n+    }\n+  },\n+  {\n+    \"tool\": \"request_refill\",\n+    \"args\": {\n+      \"rx_id\": \"RX-1001-x\",\n+      \"pharmacy_id\": \"PH-ELM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"notify_patient\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\",\n+      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_prescriptions\",\n    \"args\": {\n      \"patient_id\": \"P-5512\"\n    }\n  },\n  {\n    \"tool\": \"request_refill\",\n    \"args\": {\n      \"rx_id\": \"RX-1001-x\",\n      \"pharmacy_id\": \"PH-ELM\"\n    }\n  },\n  {\n    \"tool\": \"notify_patient\",\n    \"args\": {\n      \"patient_id\": \"P-5512\",\n      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f8ca81fd51bd2f7a9926b536bb731c59adac814b063a52b65197b30ce728cfd3",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "rx-refill",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks request_refill",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Request refill of RX-1001: The refill is requested for rx_id 'RX-1001-x', a different prescription.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks request_refill",
+       "state /refills = []",
+       "state /prescriptions/RX-1001/refills_left = 2"
+      ],
+      "requirement": "R1",
+      "text": "Request a refill of prescription RX-1001 at pharmacy PH-ELM with request_refill."
+     },
+     {
+      "failed": [
+       "order request_refill < notify_patient: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: request the refill first, then notify the patient."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f8ca81fd51bd2f7a9926b536bb731c59adac814b063a52b65197b30ce728cfd3"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\n+    \"tool\": \"list_prescriptions\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\"\n+    }\n+  },\n+  {\n+    \"tool\": \"request_refill\",\n+    \"args\": {\n+      \"rx_id\": \"RX-1001\",\n+      \"pharmacy_id\": \"PH-ELM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"notify_patient\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\",\n+      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_prescriptions\",\n    \"args\": {\n      \"patient_id\": \"P-5512\"\n    }\n  },\n  {\n    \"tool\": \"request_refill\",\n    \"args\": {\n      \"rx_id\": \"RX-1001\",\n      \"pharmacy_id\": \"PH-ELM\"\n    }\n  },\n  {\n    \"tool\": \"notify_patient\",\n    \"args\": {\n      \"patient_id\": \"P-5512\",\n      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a2f182ac421e57ffc90061bceb8b7023ea9dcc9fa264d7c832c5ec1afdf86356",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "rx-refill",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R2: state /notifications/0/message = 'Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.-x'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The message still includes Elm Street and RX-1001 after the refill, and the task does not fix the exact text.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /notifications/0/message = 'Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.-x'"
+      ],
+      "requirement": "R2",
+      "text": "Notify patient P-5512 with notify_patient (the message must include the pharmacy name Elm Street and the prescription number RX-1001)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a2f182ac421e57ffc90061bceb8b7023ea9dcc9fa264d7c832c5ec1afdf86356"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\n+    \"tool\": \"list_prescriptions\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\"\n+    }\n+  },\n+  {\n+    \"tool\": \"request_refill\",\n+    \"args\": {\n+      \"rx_id\": \"RX-1001\",\n+      \"pharmacy_id\": \"PH-ELM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"notify_patient\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512-x\",\n+      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_prescriptions\",\n    \"args\": {\n      \"patient_id\": \"P-5512\"\n    }\n  },\n  {\n    \"tool\": \"request_refill\",\n    \"args\": {\n      \"rx_id\": \"RX-1001\",\n      \"pharmacy_id\": \"PH-ELM\"\n    }\n  },\n  {\n    \"tool\": \"notify_patient\",\n    \"args\": {\n      \"patient_id\": \"P-5512-x\",\n      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6b4e2a1198a43946008b29216b4e6514a76a6ef4fd572af9a659e61e563493fc",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "rx-refill",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks notify_patient",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Notify patient P-5512: notify_patient is called with patient_id P-5512-x, which is the wrong patient.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks notify_patient",
+       "state /notifications/0/patient_id = 'P-5512-x'"
+      ],
+      "requirement": "R2",
+      "text": "Notify patient P-5512 with notify_patient (the message must include the pharmacy name Elm Street and the prescription number RX-1001)."
+     },
+     {
+      "failed": [
+       "order request_refill < notify_patient: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: request the refill first, then notify the patient."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6b4e2a1198a43946008b29216b4e6514a76a6ef4fd572af9a659e61e563493fc"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,16 @@\n [\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\n+    \"tool\": \"request_refill\",\n+    \"args\": {\n+      \"rx_id\": \"RX-1001\",\n+      \"pharmacy_id\": \"PH-ELM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"notify_patient\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\",\n+      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"request_refill\",\n    \"args\": {\n      \"rx_id\": \"RX-1001\",\n      \"pharmacy_id\": \"PH-ELM\"\n    }\n  },\n  {\n    \"tool\": \"notify_patient\",\n    \"args\": {\n      \"patient_id\": \"P-5512\",\n      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "dfa8e4f51def5ec4332e70ee298abca4d186225387075892eba8d6979172f465",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "rx-refill",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the optional read-only list_prescriptions call was dropped; the required refill and notification remain in order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\n+    \"tool\": \"list_prescriptions\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\"\n+    }\n+  },\n+  {\n+    \"tool\": \"notify_patient\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\",\n+      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_prescriptions\",\n    \"args\": {\n      \"patient_id\": \"P-5512\"\n    }\n  },\n  {\n    \"tool\": \"notify_patient\",\n    \"args\": {\n      \"patient_id\": \"P-5512\",\n      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ce0aaf124b5121438c8d0fe54e4e133e4ff348899bf5df835a890fa59000c741",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "rx-refill",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks request_refill",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Request a refill of RX-1001 at PH-ELM with request_refill: The request_refill call was removed, so the refill is never requested.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks request_refill",
+       "state /refills = []",
+       "state /prescriptions/RX-1001/refills_left = 2"
+      ],
+      "requirement": "R1",
+      "text": "Request a refill of prescription RX-1001 at pharmacy PH-ELM with request_refill."
+     },
+     {
+      "failed": [
+       "order request_refill < notify_patient: None, 1"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: request the refill first, then notify the patient."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ce0aaf124b5121438c8d0fe54e4e133e4ff348899bf5df835a890fa59000c741"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\n+    \"tool\": \"list_prescriptions\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\"\n+    }\n+  },\n+  {\n+    \"tool\": \"request_refill\",\n+    \"args\": {\n+      \"rx_id\": \"RX-1001\",\n+      \"pharmacy_id\": \"PH-ELM\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_prescriptions\",\n    \"args\": {\n      \"patient_id\": \"P-5512\"\n    }\n  },\n  {\n    \"tool\": \"request_refill\",\n    \"args\": {\n      \"rx_id\": \"RX-1001\",\n      \"pharmacy_id\": \"PH-ELM\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "de205ba6a7e004f17477d9202db66798ce6d2d3cbb45074595acbb85524697c3",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "rx-refill",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks notify_patient",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Notify the patient after requesting the refill: The notify_patient call is missing from the trajectory.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks notify_patient",
+       "state /notifications/0/patient_id missing",
+       "state /notifications/0/message missing"
+      ],
+      "requirement": "R2",
+      "text": "Notify patient P-5512 with notify_patient (the message must include the pharmacy name Elm Street and the prescription number RX-1001)."
+     },
+     {
+      "failed": [
+       "order request_refill < notify_patient: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: request the refill first, then notify the patient."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "de205ba6a7e004f17477d9202db66798ce6d2d3cbb45074595acbb85524697c3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\n+    \"tool\": \"request_refill\",\n+    \"args\": {\n+      \"rx_id\": \"RX-1001\",\n+      \"pharmacy_id\": \"PH-ELM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_prescriptions\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\"\n+    }\n+  },\n+  {\n+    \"tool\": \"notify_patient\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\",\n+      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"request_refill\",\n    \"args\": {\n      \"rx_id\": \"RX-1001\",\n      \"pharmacy_id\": \"PH-ELM\"\n    }\n  },\n  {\n    \"tool\": \"list_prescriptions\",\n    \"args\": {\n      \"patient_id\": \"P-5512\"\n    }\n  },\n  {\n    \"tool\": \"notify_patient\",\n    \"args\": {\n      \"patient_id\": \"P-5512\",\n      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "6afe1f7e2f5d6e742862446702a708fbfd4520493b4d11df4208e4f4de04a3d3",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "rx-refill",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list_prescriptions call moved after the refill; the refill still precedes the notification and the task does not require listing first.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "6afe1f7e2f5d6e742862446702a708fbfd4520493b4d11df4208e4f4de04a3d3"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\n+    \"tool\": \"list_prescriptions\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\"\n+    }\n+  },\n+  {\n+    \"tool\": \"notify_patient\",\n+    \"args\": {\n+      \"patient_id\": \"P-5512\",\n+      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n+    }\n+  },\n+  {\n+    \"tool\": \"request_refill\",\n+    \"args\": {\n+      \"rx_id\": \"RX-1001\",\n+      \"pharmacy_id\": \"PH-ELM\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_prescriptions\",\n    \"args\": {\n      \"patient_id\": \"P-5512\"\n    }\n  },\n  {\n    \"tool\": \"notify_patient\",\n    \"args\": {\n      \"patient_id\": \"P-5512\",\n      \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"\n    }\n  },\n  {\n    \"tool\": \"request_refill\",\n    \"args\": {\n      \"rx_id\": \"RX-1001\",\n      \"pharmacy_id\": \"PH-ELM\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e01a3d74dc3fe0166385e3776bbdbaed42264e256f5d9600de8e10ff4e868df9",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "rx-refill",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R3: order request_refill < notify_patient: 2, 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Request the refill first, then notify the patient: notify_patient is called before request_refill, violating the required order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n+  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-OAK\"}},\n   {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-OAK\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "deb1a8e9938f19dece9562374958ef1bb401aaaa51d80acc302c13187615347a",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "rx-refill",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks request_refill",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Request the refill at pharmacy PH-ELM: It requests the refill at PH-OAK.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks request_refill",
+       "state /refills = []",
+       "state /prescriptions/RX-1001/refills_left = 2"
+      ],
+      "requirement": "R1",
+      "text": "Request a refill of prescription RX-1001 at pharmacy PH-ELM with request_refill."
+     },
+     {
+      "failed": [
+       "order request_refill < notify_patient: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: request the refill first, then notify the patient."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "deb1a8e9938f19dece9562374958ef1bb401aaaa51d80acc302c13187615347a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n   {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup tomorrow after 14:00.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup tomorrow after 14:00.\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "74a2ab6bee9ce1078886a1905d6cb1bceea8648855e842ed0bd1c443c9c5d046",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "rx-refill",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /notifications/0/message = 'Your refill of RX-1001 (atorvastatin) will be ready for pickup tomorrow after 14:00.'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Message must include the pharmacy name Elm Street: The notification message no longer mentions Elm Street.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /notifications/0/message = 'Your refill of RX-1001 (atorvastatin) will be ready for pickup tomorrow after 14:00.'"
+      ],
+      "requirement": "R2",
+      "text": "Notify patient P-5512 with notify_patient (the message must include the pharmacy name Elm Street and the prescription number RX-1001)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "74a2ab6bee9ce1078886a1905d6cb1bceea8648855e842ed0bd1c443c9c5d046"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}},\n+  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "130c40d62c10856aac941748f4f60c10da889549a535e116da12858ca6b4a730",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "rx-refill",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: order request_refill < notify_patient: 2, 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Request the refill first, then notify the patient: The notification is sent before the refill is requested.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order request_refill < notify_patient: 2, 1"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: request the refill first, then notify the patient."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "130c40d62c10856aac941748f4f60c10da889549a535e116da12858ca6b4a730"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n   {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n+  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1002\", \"pharmacy_id\": \"PH-ELM\"}},\n   {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1002\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "a29a0f5c8257d29ffb250d92e3d9ce3e9979fce044e2f9258f4b9f91c557f87c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "rx-refill",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: trajectory has request_refill",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not request refills of any other prescription: It also requests a refill of RX-1002.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory has request_refill"
+      ],
+      "requirement": "R4",
+      "text": "Do not request refills of any other prescription."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a29a0f5c8257d29ffb250d92e3d9ce3e9979fce044e2f9258f4b9f91c557f87c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n+  {\"tool\": \"list_pharmacies\", \"args\": {}},\n   {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n   {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"list_pharmacies\", \"args\": {}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "880ab52222e236675a3e4fa5f7d45df27e24eb9363e67209672303dfd9477fb8",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "rx-refill",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The added list_pharmacies call is read-only and the required refill and notification still occur in order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "880ab52222e236675a3e4fa5f7d45df27e24eb9363e67209672303dfd9477fb8"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\"tool\": \"request_refill\", \"args\": {\"pharmacy_id\": \"PH-ELM\", \"rx_id\": \"RX-1001\"}},\n+  {\"tool\": \"notify_patient\", \"args\": {\"message\": \"Hello, prescription RX-1001 is being refilled and can be picked up at the Elm Street pharmacy.\", \"patient_id\": \"P-5512\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"request_refill\", \"args\": {\"pharmacy_id\": \"PH-ELM\", \"rx_id\": \"RX-1001\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"message\": \"Hello, prescription RX-1001 is being refilled and can be picked up at the Elm Street pharmacy.\", \"patient_id\": \"P-5512\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "420285c842180974be4b07c04da953ede3f266b00bf5889f1a6ef0a7350fe4e7",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "rx-refill",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R2: state /notifications/0/message = 'Hello, prescription RX-1001 is being refilled and can be picked up at the Elm Street pharmacy.'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "It still requests the RX-1001 refill at PH-ELM and then notifies with a message containing Elm Street and RX-1001; the lookup call is not required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n-  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n-]\n+[{\"tool\":\"list_prescriptions\",\"args\":{\"patient_id\":\"P-5512\"}},{\"tool\":\"request_refill\",\"args\":{\"rx_id\":\"RX-1001\",\"pharmacy_id\":\"PH-ELM\"}},{\"tool\":\"notify_patient\",\"args\":{\"patient_id\":\"P-5512\",\"message\":\"RX-1001 is ready at Elm Street.\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"list_prescriptions\",\"args\":{\"patient_id\":\"P-5512\"}},{\"tool\":\"request_refill\",\"args\":{\"rx_id\":\"RX-1001\",\"pharmacy_id\":\"PH-ELM\"}},{\"tool\":\"notify_patient\",\"args\":{\"patient_id\":\"P-5512\",\"message\":\"RX-1001 is ready at Elm Street.\"}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "74614d17d5dc69e8449920bd9c276e6cd02e78c2e47b620703edd7106723302b",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "rx-refill",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R2: state /notifications/0/message = 'RX-1001 is ready at Elm Street.'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The notification message still contains Elm Street and RX-1001, and the call order and arguments otherwise match.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n+  {\"tool\": \"list_pharmacies\", \"args\": {}},\n   {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n   {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n-  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n+  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Good news: we requested the refill for prescription RX-1001 at the Elm Street pharmacy. You can pick it up tomorrow afternoon.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_pharmacies\", \"args\": {}},\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Good news: we requested the refill for prescription RX-1001 at the Elm Street pharmacy. You can pick it up tomorrow afternoon.\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1d60d168fb394036d89f1678c9f8b69c881ea2cff55e388f883f50cbb831bc59",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "rx-refill",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R2: state /notifications/0/message = 'Good news: we requested the refill for prescription RX-1001 at the Elm Street pharmacy. You can pick it up tomorrow afternoon.'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The refill is requested for the right prescription and pharmacy, and the message contains 'Elm Street' and 'RX-1001'; the extra list_pharmacies call is read-only.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  }
+ ]
+}

@@ -1,0 +1,2131 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+  },
+  "probes": {
+   "11f8a449b522b6fc": {
+    "ok": true,
+    "value": [
+     "aaa",
+     "bbb",
+     "ccc"
+    ]
+   },
+   "32bcc1333dd9a5b1": {
+    "ok": true,
+    "value": [
+     "a",
+     "extraordinarily",
+     "b"
+    ]
+   },
+   "503e14bcd38fab5e": {
+    "ok": true,
+    "value": [
+     "lead and",
+     "trail"
+    ]
+   },
+   "58eafbe2e34fee76": {
+    "ok": true,
+    "value": []
+   },
+   "6bb357bcd6d92547": {
+    "ok": true,
+    "value": [
+     "x"
+    ]
+   },
+   "85b97a00862e4505": {
+    "ok": true,
+    "value": [
+     "aaa bbb",
+     "ccc"
+    ]
+   },
+   "8e5b708ed299c617": {
+    "ok": true,
+    "value": [
+     "a b",
+     "c d",
+     "e f"
+    ]
+   },
+   "911ef9b708eb4fa1": {
+    "ok": true,
+    "value": [
+     "abcdefgh"
+    ]
+   },
+   "9412f535eb3402ec": {
+    "ok": true,
+    "value": [
+     "the quick",
+     "brown fox",
+     "jumps"
+    ]
+   },
+   "a42f8c3bd46d7f8d": {
+    "ok": true,
+    "value": [
+     "ab",
+     "cdefgh",
+     "ij",
+     "kl"
+    ]
+   },
+   "aad5637b71ec193f": {
+    "ok": true,
+    "value": [
+     "ab cd",
+     "ef gh"
+    ]
+   },
+   "afeabec655f6a96f": {
+    "ok": true,
+    "value": [
+     "one two",
+     "three"
+    ]
+   },
+   "bdc7bb733542c7ea": {
+    "ok": true,
+    "value": [
+     "lorem ipsum",
+     "dolor sit",
+     "amet",
+     "consectetur",
+     "adipiscing",
+     "elit"
+    ]
+   },
+   "bffb1b8ab30cd02a": {
+    "ok": true,
+    "value": [
+     "hello world again x"
+    ]
+   },
+   "edfd36915e7ccead": {
+    "ok": true,
+    "value": [
+     "aaa bbb ccc"
+    ]
+   },
+   "fc7f6734736d1dbd": {
+    "ok": true,
+    "value": []
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "wrap.py",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write a Python module wrap.py"
+  },
+  {
+   "checks": [
+    {
+     "equals": [
+      "the quick",
+      "brown fox",
+      "jumps"
+     ],
+     "probe": {
+      "args": [
+       "the quick brown fox jumps",
+       10
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [
+      "aaa bbb",
+      "ccc"
+     ],
+     "probe": {
+      "args": [
+       "aaa bbb ccc",
+       7
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [
+      "aaa bbb ccc"
+     ],
+     "probe": {
+      "args": [
+       "aaa bbb ccc",
+       11
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [
+      "aaa",
+      "bbb",
+      "ccc"
+     ],
+     "probe": {
+      "args": [
+       "aaa bbb ccc",
+       6
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [
+      "a b",
+      "c d",
+      "e f"
+     ],
+     "probe": {
+      "args": [
+       "a b c d e f",
+       3
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Fill lines greedily with single spaces, each line at most width characters"
+  },
+  {
+   "checks": [
+    {
+     "equals": [
+      "hello world again x"
+     ],
+     "probe": {
+      "args": [
+       "  hello   world \n again\tx ",
+       20
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [
+      "one two",
+      "three"
+     ],
+     "probe": {
+      "args": [
+       "one\ntwo\n\nthree",
+       7
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+  },
+  {
+   "checks": [
+    {
+     "equals": [
+      "a",
+      "extraordinarily",
+      "b"
+     ],
+     "probe": {
+      "args": [
+       "a extraordinarily b",
+       5
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [
+      "abcdefgh"
+     ],
+     "probe": {
+      "args": [
+       "abcdefgh",
+       3
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [
+      "ab",
+      "cdefgh",
+      "ij",
+      "kl"
+     ],
+     "probe": {
+      "args": [
+       "ab cdefgh ij kl",
+       4
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "A word longer than width is put on a line of its own, unbroken"
+  },
+  {
+   "checks": [
+    {
+     "equals": [
+      "lead and",
+      "trail"
+     ],
+     "probe": {
+      "args": [
+       "  lead and trail  ",
+       8
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [
+      "x"
+     ],
+     "probe": {
+      "args": [
+       "x",
+       1
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "No line has leading or trailing spaces; return a list of lines"
+  },
+  {
+   "checks": [
+    {
+     "equals": [],
+     "probe": {
+      "args": [
+       "",
+       10
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [],
+     "probe": {
+      "args": [
+       "   \n\t ",
+       10
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "If text contains no words, return []"
+  },
+  {
+   "checks": [
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "lorem ipsum dolor sit amet consectetur adipiscing elit",
+       12
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "ab cd ef gh",
+       5
+      ],
+      "function": "wrap",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R7",
+   "source": "model:requirements/v1",
+   "text": "Boundary behaviour on further inputs agrees with the reference"
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:wrap-text",
+ "task_hash": "dc815a91feef86df1cd6f77ded47cf5831c6b2d551792f56f8e503eaa185fc3f",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -4,7 +4,7 @@\n     for word in text.split():\n         if not current:\n             current = word\n-        elif len(current) + 1 + len(word) <= width:\n+        elif (len(current) + 1) - (len(word)) <= width:\n             current += \" \" + word\n         else:\n             lines.append(current)\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif (len(current) + 1) - (len(word)) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0e0f323f244378c76492ccf79277d9cab8eaf1e358ee4d148fe628a43d5ffa9f",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['the quick brown', 'fox jumps']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Lines stay at most width characters: The fit test subtracts the word length instead of adding it.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['the quick brown', 'fox jumps']",
+       "wrap returned ['aaa bbb ccc']",
+       "wrap returned ['aaa bbb ccc']",
+       "wrap returned ['a b c', 'd e f']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned ['one two three']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['a extraordinarily', 'b']",
+       "wrap returned ['ab cdefgh', 'ij kl']"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap returned ['lead and trail']"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0e0f323f244378c76492ccf79277d9cab8eaf1e358ee4d148fe628a43d5ffa9f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -4,7 +4,7 @@\n     for word in text.split():\n         if not current:\n             current = word\n-        elif len(current) + 1 + len(word) <= width:\n+        elif (len(current)) - (1) + len(word) <= width:\n             current += \" \" + word\n         else:\n             lines.append(current)\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif (len(current)) - (1) + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "15616b191c0c16c8566225e32d9ee2117e6f4efa51a956e1d091a4b08efb5e58",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['aaa bbb', 'ccc']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Lines stay at most width characters: The fit check subtracts 1 instead of adding it, so words are packed onto lines that exceed width.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['aaa bbb', 'ccc']",
+       "wrap returned ['a b c', 'd e f']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned ['ab', 'cdefgh', 'ij kl']"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "15616b191c0c16c8566225e32d9ee2117e6f4efa51a956e1d091a4b08efb5e58"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -5,7 +5,7 @@\n         if not current:\n             current = word\n         elif len(current) + 1 + len(word) <= width:\n-            current += \" \" + word\n+            current += (\" \") - (word)\n         else:\n             lines.append(current)\n             current = word\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += (\" \") - (word)\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "62e1009a723c664c0826999f0bae82429a2715bdc4a4c12ae454ea4956448ec0",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "wrap words greedily onto lines: String minus string raises TypeError whenever a word is appended to a line.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned None"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "62e1009a723c664c0826999f0bae82429a2715bdc4a4c12ae454ea4956448ec0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -4,7 +4,7 @@\n     for word in text.split():\n         if not current:\n             current = word\n-        elif len(current) + 1 + len(word) <= width:\n+        elif len(current) + 1 + len(word) < width:\n             current += \" \" + word\n         else:\n             lines.append(current)\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) < width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "76204a3f8737c33016a7cbf71a36791a9b5493bd49854626142f0d803f7ad177",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['aaa', 'bbb', 'ccc']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Lines may be at most width characters: Using < instead of <= wraps words that exactly fit the width.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['aaa', 'bbb', 'ccc']",
+       "wrap returned ['aaa bbb', 'ccc']",
+       "wrap returned ['a', 'b', 'c', 'd', 'e', 'f']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned ['one', 'two', 'three']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['lead', 'and', 'trail']"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "76204a3f8737c33016a7cbf71a36791a9b5493bd49854626142f0d803f7ad177"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -4,7 +4,7 @@\n     for word in text.split():\n         if not current:\n             current = word\n-        elif len(current) + 1 + len(word) <= width:\n+        elif len(current) + 0 + len(word) <= width:\n             current += \" \" + word\n         else:\n             lines.append(current)\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 0 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c22bf357780dfa70fd652d9433ce45efacef33f70ff3c36a94e3609f2a983af8",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['aaa bbb', 'ccc']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The line must stay at most width characters: The separator is not counted, so lines can exceed width.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['aaa bbb', 'ccc']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned ['ab', 'cdefgh', 'ij kl']"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c22bf357780dfa70fd652d9433ce45efacef33f70ff3c36a94e3609f2a983af8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -4,7 +4,7 @@\n     for word in text.split():\n         if not current:\n             current = word\n-        elif len(current) + 1 + len(word) <= width:\n+        elif len(current) + 2 + len(word) <= width:\n             current += \" \" + word\n         else:\n             lines.append(current)\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 2 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c0884986ae1ab224e1509ed3e65d77a39ffc51102432752098037a9da79695df",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['aaa', 'bbb', 'ccc']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Words separated by single spaces fit if the line is at most width: The fit check counts two separator characters instead of one, so words that fit are wrapped early.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['aaa', 'bbb', 'ccc']",
+       "wrap returned ['aaa bbb', 'ccc']",
+       "wrap returned ['a', 'b', 'c', 'd', 'e', 'f']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned ['one', 'two', 'three']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['lead', 'and', 'trail']"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c0884986ae1ab224e1509ed3e65d77a39ffc51102432752098037a9da79695df"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -5,7 +5,7 @@\n         if not current:\n             current = word\n         elif len(current) + 1 + len(word) <= width:\n-            current += \" \" + word\n+            current += '' + word\n         else:\n             lines.append(current)\n             current = word\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += '' + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b4412015a10e9f57564612a1d96d9925fe18a94c24d6757f6e3b146faf4402b6",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['thequick', 'brownfox', 'jumps']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "words on a line are separated by single spaces: Words are concatenated without a space.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['thequick', 'brownfox', 'jumps']",
+       "wrap returned ['aaabbb', 'ccc']",
+       "wrap returned ['aaabbbccc']",
+       "wrap returned ['ab', 'cd', 'ef']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned ['helloworldagainx']",
+       "wrap returned ['onetwo', 'three']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['leadand', 'trail']"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b4412015a10e9f57564612a1d96d9925fe18a94c24d6757f6e3b146faf4402b6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -9,6 +9,6 @@\n         else:\n             lines.append(current)\n             current = word\n-    if current:\n+    if not (current):\n         lines.append(current)\n     return lines\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if not (current):\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0c94ca6a493bca2a4798f5bbc45b284c48977e3900a9b17166de3021cdbe8049",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['the quick', 'brown fox']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the list of lines including the last line: The inverted condition drops the final line and appends an empty line when current is empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['the quick', 'brown fox']",
+       "wrap returned ['aaa bbb']",
+       "wrap returned []",
+       "wrap returned ['aaa', 'bbb']",
+       "wrap returned ['a b', 'c d']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned []",
+       "wrap returned ['one two']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['a', 'extraordinarily']",
+       "wrap returned []",
+       "wrap returned ['ab', 'cdefgh', 'ij']"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap returned ['lead and']",
+       "wrap returned []"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap returned ['']",
+       "wrap returned ['']"
+      ],
+      "requirement": "R6",
+      "text": "If text contains no words, return []"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0c94ca6a493bca2a4798f5bbc45b284c48977e3900a9b17166de3021cdbe8049"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -2,7 +2,7 @@\n     lines = []\n     current = \"\"\n     for word in text.split():\n-        if not current:\n+        if not (not current):\n             current = word\n         elif len(current) + 1 + len(word) <= width:\n             current += \" \" + word\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not (not current):\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "18dd23df4d8ffdbfebd88151d7477d77b062a9ecdaf3a1912b01862899d95991",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['jumps']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Greedy wrapping of words: The inverted condition replaces the current line with the new word instead of starting a line only when empty, so words are lost.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['jumps']",
+       "wrap returned ['ccc']",
+       "wrap returned ['ccc']",
+       "wrap returned ['ccc']",
+       "wrap returned ['f']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned ['x']",
+       "wrap returned ['three']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['b']",
+       "wrap returned ['', 'abcdefgh']",
+       "wrap returned ['kl']"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap returned ['trail']",
+       "wrap returned ['', 'x']"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "18dd23df4d8ffdbfebd88151d7477d77b062a9ecdaf3a1912b01862899d95991"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -4,7 +4,7 @@\n     for word in text.split():\n         if not current:\n             current = word\n-        elif len(current) + 1 + len(word) <= width:\n+        elif not (len(current) + 1 + len(word) <= width):\n             current += \" \" + word\n         else:\n             lines.append(current)\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif not (len(current) + 1 + len(word) <= width):\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "53e092335aa95e74a9c5f01662389df0d630ff1c2bf93704477ce9c74338a07b",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['the', 'quick brown fox jumps']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Greedy wrapping within width: The fit condition is inverted so words that fit start new lines and overlong lines are built.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['the', 'quick brown fox jumps']",
+       "wrap returned ['aaa', 'bbb', 'ccc']",
+       "wrap returned ['aaa', 'bbb', 'ccc']",
+       "wrap returned ['aaa bbb ccc']",
+       "wrap returned ['a', 'b', 'c', 'd', 'e', 'f']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned ['hello', 'world', 'again', 'x']",
+       "wrap returned ['one', 'two three']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['a extraordinarily b']",
+       "wrap returned ['ab cdefgh ij kl']"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap returned ['lead', 'and trail']"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "53e092335aa95e74a9c5f01662389df0d630ff1c2bf93704477ce9c74338a07b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -1,7 +1,7 @@\n def wrap(text, width):\n     lines = []\n     current = \"\"\n-    for word in text.split():\n+    for word in list(text.split())[:-1]:\n         if not current:\n             current = word\n         elif len(current) + 1 + len(word) <= width:\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in list(text.split())[:-1]:\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "47616eb4c2e24dde7cf63a8445999f9050b81f52da43d893bcf8d8259ffd95da",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['the quick', 'brown fox']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Include all words in the wrapped output: The last word is dropped from the iteration.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['the quick', 'brown fox']",
+       "wrap returned ['aaa bbb']",
+       "wrap returned ['aaa bbb']",
+       "wrap returned ['aaa', 'bbb']",
+       "wrap returned ['a b', 'c d', 'e']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned ['hello world again']",
+       "wrap returned ['one two']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['a', 'extraordinarily']",
+       "wrap returned []",
+       "wrap returned ['ab', 'cdefgh', 'ij']"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap returned ['lead and']",
+       "wrap returned []"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "47616eb4c2e24dde7cf63a8445999f9050b81f52da43d893bcf8d8259ffd95da"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -1,14 +1,14 @@\n def wrap(text, width):\n-    lines = []\n-    current = \"\"\n-    for word in text.split():\n-        if not current:\n-            current = word\n-        elif len(current) + 1 + len(word) <= width:\n-            current += \" \" + word\n+    lines_gp = []\n+    current_gp = \"\"\n+    for word_gp in text.split():\n+        if not current_gp:\n+            current_gp = word_gp\n+        elif len(current_gp) + 1 + len(word_gp) <= width:\n+            current_gp += \" \" + word_gp\n         else:\n-            lines.append(current)\n-            current = word\n-    if current:\n-        lines.append(current)\n-    return lines\n+            lines_gp.append(current_gp)\n+            current_gp = word_gp\n+    if current_gp:\n+        lines_gp.append(current_gp)\n+    return lines_gp\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines_gp = []\n    current_gp = \"\"\n    for word_gp in text.split():\n        if not current_gp:\n            current_gp = word_gp\n        elif len(current_gp) + 1 + len(word_gp) <= width:\n            current_gp += \" \" + word_gp\n        else:\n            lines_gp.append(current_gp)\n            current_gp = word_gp\n    if current_gp:\n        lines_gp.append(current_gp)\n    return lines_gp\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "2bedcd50412a057c0102bff2359176071dc221cae46eb40df072889aed878505",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variable names changed; behavior is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "2bedcd50412a057c0102bff2359176071dc221cae46eb40df072889aed878505"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -11,4 +11,4 @@\n             current = word\n     if current:\n         lines.append(current)\n-    return lines\n+    return None\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a2f3e42d4c8138d1760b0e9b50d9eb205c3f1d632eeb1de64f3676e055bbb196",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the list of lines: The function returns None instead of the list.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R6",
+      "text": "If text contains no words, return []"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a2f3e42d4c8138d1760b0e9b50d9eb205c3f1d632eeb1de64f3676e055bbb196"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -10,5 +10,5 @@\n             lines.append(current)\n             current = word\n     if current:\n-        lines.append(current)\n+        pass\n     return lines\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        pass\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f554a9bf9cbe3e1c34e8e05da11c288ac46590961874d95ad0c031d604b8c2e9",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['the quick', 'brown fox']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "return all wrapped lines: The final line is never appended, so the last line of text is lost.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['the quick', 'brown fox']",
+       "wrap returned ['aaa bbb']",
+       "wrap returned []",
+       "wrap returned ['aaa', 'bbb']",
+       "wrap returned ['a b', 'c d']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned []",
+       "wrap returned ['one two']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['a', 'extraordinarily']",
+       "wrap returned []",
+       "wrap returned ['ab', 'cdefgh', 'ij']"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap returned ['lead and']",
+       "wrap returned []"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f554a9bf9cbe3e1c34e8e05da11c288ac46590961874d95ad0c031d604b8c2e9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -1,5 +1,5 @@\n def wrap(text, width):\n-    lines = []\n+    pass\n     current = \"\"\n     for word in text.split():\n         if not current:\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    pass\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9a9619662fcf473ec126af156c5c300edd0d2f83c30f9dfa76da5ffdfafd8881",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the list of wrapped lines: The lines list is never defined, so the function raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R6",
+      "text": "If text contains no words, return []"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9a9619662fcf473ec126af156c5c300edd0d2f83c30f9dfa76da5ffdfafd8881"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -1,6 +1,6 @@\n def wrap(text, width):\n     lines = []\n-    current = \"\"\n+    pass\n     for word in text.split():\n         if not current:\n             current = word\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    pass\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d0cf234ed80dd627d07e64a38921c261ef3e346eeb1ea8dfbfd924a1c08a3141",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "wrap must return the wrapped lines: The initialization of current was removed, so any non-empty text raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap returned None",
+       "wrap returned None"
+      ],
+      "requirement": "R6",
+      "text": "If text contains no words, return []"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d0cf234ed80dd627d07e64a38921c261ef3e346eeb1ea8dfbfd924a1c08a3141"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -2,13 +2,7 @@\n     lines = []\n     current = \"\"\n     for word in text.split():\n-        if not current:\n-            current = word\n-        elif len(current) + 1 + len(word) <= width:\n-            current += \" \" + word\n-        else:\n-            lines.append(current)\n-            current = word\n+        pass\n     if current:\n         lines.append(current)\n     return lines\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        pass\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a086985883dab94d52a7a34028ddf924c5d054bc3abfe32156a5cd41a0873d15",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the wrapped list of lines: The loop body is pass, so no words are collected and wrap always returns an empty list.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned []",
+       "wrap returned []",
+       "wrap returned []",
+       "wrap returned []",
+       "wrap returned []"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned []",
+       "wrap returned []"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned []",
+       "wrap returned []",
+       "wrap returned []"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap returned []",
+       "wrap returned []"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a086985883dab94d52a7a34028ddf924c5d054bc3abfe32156a5cd41a0873d15"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -3,7 +3,7 @@\n     current = \"\"\n     for word in text.split():\n         if not current:\n-            current = word\n+            pass\n         elif len(current) + 1 + len(word) <= width:\n             current += \" \" + word\n         else:\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            pass\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "41c87ff1c17a10ca53f4d5a043ca380fc4ba65dfcf3c938b4c256b5fc25b4099",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Words are placed on lines: The first word on each line is dropped because current is never set when empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned []",
+       "wrap returned []",
+       "wrap returned []",
+       "wrap returned []",
+       "wrap returned []"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned []",
+       "wrap returned []"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned []",
+       "wrap returned []",
+       "wrap returned []"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap returned []",
+       "wrap returned []"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "41c87ff1c17a10ca53f4d5a043ca380fc4ba65dfcf3c938b4c256b5fc25b4099"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -5,7 +5,7 @@\n         if not current:\n             current = word\n         elif len(current) + 1 + len(word) <= width:\n-            current += \" \" + word\n+            pass\n         else:\n             lines.append(current)\n             current = word\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            pass\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fa8ffec88498090451dda1d87c74a6f1bccc5250418bb05566ea315b4106463f",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['the']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Fill lines greedily with words separated by single spaces: Words that fit are dropped instead of appended, so lines lose words.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['the']",
+       "wrap returned ['aaa']",
+       "wrap returned ['aaa']",
+       "wrap returned ['a']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned ['hello']",
+       "wrap returned ['one', 'three']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['lead', 'trail']"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fa8ffec88498090451dda1d87c74a6f1bccc5250418bb05566ea315b4106463f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -4,7 +4,7 @@\n     for word in text.split():\n         if not current:\n             current = word\n-        elif len(current) + 1 + len(word) <= width:\n+        elif len(current) + 1 + len(word) < width:\n             current += \" \" + word\n         else:\n             lines.append(current)\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) < width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "de0049a9198a2ce846e265d7a5200ef1db9c31a859b38e949e1189ab0b34fabd",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['aaa', 'bbb', 'ccc']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Lines may be at most width characters long: Using < instead of <= wraps lines that exactly fit the width.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['aaa', 'bbb', 'ccc']",
+       "wrap returned ['aaa bbb', 'ccc']",
+       "wrap returned ['a', 'b', 'c', 'd', 'e', 'f']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned ['one', 'two', 'three']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['lead', 'and', 'trail']"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "de0049a9198a2ce846e265d7a5200ef1db9c31a859b38e949e1189ab0b34fabd"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -1,7 +1,9 @@\n def wrap(text, width):\n     lines = []\n     current = \"\"\n-    for word in text.split():\n+    for word in text.split(\" \"):\n+        if not word:\n+            continue\n         if not current:\n             current = word\n         elif len(current) + 1 + len(word) <= width:\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split(\" \"):\n        if not word:\n            continue\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "73df615ede8696bc5914f85dd2ffd243361d45842bad31318e9a0ba663c94477",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: wrap returned ['hello world \\n', 'again\\tx']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Words are maximal runs of non-whitespace characters: Splitting only on single spaces leaves tabs and newlines inside words, so such whitespace is not treated as a separator.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['hello world \\n', 'again\\tx']",
+       "wrap returned ['one\\ntwo\\n\\nthree']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['\\n\\t']"
+      ],
+      "requirement": "R6",
+      "text": "If text contains no words, return []"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "73df615ede8696bc5914f85dd2ffd243361d45842bad31318e9a0ba663c94477"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -9,6 +9,9 @@\n         else:\n             lines.append(current)\n             current = word\n+        while len(current) > width:\n+            lines.append(current[:width])\n+            current = current[width:]\n     if current:\n         lines.append(current)\n     return lines\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n        while len(current) > width:\n            lines.append(current[:width])\n            current = current[width:]\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d8d8dbf31efde838b42377152fe4b581feb96b8936f578fc57f68b21a63b180e",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: wrap returned ['a', 'extra', 'ordin', 'arily', 'b']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "A word longer than width is put on a line of its own, unbroken: The added loop splits over-long words into width-sized chunks.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['a', 'extra', 'ordin', 'arily', 'b']",
+       "wrap returned ['abc', 'def', 'gh']",
+       "wrap returned ['ab', 'cdef', 'gh', 'ij', 'kl']"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d8d8dbf31efde838b42377152fe4b581feb96b8936f578fc57f68b21a63b180e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -7,7 +7,7 @@\n         elif len(current) + 1 + len(word) <= width:\n             current += \" \" + word\n         else:\n-            lines.append(current)\n+            lines.append(current + \" \")\n             current = word\n     if current:\n         lines.append(current)\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current + \" \")\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7cedf82beb1951b9675b2baeff469a5f06aeab476d33789d43e76fe9a5451a4b",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: wrap returned ['the quick ', 'brown fox ', 'jumps']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "No line has leading or trailing spaces: Completed lines get a trailing space appended.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['the quick ', 'brown fox ', 'jumps']",
+       "wrap returned ['aaa bbb ', 'ccc']",
+       "wrap returned ['aaa ', 'bbb ', 'ccc']",
+       "wrap returned ['a b ', 'c d ', 'e f']"
+      ],
+      "requirement": "R2",
+      "text": "Fill lines greedily with single spaces, each line at most width characters"
+     },
+     {
+      "failed": [
+       "wrap returned ['one two ', 'three']"
+      ],
+      "requirement": "R3",
+      "text": "Words are maximal runs of non-whitespace; runs of any whitespace separate words and are collapsed to single spaces"
+     },
+     {
+      "failed": [
+       "wrap returned ['a ', 'extraordinarily ', 'b']",
+       "wrap returned ['ab ', 'cdefgh ', 'ij ', 'kl']"
+      ],
+      "requirement": "R4",
+      "text": "A word longer than width is put on a line of its own, unbroken"
+     },
+     {
+      "failed": [
+       "wrap returned ['lead and ', 'trail']"
+      ],
+      "requirement": "R5",
+      "text": "No line has leading or trailing spaces; return a list of lines"
+     },
+     {
+      "failed": [
+       "wrap differs from reference",
+       "wrap differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Boundary behaviour on further inputs agrees with the reference"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7cedf82beb1951b9675b2baeff469a5f06aeab476d33789d43e76fe9a5451a4b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -9,6 +9,5 @@\n         else:\n             lines.append(current)\n             current = word\n-    if current:\n-        lines.append(current)\n+    lines.append(current)\n     return lines\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    lines.append(current)\n    return lines\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d41a046713fad9db7840ddb0075e46570b0bfc9e9cefd1678df13efadff33544",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R6: wrap returned ['']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "If text contains no words, return []: Unconditionally appending current returns [''] for empty or whitespace-only text instead of [].",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "wrap returned ['']",
+       "wrap returned ['']"
+      ],
+      "requirement": "R6",
+      "text": "If text contains no words, return []"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d41a046713fad9db7840ddb0075e46570b0bfc9e9cefd1678df13efadff33544"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -1,14 +1,17 @@\n+import re\n+\n+\n def wrap(text, width):\n     lines = []\n-    current = \"\"\n-    for word in text.split():\n-        if not current:\n-            current = word\n-        elif len(current) + 1 + len(word) <= width:\n-            current += \" \" + word\n-        else:\n-            lines.append(current)\n-            current = word\n-    if current:\n-        lines.append(current)\n+    row = []\n+    size = 0\n+    for word in re.findall(r\"\\S+\", text):\n+        if row and size + 1 + len(word) > width:\n+            lines.append(\" \".join(row))\n+            row = []\n+            size = 0\n+        size = size + len(word) if not row else size + 1 + len(word)\n+        row.append(word)\n+    if row:\n+        lines.append(\" \".join(row))\n     return lines\n",
+   "files": {
+    "wrap.py": "import re\n\n\ndef wrap(text, width):\n    lines = []\n    row = []\n    size = 0\n    for word in re.findall(r\"\\S+\", text):\n        if row and size + 1 + len(word) > width:\n            lines.append(\" \".join(row))\n            row = []\n            size = 0\n        size = size + len(word) if not row else size + 1 + len(word)\n        row.append(word)\n    if row:\n        lines.append(\" \".join(row))\n    return lines\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "27b3d6a0d478b8d99bddb31d612d0fe8434827dd2097ca111b937afefd75e8eb",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It is the same greedy wrapping with the same word definition and the same fit condition.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "27b3d6a0d478b8d99bddb31d612d0fe8434827dd2097ca111b937afefd75e8eb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/wrap.py\n+++ b/wrap.py\n@@ -1,14 +1,16 @@\n def wrap(text, width):\n-    lines = []\n-    current = \"\"\n-    for word in text.split():\n-        if not current:\n-            current = word\n-        elif len(current) + 1 + len(word) <= width:\n-            current += \" \" + word\n+    result = []\n+    line = None\n+    for token in text.split():\n+        if line is None:\n+            line = token\n+            continue\n+        candidate = line + \" \" + token\n+        if len(candidate) <= width:\n+            line = candidate\n         else:\n-            lines.append(current)\n-            current = word\n-    if current:\n-        lines.append(current)\n-    return lines\n+            result.append(line)\n+            line = token\n+    if line is not None:\n+        result.append(line)\n+    return result\n",
+   "files": {
+    "wrap.py": "def wrap(text, width):\n    result = []\n    line = None\n    for token in text.split():\n        if line is None:\n            line = token\n            continue\n        candidate = line + \" \" + token\n        if len(candidate) <= width:\n            line = candidate\n        else:\n            result.append(line)\n            line = token\n    if line is not None:\n        result.append(line)\n    return result\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1627a1379224930fdab8d876666870db8853460b36e24c37cdbfeb7f6ee29ef4",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "wrap-text",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Same greedy algorithm with different variable names and structure; results are identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "1627a1379224930fdab8d876666870db8853460b36e24c37cdbfeb7f6ee29ef4"
+   }
+  }
+ ]
+}

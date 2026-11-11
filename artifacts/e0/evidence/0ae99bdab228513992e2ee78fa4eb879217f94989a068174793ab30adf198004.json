@@ -1,0 +1,1532 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "report.json": "{\n  \"date\": \"2026-11-03\",\n  \"stores\": 4,\n  \"total\": 3169.85,\n  \"generated_at\": \"2026-11-04T02:28:57Z\"\n}\n",
+   "sales.csv": "date,store,amount\n2026-11-03,north,412.50\n2026-11-03,south,980.00\n2026-11-03,east,233.25\n2026-11-03,online,1544.10\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "report.json",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write `report.json` containing a JSON object."
+  },
+  {
+   "checks": [
+    {
+     "equals": "2026-11-03",
+     "lenient": false,
+     "path": "report.json",
+     "pointer": "/date",
+     "type": "file_json"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "`date`: the date from the file, as a string."
+  },
+  {
+   "checks": [
+    {
+     "equals": 4,
+     "lenient": false,
+     "path": "report.json",
+     "pointer": "/stores",
+     "type": "file_json"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "`stores`: the number of data rows, as an integer."
+  },
+  {
+   "checks": [
+    {
+     "equals": 3169.85,
+     "lenient": false,
+     "path": "report.json",
+     "pointer": "/total",
+     "type": "file_json"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+  },
+  {
+   "checks": [
+    {
+     "path": "report.json",
+     "pattern": "\"generated_at\"\\s*:\\s*\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\"",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:sales-report",
+ "task_hash": "0ae99bdab228513992e2ee78fa4eb879217f94989a068174793ab30adf198004",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,16 @@\n+import csv\n+import json\n+from datetime import datetime, timezone\n+\n+with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+report = {\n+    \"date\": rows[0][\"date\"],\n+    \"stores\": len(rows),\n+    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n+}\n+report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n+with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(report, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['report.json']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,14 @@\n-import csv\n-import json\n-from datetime import datetime, timezone\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-report = {\n-    \"date\": rows[0][\"date\"],\n-    \"stores\": len(rows),\n-    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n-}\n-report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n-with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['report.json']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "abcafa54c2a9288c8b247ffbd82a78b3217e4b66bf94952a1a40289297dd6de7",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: report.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "report.json must be a JSON object with exactly the required keys: The transform drops the last line of report.json, which cuts the closing brace and leaves invalid JSON.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json is not valid JSON"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     },
+     {
+      "failed": [
+       "report.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     },
+     {
+      "failed": [
+       "report.json is not valid JSON"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "abcafa54c2a9288c8b247ffbd82a78b3217e4b66bf94952a1a40289297dd6de7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,16 @@\n+import csv\n+import json\n+from datetime import datetime, timezone\n+\n+with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+report = {\n+    \"date\": rows[0][\"date\"],\n+    \"stores\": len(rows),\n+    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n+}\n+report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n+with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(report, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['report.json']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,14 @@\n-import csv\n-import json\n-from datetime import datetime, timezone\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-report = {\n-    \"date\": rows[0][\"date\"],\n-    \"stores\": len(rows),\n-    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n-}\n-report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n-with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['report.json']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a4993c2b2d6067780e2115bea08acd99de3c46aeb5b7300098e19e1c8ef836e8",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: report.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "report.json must be a JSON object with exactly the given keys: The wrapper appends a line reading extra to report.json, which makes it invalid JSON.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json is not valid JSON"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     },
+     {
+      "failed": [
+       "report.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     },
+     {
+      "failed": [
+       "report.json is not valid JSON"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a4993c2b2d6067780e2115bea08acd99de3c46aeb5b7300098e19e1c8ef836e8"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,16 @@\n+import csv\n+import json\n+from datetime import datetime, timezone\n+\n+with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+report = {\n+    \"date\": rows[0][\"date\"],\n+    \"stores\": len(rows),\n+    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n+}\n+report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n+with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(report, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,44 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['report.json']\n+\n+\n+def floatify(obj):\n+    if isinstance(obj, bool):\n+        return obj\n+    if isinstance(obj, int):\n+        return float(obj)\n+    if isinstance(obj, dict):\n+        return {k: floatify(v) for k, v in obj.items()}\n+    if isinstance(obj, list):\n+        return [floatify(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    return rewrite_json(text, floatify, 2)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,14 @@\n-import csv\n-import json\n-from datetime import datetime, timezone\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-report = {\n-    \"date\": rows[0][\"date\"],\n-    \"stores\": len(rows),\n-    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n-}\n-report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n-with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['report.json']\n\n\ndef floatify(obj):\n    if isinstance(obj, bool):\n        return obj\n    if isinstance(obj, int):\n        return float(obj)\n    if isinstance(obj, dict):\n        return {k: floatify(v) for k, v in obj.items()}\n    if isinstance(obj, list):\n        return [floatify(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    return rewrite_json(text, floatify, 2)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "09183187ce792ed8fb3120c6462cfd5f20ef5e25803a29a211966f05d7655485",
+   "kind": "preserving",
+   "operator": "out-json-float",
+   "task_id": "sales-report",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "stores must be an integer: The post-processing converts all integers to floats, so stores becomes a float.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "09183187ce792ed8fb3120c6462cfd5f20ef5e25803a29a211966f05d7655485"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,16 @@\n+import csv\n+import json\n+from datetime import datetime, timezone\n+\n+with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+report = {\n+    \"date\": rows[0][\"date\"],\n+    \"stores\": len(rows),\n+    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n+}\n+report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n+with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(report, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,32 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['report.json']\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    return rewrite_json(text, lambda o: o, 4)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,14 @@\n-import csv\n-import json\n-from datetime import datetime, timezone\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-report = {\n-    \"date\": rows[0][\"date\"],\n-    \"stores\": len(rows),\n-    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n-}\n-report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n-with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['report.json']\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    return rewrite_json(text, lambda o: o, 4)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d952ac453164258f7431801292454bf892010ed198e8fa18033479726444c712",
+   "kind": "preserving",
+   "operator": "out-json-indent",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "report.json keeps the same keys and values and is re-indented with 4 spaces, which the task does not constrain; generated_at is still the time of writing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "d952ac453164258f7431801292454bf892010ed198e8fa18033479726444c712"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,16 @@\n+import csv\n+import json\n+from datetime import datetime, timezone\n+\n+with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+report = {\n+    \"date\": rows[0][\"date\"],\n+    \"stores\": len(rows),\n+    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n+}\n+report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n+with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(report, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,40 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['report.json']\n+\n+\n+def reorder(obj):\n+    if isinstance(obj, dict):\n+        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n+    if isinstance(obj, list):\n+        return [reorder(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    return rewrite_json(text, reorder, 2)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,14 @@\n-import csv\n-import json\n-from datetime import datetime, timezone\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-report = {\n-    \"date\": rows[0][\"date\"],\n-    \"stores\": len(rows),\n-    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n-}\n-report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n-with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['report.json']\n\n\ndef reorder(obj):\n    if isinstance(obj, dict):\n        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n    if isinstance(obj, list):\n        return [reorder(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    return rewrite_json(text, reorder, 2)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "fa3076bca8146304fb98a9a833b19a42810a3517305c189d1383cef3c34beec3",
+   "kind": "preserving",
+   "operator": "out-json-key-order",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The report has the same keys and values, with generated_at still computed at write time; only key order changes, which the task does not constrain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "fa3076bca8146304fb98a9a833b19a42810a3517305c189d1383cef3c34beec3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,16 @@\n+import csv\n+import json\n+from datetime import datetime, timezone\n+\n+with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+report = {\n+    \"date\": rows[0][\"date\"],\n+    \"stores\": len(rows),\n+    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n+}\n+report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n+with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(report, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['report.json']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,14 @@\n-import csv\n-import json\n-from datetime import datetime, timezone\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-report = {\n-    \"date\": rows[0][\"date\"],\n-    \"stores\": len(rows),\n-    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n-}\n-report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n-with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['report.json']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ac953d18f2a6efcf45d1216b4e36e583bb1f2ee47f862fa10f3bdf64850d0c0a",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the trailing newline of report.json is removed, and the task does not require one; the content is still a valid JSON object with the required keys.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ac953d18f2a6efcf45d1216b4e36e583bb1f2ee47f862fa10f3bdf64850d0c0a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,16 @@\n+import csv\n+import json\n+from datetime import datetime, timezone\n+\n+with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+report = {\n+    \"date\": rows[0][\"date\"],\n+    \"stores\": len(rows),\n+    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n+}\n+report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n+with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(report, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,14 @@\n-import csv\n-import json\n-from datetime import datetime, timezone\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-report = {\n-    \"date\": rows[0][\"date\"],\n-    \"stores\": len(rows),\n-    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n-}\n-report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n-with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(3.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(3.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "191f74534318b98649c29be15601c3d775089e8290eae69eada1e3c398d87d8a",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper only delays by 3 seconds, then runs the original, and generated_at is still taken when the report is written; the output is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "191f74534318b98649c29be15601c3d775089e8290eae69eada1e3c398d87d8a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n     \"stores\": len(rows),\n     \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n }\n-report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n+report[''] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n     json.dump(report, fh, indent=2)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[''] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "74dfe701b390d3ff91c1b65f887feba317236ffe604956dae0df7d86d8bdedc4",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: report.json does not match /\"generated_at\"\\s*:\\s*\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\"/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Include the generated_at key: The timestamp is stored under an empty-string key and generated_at is missing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json does not match /\"generated_at\"\\s*:\\s*\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\"/"
+      ],
+      "requirement": "R5",
+      "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "74dfe701b390d3ff91c1b65f887feba317236ffe604956dae0df7d86d8bdedc4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,6 +11,6 @@\n     \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n-with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n+with open('', \"w\", encoding=\"utf-8\") as fh:\n     json.dump(report, fh, indent=2)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open('', \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7362316dc2fce4f117eee0b1a27fee23077ae4abc613d05f0d89a956191139bb",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: report.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write report.json: open('') raises FileNotFoundError so no report is written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `report.json` containing a JSON object."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7362316dc2fce4f117eee0b1a27fee23077ae4abc613d05f0d89a956191139bb"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,6 +11,6 @@\n     \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n-with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n+with open(\"report.json\", \"w\", encoding='utf-') as fh:\n     json.dump(report, fh, indent=2)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding='utf-') as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7002d4a61fb08896e9cfac755d276c6ec6add66611aacb9082e7796050995c4c",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "sales-report",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Write report.json: encoding='utf-' is an unknown encoding, so open raises LookupError and no report is written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,6 +11,6 @@\n     \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n-with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n+with open(\"report.json\", \"w\", encoding='utf-8x') as fh:\n     json.dump(report, fh, indent=2)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding='utf-8x') as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a05c953bbab1188d298751bdffef3988680147f134aa773708ec54b723306328",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: report.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write report.json: The invalid encoding name 'utf-8x' raises LookupError so report.json is never written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json is not valid JSON"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     },
+     {
+      "failed": [
+       "report.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     },
+     {
+      "failed": [
+       "report.json is not valid JSON"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     },
+     {
+      "failed": [
+       "report.json does not match /\"generated_at\"\\s*:\\s*\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\"/"
+      ],
+      "requirement": "R5",
+      "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a05c953bbab1188d298751bdffef3988680147f134aa773708ec54b723306328"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -12,5 +12,5 @@\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n+    json.dump(report, fh, indent=0)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=0)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "56c02478826e8af034adb9dc64919a0a6bf82ed96e8a961758c08f7c32f59840",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "sales-report",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Indentation of the JSON is unspecified and the content is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,7 +6,7 @@\n     rows = list(csv.DictReader(fh))\n \n report = {\n-    \"date\": rows[0][\"date\"],\n+    'dat': rows[0][\"date\"],\n     \"stores\": len(rows),\n     \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n }\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    'dat': rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c1cd7ba53090231b32dea16bd0107ca48e21742b17c73fb988dcfe85690927c3",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: report.json /date missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Key must be exactly 'date': The key was renamed to 'dat', so the 'date' key is missing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json /date missing"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c1cd7ba53090231b32dea16bd0107ca48e21742b17c73fb988dcfe85690927c3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n     \"stores\": len(rows),\n     \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n }\n-report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n+pass\n with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n     json.dump(report, fh, indent=2)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\npass\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3eba13f69c8156703af8a406012782d671d86926bee630a189661b10949a2f1f",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: report.json does not match /\"generated_at\"\\s*:\\s*\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\"/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Include the generated_at key: The generated_at timestamp is no longer written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json does not match /\"generated_at\"\\s*:\\s*\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\"/"
+      ],
+      "requirement": "R5",
+      "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3eba13f69c8156703af8a406012782d671d86926bee630a189661b10949a2f1f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,6 +11,4 @@\n     \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n-with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n-    fh.write(\"\\n\")\n+pass\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\npass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "09e0f1e23cd1a623b205641a307320480147423d3bbb43a27cd42becb115b9b4",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: report.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write report.json: The report file is never written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `report.json` containing a JSON object."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "09e0f1e23cd1a623b205641a307320480147423d3bbb43a27cd42becb115b9b4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -12,5 +12,5 @@\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n+    pass\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    pass\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a53542b8f8ae239215083b63ca43e4c1df2e7db7e04a9f0b616477933ff60c25",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: report.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "report.json contains the JSON object: json.dump was replaced by pass, so the file holds only a newline.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json is not valid JSON"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     },
+     {
+      "failed": [
+       "report.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     },
+     {
+      "failed": [
+       "report.json is not valid JSON"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     },
+     {
+      "failed": [
+       "report.json does not match /\"generated_at\"\\s*:\\s*\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\"/"
+      ],
+      "requirement": "R5",
+      "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a53542b8f8ae239215083b63ca43e4c1df2e7db7e04a9f0b616477933ff60c25"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,8 +2,7 @@\n import json\n from datetime import datetime, timezone\n \n-with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n+pass\n \n report = {\n     \"date\": rows[0][\"date\"],\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\npass\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c5e310d87c16a0b5a6014ec201f2d9cc28518c449d94a6165b28cc6ee8c61dd1",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: report.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write report.json from sales.csv: The CSV reading was replaced with pass, so rows is undefined and the script crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `report.json` containing a JSON object."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c5e310d87c16a0b5a6014ec201f2d9cc28518c449d94a6165b28cc6ee8c61dd1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,7 +3,7 @@\n from datetime import datetime, timezone\n \n with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n+    pass\n \n report = {\n     \"date\": rows[0][\"date\"],\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    pass\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9802dbaf53f1ce323dc125a1b55e1f4a6134d82ca351bc82f588318ee5bae8be",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: report.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write report.json from sales.csv: The CSV is never read into rows, so the script crashes with NameError and writes no report.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `report.json` containing a JSON object."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9802dbaf53f1ce323dc125a1b55e1f4a6134d82ca351bc82f588318ee5bae8be"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,11 +5,7 @@\n with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     rows = list(csv.DictReader(fh))\n \n-report = {\n-    \"date\": rows[0][\"date\"],\n-    \"stores\": len(rows),\n-    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n-}\n+pass\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n     json.dump(report, fh, indent=2)\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\npass\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2f10f88b87ea035e138539125ba0785258b55be2b579362af10c33708fff5efc",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: report.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write report.json with date, stores, total, generated_at: report is never defined, so the script raises NameError and writes no report.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `report.json` containing a JSON object."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2f10f88b87ea035e138539125ba0785258b55be2b579362af10c33708fff5efc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,6 +11,6 @@\n     \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n-with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n+with open('report.json.bak', \"w\", encoding=\"utf-8\") as fh:\n     json.dump(report, fh, indent=2)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open('report.json.bak', \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "039c483396dd2ac4c0e388817cb4e9853df660d11cf5b0d36fee1f012e3d82cf",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: report.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write report.json: The report is written to report.json.bak instead.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `report.json` containing a JSON object."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "039c483396dd2ac4c0e388817cb4e9853df660d11cf5b0d36fee1f012e3d82cf"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,7 +2,7 @@\n import json\n from datetime import datetime, timezone\n \n-with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open('sales.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n     rows = list(csv.DictReader(fh))\n \n report = {\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open('sales.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "201042f3709a307ba5eae50fa8e4323786b2c8d8d016b5d07e815579267deac9",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: report.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read sales.csv: The program reads sales.csv.bak instead of sales.csv.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `report.json` containing a JSON object."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     },
+     {
+      "failed": [
+       "report.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "201042f3709a307ba5eae50fa8e4323786b2c8d8d016b5d07e815579267deac9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -12,5 +12,5 @@\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n+    json.dump([report], fh, indent=2)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump([report], fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "acf9b9c1dc37f7c6af79e0f335d38ab78de53c84298357c370a9eb6748cacb87",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: report.json /date missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "report.json contains a JSON object: The object is wrapped in an array.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json /date missing"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     },
+     {
+      "failed": [
+       "report.json /stores missing"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     },
+     {
+      "failed": [
+       "report.json /total missing"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "acf9b9c1dc37f7c6af79e0f335d38ab78de53c84298357c370a9eb6748cacb87"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,7 +6,7 @@\n     rows = list(csv.DictReader(fh))\n \n report = {\n-    \"date\": rows[0][\"date\"],\n+    \"date\": rows[0][\"date\"].replace(\"-\", \"/\"),\n     \"stores\": len(rows),\n     \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n }\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"].replace(\"-\", \"/\"),\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c9d6c14979e9245de93a614c10ba311672872643e317c0616e28be42e94023ba",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: report.json /date = '2026/11/03'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "`date` must be the date from the file: Slashes replace the hyphens in the date, so it no longer matches the date in the file.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json /date = '2026/11/03'"
+      ],
+      "requirement": "R2",
+      "text": "`date`: the date from the file, as a string."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c9d6c14979e9245de93a614c10ba311672872643e317c0616e28be42e94023ba"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n \n report = {\n     \"date\": rows[0][\"date\"],\n-    \"stores\": len(rows),\n+    \"stores\": str(len(rows)),\n     \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": str(len(rows)),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9cafaee889cd0874bcabb797c5fe82f6651da5bb4f9f8f29fcbec2fd2100c613",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: report.json /stores = '4'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "stores must be an integer: stores is written as a string.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json /stores = '4'"
+      ],
+      "requirement": "R3",
+      "text": "`stores`: the number of data rows, as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9cafaee889cd0874bcabb797c5fe82f6651da5bb4f9f8f29fcbec2fd2100c613"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,7 +8,7 @@\n report = {\n     \"date\": rows[0][\"date\"],\n     \"stores\": len(rows),\n-    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n+    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 1),\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 1),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f4e094c0ec052de00007c98fc6f4e2c15c338c7dd91e9a684e8ac8d2453e22f3",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: report.json /total = 3169.8",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "total rounded to 2 decimal places: The total is rounded to 1 decimal place instead of 2.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json /total = 3169.8"
+      ],
+      "requirement": "R4",
+      "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f4e094c0ec052de00007c98fc6f4e2c15c338c7dd91e9a684e8ac8d2453e22f3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n     \"stores\": len(rows),\n     \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n }\n-report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n+report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%S\")\n with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n     json.dump(report, fh, indent=2)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%S\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "cb5b08847a049b043742c412b881ad446dc22ad091481fa22fce6aec7d511156",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: report.json does not match /\"generated_at\"\\s*:\\s*\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\"/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "generated_at must have the form YYYY-MM-DDTHH:MM:SSZ: The trailing Z was dropped from the timestamp.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "report.json does not match /\"generated_at\"\\s*:\\s*\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z\"/"
+      ],
+      "requirement": "R5",
+      "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "cb5b08847a049b043742c412b881ad446dc22ad091481fa22fce6aec7d511156"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -12,5 +12,4 @@\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n-    fh.write(\"\\n\")\n+    json.dump(report, fh, separators=(\",\", \":\"))\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, separators=(\",\", \":\"))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3a91bd135b0dabacc8338eb33bbb3ec9d3cf13b51ff5fb9315873757b5d32862",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The JSON object has the same keys and values; only whitespace and trailing newline differ.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "3a91bd135b0dabacc8338eb33bbb3ec9d3cf13b51ff5fb9315873757b5d32862"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,11 +6,11 @@\n     rows = list(csv.DictReader(fh))\n \n report = {\n-    \"date\": rows[0][\"date\"],\n     \"stores\": len(rows),\n     \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n+    \"date\": rows[0][\"date\"],\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(report, fh, indent=2)\n+    json.dump(report, fh, indent=4, sort_keys=True)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n    \"date\": rows[0][\"date\"],\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=4, sort_keys=True)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "2d84ecaed58848aed50cf199abf741ed998c73f11438fb8bf42663d5e3ee1f1f",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Same keys and values; only key order and indentation of the JSON output changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "2d84ecaed58848aed50cf199abf741ed998c73f11438fb8bf42663d5e3ee1f1f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,14 +1,16 @@\n import csv\n import json\n from datetime import datetime, timezone\n+from decimal import Decimal, ROUND_HALF_EVEN\n \n with open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     rows = list(csv.DictReader(fh))\n \n+total = sum((Decimal(row[\"amount\"]) for row in rows), Decimal(0))\n report = {\n     \"date\": rows[0][\"date\"],\n     \"stores\": len(rows),\n-    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n+    \"total\": float(total.quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_EVEN)),\n }\n report[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n with open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\nfrom decimal import Decimal, ROUND_HALF_EVEN\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\ntotal = sum((Decimal(row[\"amount\"]) for row in rows), Decimal(0))\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": float(total.quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_EVEN)),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7ebac06799f475d86836f06ba4c2bb8751e22f207c6d3e0191a534490f89aedc",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "sales-report",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Decimal summation rounded to cents gives the correct total as a number, and the other keys and timestamp are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "7ebac06799f475d86836f06ba4c2bb8751e22f207c6d3e0191a534490f89aedc"
+   }
+  }
+ ]
+}

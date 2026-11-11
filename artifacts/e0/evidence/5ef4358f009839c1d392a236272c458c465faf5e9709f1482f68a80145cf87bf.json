@@ -1,0 +1,1950 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "products.csv": "sku,name,price,in_stock\nA-100,Desk Lamp,24.99,yes\nA-101,Monitor Stand,39.50,no\nB-200,USB-C Hub,18.00,yes\nB-201,\"Braided Cable, 2 m\",7.25,yes\nC-300,Ergonomic Chair,189.00,no\n",
+   "products.json": "[\n  {\n    \"sku\": \"A-100\",\n    \"name\": \"Desk Lamp\",\n    \"price\": 24.99,\n    \"in_stock\": true\n  },\n  {\n    \"sku\": \"A-101\",\n    \"name\": \"Monitor Stand\",\n    \"price\": 39.5,\n    \"in_stock\": false\n  },\n  {\n    \"sku\": \"B-200\",\n    \"name\": \"USB-C Hub\",\n    \"price\": 18.0,\n    \"in_stock\": true\n  },\n  {\n    \"sku\": \"B-201\",\n    \"name\": \"Braided Cable, 2 m\",\n    \"price\": 7.25,\n    \"in_stock\": true\n  },\n  {\n    \"sku\": \"C-300\",\n    \"name\": \"Ergonomic Chair\",\n    \"price\": 189.0,\n    \"in_stock\": false\n  }\n]\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "products.json",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write products.json in the working directory."
+  },
+  {
+   "checks": [
+    {
+     "equals": "A-100",
+     "lenient": false,
+     "path": "products.json",
+     "pointer": "/0/sku",
+     "type": "file_json"
+    },
+    {
+     "equals": "A-101",
+     "lenient": false,
+     "path": "products.json",
+     "pointer": "/1/sku",
+     "type": "file_json"
+    },
+    {
+     "equals": "B-200",
+     "lenient": false,
+     "path": "products.json",
+     "pointer": "/2/sku",
+     "type": "file_json"
+    },
+    {
+     "equals": "B-201",
+     "lenient": false,
+     "path": "products.json",
+     "pointer": "/3/sku",
+     "type": "file_json"
+    },
+    {
+     "equals": "C-300",
+     "lenient": false,
+     "path": "products.json",
+     "pointer": "/4/sku",
+     "type": "file_json"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+  },
+  {
+   "checks": [
+    {
+     "equals": [
+      {
+       "in_stock": true,
+       "name": "Desk Lamp",
+       "price": 24.99,
+       "sku": "A-100"
+      },
+      {
+       "in_stock": false,
+       "name": "Monitor Stand",
+       "price": 39.5,
+       "sku": "A-101"
+      },
+      {
+       "in_stock": true,
+       "name": "USB-C Hub",
+       "price": 18.0,
+       "sku": "B-200"
+      },
+      {
+       "in_stock": true,
+       "name": "Braided Cable, 2 m",
+       "price": 7.25,
+       "sku": "B-201"
+      },
+      {
+       "in_stock": false,
+       "name": "Ergonomic Chair",
+       "price": 189.0,
+       "sku": "C-300"
+      }
+     ],
+     "lenient": true,
+     "path": "products.json",
+     "pointer": "",
+     "type": "file_json"
+    },
+    {
+     "equals": "Braided Cable, 2 m",
+     "lenient": false,
+     "path": "products.json",
+     "pointer": "/3/name",
+     "type": "file_json"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+  },
+  {
+   "checks": [
+    {
+     "equals": 39.5,
+     "lenient": true,
+     "path": "products.json",
+     "pointer": "/1/price",
+     "type": "file_json"
+    },
+    {
+     "equals": 24.99,
+     "lenient": true,
+     "path": "products.json",
+     "pointer": "/0/price",
+     "type": "file_json"
+    },
+    {
+     "equals": 189,
+     "lenient": true,
+     "path": "products.json",
+     "pointer": "/4/price",
+     "type": "file_json"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+  },
+  {
+   "checks": [
+    {
+     "equals": true,
+     "lenient": false,
+     "path": "products.json",
+     "pointer": "/0/in_stock",
+     "type": "file_json"
+    },
+    {
+     "equals": false,
+     "lenient": false,
+     "path": "products.json",
+     "pointer": "/1/in_stock",
+     "type": "file_json"
+    },
+    {
+     "equals": false,
+     "lenient": false,
+     "path": "products.json",
+     "pointer": "/4/in_stock",
+     "type": "file_json"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "in_stock is JSON true for yes and false for no."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:catalog-json",
+ "task_hash": "5ef4358f009839c1d392a236272c458c465faf5e9709f1482f68a80145cf87bf",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,20 @@\n+import csv\n+import json\n+\n+with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+products = []\n+for row in rows:\n+    products.append(\n+        {\n+            \"sku\": row[\"sku\"],\n+            \"name\": row[\"name\"],\n+            \"price\": float(row[\"price\"]),\n+            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n+        }\n+    )\n+\n+with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(products, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['products.json']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,20 +1,14 @@\n-import csv\n-import json\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-products = []\n-for row in rows:\n-    products.append(\n-        {\n-            \"sku\": row[\"sku\"],\n-            \"name\": row[\"name\"],\n-            \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n-        }\n-    )\n-\n-with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(products, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['products.json']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f7b701916c80da5d720672f1fc09fe3557c2eb9fcb2a652a13b8ba7479ac2b58",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: products.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "products.json must contain a valid JSON array of all rows: A post-processing step drops the last line of products.json, truncating the JSON so it is invalid.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json is not valid JSON",
+       "products.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f7b701916c80da5d720672f1fc09fe3557c2eb9fcb2a652a13b8ba7479ac2b58"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,20 @@\n+import csv\n+import json\n+\n+with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+products = []\n+for row in rows:\n+    products.append(\n+        {\n+            \"sku\": row[\"sku\"],\n+            \"name\": row[\"name\"],\n+            \"price\": float(row[\"price\"]),\n+            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n+        }\n+    )\n+\n+with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(products, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['products.json']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,20 +1,14 @@\n-import csv\n-import json\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-products = []\n-for row in rows:\n-    products.append(\n-        {\n-            \"sku\": row[\"sku\"],\n-            \"name\": row[\"name\"],\n-            \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n-        }\n-    )\n-\n-with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(products, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['products.json']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0ae9f10ed8a2c2b3f9af5d14cd5f666c9c11ead594b889934f07498cff565fe5",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: products.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "products.json contains a JSON array: The transform appends an extra line making the file invalid JSON.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json is not valid JSON",
+       "products.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0ae9f10ed8a2c2b3f9af5d14cd5f666c9c11ead594b889934f07498cff565fe5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,20 @@\n+import csv\n+import json\n+\n+with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+products = []\n+for row in rows:\n+    products.append(\n+        {\n+            \"sku\": row[\"sku\"],\n+            \"name\": row[\"name\"],\n+            \"price\": float(row[\"price\"]),\n+            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n+        }\n+    )\n+\n+with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(products, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,44 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['products.json']\n+\n+\n+def floatify(obj):\n+    if isinstance(obj, bool):\n+        return obj\n+    if isinstance(obj, int):\n+        return float(obj)\n+    if isinstance(obj, dict):\n+        return {k: floatify(v) for k, v in obj.items()}\n+    if isinstance(obj, list):\n+        return [floatify(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    return rewrite_json(text, floatify, 2)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,20 +1,14 @@\n-import csv\n-import json\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-products = []\n-for row in rows:\n-    products.append(\n-        {\n-            \"sku\": row[\"sku\"],\n-            \"name\": row[\"name\"],\n-            \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n-        }\n-    )\n-\n-with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(products, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['products.json']\n\n\ndef floatify(obj):\n    if isinstance(obj, bool):\n        return obj\n    if isinstance(obj, int):\n        return float(obj)\n    if isinstance(obj, dict):\n        return {k: floatify(v) for k, v in obj.items()}\n    if isinstance(obj, list):\n        return [floatify(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    return rewrite_json(text, floatify, 2)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7963058ff5e2f37c7ff227a74eb53c2e6509db5156c3a5bedecf32b3eb4a91d2",
+   "kind": "preserving",
+   "operator": "out-json-float",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The transform only converts ints to floats and prices are already floats, so the content is equivalent.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "7963058ff5e2f37c7ff227a74eb53c2e6509db5156c3a5bedecf32b3eb4a91d2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,20 @@\n+import csv\n+import json\n+\n+with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+products = []\n+for row in rows:\n+    products.append(\n+        {\n+            \"sku\": row[\"sku\"],\n+            \"name\": row[\"name\"],\n+            \"price\": float(row[\"price\"]),\n+            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n+        }\n+    )\n+\n+with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(products, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,32 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['products.json']\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    return rewrite_json(text, lambda o: o, 4)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,20 +1,14 @@\n-import csv\n-import json\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-products = []\n-for row in rows:\n-    products.append(\n-        {\n-            \"sku\": row[\"sku\"],\n-            \"name\": row[\"name\"],\n-            \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n-        }\n-    )\n-\n-with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(products, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['products.json']\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    return rewrite_json(text, lambda o: o, 4)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0f818dd11b0f550b6e9c83722611bc93b2e8bdfdf43f81d42fbd4a4c126a54cb",
+   "kind": "preserving",
+   "operator": "out-json-indent",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper only re-indents the JSON with 4 spaces, which the task leaves up to the solver, and the data is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "0f818dd11b0f550b6e9c83722611bc93b2e8bdfdf43f81d42fbd4a4c126a54cb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,20 @@\n+import csv\n+import json\n+\n+with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+products = []\n+for row in rows:\n+    products.append(\n+        {\n+            \"sku\": row[\"sku\"],\n+            \"name\": row[\"name\"],\n+            \"price\": float(row[\"price\"]),\n+            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n+        }\n+    )\n+\n+with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(products, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,40 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['products.json']\n+\n+\n+def reorder(obj):\n+    if isinstance(obj, dict):\n+        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n+    if isinstance(obj, list):\n+        return [reorder(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    return rewrite_json(text, reorder, 2)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,20 +1,14 @@\n-import csv\n-import json\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-products = []\n-for row in rows:\n-    products.append(\n-        {\n-            \"sku\": row[\"sku\"],\n-            \"name\": row[\"name\"],\n-            \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n-        }\n-    )\n-\n-with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(products, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['products.json']\n\n\ndef reorder(obj):\n    if isinstance(obj, dict):\n        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n    if isinstance(obj, list):\n        return [reorder(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    return rewrite_json(text, reorder, 2)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "59c5c42e242457b67445503447d506656515f9aa67827c22a1b7cc6611cba7b8",
+   "kind": "preserving",
+   "operator": "out-json-key-order",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only key order inside each object changes, which the task leaves to the author.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "59c5c42e242457b67445503447d506656515f9aa67827c22a1b7cc6611cba7b8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,20 @@\n+import csv\n+import json\n+\n+with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+products = []\n+for row in rows:\n+    products.append(\n+        {\n+            \"sku\": row[\"sku\"],\n+            \"name\": row[\"name\"],\n+            \"price\": float(row[\"price\"]),\n+            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n+        }\n+    )\n+\n+with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(products, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['products.json']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,20 +1,14 @@\n-import csv\n-import json\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-products = []\n-for row in rows:\n-    products.append(\n-        {\n-            \"sku\": row[\"sku\"],\n-            \"name\": row[\"name\"],\n-            \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n-        }\n-    )\n-\n-with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(products, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['products.json']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "e6e80a2e3cbc442e1994a57fb646b52c52050690e9f8f5b97c20ff218ac965f4",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper only removes the trailing newline from products.json, which stays a valid JSON array with the same content; the task leaves spacing open.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "e6e80a2e3cbc442e1994a57fb646b52c52050690e9f8f5b97c20ff218ac965f4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,20 @@\n+import csv\n+import json\n+\n+with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+products = []\n+for row in rows:\n+    products.append(\n+        {\n+            \"sku\": row[\"sku\"],\n+            \"name\": row[\"name\"],\n+            \"price\": float(row[\"price\"]),\n+            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n+        }\n+    )\n+\n+with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(products, fh, indent=2)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,20 +1,14 @@\n-import csv\n-import json\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-products = []\n-for row in rows:\n-    products.append(\n-        {\n-            \"sku\": row[\"sku\"],\n-            \"name\": row[\"name\"],\n-            \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n-        }\n-    )\n-\n-with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(products, fh, indent=2)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(3.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(3.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7dd5335a72261f3c84804bb260d8aa294b3b3c52c029dfb471c5322eea75f89a",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper runs the original logic and an identity transform after a delay, producing the same products.json.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "7dd5335a72261f3c84804bb260d8aa294b3b3c52c029dfb471c5322eea75f89a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,7 +11,7 @@\n             \"sku\": row[\"sku\"],\n             \"name\": row[\"name\"],\n             \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n+            \"in_stock\": row[\"in_stock\"].strip().lower() != \"yes\",\n         }\n     )\n \n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() != \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "1125ecab2fe01f5f82fbd43d470833a5165c6a1bb515e2fba4d2f7f2eda60c94",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': 24.99, 'in_stock': False}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': 39.5, 'in_stock': True}, {'sku': 'B-200', 'name': 'USB-C Hub', 'price': 18.0, 'in_stock': False}, {'sku': 'B-201', 'name': 'Braided Cable, 2 m', 'price': 7.25, 'in_stock': False}, {'sku': 'C-300', 'name': 'Ergonomic Chair', 'price': 189.0, 'in_stock': True}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "in_stock is true if the column is yes: The in_stock boolean is inverted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': 24.99, 'in_stock': False}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': 39.5, 'in_stock': True}, {'sku': 'B-200', 'name': 'USB-C Hub', 'price': 18.0, 'in_stock': False}, {'sku': 'B-201', 'name': 'Braided Cable, 2 m', 'price': 7.25, 'in_stock': False}, {'sku': 'C-300', 'name': 'Ergonomic Chair', 'price': 189.0, 'in_stock': True}]"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json /0/in_stock = False",
+       "products.json /1/in_stock = True",
+       "products.json /4/in_stock = True"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1125ecab2fe01f5f82fbd43d470833a5165c6a1bb515e2fba4d2f7f2eda60c94"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,7 +9,7 @@\n     products.append(\n         {\n             \"sku\": row[\"sku\"],\n-            \"name\": row[\"name\"],\n+            'namex': row[\"name\"],\n             \"price\": float(row[\"price\"]),\n             \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n         }\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            'namex': row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "68d103176c409483174d68279d960323aa18452ab1734449d69a49ab567c7d83",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: products.json  = [{'sku': 'A-100', 'namex': 'Desk Lamp', 'price': 24.99, 'in_stock': True}, {'sku': 'A-101', 'namex': 'Monitor Stand', 'price': 39.5, 'in_stock': False}, {'sku': 'B-200', 'namex': 'USB-C Hub', 'price': 18.0, 'in_stock': True}, {'sku': 'B-201', 'namex': 'Braided Cable, 2 m', 'price': 7.25, 'in_stock': True}, {'sku': 'C-300', 'namex': 'Ergonomic Chair', 'price': 189.0, 'in_stock': False}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "objects have exactly the key name: The key is renamed to namex.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json  = [{'sku': 'A-100', 'namex': 'Desk Lamp', 'price': 24.99, 'in_stock': True}, {'sku': 'A-101', 'namex': 'Monitor Stand', 'price': 39.5, 'in_stock': False}, {'sku': 'B-200', 'namex': 'USB-C Hub', 'price': 18.0, 'in_stock': True}, {'sku': 'B-201', 'namex': 'Braided Cable, 2 m', 'price': 7.25, 'in_stock': True}, {'sku': 'C-300', 'namex': 'Ergonomic Chair', 'price': 189.0, 'in_stock': False}]",
+       "products.json /3/name missing"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "68d103176c409483174d68279d960323aa18452ab1734449d69a49ab567c7d83"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,7 +11,7 @@\n             \"sku\": row[\"sku\"],\n             \"name\": row[\"name\"],\n             \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n+            \"in_stock\": row[''].strip().lower() == \"yes\",\n         }\n     )\n \n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[''].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "cb51f0b1a2713950421ad02e8cdee7fa737dd266c22ab235bfa8371c74af04d5",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: products.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Compute in_stock from the in_stock column: It reads row[''], which raises KeyError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write products.json in the working directory."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "cb51f0b1a2713950421ad02e8cdee7fa737dd266c22ab235bfa8371c74af04d5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,7 +11,7 @@\n             \"sku\": row[\"sku\"],\n             \"name\": row[\"name\"],\n             \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n+            'in_stockx': row[\"in_stock\"].strip().lower() == \"yes\",\n         }\n     )\n \n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            'in_stockx': row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "743a569ab9a8bcbc518a9b91a0e393b91198417a9f9deef761a0d2bab09dbd2c",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': 24.99, 'in_stockx': True}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': 39.5, 'in_stockx': False}, {'sku': 'B-200', 'name': 'USB-C Hub', 'price': 18.0, 'in_stockx': True}, {'sku': 'B-201', 'name': 'Braided Cable, 2 m', 'price': 7.25, 'in_stockx': True}, {'sku': 'C-300', 'name': 'Ergonomic Chair', 'price': 189.0, 'in_stockx': False}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Each object has exactly the key in_stock: The key is renamed to in_stockx.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': 24.99, 'in_stockx': True}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': 39.5, 'in_stockx': False}, {'sku': 'B-200', 'name': 'USB-C Hub', 'price': 18.0, 'in_stockx': True}, {'sku': 'B-201', 'name': 'Braided Cable, 2 m', 'price': 7.25, 'in_stockx': True}, {'sku': 'C-300', 'name': 'Ergonomic Chair', 'price': 189.0, 'in_stockx': False}]"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json /0/in_stock missing",
+       "products.json /1/in_stock missing",
+       "products.json /4/in_stock missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "743a569ab9a8bcbc518a9b91a0e393b91198417a9f9deef761a0d2bab09dbd2c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,7 +11,7 @@\n             \"sku\": row[\"sku\"],\n             \"name\": row[\"name\"],\n             \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n+            \"in_stock\": row[\"in_stock\"].strip().lower() == 'yesx',\n         }\n     )\n \n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == 'yesx',\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "17cfb97adcb78dfbd8a26204ef1f773fa58bff7a9c465fe2eb79cf39e8feee0b",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': 24.99, 'in_stock': False}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': 39.5, 'in_stock': False}, {'sku': 'B-200', 'name': 'USB-C Hub', 'price': 18.0, 'in_stock': False}, {'sku': 'B-201', 'name': 'Braided Cable, 2 m', 'price': 7.25, 'in_stock': False}, {'sku': 'C-300', 'name': 'Ergonomic Chair', 'price': 189.0, 'in_stock': False}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "in_stock is true if the column is yes: It compares against 'yesx', so in_stock is always false.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': 24.99, 'in_stock': False}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': 39.5, 'in_stock': False}, {'sku': 'B-200', 'name': 'USB-C Hub', 'price': 18.0, 'in_stock': False}, {'sku': 'B-201', 'name': 'Braided Cable, 2 m', 'price': 7.25, 'in_stock': False}, {'sku': 'C-300', 'name': 'Ergonomic Chair', 'price': 189.0, 'in_stock': False}]"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json /0/in_stock = False"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "17cfb97adcb78dfbd8a26204ef1f773fa58bff7a9c465fe2eb79cf39e8feee0b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n import csv\n import json\n \n-with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open('', newline=\"\", encoding=\"utf-8\") as fh:\n     rows = list(csv.DictReader(fh))\n \n products = []\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open('', newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0feeab7ef5a109fc8974b9271cc4e59540d63f5567214ec750604ce1029cfb8b",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: products.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read products.csv: open('') raises an error so no output is written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write products.json in the working directory."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0feeab7ef5a109fc8974b9271cc4e59540d63f5567214ec750604ce1029cfb8b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n import csv\n import json\n \n-with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open(\"products.csv\", newline=\"\", encoding='utf-8x') as fh:\n     rows = list(csv.DictReader(fh))\n \n products = []\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding='utf-8x') as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3c0580489857164434f3fc471661eb7a05bfcd5a7e6ce55ef6ff1a798e399e7a",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: products.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read products.csv: The unknown encoding 'utf-8x' raises LookupError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write products.json in the working directory."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3c0580489857164434f3fc471661eb7a05bfcd5a7e6ce55ef6ff1a798e399e7a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n     rows = list(csv.DictReader(fh))\n \n products = []\n-for row in rows:\n+for row in list(rows)[:-1]:\n     products.append(\n         {\n             \"sku\": row[\"sku\"],\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in list(rows)[:-1]:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e261797032983ba180efb97eaf438b68b8295b61ab3461fe53e663d59081b8da",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: products.json /4/sku missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One object per data row: The last row of products.csv is dropped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json /4/sku missing"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': 24.99, 'in_stock': True}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': 39.5, 'in_stock': False}, {'sku': 'B-200', 'name': 'USB-C Hub', 'price': 18.0, 'in_stock': True}, {'sku': 'B-201', 'name': 'Braided Cable, 2 m', 'price': 7.25, 'in_stock': True}]"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json /4/price missing"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json /4/in_stock missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e261797032983ba180efb97eaf438b68b8295b61ab3461fe53e663d59081b8da"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -15,6 +15,4 @@\n         }\n     )\n \n-with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(products, fh, indent=2)\n-    fh.write(\"\\n\")\n+pass\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\npass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "62bda3990c563a565bdf7f075c4a48483ee83edfeb07ea519fa4f2b9eda0d70b",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: products.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write products.json: The write of products.json was removed, so no output file is produced.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write products.json in the working directory."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "62bda3990c563a565bdf7f075c4a48483ee83edfeb07ea519fa4f2b9eda0d70b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -16,5 +16,5 @@\n     )\n \n with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(products, fh, indent=2)\n+    pass\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    pass\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d015e93365846749ce3d43ec1647232dc1535f7240e819ac8a852d4d8ca03dd4",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: products.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "products.json must contain the JSON array of products: json.dump was replaced by pass, so the file is left empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json is not valid JSON",
+       "products.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json is not valid JSON",
+       "products.json is not valid JSON",
+       "products.json is not valid JSON"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d015e93365846749ce3d43ec1647232dc1535f7240e819ac8a852d4d8ca03dd4"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -17,4 +17,4 @@\n \n with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n     json.dump(products, fh, indent=2)\n-    fh.write(\"\\n\")\n+    pass\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    pass\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "9dab930507766c0be9eb9d4969fd0878315be63dbccb79f2ce39a766372046ca",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "catalog-json",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the trailing newline of products.json is dropped; the task requires a valid JSON array and leaves formatting open.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,8 +1,7 @@\n import csv\n import json\n \n-with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n+pass\n \n products = []\n for row in rows:\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\npass\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8aeb83ffd89f8c794d8165916bd3f6783d17d1bcc48ebb1da252073daf49ace9",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: products.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write products.json from products.csv: The CSV is never read, so rows is undefined and the script raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write products.json in the working directory."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8aeb83ffd89f8c794d8165916bd3f6783d17d1bcc48ebb1da252073daf49ace9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,7 +4,7 @@\n with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     rows = list(csv.DictReader(fh))\n \n-products = []\n+pass\n for row in rows:\n     products.append(\n         {\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\npass\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e59f7f963cda16e9f502911159ebd5b0b6cf56f8c2002125c629c2a7989421aa",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: products.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write products.json: products is never initialised, so the script raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write products.json in the working directory."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e59f7f963cda16e9f502911159ebd5b0b6cf56f8c2002125c629c2a7989421aa"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,15 +5,7 @@\n     rows = list(csv.DictReader(fh))\n \n products = []\n-for row in rows:\n-    products.append(\n-        {\n-            \"sku\": row[\"sku\"],\n-            \"name\": row[\"name\"],\n-            \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n-        }\n-    )\n+pass\n \n with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n     json.dump(products, fh, indent=2)\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\npass\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "be3be98df129712ca7b9251eebb5a2efa167dd2292f8ff70701aa99865f425bb",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: products.json /0/sku missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One object per data row: The loop was replaced with pass, so products.json is an empty array.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json /0/sku missing",
+       "products.json /1/sku missing",
+       "products.json /2/sku missing",
+       "products.json /3/sku missing",
+       "products.json /4/sku missing"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json  = []",
+       "products.json /3/name missing"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json /1/price missing",
+       "products.json /0/price missing",
+       "products.json /4/price missing"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json /0/in_stock missing",
+       "products.json /1/in_stock missing",
+       "products.json /4/in_stock missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "be3be98df129712ca7b9251eebb5a2efa167dd2292f8ff70701aa99865f425bb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -15,6 +15,6 @@\n         }\n     )\n \n-with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n+with open('products.json.bak', \"w\", encoding=\"utf-8\") as fh:\n     json.dump(products, fh, indent=2)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open('products.json.bak', \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "75bfc1818f419296ea2e37a40414f720ef4e0bccc3e66064e1d69a5ceb921349",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: products.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write products.json: Output is written to products.json.bak instead.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write products.json in the working directory."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "75bfc1818f419296ea2e37a40414f720ef4e0bccc3e66064e1d69a5ceb921349"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n import csv\n import json\n \n-with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open('products.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n     rows = list(csv.DictReader(fh))\n \n products = []\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open('products.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3a8c6e83cf2f612c86106fa4fdd3ba0ee95375da9f27e874270e32fb7759060f",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: products.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read products.csv: It opens products.csv.bak, which does not exist.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write products.json in the working directory."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3a8c6e83cf2f612c86106fa4fdd3ba0ee95375da9f27e874270e32fb7759060f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -15,6 +15,6 @@\n         }\n     )\n \n-with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n+with open(\"product.json\", \"w\", encoding=\"utf-8\") as fh:\n     json.dump(products, fh, indent=2)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"product.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "25115389c1b50b63688d0591f02eedbad07de56ac85c98d4674e236afdd77792",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: products.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write products.json: The output file is named product.json instead.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write products.json in the working directory."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json missing",
+       "products.json missing",
+       "products.json missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "25115389c1b50b63688d0591f02eedbad07de56ac85c98d4674e236afdd77792"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n     rows = list(csv.DictReader(fh))\n \n products = []\n-for row in rows:\n+for row in rows[:-1]:\n     products.append(\n         {\n             \"sku\": row[\"sku\"],\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows[:-1]:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7c610749af638243f73e63f1621d3bf0ee888610ca507feb1905021e9299e2ee",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: products.json /4/sku missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One object per data row of products.csv: The last row is dropped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json /4/sku missing"
+      ],
+      "requirement": "R2",
+      "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300)."
+     },
+     {
+      "failed": [
+       "products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': 24.99, 'in_stock': True}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': 39.5, 'in_stock': False}, {'sku': 'B-200', 'name': 'USB-C Hub', 'price': 18.0, 'in_stock': True}, {'sku': 'B-201', 'name': 'Braided Cable, 2 m', 'price': 7.25, 'in_stock': True}]"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json /4/price missing"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     },
+     {
+      "failed": [
+       "products.json /4/in_stock missing"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7c610749af638243f73e63f1621d3bf0ee888610ca507feb1905021e9299e2ee"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,7 +9,7 @@\n     products.append(\n         {\n             \"sku\": row[\"sku\"],\n-            \"name\": row[\"name\"],\n+            \"name\": row[\"name\"].title(),\n             \"price\": float(row[\"price\"]),\n             \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n         }\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"].title(),\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "a4fd713770ee4d0ecb7b506e40801345f62ad39a1062c8a8bb2477e25099d82b",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': 24.99, 'in_stock': True}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': 39.5, 'in_stock': False}, {'sku': 'B-200', 'name': 'Usb-C Hub', 'price': 18.0, 'in_stock': True}, {'sku': 'B-201', 'name': 'Braided Cable, 2 M', 'price': 7.25, 'in_stock': True}, {'sku': 'C-300', 'name': 'Ergonomic Chair', 'price': 189.0, 'in_stock': False}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "name unchanged: Product names are title-cased.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': 24.99, 'in_stock': True}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': 39.5, 'in_stock': False}, {'sku': 'B-200', 'name': 'Usb-C Hub', 'price': 18.0, 'in_stock': True}, {'sku': 'B-201', 'name': 'Braided Cable, 2 M', 'price': 7.25, 'in_stock': True}, {'sku': 'C-300', 'name': 'Ergonomic Chair', 'price': 189.0, 'in_stock': False}]",
+       "products.json /3/name = 'Braided Cable, 2 M'"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a4fd713770ee4d0ecb7b506e40801345f62ad39a1062c8a8bb2477e25099d82b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n         {\n             \"sku\": row[\"sku\"],\n             \"name\": row[\"name\"],\n-            \"price\": float(row[\"price\"]),\n+            \"price\": row[\"price\"],\n             \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n         }\n     )\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": row[\"price\"],\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6df16f8806356e92ec0b19126c90092cb09e14c48db595d6474c4a71fe875b73",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': '24.99', 'in_stock': True}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': '39.50', 'in_stock': False}, {'sku': 'B-200', 'name': 'USB-C Hub', 'price': '18.00', 'in_stock': True}, {'sku': 'B-201', 'name': 'Braided Cable, 2 m', 'price': '7.25', 'in_stock': True}, {'sku': 'C-300', 'name': 'Ergonomic Chair', 'price': '189.00', 'in_stock': False}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "price must be a JSON number: Price is emitted as a string instead of a number.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': '24.99', 'in_stock': True}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': '39.50', 'in_stock': False}, {'sku': 'B-200', 'name': 'USB-C Hub', 'price': '18.00', 'in_stock': True}, {'sku': 'B-201', 'name': 'Braided Cable, 2 m', 'price': '7.25', 'in_stock': True}, {'sku': 'C-300', 'name': 'Ergonomic Chair', 'price': '189.00', 'in_stock': False}]"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json /1/price = '39.50'",
+       "products.json /0/price = '24.99'",
+       "products.json /4/price = '189.00'"
+      ],
+      "requirement": "R4",
+      "text": "price is a JSON number (for example 39.5 for 39.50), not a string."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6df16f8806356e92ec0b19126c90092cb09e14c48db595d6474c4a71fe875b73"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,7 +11,7 @@\n             \"sku\": row[\"sku\"],\n             \"name\": row[\"name\"],\n             \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n+            \"in_stock\": bool(row[\"in_stock\"].strip()),\n         }\n     )\n \n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": bool(row[\"in_stock\"].strip()),\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "49905a53a236bb80ab6a85e5283ddaf29cd3237edb0f00041bc4f327bc6adf01",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': 24.99, 'in_stock': True}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': 39.5, 'in_stock': True}, {'sku': 'B-200', 'name': 'USB-C Hub', 'price': 18.0, 'in_stock': True}, {'sku': 'B-201', 'name': 'Braided Cable, 2 m', 'price': 7.25, 'in_stock': True}, {'sku': 'C-300', 'name': 'Ergonomic Chair', 'price': 189.0, 'in_stock': True}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "in_stock is true if the column is yes, false if no: Any non-empty value, including no, now gives true.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "products.json  = [{'sku': 'A-100', 'name': 'Desk Lamp', 'price': 24.99, 'in_stock': True}, {'sku': 'A-101', 'name': 'Monitor Stand', 'price': 39.5, 'in_stock': True}, {'sku': 'B-200', 'name': 'USB-C Hub', 'price': 18.0, 'in_stock': True}, {'sku': 'B-201', 'name': 'Braided Cable, 2 m', 'price': 7.25, 'in_stock': True}, {'sku': 'C-300', 'name': 'Ergonomic Chair', 'price': 189.0, 'in_stock': True}]"
+      ],
+      "requirement": "R3",
+      "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free."
+     },
+     {
+      "failed": [
+       "products.json /1/in_stock = True",
+       "products.json /4/in_stock = True"
+      ],
+      "requirement": "R5",
+      "text": "in_stock is JSON true for yes and false for no."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "49905a53a236bb80ab6a85e5283ddaf29cd3237edb0f00041bc4f327bc6adf01"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -16,5 +16,4 @@\n     )\n \n with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(products, fh, indent=2)\n-    fh.write(\"\\n\")\n+    json.dump(products, fh, separators=(\",\", \":\"), sort_keys=True)\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, separators=(\",\", \":\"), sort_keys=True)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f7d8e262914aa5d0d9e8f03224ab8603e2f005d6f0cf9415e9e5a51f0d747e32",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The task leaves indentation, spacing, and key order free, and the data content is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "f7d8e262914aa5d0d9e8f03224ab8603e2f005d6f0cf9415e9e5a51f0d747e32"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,20 +1,23 @@\n import csv\n import json\n \n+products = []\n with open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-products = []\n-for row in rows:\n-    products.append(\n-        {\n-            \"sku\": row[\"sku\"],\n-            \"name\": row[\"name\"],\n-            \"price\": float(row[\"price\"]),\n-            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n-        }\n-    )\n+    reader = csv.reader(fh)\n+    header = next(reader)\n+    idx = {name: i for i, name in enumerate(header)}\n+    for row in reader:\n+        if not row:\n+            continue\n+        products.append(\n+            {\n+                \"in_stock\": row[idx[\"in_stock\"]].strip().lower() == \"yes\",\n+                \"price\": float(row[idx[\"price\"]]),\n+                \"name\": row[idx[\"name\"]],\n+                \"sku\": row[idx[\"sku\"]],\n+            }\n+        )\n \n with open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(products, fh, indent=2)\n+    json.dump(products, fh, indent=4)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nproducts = []\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    reader = csv.reader(fh)\n    header = next(reader)\n    idx = {name: i for i, name in enumerate(header)}\n    for row in reader:\n        if not row:\n            continue\n        products.append(\n            {\n                \"in_stock\": row[idx[\"in_stock\"]].strip().lower() == \"yes\",\n                \"price\": float(row[idx[\"price\"]]),\n                \"name\": row[idx[\"name\"]],\n                \"sku\": row[idx[\"sku\"]],\n            }\n        )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=4)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0040f5241ae9b22414b2e3a35c689df60babaee2e271d3c65a954cc00fd0ac6e",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "catalog-json",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only indentation, key order and CSV reading style changed, all of which the task leaves open.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "0040f5241ae9b22414b2e3a35c689df60babaee2e271d3c65a954cc00fd0ac6e"
+   }
+  }
+ ]
+}

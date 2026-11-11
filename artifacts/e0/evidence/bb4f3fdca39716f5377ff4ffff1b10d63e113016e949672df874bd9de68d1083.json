@@ -1,0 +1,1258 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "next_ticket": 1002,
+   "tickets": {
+    "T-0998": {
+     "category": "hardware",
+     "comments": [],
+     "priority": "low",
+     "status": "closed",
+     "team": "desktop",
+     "title": "Cannot print to floor 3 printer",
+     "user_id": "U-204"
+    },
+    "T-1000": {
+     "category": "software",
+     "comments": [],
+     "priority": "medium",
+     "status": "open",
+     "team": "apps",
+     "title": "CRM export times out",
+     "user_id": "U-311"
+    },
+    "T-1001": {
+     "category": "network",
+     "comments": [],
+     "priority": "high",
+     "status": "open",
+     "team": "netops",
+     "title": "VPN disconnects every few minutes",
+     "user_id": "U-204"
+    }
+   },
+   "users": {
+    "U-204": {
+     "department": "Finance",
+     "email": "ana.lima@example.com",
+     "name": "Ana Lima"
+    },
+    "U-311": {
+     "department": "Sales",
+     "email": "ben.ochoa@example.com",
+     "name": "Ben Ochoa"
+    },
+    "U-412": {
+     "department": "Legal",
+     "email": "ana.lindqvist@example.com",
+     "name": "Ana Lindqvist"
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "email": "ana.lima@example.com"
+    },
+    "result": {
+     "department": "Finance",
+     "name": "Ana Lima",
+     "ok": true,
+     "user_id": "U-204"
+    },
+    "tool": "find_user"
+   },
+   {
+    "args": {
+     "category": "network",
+     "priority": "high",
+     "title": "VPN disconnects every few minutes",
+     "user_id": "U-204"
+    },
+    "result": {
+     "ok": true,
+     "ticket_id": "T-1001"
+    },
+    "tool": "create_ticket"
+   },
+   {
+    "args": {
+     "team": "netops",
+     "ticket_id": "T-1001"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "assign_ticket"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "email": "ana.lima@example.com"
+     },
+     "tool": "find_user",
+     "type": "trajectory_includes"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Look up Ana's user record with find_user using ana.lima@example.com."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "category": "network",
+      "priority": "high",
+      "title": "VPN disconnects every few minutes",
+      "user_id": "U-204"
+     },
+     "tool": "create_ticket",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "U-204",
+     "pointer": "/tickets/T-1001/user_id",
+     "type": "state_equals"
+    },
+    {
+     "equals": "VPN disconnects every few minutes",
+     "pointer": "/tickets/T-1001/title",
+     "type": "state_equals"
+    },
+    {
+     "equals": "network",
+     "pointer": "/tickets/T-1001/category",
+     "type": "state_equals"
+    },
+    {
+     "equals": "high",
+     "pointer": "/tickets/T-1001/priority",
+     "type": "state_equals"
+    },
+    {
+     "equals": 1002,
+     "pointer": "/next_ticket",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Open one ticket for Ana (U-204) with create_ticket: title 'VPN disconnects every few minutes', category 'network', priority 'high'."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "team": "netops",
+      "ticket_id": "T-1001"
+     },
+     "tool": "assign_ticket",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "netops",
+     "pointer": "/tickets/T-1001/team",
+     "type": "state_equals"
+    },
+    {
+     "equals": "open",
+     "pointer": "/tickets/T-1001/status",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Assign the new ticket T-1001 to the netops team with assign_ticket."
+  },
+  {
+   "checks": [
+    {
+     "first": {
+      "args": {
+       "email": "ana.lima@example.com"
+      },
+      "tool": "find_user"
+     },
+     "then": {
+      "args": {},
+      "tool": "create_ticket"
+     },
+     "type": "trajectory_before"
+    },
+    {
+     "first": {
+      "args": {},
+      "tool": "create_ticket"
+     },
+     "then": {
+      "args": {
+       "ticket_id": "T-1001"
+      },
+      "tool": "assign_ticket"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Ordering: the user lookup comes before ticket creation, and the ticket is created before it is assigned."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "category": "hardware",
+      "comments": [],
+      "priority": "low",
+      "status": "closed",
+      "team": "desktop",
+      "title": "Cannot print to floor 3 printer",
+      "user_id": "U-204"
+     },
+     "pointer": "/tickets/T-0998",
+     "type": "state_equals"
+    },
+    {
+     "equals": {
+      "category": "software",
+      "comments": [],
+      "priority": "medium",
+      "status": "open",
+      "team": "apps",
+      "title": "CRM export times out",
+      "user_id": "U-311"
+     },
+     "pointer": "/tickets/T-1000",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "ticket_id": "T-1000"
+     },
+     "tool": "assign_ticket",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "ticket_id": "T-0998"
+     },
+     "tool": "assign_ticket",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Do not modify any existing ticket."
+  },
+  {
+   "checks": [
+    {
+     "equals": 1002,
+     "pointer": "/next_ticket",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "Open exactly one ticket (no duplicates)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:helpdesk-ticket",
+ "task_hash": "bb4f3fdca39716f5377ff4ffff1b10d63e113016e949672df874bd9de68d1083",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,30 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\n+    \"tool\": \"find_user\",\n+    \"args\": {\n+      \"email\": \"ana.lima@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"find_user\",\n+    \"args\": {\n+      \"email\": \"ana.lima@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_ticket\",\n+    \"args\": {\n+      \"user_id\": \"U-204\",\n+      \"title\": \"VPN disconnects every few minutes\",\n+      \"category\": \"network\",\n+      \"priority\": \"high\"\n+    }\n+  },\n+  {\n+    \"tool\": \"assign_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"T-1001\",\n+      \"team\": \"netops\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_user\",\n    \"args\": {\n      \"email\": \"ana.lima@example.com\"\n    }\n  },\n  {\n    \"tool\": \"find_user\",\n    \"args\": {\n      \"email\": \"ana.lima@example.com\"\n    }\n  },\n  {\n    \"tool\": \"create_ticket\",\n    \"args\": {\n      \"user_id\": \"U-204\",\n      \"title\": \"VPN disconnects every few minutes\",\n      \"category\": \"network\",\n      \"priority\": \"high\"\n    }\n  },\n  {\n    \"tool\": \"assign_ticket\",\n    \"args\": {\n      \"ticket_id\": \"T-1001\",\n      \"team\": \"netops\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "afb05f65ac527a4935b69a8c992f13bfed44f30eeb246a885f68a49488812a18",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only a duplicate read-only find_user call was added; ticket creation and assignment are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "afb05f65ac527a4935b69a8c992f13bfed44f30eeb246a885f68a49488812a18"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\n+    \"tool\": \"find_user\",\n+    \"args\": {\n+      \"email\": \"ana.lima@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_ticket\",\n+    \"args\": {\n+      \"user_id\": \"U-204\",\n+      \"title\": \"VPN disconnects every few minutes\",\n+      \"category\": \"network-x\",\n+      \"priority\": \"high\"\n+    }\n+  },\n+  {\n+    \"tool\": \"assign_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"T-1001\",\n+      \"team\": \"netops\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_user\",\n    \"args\": {\n      \"email\": \"ana.lima@example.com\"\n    }\n  },\n  {\n    \"tool\": \"create_ticket\",\n    \"args\": {\n      \"user_id\": \"U-204\",\n      \"title\": \"VPN disconnects every few minutes\",\n      \"category\": \"network-x\",\n      \"priority\": \"high\"\n    }\n  },\n  {\n    \"tool\": \"assign_ticket\",\n    \"args\": {\n      \"ticket_id\": \"T-1001\",\n      \"team\": \"netops\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2f5630064d0579571f82138de46bf1d25b991695c222691777f3d884b5d1cb54",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks create_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Open the ticket with category network: The category is changed to network-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_ticket",
+       "state /tickets/T-1001/user_id missing",
+       "state /tickets/T-1001/title missing",
+       "state /tickets/T-1001/category missing",
+       "state /tickets/T-1001/priority missing",
+       "state /next_ticket = 1001"
+      ],
+      "requirement": "R2",
+      "text": "Open one ticket for Ana (U-204) with create_ticket: title 'VPN disconnects every few minutes', category 'network', priority 'high'."
+     },
+     {
+      "failed": [
+       "state /tickets/T-1001/team missing",
+       "state /tickets/T-1001/status missing"
+      ],
+      "requirement": "R3",
+      "text": "Assign the new ticket T-1001 to the netops team with assign_ticket."
+     },
+     {
+      "failed": [
+       "state /next_ticket = 1001"
+      ],
+      "requirement": "R6",
+      "text": "Open exactly one ticket (no duplicates)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2f5630064d0579571f82138de46bf1d25b991695c222691777f3d884b5d1cb54"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\n+    \"tool\": \"find_user\",\n+    \"args\": {\n+      \"email\": \"ana.lima@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_ticket\",\n+    \"args\": {\n+      \"user_id\": \"U-204\",\n+      \"title\": \"VPN disconnects every few minutes\",\n+      \"category\": \"network\",\n+      \"priority\": \"high-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"assign_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"T-1001\",\n+      \"team\": \"netops\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_user\",\n    \"args\": {\n      \"email\": \"ana.lima@example.com\"\n    }\n  },\n  {\n    \"tool\": \"create_ticket\",\n    \"args\": {\n      \"user_id\": \"U-204\",\n      \"title\": \"VPN disconnects every few minutes\",\n      \"category\": \"network\",\n      \"priority\": \"high-x\"\n    }\n  },\n  {\n    \"tool\": \"assign_ticket\",\n    \"args\": {\n      \"ticket_id\": \"T-1001\",\n      \"team\": \"netops\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f75f61a14bde33b1f177092adc0f418acb8d2dee117ce8ec179c2032fb4682d6",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks create_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Create ticket with priority high: The ticket priority was changed to 'high-x'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_ticket",
+       "state /tickets/T-1001/user_id missing",
+       "state /tickets/T-1001/title missing",
+       "state /tickets/T-1001/category missing",
+       "state /tickets/T-1001/priority missing",
+       "state /next_ticket = 1001"
+      ],
+      "requirement": "R2",
+      "text": "Open one ticket for Ana (U-204) with create_ticket: title 'VPN disconnects every few minutes', category 'network', priority 'high'."
+     },
+     {
+      "failed": [
+       "state /tickets/T-1001/team missing",
+       "state /tickets/T-1001/status missing"
+      ],
+      "requirement": "R3",
+      "text": "Assign the new ticket T-1001 to the netops team with assign_ticket."
+     },
+     {
+      "failed": [
+       "state /next_ticket = 1001"
+      ],
+      "requirement": "R6",
+      "text": "Open exactly one ticket (no duplicates)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f75f61a14bde33b1f177092adc0f418acb8d2dee117ce8ec179c2032fb4682d6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\n+    \"tool\": \"find_user\",\n+    \"args\": {\n+      \"email\": \"ana.lima@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_ticket\",\n+    \"args\": {\n+      \"user_id\": \"U-204\",\n+      \"title\": \"VPN disconnects every few minutes-x\",\n+      \"category\": \"network\",\n+      \"priority\": \"high\"\n+    }\n+  },\n+  {\n+    \"tool\": \"assign_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"T-1001\",\n+      \"team\": \"netops\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_user\",\n    \"args\": {\n      \"email\": \"ana.lima@example.com\"\n    }\n  },\n  {\n    \"tool\": \"create_ticket\",\n    \"args\": {\n      \"user_id\": \"U-204\",\n      \"title\": \"VPN disconnects every few minutes-x\",\n      \"category\": \"network\",\n      \"priority\": \"high\"\n    }\n  },\n  {\n    \"tool\": \"assign_ticket\",\n    \"args\": {\n      \"ticket_id\": \"T-1001\",\n      \"team\": \"netops\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "cec7b4d292c2d1ef611fdb8dabb662a9b78973e48eb67d6d6b1c35ca26608d95",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks create_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Ticket title must be 'VPN disconnects every few minutes': The title has a '-x' suffix.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_ticket",
+       "state /tickets/T-1001/title = 'VPN disconnects every few minutes-x'"
+      ],
+      "requirement": "R2",
+      "text": "Open one ticket for Ana (U-204) with create_ticket: title 'VPN disconnects every few minutes', category 'network', priority 'high'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "cec7b4d292c2d1ef611fdb8dabb662a9b78973e48eb67d6d6b1c35ca26608d95"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\n+    \"tool\": \"find_user\",\n+    \"args\": {\n+      \"email\": \"ana.lima@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_ticket\",\n+    \"args\": {\n+      \"user_id\": \"U-204-x\",\n+      \"title\": \"VPN disconnects every few minutes\",\n+      \"category\": \"network\",\n+      \"priority\": \"high\"\n+    }\n+  },\n+  {\n+    \"tool\": \"assign_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"T-1001\",\n+      \"team\": \"netops\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_user\",\n    \"args\": {\n      \"email\": \"ana.lima@example.com\"\n    }\n  },\n  {\n    \"tool\": \"create_ticket\",\n    \"args\": {\n      \"user_id\": \"U-204-x\",\n      \"title\": \"VPN disconnects every few minutes\",\n      \"category\": \"network\",\n      \"priority\": \"high\"\n    }\n  },\n  {\n    \"tool\": \"assign_ticket\",\n    \"args\": {\n      \"ticket_id\": \"T-1001\",\n      \"team\": \"netops\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1a25f999627dd40c28b35af5dce8f454b8cbbe87e1dfeab0e65f3637d2c2bc77",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks create_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Create the ticket for Ana's user record (U-204): create_ticket uses user_id U-204-x, which is not Ana's user ID.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_ticket",
+       "state /tickets/T-1001/user_id missing",
+       "state /tickets/T-1001/title missing",
+       "state /tickets/T-1001/category missing",
+       "state /tickets/T-1001/priority missing",
+       "state /next_ticket = 1001"
+      ],
+      "requirement": "R2",
+      "text": "Open one ticket for Ana (U-204) with create_ticket: title 'VPN disconnects every few minutes', category 'network', priority 'high'."
+     },
+     {
+      "failed": [
+       "state /tickets/T-1001/team missing",
+       "state /tickets/T-1001/status missing"
+      ],
+      "requirement": "R3",
+      "text": "Assign the new ticket T-1001 to the netops team with assign_ticket."
+     },
+     {
+      "failed": [
+       "state /next_ticket = 1001"
+      ],
+      "requirement": "R6",
+      "text": "Open exactly one ticket (no duplicates)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1a25f999627dd40c28b35af5dce8f454b8cbbe87e1dfeab0e65f3637d2c2bc77"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\n+    \"tool\": \"find_user\",\n+    \"args\": {\n+      \"email\": \"ana.lima@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_ticket\",\n+    \"args\": {\n+      \"user_id\": \"U-204\",\n+      \"title\": \"VPN disconnects every few minutes\",\n+      \"category\": \"network\",\n+      \"priority\": \"high\"\n+    }\n+  },\n+  {\n+    \"tool\": \"assign_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"T-1001\",\n+      \"team\": \"netops-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_user\",\n    \"args\": {\n      \"email\": \"ana.lima@example.com\"\n    }\n  },\n  {\n    \"tool\": \"create_ticket\",\n    \"args\": {\n      \"user_id\": \"U-204\",\n      \"title\": \"VPN disconnects every few minutes\",\n      \"category\": \"network\",\n      \"priority\": \"high\"\n    }\n  },\n  {\n    \"tool\": \"assign_ticket\",\n    \"args\": {\n      \"ticket_id\": \"T-1001\",\n      \"team\": \"netops-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "97b39f693c36dc7c38b6442cbac6c801f972ee24edd9577cf925654ca824d9f9",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks assign_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Assign the ticket to the netops team: The team argument was changed to netops-x, which is not the netops team.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks assign_ticket",
+       "state /tickets/T-1001/team = None"
+      ],
+      "requirement": "R3",
+      "text": "Assign the new ticket T-1001 to the netops team with assign_ticket."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "97b39f693c36dc7c38b6442cbac6c801f972ee24edd9577cf925654ca824d9f9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\n+    \"tool\": \"find_user\",\n+    \"args\": {\n+      \"email\": \"ana.lima@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_ticket\",\n+    \"args\": {\n+      \"user_id\": \"U-204\",\n+      \"title\": \"VPN disconnects every few minutes\",\n+      \"category\": \"network\",\n+      \"priority\": \"high\"\n+    }\n+  },\n+  {\n+    \"tool\": \"assign_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"T-1001-x\",\n+      \"team\": \"netops\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_user\",\n    \"args\": {\n      \"email\": \"ana.lima@example.com\"\n    }\n  },\n  {\n    \"tool\": \"create_ticket\",\n    \"args\": {\n      \"user_id\": \"U-204\",\n      \"title\": \"VPN disconnects every few minutes\",\n      \"category\": \"network\",\n      \"priority\": \"high\"\n    }\n  },\n  {\n    \"tool\": \"assign_ticket\",\n    \"args\": {\n      \"ticket_id\": \"T-1001-x\",\n      \"team\": \"netops\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9726dbc7a8e88289ec10aad571da8a6eac32b3be458c8adf208f4b85751a7038",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks assign_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Assign the new ticket T-1001 to netops: The ticket id is altered to T-1001-x, which does not exist.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks assign_ticket",
+       "state /tickets/T-1001/team = None"
+      ],
+      "requirement": "R3",
+      "text": "Assign the new ticket T-1001 to the netops team with assign_ticket."
+     },
+     {
+      "failed": [
+       "order create_ticket < assign_ticket: 1, None"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the user lookup comes before ticket creation, and the ticket is created before it is assigned."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9726dbc7a8e88289ec10aad571da8a6eac32b3be458c8adf208f4b85751a7038"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,18 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\n+    \"tool\": \"create_ticket\",\n+    \"args\": {\n+      \"user_id\": \"U-204\",\n+      \"title\": \"VPN disconnects every few minutes\",\n+      \"category\": \"network\",\n+      \"priority\": \"high\"\n+    }\n+  },\n+  {\n+    \"tool\": \"assign_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"T-1001\",\n+      \"team\": \"netops\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"create_ticket\",\n    \"args\": {\n      \"user_id\": \"U-204\",\n      \"title\": \"VPN disconnects every few minutes\",\n      \"category\": \"network\",\n      \"priority\": \"high\"\n    }\n  },\n  {\n    \"tool\": \"assign_ticket\",\n    \"args\": {\n      \"ticket_id\": \"T-1001\",\n      \"team\": \"netops\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "9495d137265f480961edc810cef51e1cd1d07bcf546033f56b1a0d280f87b979",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks find_user",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Look up Ana's user record with find_user: The find_user step is omitted although the task lists it as a required step.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks find_user"
+      ],
+      "requirement": "R1",
+      "text": "Look up Ana's user record with find_user using ana.lima@example.com."
+     },
+     {
+      "failed": [
+       "order find_user < create_ticket: None, 0"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the user lookup comes before ticket creation, and the ticket is created before it is assigned."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9495d137265f480961edc810cef51e1cd1d07bcf546033f56b1a0d280f87b979"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\n+    \"tool\": \"find_user\",\n+    \"args\": {\n+      \"email\": \"ana.lima@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"assign_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"T-1001\",\n+      \"team\": \"netops\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_user\",\n    \"args\": {\n      \"email\": \"ana.lima@example.com\"\n    }\n  },\n  {\n    \"tool\": \"assign_ticket\",\n    \"args\": {\n      \"ticket_id\": \"T-1001\",\n      \"team\": \"netops\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "321ee629d9e8cc8243873d8c36f5f47e273966e5749ef8564ff785e2567565aa",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks create_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Open one ticket with create_ticket: The create_ticket step is missing, so no ticket is created before assignment.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_ticket",
+       "state /tickets/T-1001/user_id missing",
+       "state /tickets/T-1001/title missing",
+       "state /tickets/T-1001/category missing",
+       "state /tickets/T-1001/priority missing",
+       "state /next_ticket = 1001"
+      ],
+      "requirement": "R2",
+      "text": "Open one ticket for Ana (U-204) with create_ticket: title 'VPN disconnects every few minutes', category 'network', priority 'high'."
+     },
+     {
+      "failed": [
+       "state /tickets/T-1001/team missing",
+       "state /tickets/T-1001/status missing"
+      ],
+      "requirement": "R3",
+      "text": "Assign the new ticket T-1001 to the netops team with assign_ticket."
+     },
+     {
+      "failed": [
+       "order find_user < create_ticket: 0, None",
+       "order create_ticket < assign_ticket: None, 1"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the user lookup comes before ticket creation, and the ticket is created before it is assigned."
+     },
+     {
+      "failed": [
+       "state /next_ticket = 1001"
+      ],
+      "requirement": "R6",
+      "text": "Open exactly one ticket (no duplicates)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "321ee629d9e8cc8243873d8c36f5f47e273966e5749ef8564ff785e2567565aa"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,17 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\n+    \"tool\": \"find_user\",\n+    \"args\": {\n+      \"email\": \"ana.lima@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_ticket\",\n+    \"args\": {\n+      \"user_id\": \"U-204\",\n+      \"title\": \"VPN disconnects every few minutes\",\n+      \"category\": \"network\",\n+      \"priority\": \"high\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_user\",\n    \"args\": {\n      \"email\": \"ana.lima@example.com\"\n    }\n  },\n  {\n    \"tool\": \"create_ticket\",\n    \"args\": {\n      \"user_id\": \"U-204\",\n      \"title\": \"VPN disconnects every few minutes\",\n      \"category\": \"network\",\n      \"priority\": \"high\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6844ff984e7e5d0b58734923ca35a6c3c1b29998e4dfe824e02287f9927a2203",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks assign_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "assign the new ticket to netops: The assign_ticket step is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks assign_ticket",
+       "state /tickets/T-1001/team = None"
+      ],
+      "requirement": "R3",
+      "text": "Assign the new ticket T-1001 to the netops team with assign_ticket."
+     },
+     {
+      "failed": [
+       "order create_ticket < assign_ticket: 1, None"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the user lookup comes before ticket creation, and the ticket is created before it is assigned."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6844ff984e7e5d0b58734923ca35a6c3c1b29998e4dfe824e02287f9927a2203"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\n+    \"tool\": \"create_ticket\",\n+    \"args\": {\n+      \"user_id\": \"U-204\",\n+      \"title\": \"VPN disconnects every few minutes\",\n+      \"category\": \"network\",\n+      \"priority\": \"high\"\n+    }\n+  },\n+  {\n+    \"tool\": \"find_user\",\n+    \"args\": {\n+      \"email\": \"ana.lima@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"assign_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"T-1001\",\n+      \"team\": \"netops\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"create_ticket\",\n    \"args\": {\n      \"user_id\": \"U-204\",\n      \"title\": \"VPN disconnects every few minutes\",\n      \"category\": \"network\",\n      \"priority\": \"high\"\n    }\n  },\n  {\n    \"tool\": \"find_user\",\n    \"args\": {\n      \"email\": \"ana.lima@example.com\"\n    }\n  },\n  {\n    \"tool\": \"assign_ticket\",\n    \"args\": {\n      \"ticket_id\": \"T-1001\",\n      \"team\": \"netops\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0b365d07ee0f10f784246fce99be67d5c87754403030754ddae54ffe979f889f",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R4: order find_user < create_ticket: 1, 0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Look up the user with find_user first (step 1), then create the ticket: create_ticket is now called before find_user, breaking the stated step order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\n+    \"tool\": \"find_user\",\n+    \"args\": {\n+      \"email\": \"ana.lima@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"assign_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"T-1001\",\n+      \"team\": \"netops\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_ticket\",\n+    \"args\": {\n+      \"user_id\": \"U-204\",\n+      \"title\": \"VPN disconnects every few minutes\",\n+      \"category\": \"network\",\n+      \"priority\": \"high\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_user\",\n    \"args\": {\n      \"email\": \"ana.lima@example.com\"\n    }\n  },\n  {\n    \"tool\": \"assign_ticket\",\n    \"args\": {\n      \"ticket_id\": \"T-1001\",\n      \"team\": \"netops\"\n    }\n  },\n  {\n    \"tool\": \"create_ticket\",\n    \"args\": {\n      \"user_id\": \"U-204\",\n      \"title\": \"VPN disconnects every few minutes\",\n      \"category\": \"network\",\n      \"priority\": \"high\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5e632fb04f5bea288b7d8f1dfc2b0630c7284040b5d39c3fb9ce54fd372f9639",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R3: state /tickets/T-1001/team = None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Create the ticket, then assign the new ticket: assign_ticket for T-1001 is called before create_ticket, when that ticket does not yet exist.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n   {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n   {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "f52805b7ce50c8524b6a227f39f35763acf33afc718625626820cd012d85bb31",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks find_user",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Look up Ana's user record with find_user: The required find_user step was skipped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks find_user"
+      ],
+      "requirement": "R1",
+      "text": "Look up Ana's user record with find_user using ana.lima@example.com."
+     },
+     {
+      "failed": [
+       "order find_user < create_ticket: None, 0"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the user lookup comes before ticket creation, and the ticket is created before it is assigned."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f52805b7ce50c8524b6a227f39f35763acf33afc718625626820cd012d85bb31"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n+  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"medium\"}},\n   {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"medium\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "718e6bbe1e72e03c4098340758e0bb348e3978a6b7f823b690f4c78c5327f283",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks create_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Ticket priority must be high: create_ticket uses priority medium instead of high.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_ticket",
+       "state /tickets/T-1001/priority = 'medium'"
+      ],
+      "requirement": "R2",
+      "text": "Open one ticket for Ana (U-204) with create_ticket: title 'VPN disconnects every few minutes', category 'network', priority 'high'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "718e6bbe1e72e03c4098340758e0bb348e3978a6b7f823b690f4c78c5327f283"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n   {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "55e57b9fb409f412b8d7d432b01ca5161dbe892c5c809cf27e4fc9fa717d7ac5",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks assign_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Assign the new ticket to netops with assign_ticket: The assign_ticket step is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks assign_ticket",
+       "state /tickets/T-1001/team = None"
+      ],
+      "requirement": "R3",
+      "text": "Assign the new ticket T-1001 to the netops team with assign_ticket."
+     },
+     {
+      "failed": [
+       "order create_ticket < assign_ticket: 1, None"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the user lookup comes before ticket creation, and the ticket is created before it is assigned."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "55e57b9fb409f412b8d7d432b01ca5161dbe892c5c809cf27e4fc9fa717d7ac5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n+  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n   {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n   {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "b33f74336a60023ed92d154a09d19d0f14077aff7a794eb0b2923d1141f263f0",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: order find_user < create_ticket: 1, 0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Look up Ana's user record with find_user before opening the ticket: The ticket is created before the user lookup, so the user id is used without having been looked up, contradicting the stated step order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order find_user < create_ticket: 1, 0"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the user lookup comes before ticket creation, and the ticket is created before it is assigned."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b33f74336a60023ed92d154a09d19d0f14077aff7a794eb0b2923d1141f263f0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n   {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n+  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1000\", \"team\": \"netops\"}},\n   {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1000\", \"team\": \"netops\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dbf5c65ac1c50b3c787780969723ba380b632e5c9878e0ae3c618b707e86491c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: state /tickets/T-1000 = {'category': 'software', 'comments': [], 'priority': 'medium', 'status': 'open', 'team': 'netops', 'title': 'CRM export times out', 'user_id': 'U-311'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not modify any existing ticket: It adds an assign_ticket call on T-1000, which is an existing ticket.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /tickets/T-1000 = {'category': 'software', 'comments': [], 'priority': 'medium', 'status': 'open', 'team': 'netops', 'title': 'CRM export times out', 'user_id': 'U-311'}",
+       "trajectory has assign_ticket"
+      ],
+      "requirement": "R5",
+      "text": "Do not modify any existing ticket."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "dbf5c65ac1c50b3c787780969723ba380b632e5c9878e0ae3c618b707e86491c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n   {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n+  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n   {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2090d5dca029ea3ea77084d46e08b2fd7734b009c94757f84d18e4a6045ee4d2",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /next_ticket = 1003",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Open one ticket: It creates the ticket twice.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /next_ticket = 1003"
+      ],
+      "requirement": "R2",
+      "text": "Open one ticket for Ana (U-204) with create_ticket: title 'VPN disconnects every few minutes', category 'network', priority 'high'."
+     },
+     {
+      "failed": [
+       "state /next_ticket = 1003"
+      ],
+      "requirement": "R6",
+      "text": "Open exactly one ticket (no duplicates)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2090d5dca029ea3ea77084d46e08b2fd7734b009c94757f84d18e4a6045ee4d2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\"tool\": \"create_ticket\", \"args\": {\"priority\": \"high\", \"category\": \"network\", \"title\": \"VPN disconnects every few minutes\", \"user_id\": \"U-204\"}},\n+  {\"tool\": \"assign_ticket\", \"args\": {\"team\": \"netops\", \"ticket_id\": \"T-1001\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"priority\": \"high\", \"category\": \"network\", \"title\": \"VPN disconnects every few minutes\", \"user_id\": \"U-204\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"team\": \"netops\", \"ticket_id\": \"T-1001\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "cbf013752daaa65ef75b9a1d9b4822e8ecae55dbb3833691595f7a36303e093a",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the key order within the argument objects changed, so the calls are semantically identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "cbf013752daaa65ef75b9a1d9b4822e8ecae55dbb3833691595f7a36303e093a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n   {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}},\n+  {\"tool\": \"get_ticket\", \"args\": {\"ticket_id\": \"T-1001\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}},\n  {\"tool\": \"get_ticket\", \"args\": {\"ticket_id\": \"T-1001\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "6d43cf9cea465e324b94287fa9bba10d9855b5c7309dd3af3b783429a59ef2fe",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "An extra read-only get_ticket call after the required steps modifies nothing and all required calls remain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "6d43cf9cea465e324b94287fa9bba10d9855b5c7309dd3af3b783429a59ef2fe"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n-]\n+[{\"tool\":\"find_user\",\"args\":{\"email\":\"ana.lima@example.com\"}},{\"tool\":\"create_ticket\",\"args\":{\"user_id\":\"U-204\",\"title\":\"VPN disconnects every few minutes\",\"category\":\"network\",\"priority\":\"high\"}},{\"tool\":\"assign_ticket\",\"args\":{\"ticket_id\":\"T-1001\",\"team\":\"netops\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"find_user\",\"args\":{\"email\":\"ana.lima@example.com\"}},{\"tool\":\"create_ticket\",\"args\":{\"user_id\":\"U-204\",\"title\":\"VPN disconnects every few minutes\",\"category\":\"network\",\"priority\":\"high\"}},{\"tool\":\"assign_ticket\",\"args\":{\"ticket_id\":\"T-1001\",\"team\":\"netops\"}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "77907224540d4c6bc06ed120453c57fb270fcd22b0f2cfaa6720f30bdf474588",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "helpdesk-ticket",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only whitespace formatting of the JSON changed; the calls are identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "77907224540d4c6bc06ed120453c57fb270fcd22b0f2cfaa6720f30bdf474588"
+   }
+  }
+ ]
+}

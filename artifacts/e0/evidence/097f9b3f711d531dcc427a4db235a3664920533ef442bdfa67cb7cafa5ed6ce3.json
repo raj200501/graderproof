@@ -1,0 +1,1472 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "codes_sent": [
+    "TK-9035"
+   ],
+   "log": [
+    {
+     "account_id": "TK-9035",
+     "action": "send_verification_code",
+     "ok": true,
+     "seq": 1
+    },
+    {
+     "account_id": "TK-9035",
+     "action": "confirm_verification",
+     "ok": true,
+     "seq": 2
+    },
+    {
+     "action": "transfer_ticket",
+     "from_owner": "TK-9035",
+     "ok": true,
+     "seq": 3,
+     "ticket_id": "TKT-3"
+    },
+    {
+     "action": "transfer_ticket",
+     "from_owner": "TK-9035",
+     "ok": true,
+     "seq": 4,
+     "ticket_id": "TKT-4"
+    }
+   ],
+   "tickets": {
+    "TKT-1": {
+     "event": "Jazz at the Pier",
+     "owner": "TK-9035",
+     "seat": "A10"
+    },
+    "TKT-2": {
+     "event": "Jazz at the Pier",
+     "owner": "TK-9035",
+     "seat": "A11"
+    },
+    "TKT-3": {
+     "event": "Jazz at the Pier",
+     "owner": "rafael.ortiz@example.com",
+     "seat": "A12"
+    },
+    "TKT-4": {
+     "event": "Jazz at the Pier",
+     "owner": "rafael.ortiz@example.com",
+     "seat": "A13"
+    },
+    "TKT-5": {
+     "event": "Jazz at the Pier",
+     "owner": "TK-1200",
+     "seat": "A14"
+    }
+   },
+   "verified": [
+    "TK-9035"
+   ]
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "account_id": "TK-9035"
+    },
+    "result": {
+     "ok": true,
+     "tickets": {
+      "TKT-1": {
+       "event": "Jazz at the Pier",
+       "owner": "TK-9035",
+       "seat": "A10"
+      },
+      "TKT-2": {
+       "event": "Jazz at the Pier",
+       "owner": "TK-9035",
+       "seat": "A11"
+      },
+      "TKT-3": {
+       "event": "Jazz at the Pier",
+       "owner": "TK-9035",
+       "seat": "A12"
+      },
+      "TKT-4": {
+       "event": "Jazz at the Pier",
+       "owner": "TK-9035",
+       "seat": "A13"
+      }
+     }
+    },
+    "tool": "list_tickets"
+   },
+   {
+    "args": {
+     "account_id": "TK-9035"
+    },
+    "result": {
+     "message": "code sent by SMS",
+     "ok": true
+    },
+    "tool": "send_verification_code"
+   },
+   {
+    "args": {
+     "account_id": "TK-9035",
+     "code": "481516"
+    },
+    "result": {
+     "ok": true,
+     "verified": true
+    },
+    "tool": "confirm_verification"
+   },
+   {
+    "args": {
+     "recipient_email": "rafael.ortiz@example.com",
+     "ticket_id": "TKT-3"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "transfer_ticket"
+   },
+   {
+    "args": {
+     "recipient_email": "rafael.ortiz@example.com",
+     "ticket_id": "TKT-4"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "transfer_ticket"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "account_id": "TK-9035"
+     },
+     "tool": "send_verification_code",
+     "type": "trajectory_includes"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Call `send_verification_code` for her account TK-9035."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "account_id": "TK-9035",
+      "code": "481516"
+     },
+     "tool": "confirm_verification",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": [
+      "TK-9035"
+     ],
+     "pointer": "/verified",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Call `confirm_verification` with the code she read back, `481516`, for account TK-9035."
+  },
+  {
+   "checks": [
+    {
+     "first": {
+      "args": {
+       "account_id": "TK-9035"
+      },
+      "tool": "send_verification_code"
+     },
+     "then": {
+      "args": {
+       "account_id": "TK-9035",
+       "code": "481516"
+      },
+      "tool": "confirm_verification"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Verification code is sent before it is confirmed."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "recipient_email": "rafael.ortiz@example.com",
+      "ticket_id": "TKT-3"
+     },
+     "tool": "transfer_ticket",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "rafael.ortiz@example.com",
+     "pointer": "/tickets/TKT-3/owner",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Transfer the ticket for seat A12 (TKT-3) to rafael.ortiz@example.com."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "recipient_email": "rafael.ortiz@example.com",
+      "ticket_id": "TKT-4"
+     },
+     "tool": "transfer_ticket",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "rafael.ortiz@example.com",
+     "pointer": "/tickets/TKT-4/owner",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Transfer the ticket for seat A13 (TKT-4) to rafael.ortiz@example.com."
+  },
+  {
+   "checks": [
+    {
+     "first": {
+      "args": {
+       "account_id": "TK-9035",
+       "code": "481516"
+      },
+      "tool": "confirm_verification"
+     },
+     "then": {
+      "args": {
+       "ticket_id": "TKT-3"
+      },
+      "tool": "transfer_ticket"
+     },
+     "type": "trajectory_before"
+    },
+    {
+     "first": {
+      "args": {
+       "account_id": "TK-9035",
+       "code": "481516"
+      },
+      "tool": "confirm_verification"
+     },
+     "then": {
+      "args": {
+       "ticket_id": "TKT-4"
+      },
+      "tool": "transfer_ticket"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "Transfer tickets only after the verification has succeeded."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "ticket_id": "TKT-1"
+     },
+     "tool": "transfer_ticket",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "ticket_id": "TKT-2"
+     },
+     "tool": "transfer_ticket",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": "TK-9035",
+     "pointer": "/tickets/TKT-1/owner",
+     "type": "state_equals"
+    },
+    {
+     "equals": "TK-9035",
+     "pointer": "/tickets/TKT-2/owner",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R7",
+   "source": "model:requirements/v1",
+   "text": "Seats A10 and A11 (TKT-1, TKT-2) stay on her account."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "ticket_id": "TKT-5"
+     },
+     "tool": "transfer_ticket",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": "TK-1200",
+     "pointer": "/tickets/TKT-5/owner",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R8",
+   "source": "model:requirements/v1",
+   "text": "No other ticket (such as TKT-5, owned by another account) is transferred."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:ticket-transfer",
+ "task_hash": "097f9b3f711d531dcc427a4db235a3664920533ef442bdfa67cb7cafa5ed6ce3",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,41 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f9f4110318c28bbf2d539e6567d5fa36e9d395cdf95659ceff4ff64cf334af76",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "8 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only a redundant read-only list_tickets call was added; verification precedes the transfers as required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7",
+     "R8"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "f9f4110318c28bbf2d539e6567d5fa36e9d395cdf95659ceff4ff64cf334af76"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,35 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035-x\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7b9da155c620ddecea0527186944783359dc9ad13c85a9423b34af08fcec5a23",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "ticket-transfer",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "8 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list_tickets lookup has a wrong account id; verification and transfers are unchanged and the task does not require the listing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,35 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035-x\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "798604b3ebf8c1bd0c54c66d014cd59512e50da9775cbd18224b6a9857e4669a",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks send_verification_code",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Send the verification code for account TK-9035: send_verification_code is called with account TK-9035-x, so verification for the real account is never started.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks send_verification_code"
+      ],
+      "requirement": "R1",
+      "text": "Call `send_verification_code` for her account TK-9035."
+     },
+     {
+      "failed": [
+       "state /verified = []"
+      ],
+      "requirement": "R2",
+      "text": "Call `confirm_verification` with the code she read back, `481516`, for account TK-9035."
+     },
+     {
+      "failed": [
+       "order send_verification_code < confirm_verification: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "Verification code is sent before it is confirmed."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "798604b3ebf8c1bd0c54c66d014cd59512e50da9775cbd18224b6a9857e4669a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,35 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035-x\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035-x\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d41b850b8f011929c080a79782f2e7699592ad03e6b8a08fc58b3a6fd8a649b6",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks confirm_verification",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Confirm verification for account TK-9035 before transferring: confirm_verification uses account id 'TK-9035-x', so verification does not succeed for the account before the transfers.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks confirm_verification",
+       "state /verified = []"
+      ],
+      "requirement": "R2",
+      "text": "Call `confirm_verification` with the code she read back, `481516`, for account TK-9035."
+     },
+     {
+      "failed": [
+       "order send_verification_code < confirm_verification: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "Verification code is sent before it is confirmed."
+     },
+     {
+      "failed": [
+       "order confirm_verification < transfer_ticket: None, 3",
+       "order confirm_verification < transfer_ticket: None, 4"
+      ],
+      "requirement": "R6",
+      "text": "Transfer tickets only after the verification has succeeded."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d41b850b8f011929c080a79782f2e7699592ad03e6b8a08fc58b3a6fd8a649b6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,35 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3-x\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3-x\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "80ae5609f5288c9799748a207dd44d64f1d90b16c31da5bab0cd2663a67ad83c",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: trajectory lacks transfer_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Transfer ticket TKT-3 (seat A12): The ticket id was changed to TKT-3-x, so the wrong or nonexistent ticket is transferred.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks transfer_ticket",
+       "state /tickets/TKT-3/owner = 'TK-9035'"
+      ],
+      "requirement": "R4",
+      "text": "Transfer the ticket for seat A12 (TKT-3) to rafael.ortiz@example.com."
+     },
+     {
+      "failed": [
+       "order confirm_verification < transfer_ticket: 2, None"
+      ],
+      "requirement": "R6",
+      "text": "Transfer tickets only after the verification has succeeded."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "80ae5609f5288c9799748a207dd44d64f1d90b16c31da5bab0cd2663a67ad83c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,35 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b82991815f57edc52e6aa7bcd5839261aad19fb67fba5018f7f589974b4fc96a",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: trajectory lacks transfer_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "transfer seat A13 ticket to rafael.ortiz@example.com: The TKT-4 transfer uses recipient rafael.ortiz@example.com-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks transfer_ticket",
+       "state /tickets/TKT-4/owner = 'rafael.ortiz@example.com-x'"
+      ],
+      "requirement": "R5",
+      "text": "Transfer the ticket for seat A13 (TKT-4) to rafael.ortiz@example.com."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b82991815f57edc52e6aa7bcd5839261aad19fb67fba5018f7f589974b4fc96a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,35 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4-x\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4-x\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d3fd55d062d7f35502841a237058d6b5c628623aee8956efc5f1bdb5b78f86cb",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: trajectory lacks transfer_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Transfer the ticket for seat A13 (TKT-4): The second transfer uses ticket id 'TKT-4-x', so TKT-4 is never transferred.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks transfer_ticket",
+       "state /tickets/TKT-4/owner = 'TK-9035'"
+      ],
+      "requirement": "R5",
+      "text": "Transfer the ticket for seat A13 (TKT-4) to rafael.ortiz@example.com."
+     },
+     {
+      "failed": [
+       "order confirm_verification < transfer_ticket: 2, None"
+      ],
+      "requirement": "R6",
+      "text": "Transfer tickets only after the verification has succeeded."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d3fd55d062d7f35502841a237058d6b5c628623aee8956efc5f1bdb5b78f86cb"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,29 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0c7353a329303ce507c622e3516863bb491cdb1251a6015bd67d11697c422610",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "ticket-transfer",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "8 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The task does not require list_tickets; verification still precedes both required transfers of the same tickets.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,29 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6570b16e19c2e7909a9428d9bb54b796f7e72fcec27f5097b58a2d3ae80672b9",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks send_verification_code",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "call send_verification_code before confirming: The send_verification_code step is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks send_verification_code"
+      ],
+      "requirement": "R1",
+      "text": "Call `send_verification_code` for her account TK-9035."
+     },
+     {
+      "failed": [
+       "state /verified = []"
+      ],
+      "requirement": "R2",
+      "text": "Call `confirm_verification` with the code she read back, `481516`, for account TK-9035."
+     },
+     {
+      "failed": [
+       "order send_verification_code < confirm_verification: None, 1"
+      ],
+      "requirement": "R3",
+      "text": "Verification code is sent before it is confirmed."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6570b16e19c2e7909a9428d9bb54b796f7e72fcec27f5097b58a2d3ae80672b9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,28 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "913071977e3a4da6f3ba78d1846fb212ea11417ba2bc79130fd9a1b946f4bb3b",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: trajectory lacks transfer_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Transfer the ticket for seat A12 (TKT-3) as well as A13: The transfer of TKT-3 is dropped, so only one of the two tickets is transferred.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks transfer_ticket",
+       "state /tickets/TKT-3/owner = 'TK-9035'"
+      ],
+      "requirement": "R4",
+      "text": "Transfer the ticket for seat A12 (TKT-3) to rafael.ortiz@example.com."
+     },
+     {
+      "failed": [
+       "order confirm_verification < transfer_ticket: 2, None"
+      ],
+      "requirement": "R6",
+      "text": "Transfer tickets only after the verification has succeeded."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "913071977e3a4da6f3ba78d1846fb212ea11417ba2bc79130fd9a1b946f4bb3b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,28 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f51df15c9bb8580523d56b5f8a15262f2deb0df25f08846cd323e1c8f7a2d850",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: trajectory lacks transfer_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "transfer tickets for seats A12 and A13: The transfer of TKT-4 was removed, so only one of the two tickets is transferred.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks transfer_ticket",
+       "state /tickets/TKT-4/owner = 'TK-9035'"
+      ],
+      "requirement": "R5",
+      "text": "Transfer the ticket for seat A13 (TKT-4) to rafael.ortiz@example.com."
+     },
+     {
+      "failed": [
+       "order confirm_verification < transfer_ticket: 2, None"
+      ],
+      "requirement": "R6",
+      "text": "Transfer tickets only after the verification has succeeded."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f51df15c9bb8580523d56b5f8a15262f2deb0df25f08846cd323e1c8f7a2d850"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,28 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c4c421c925e52f02b105448f497e2a85431c3b3d8a842b85282426686564a295",
+   "kind": "violating",
+   "operator": "traj-drop-confirmation",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks confirm_verification",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Confirm verification before transferring tickets: The confirm_verification step was removed, so transfers happen without a successful verification.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks confirm_verification",
+       "state /verified = []"
+      ],
+      "requirement": "R2",
+      "text": "Call `confirm_verification` with the code she read back, `481516`, for account TK-9035."
+     },
+     {
+      "failed": [
+       "order send_verification_code < confirm_verification: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "Verification code is sent before it is confirmed."
+     },
+     {
+      "failed": [
+       "order confirm_verification < transfer_ticket: None, 2",
+       "order confirm_verification < transfer_ticket: None, 3"
+      ],
+      "requirement": "R6",
+      "text": "Transfer tickets only after the verification has succeeded."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c4c421c925e52f02b105448f497e2a85431c3b3d8a842b85282426686564a295"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,35 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "9923e5640d358dd8ae7b2d0ac201f3b0aaee24acca8baad7553d94c303c097a5",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "ticket-transfer",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "8 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Listing tickets is read-only and the task only requires verification to be sent and confirmed before the transfers, which still holds.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,35 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6819ec726d0f44d33120ebdf6a2708ee5cbcb0199b17ba7d4a8959f7820c5c99",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /verified = []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "send the code before confirming verification: confirm_verification is called before send_verification_code.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /verified = []"
+      ],
+      "requirement": "R2",
+      "text": "Call `confirm_verification` with the code she read back, `481516`, for account TK-9035."
+     },
+     {
+      "failed": [
+       "order send_verification_code < confirm_verification: 2, 1"
+      ],
+      "requirement": "R3",
+      "text": "Verification code is sent before it is confirmed."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6819ec726d0f44d33120ebdf6a2708ee5cbcb0199b17ba7d4a8959f7820c5c99"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,35 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2df86d398dbc36e0e8f9b2a7f646d78d521fa6792f79d58e8ca6ee6e8cb367c3",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R6: order confirm_verification < transfer_ticket: 3, 2",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Transfer tickets only after verification has succeeded: TKT-3 is transferred before confirm_verification is called.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order confirm_verification < transfer_ticket: 3, 2"
+      ],
+      "requirement": "R6",
+      "text": "Transfer tickets only after the verification has succeeded."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2df86d398dbc36e0e8f9b2a7f646d78d521fa6792f79d58e8ca6ee6e8cb367c3"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,35 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\n+    \"tool\": \"list_tickets\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_verification_code\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\"\n+    }\n+  },\n+  {\n+    \"tool\": \"confirm_verification\",\n+    \"args\": {\n+      \"account_id\": \"TK-9035\",\n+      \"code\": \"481516\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-4\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer_ticket\",\n+    \"args\": {\n+      \"ticket_id\": \"TKT-3\",\n+      \"recipient_email\": \"rafael.ortiz@example.com\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_tickets\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"send_verification_code\",\n    \"args\": {\n      \"account_id\": \"TK-9035\"\n    }\n  },\n  {\n    \"tool\": \"confirm_verification\",\n    \"args\": {\n      \"account_id\": \"TK-9035\",\n      \"code\": \"481516\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-4\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  },\n  {\n    \"tool\": \"transfer_ticket\",\n    \"args\": {\n      \"ticket_id\": \"TKT-3\",\n      \"recipient_email\": \"rafael.ortiz@example.com\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ad2ef74bbfe7180d7b71bbc774fdb57fc1edf3a4cd3bd4ba59d6af8b3315bca1",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "ticket-transfer",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "8 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Both tickets are still transferred after verification, only in swapped order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,5 @@\n [\n   {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n   {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n   {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "048fdfb27a64e4c7e884f70ea813ee9454c8691b729641094b2582ca3ba03b0a",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks send_verification_code",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Call send_verification_code before confirm_verification: The send_verification_code step is removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks send_verification_code"
+      ],
+      "requirement": "R1",
+      "text": "Call `send_verification_code` for her account TK-9035."
+     },
+     {
+      "failed": [
+       "state /verified = []"
+      ],
+      "requirement": "R2",
+      "text": "Call `confirm_verification` with the code she read back, `481516`, for account TK-9035."
+     },
+     {
+      "failed": [
+       "order send_verification_code < confirm_verification: None, 1"
+      ],
+      "requirement": "R3",
+      "text": "Verification code is sent before it is confirmed."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "048fdfb27a64e4c7e884f70ea813ee9454c8691b729641094b2582ca3ba03b0a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,7 @@\n [\n   {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n+  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481561\"}},\n   {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n   {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481561\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2db9518920343cf1ec3e6a8a1d787dada9333b73253b42ac137a7d7494bd99e3",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks confirm_verification",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "confirm verification with the code 481516: The confirmation code was changed to 481561, so verification would fail.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks confirm_verification",
+       "state /verified = []"
+      ],
+      "requirement": "R2",
+      "text": "Call `confirm_verification` with the code she read back, `481516`, for account TK-9035."
+     },
+     {
+      "failed": [
+       "order send_verification_code < confirm_verification: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "Verification code is sent before it is confirmed."
+     },
+     {
+      "failed": [
+       "order confirm_verification < transfer_ticket: None, 3",
+       "order confirm_verification < transfer_ticket: None, 4"
+      ],
+      "requirement": "R6",
+      "text": "Transfer tickets only after the verification has succeeded."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2db9518920343cf1ec3e6a8a1d787dada9333b73253b42ac137a7d7494bd99e3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -2,6 +2,5 @@\n   {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n   {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dfb58fba346f7100714d89ec86f82e772a9e05d12f538c4cd66f1e0b39441a99",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: trajectory lacks transfer_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Transfer the tickets for seats A12 and A13: The transfer of TKT-3 was removed, so only one of the two tickets is transferred.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks transfer_ticket",
+       "state /tickets/TKT-3/owner = 'TK-9035'"
+      ],
+      "requirement": "R4",
+      "text": "Transfer the ticket for seat A12 (TKT-3) to rafael.ortiz@example.com."
+     },
+     {
+      "failed": [
+       "order confirm_verification < transfer_ticket: 2, None"
+      ],
+      "requirement": "R6",
+      "text": "Transfer tickets only after the verification has succeeded."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "dfb58fba346f7100714d89ec86f82e772a9e05d12f538c4cd66f1e0b39441a99"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -2,6 +2,5 @@\n   {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c297a05be01d3aaa105a4b93376aebadad03bf1bb8950e7c2f7bbb1c1fb12a5e",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: trajectory lacks transfer_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Transfer tickets for seats A12 and A13: Only TKT-3 is transferred and TKT-4 is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks transfer_ticket",
+       "state /tickets/TKT-4/owner = 'TK-9035'"
+      ],
+      "requirement": "R5",
+      "text": "Transfer the ticket for seat A13 (TKT-4) to rafael.ortiz@example.com."
+     },
+     {
+      "failed": [
+       "order confirm_verification < transfer_ticket: 2, None"
+      ],
+      "requirement": "R6",
+      "text": "Transfer tickets only after the verification has succeeded."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c297a05be01d3aaa105a4b93376aebadad03bf1bb8950e7c2f7bbb1c1fb12a5e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,7 @@\n [\n   {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n+  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n   {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n   {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5a3e372d8e4f9119fc1c22631f3d5bfbce3e3cf26d56dbbe8bf9efc65cebe61c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R6: order confirm_verification < transfer_ticket: 3, 2",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Transfer tickets only after verification has succeeded: TKT-3 is transferred before confirm_verification.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order confirm_verification < transfer_ticket: 3, 2"
+      ],
+      "requirement": "R6",
+      "text": "Transfer tickets only after the verification has succeeded."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5a3e372d8e4f9119fc1c22631f3d5bfbce3e3cf26d56dbbe8bf9efc65cebe61c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -3,5 +3,6 @@\n   {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n   {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n+  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-5\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-5\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d858302da239fde6c1e4063297965786a931ed604abd7f22732e263dc39bb791",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R8: trajectory has transfer_ticket",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Transfer only the tickets for seats A12 and A13: It also transfers TKT-5, which is not one of the two requested tickets.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory has transfer_ticket",
+       "state /tickets/TKT-5/owner = 'rafael.ortiz@example.com'"
+      ],
+      "requirement": "R8",
+      "text": "No other ticket (such as TKT-5, owned by another account) is transferred."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d858302da239fde6c1e4063297965786a931ed604abd7f22732e263dc39bb791"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -2,6 +2,6 @@\n   {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n+  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n+  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "44b0772c710516489b53f66856d70a45181c43180c3babb680cf1b41ba19083a",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "8 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Both tickets are still transferred after verification; the task sets no order between the two transfers.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7",
+     "R8"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "44b0772c710516489b53f66856d70a45181c43180c3babb680cf1b41ba19083a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n   {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "90451f36e1ee18ee64b5f0e62ea32b653eb72570f52aa349f3355420c2574625",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "8 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list_tickets lookup was dropped; verification precedes both required transfers.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7",
+     "R8"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "90451f36e1ee18ee64b5f0e62ea32b653eb72570f52aa349f3355420c2574625"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1 @@\n-[\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n-  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n-  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n-]\n+[{\"args\":{\"account_id\":\"TK-9035\"},\"tool\":\"list_tickets\"},{\"args\":{\"account_id\":\"TK-9035\"},\"tool\":\"send_verification_code\"},{\"args\":{\"code\":\"481516\",\"account_id\":\"TK-9035\"},\"tool\":\"confirm_verification\"},{\"args\":{\"recipient_email\":\"rafael.ortiz@example.com\",\"ticket_id\":\"TKT-3\"},\"tool\":\"transfer_ticket\"},{\"args\":{\"recipient_email\":\"rafael.ortiz@example.com\",\"ticket_id\":\"TKT-4\"},\"tool\":\"transfer_ticket\"}]\n",
+   "files": {
+    "trajectory.json": "[{\"args\":{\"account_id\":\"TK-9035\"},\"tool\":\"list_tickets\"},{\"args\":{\"account_id\":\"TK-9035\"},\"tool\":\"send_verification_code\"},{\"args\":{\"code\":\"481516\",\"account_id\":\"TK-9035\"},\"tool\":\"confirm_verification\"},{\"args\":{\"recipient_email\":\"rafael.ortiz@example.com\",\"ticket_id\":\"TKT-3\"},\"tool\":\"transfer_ticket\"},{\"args\":{\"recipient_email\":\"rafael.ortiz@example.com\",\"ticket_id\":\"TKT-4\"},\"tool\":\"transfer_ticket\"}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7861a777ab25868b7bededabeb7574fa1fd7dd02e8a4d93f57eb038615692fc5",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "ticket-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "8 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only whitespace and key order changed; tool order and argument values are the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7",
+     "R8"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "7861a777ab25868b7bededabeb7574fa1fd7dd02e8a4d93f57eb038615692fc5"
+   }
+  }
+ ]
+}

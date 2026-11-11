@@ -1,0 +1,1504 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+  },
+  "probes": {
+   "2d9183e685f28712": {
+    "ok": true,
+    "value": 1033.45
+   },
+   "6dfc2aaae30575c0": {
+    "ok": true,
+    "value": 100.0
+   },
+   "a4d02fa6da016ff5": {
+    "ok": true,
+    "value": 218.8
+   },
+   "b56273c45eecd6b5": {
+    "ok": true,
+    "value": 1045.94
+   },
+   "c426a363447f3782": {
+    "ok": true,
+    "value": 0.0
+   },
+   "c605f0c0f2cad0fd": {
+    "ok": true,
+    "value": 1210.0
+   },
+   "d2e455bbd214f723": {
+    "ok": true,
+    "value": 1715.51
+   },
+   "d524b0f0e4e5a40e": {
+    "ok": true,
+    "value": 3139.55
+   },
+   "da9e706932241192": {
+    "ok": true,
+    "value": 1647.01
+   },
+   "ed49d70e23f7e9f9": {
+    "ok": true,
+    "value": 1485.02
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "finance.py",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Provide a Python module `finance.py`."
+  },
+  {
+   "checks": [
+    {
+     "equals": 1647.01,
+     "probe": {
+      "args": [
+       1000,
+       5,
+       10,
+       12
+      ],
+      "function": "future_value",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 1210.0,
+     "probe": {
+      "args": [
+       1000,
+       10,
+       2,
+       1
+      ],
+      "function": "future_value",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       1000,
+       4.5,
+       1,
+       12
+      ],
+      "function": "future_value",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       1500,
+       4.5,
+       3,
+       4
+      ],
+      "function": "future_value",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       2500.75,
+       3.25,
+       7,
+       365
+      ],
+      "function": "future_value",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+  },
+  {
+   "checks": [
+    {
+     "equals": 100.0,
+     "probe": {
+      "args": [
+       100,
+       0,
+       5,
+       12
+      ],
+      "function": "future_value",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       200,
+       4.5,
+       2,
+       12
+      ],
+      "function": "future_value",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+  },
+  {
+   "checks": [
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       1234.56,
+       3.7,
+       5,
+       12
+      ],
+      "function": "future_value",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       999.99,
+       1.1,
+       3,
+       2
+      ],
+      "function": "future_value",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 0.0,
+     "probe": {
+      "args": [
+       0,
+       5,
+       3,
+       1
+      ],
+      "function": "future_value",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:interest-calc",
+ "task_hash": "f2e62da0c11056a1848b2a8b53303e2a076c804e55bf1688c24c81883a3dcade",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n-    rate = annual_rate / 100.0\n+    rate = (annual_rate) * (100.0)\n     n = periods_per_year\n     value = principal * (1 + rate / n) ** (n * years)\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = (annual_rate) * (100.0)\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "79b1ba0182d2a79edc813e662b592089f0511e36d1f6d0bf904ade82ff17f2ab",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 4.0798649865716686e+198",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "r = annual_rate / 100: The rate is multiplied by 100 instead of divided.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 4.0798649865716686e+198",
+       "future_value returned 1002001000.0",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "79b1ba0182d2a79edc813e662b592089f0511e36d1f6d0bf904ade82ff17f2ab"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n     rate = annual_rate / 100.0\n     n = periods_per_year\n-    value = principal * (1 + rate / n) ** (n * years)\n+    value = principal * (1 + (rate) * (n)) ** (n * years)\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + (rate) * (n)) ** (n * years)\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3e3f9fcdd089abe4a13fadd1776db1027332db1819324e9933d7f35d442f48ab",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 3.121748550316013e+27",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "principal * (1 + r / n) ** (n * years): It multiplies the rate by n instead of dividing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 3.121748550316013e+27",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3e3f9fcdd089abe4a13fadd1776db1027332db1819324e9933d7f35d442f48ab"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n     rate = annual_rate / 100.0\n     n = periods_per_year\n-    value = principal * (1 + rate / n) ** (n * years)\n+    value = principal * ((1) - (rate / n)) ** (n * years)\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * ((1) - (rate / n)) ** (n * years)\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7635ab68ee636230227baea58615295c9ab3d6218c1eee47687d3b3a29f182fa",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 605.9",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Result is principal * (1 + r/n) ** (n*years): The formula uses (1 - r/n) instead of (1 + r/n).",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 605.9",
+       "future_value returned 810.0",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7635ab68ee636230227baea58615295c9ab3d6218c1eee47687d3b3a29f182fa"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n     rate = annual_rate / 100.0\n     n = periods_per_year\n-    value = principal * (1 + rate / n) ** (n * years)\n+    value = (principal) // ((1 + rate / n) ** (n * years))\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = (principal) // ((1 + rate / n) ** (n * years))\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0284c19dae898173ddaae526682f3b9a45f6972452320d6410d18724d30303d4",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 607.0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "result is principal * (1 + r/n) ** (n*years): Multiplication is replaced by floor division, giving a wrong value.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 607.0",
+       "future_value returned 826.0",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0284c19dae898173ddaae526682f3b9a45f6972452320d6410d18724d30303d4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n     rate = annual_rate / 100.0\n     n = periods_per_year\n-    value = principal * (1 + rate / n) ** (n * years)\n+    value = principal * (1 + rate / n) ** ((n) // (years))\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** ((n) // (years))\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e9c6c8d1b08b4bd5ebdf6b3d6ce5711ce1f1506a6db1537253801b91fbdee9f1",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 1004.17",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "result = principal * (1 + r/n) ** (n * years): The exponent is n // years instead of n * years, giving wrong values.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 1004.17",
+       "future_value returned 1000.0",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e9c6c8d1b08b4bd5ebdf6b3d6ce5711ce1f1506a6db1537253801b91fbdee9f1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n-    rate = annual_rate / 100.0\n+    rate = annual_rate / 101.0\n     n = periods_per_year\n     value = principal * (1 + rate / n) ** (n * years)\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 101.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "666af8213e6cd0b0fa4ac3e3713d220381e5ab73e6683d3415d2a1a498af4b33",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 1638.91",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "r = annual_rate / 100: The divisor is 101, giving wrong results.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 1638.91",
+       "future_value returned 1207.82",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "666af8213e6cd0b0fa4ac3e3713d220381e5ab73e6683d3415d2a1a498af4b33"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n     rate = annual_rate / 100.0\n     n = periods_per_year\n-    value = principal * (1 + rate / n) ** (n * years)\n+    value = principal * (0 + rate / n) ** (n * years)\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (0 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "623c334dc8ca4996768d3188519527e29f1d33733fd3e47649de0fdf6bbd0007",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 0.0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Result is principal * (1 + r/n) ** (n*years): The formula uses (0 + r/n) instead of (1 + r/n), giving wrong values.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 0.0",
+       "future_value returned 10.0",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value returned 0.0",
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "623c334dc8ca4996768d3188519527e29f1d33733fd3e47649de0fdf6bbd0007"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n     rate = annual_rate / 100.0\n     n = periods_per_year\n-    value = principal * (1 + rate / n) ** (n * years)\n+    value = principal * (2 + rate / n) ** (n * years)\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (2 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3cbc4f0a71dc6a9a33001c9c7805ad7eefdfad4ef197d925fbda21f7412234a9",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 1.7063187358154917e+39",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "principal * (1 + r / n) ** (n * years): The base uses 2 instead of 1.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 1.7063187358154917e+39",
+       "future_value returned 4410.0",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value returned 1.152921504606847e+20",
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3cbc4f0a71dc6a9a33001c9c7805ad7eefdfad4ef197d925fbda21f7412234a9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -2,4 +2,4 @@\n     rate = annual_rate / 100.0\n     n = periods_per_year\n     value = principal * (1 + rate / n) ** (n * years)\n-    return round(value, 2)\n+    return round(value, 0)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 0)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "501da1ad812b80d308030181364d0950a9ca5e2b5d01b70885e501b36a990cb8",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 1647.0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "round to 2 decimal places: Rounding to 0 places drops the cents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 1647.0",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "501da1ad812b80d308030181364d0950a9ca5e2b5d01b70885e501b36a990cb8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -2,4 +2,4 @@\n     rate = annual_rate / 100.0\n     n = periods_per_year\n     value = principal * (1 + rate / n) ** (n * years)\n-    return round(value, 2)\n+    return round(value, 3)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 3)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "0efb700945be2237232c76b0bd23f0acf976e559bea1a13bc8be308787bcb7cb",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 1647.009",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Round to 2 decimal places: Rounds to 3 decimal places.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 1647.009",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0efb700945be2237232c76b0bd23f0acf976e559bea1a13bc8be308787bcb7cb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n-    rate = annual_rate / 100.0\n-    n = periods_per_year\n-    value = principal * (1 + rate / n) ** (n * years)\n-    return round(value, 2)\n+    rate_gp = annual_rate / 100.0\n+    n_gp = periods_per_year\n+    value_gp = principal * (1 + rate_gp / n_gp) ** (n_gp * years)\n+    return round(value_gp, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate_gp = annual_rate / 100.0\n    n_gp = periods_per_year\n    value_gp = principal * (1 + rate_gp / n_gp) ** (n_gp * years)\n    return round(value_gp, 2)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3c79346e2451c4fceb87202adba207b0d99935b4a63faac22dffce2400f039d1",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variable names changed and the computation is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "3c79346e2451c4fceb87202adba207b0d99935b4a63faac22dffce2400f039d1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -2,4 +2,4 @@\n     rate = annual_rate / 100.0\n     n = periods_per_year\n     value = principal * (1 + rate / n) ** (n * years)\n-    return round(value, 2)\n+    return None\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "753570309831a5e972a371da8113486c1c64ae97f309c7fdac09d1bb1bd872b9",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the rounded float result: The function returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned None",
+       "future_value returned None",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value returned None",
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value returned None"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "753570309831a5e972a371da8113486c1c64ae97f309c7fdac09d1bb1bd872b9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n-    rate = annual_rate / 100.0\n+    pass\n     n = periods_per_year\n     value = principal * (1 + rate / n) ** (n * years)\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    pass\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ab9344d4966ddc919fddd82f804d3d7cf8dedc28ab0b13e45a22de870c3fd405",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Compute the future value: rate is never defined, so the function raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned None",
+       "future_value returned None",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value returned None",
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value returned None"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ab9344d4966ddc919fddd82f804d3d7cf8dedc28ab0b13e45a22de870c3fd405"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n     rate = annual_rate / 100.0\n-    n = periods_per_year\n+    pass\n     value = principal * (1 + rate / n) ** (n * years)\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    pass\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e5a3a85524eb54abc5bfe7c1043a6a146f97aa05048369eb71c6f66468e0640f",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Compute future value: n is never defined, so the function raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned None",
+       "future_value returned None",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value returned None",
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value returned None"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e5a3a85524eb54abc5bfe7c1043a6a146f97aa05048369eb71c6f66468e0640f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n     rate = annual_rate / 100.0\n     n = periods_per_year\n-    value = principal * (1 + rate / n) ** (n * years)\n+    pass\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    pass\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9744498dfd25004246e882251b704cf82c3330a4ff836ce7d5f2c6f79b6d086b",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Compute the compound interest future value: value is never assigned, so the function raises UnboundLocalError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned None",
+       "future_value returned None",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value returned None",
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value returned None"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9744498dfd25004246e882251b704cf82c3330a4ff836ce7d5f2c6f79b6d086b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -2,4 +2,4 @@\n     rate = annual_rate / 100.0\n     n = periods_per_year\n     value = principal * (1 + rate / n) ** (n * years)\n-    return round(value, 2)\n+    pass\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1006f2e0cae2f1bcfe54d6f1227660dd7ba5be46fba7a8e5a11f0519a957acb9",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the rounded result: The function now returns None instead of the rounded float.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned None",
+       "future_value returned None",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value returned None",
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value returned None"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1006f2e0cae2f1bcfe54d6f1227660dd7ba5be46fba7a8e5a11f0519a957acb9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n     rate = annual_rate / 100.0\n     n = periods_per_year\n-    value = principal * (1 + rate / n) ** (n * years)\n+    value = principal * (1 + rate / n) ** (n * years - 1)\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years - 1)\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6c4e110b51128b8fc44327cfddef911b748eaeeb384316aadea4245a5f89b04d",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 1640.18",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "result is principal * (1 + r/n) ** (n * years): The exponent was changed to n*years - 1, which gives a different value.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 1640.18",
+       "future_value returned 1100.0",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6c4e110b51128b8fc44327cfddef911b748eaeeb384316aadea4245a5f89b04d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n-    rate = annual_rate / 100.0\n+    rate = annual_rate\n     n = periods_per_year\n     value = principal * (1 + rate / n) ** (n * years)\n     return round(value, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ae37a3ec95c8af0c8e7c27916a8279032d2851a902bb8ab1829a4e3fa89b46d2",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 1.4194530740392836e+21",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "r = annual_rate / 100: The percent rate is no longer divided by 100.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 1.4194530740392836e+21",
+       "future_value returned 121000.0",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ae37a3ec95c8af0c8e7c27916a8279032d2851a902bb8ab1829a4e3fa89b46d2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -2,4 +2,4 @@\n     rate = annual_rate / 100.0\n     n = periods_per_year\n     value = principal * (1 + rate / n) ** (n * years)\n-    return round(value, 2)\n+    return float(round(value))\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return float(round(value))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "8b545d2d151d5b6b88756de792c274e1b5b677226f4944bcac1879f3539a0cf1",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 1647.0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "round to the nearest cent (2 decimal places): It rounds to a whole dollar instead of cents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 1647.0",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8b545d2d151d5b6b88756de792c274e1b5b677226f4944bcac1879f3539a0cf1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -2,4 +2,4 @@\n     rate = annual_rate / 100.0\n     n = periods_per_year\n     value = principal * (1 + rate / n) ** (n * years)\n-    return round(value, 2)\n+    return value\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return value\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "b72686397547f2ebb42ab27bbd717a23c0f624695041c54461af08f1bc0974d0",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: future_value returned 1647.00949769028",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the result rounded to the nearest cent: The rounding to 2 decimal places was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "future_value returned 1647.00949769028",
+       "future_value returned 1210.0000000000002",
+       "future_value differs from reference",
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year."
+     },
+     {
+      "failed": [
+       "future_value differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction."
+     },
+     {
+      "failed": [
+       "future_value differs from reference",
+       "future_value differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The result is a float rounded to the nearest cent (2 decimal places)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b72686397547f2ebb42ab27bbd717a23c0f624695041c54461af08f1bc0974d0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,5 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n-    rate = annual_rate / 100.0\n     n = periods_per_year\n-    value = principal * (1 + rate / n) ** (n * years)\n-    return round(value, 2)\n+    periodic = 1 + (annual_rate / 100) / n\n+    factor = pow(periodic, n * years)\n+    return round(principal * factor, 2)\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    n = periods_per_year\n    periodic = 1 + (annual_rate / 100) / n\n    factor = pow(periodic, n * years)\n    return round(principal * factor, 2)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "4210f51526f5ca6f2d8784fdd2a10531fbfa3b0e0a910a866530c69aa2fc95df",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It computes the same formula and rounds to 2 decimals.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "4210f51526f5ca6f2d8784fdd2a10531fbfa3b0e0a910a866530c69aa2fc95df"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/finance.py\n+++ b/finance.py\n@@ -1,5 +1,8 @@\n def future_value(principal, annual_rate, years, periods_per_year):\n-    rate = annual_rate / 100.0\n+\n+    r = annual_rate / 100\n     n = periods_per_year\n-    value = principal * (1 + rate / n) ** (n * years)\n-    return round(value, 2)\n+\n+    result = float(principal) * (1.0 + r / n) ** (n * years)\n+\n+    return float(round(result, 2))\n",
+   "files": {
+    "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n\n    r = annual_rate / 100\n    n = periods_per_year\n\n    result = float(principal) * (1.0 + r / n) ** (n * years)\n\n    return float(round(result, 2))"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ab053a07a94ac413f3c655a841dd9cbac9944d5922bbede9e30dcebc0228f63f",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "interest-calc",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It computes the same formula and returns a float rounded to two decimals.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ab053a07a94ac413f3c655a841dd9cbac9944d5922bbede9e30dcebc0228f63f"
+   }
+  }
+ ]
+}

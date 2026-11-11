@@ -1,0 +1,1984 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "orders.jsonl": "{\"order_id\": \"A1001\", \"product\": \"espresso beans 1kg\", \"quantity\": 2, \"unit_price\": 18.5}\n{\"order_id\": \"A1002\", \"product\": \"pour-over kettle\", \"quantity\": 1, \"unit_price\": 42.0}\n{\"order_id\": \"A1003\", \"product\": \"espresso beans 1kg\", \"quantity\": 3, \"unit_price\": 18.5}\n{\"order_id\": \"A1004\", \"product\": \"paper filters x100\", \"quantity\": 4, \"unit_price\": 4.25}\n{\"order_id\": \"A1005\", \"product\": \"ceramic dripper\", \"quantity\": 1, \"unit_price\": 23.9}\n",
+   "summary.json": "{\"orders\": 5, \"units\": 11, \"revenue\": 175.4, \"top_product\": \"espresso beans 1kg\"}\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "summary.json",
+     "type": "file_exists"
+    },
+    {
+     "equals": {
+      "orders": 5,
+      "revenue": 175.4,
+      "top_product": "espresso beans 1kg",
+      "units": 11
+     },
+     "lenient": true,
+     "path": "summary.json",
+     "pointer": "",
+     "type": "file_json"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+  },
+  {
+   "checks": [
+    {
+     "equals": 5,
+     "lenient": false,
+     "path": "summary.json",
+     "pointer": "/orders",
+     "type": "file_json"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "`orders`: the number of orders (an integer)."
+  },
+  {
+   "checks": [
+    {
+     "equals": 11,
+     "lenient": false,
+     "path": "summary.json",
+     "pointer": "/units",
+     "type": "file_json"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "`units`: the total quantity over all orders (an integer)."
+  },
+  {
+   "checks": [
+    {
+     "equals": 175.4,
+     "lenient": true,
+     "path": "summary.json",
+     "pointer": "/revenue",
+     "type": "file_json"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+  },
+  {
+   "checks": [
+    {
+     "equals": "espresso beans 1kg",
+     "lenient": false,
+     "path": "summary.json",
+     "pointer": "/top_product",
+     "type": "file_json"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "`top_product`: the product with the largest total quantity (a string)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:order-summary",
+ "task_hash": "71bb88ee2efa4bdd81c7b62d12ade4f205a54a416df76a5ebb88857cb70cb42b",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,23 @@\n+import json\n+from collections import Counter\n+\n+orders = []\n+with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n+    for line in fh:\n+        if line.strip():\n+            orders.append(json.loads(line))\n+\n+units = Counter()\n+revenue = 0.0\n+for order in orders:\n+    units[order[\"product\"]] += order[\"quantity\"]\n+    revenue += order[\"quantity\"] * order[\"unit_price\"]\n+\n+summary = {\n+    \"orders\": len(orders),\n+    \"units\": sum(units.values()),\n+    \"revenue\": round(revenue, 2),\n+    \"top_product\": units.most_common(1)[0][0],\n+}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(json.dumps(summary) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['summary.json']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,23 +1,14 @@\n-import json\n-from collections import Counter\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-orders = []\n-with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n-    for line in fh:\n-        if line.strip():\n-            orders.append(json.loads(line))\n-\n-units = Counter()\n-revenue = 0.0\n-for order in orders:\n-    units[order[\"product\"]] += order[\"quantity\"]\n-    revenue += order[\"quantity\"] * order[\"unit_price\"]\n-\n-summary = {\n-    \"orders\": len(orders),\n-    \"units\": sum(units.values()),\n-    \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n-}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['summary.json']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2e01c3b76860f31a79a406b6d0f4d70a70019a919158bd585721304ea497d281",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "summary.json must contain the JSON object with the required keys: The transform drops the last line of the single-line JSON, leaving summary.json empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2e01c3b76860f31a79a406b6d0f4d70a70019a919158bd585721304ea497d281"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,23 @@\n+import json\n+from collections import Counter\n+\n+orders = []\n+with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n+    for line in fh:\n+        if line.strip():\n+            orders.append(json.loads(line))\n+\n+units = Counter()\n+revenue = 0.0\n+for order in orders:\n+    units[order[\"product\"]] += order[\"quantity\"]\n+    revenue += order[\"quantity\"] * order[\"unit_price\"]\n+\n+summary = {\n+    \"orders\": len(orders),\n+    \"units\": sum(units.values()),\n+    \"revenue\": round(revenue, 2),\n+    \"top_product\": units.most_common(1)[0][0],\n+}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(json.dumps(summary) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['summary.json']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,23 +1,14 @@\n-import json\n-from collections import Counter\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-orders = []\n-with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n-    for line in fh:\n-        if line.strip():\n-            orders.append(json.loads(line))\n-\n-units = Counter()\n-revenue = 0.0\n-for order in orders:\n-    units[order[\"product\"]] += order[\"quantity\"]\n-    revenue += order[\"quantity\"] * order[\"unit_price\"]\n-\n-summary = {\n-    \"orders\": len(orders),\n-    \"units\": sum(units.values()),\n-    \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n-}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['summary.json']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f02cfb615008def5ce5c7ee046bae55ca3d6fac196507f2e64ba9766bc6406c0",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "summary.json contains a single JSON object: The transform appends a line 'extra' after the JSON, making the file invalid JSON.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f02cfb615008def5ce5c7ee046bae55ca3d6fac196507f2e64ba9766bc6406c0"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,23 @@\n+import json\n+from collections import Counter\n+\n+orders = []\n+with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n+    for line in fh:\n+        if line.strip():\n+            orders.append(json.loads(line))\n+\n+units = Counter()\n+revenue = 0.0\n+for order in orders:\n+    units[order[\"product\"]] += order[\"quantity\"]\n+    revenue += order[\"quantity\"] * order[\"unit_price\"]\n+\n+summary = {\n+    \"orders\": len(orders),\n+    \"units\": sum(units.values()),\n+    \"revenue\": round(revenue, 2),\n+    \"top_product\": units.most_common(1)[0][0],\n+}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(json.dumps(summary) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,44 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['summary.json']\n+\n+\n+def floatify(obj):\n+    if isinstance(obj, bool):\n+        return obj\n+    if isinstance(obj, int):\n+        return float(obj)\n+    if isinstance(obj, dict):\n+        return {k: floatify(v) for k, v in obj.items()}\n+    if isinstance(obj, list):\n+        return [floatify(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    return rewrite_json(text, floatify, 2)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,23 +1,14 @@\n-import json\n-from collections import Counter\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-orders = []\n-with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n-    for line in fh:\n-        if line.strip():\n-            orders.append(json.loads(line))\n-\n-units = Counter()\n-revenue = 0.0\n-for order in orders:\n-    units[order[\"product\"]] += order[\"quantity\"]\n-    revenue += order[\"quantity\"] * order[\"unit_price\"]\n-\n-summary = {\n-    \"orders\": len(orders),\n-    \"units\": sum(units.values()),\n-    \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n-}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['summary.json']\n\n\ndef floatify(obj):\n    if isinstance(obj, bool):\n        return obj\n    if isinstance(obj, int):\n        return float(obj)\n    if isinstance(obj, dict):\n        return {k: floatify(v) for k, v in obj.items()}\n    if isinstance(obj, list):\n        return [floatify(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    return rewrite_json(text, floatify, 2)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "82bf78152feeae8cba4fd3a8ea2ce707c52b2e46828a84784b2f6151f4c90f69",
+   "kind": "preserving",
+   "operator": "out-json-float",
+   "task_id": "order-summary",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "orders and units must be integers: The transform converts integers to floats in summary.json.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "82bf78152feeae8cba4fd3a8ea2ce707c52b2e46828a84784b2f6151f4c90f69"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,23 @@\n+import json\n+from collections import Counter\n+\n+orders = []\n+with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n+    for line in fh:\n+        if line.strip():\n+            orders.append(json.loads(line))\n+\n+units = Counter()\n+revenue = 0.0\n+for order in orders:\n+    units[order[\"product\"]] += order[\"quantity\"]\n+    revenue += order[\"quantity\"] * order[\"unit_price\"]\n+\n+summary = {\n+    \"orders\": len(orders),\n+    \"units\": sum(units.values()),\n+    \"revenue\": round(revenue, 2),\n+    \"top_product\": units.most_common(1)[0][0],\n+}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(json.dumps(summary) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,32 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['summary.json']\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    return rewrite_json(text, lambda o: o, 4)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,23 +1,14 @@\n-import json\n-from collections import Counter\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-orders = []\n-with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n-    for line in fh:\n-        if line.strip():\n-            orders.append(json.loads(line))\n-\n-units = Counter()\n-revenue = 0.0\n-for order in orders:\n-    units[order[\"product\"]] += order[\"quantity\"]\n-    revenue += order[\"quantity\"] * order[\"unit_price\"]\n-\n-summary = {\n-    \"orders\": len(orders),\n-    \"units\": sum(units.values()),\n-    \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n-}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['summary.json']\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    return rewrite_json(text, lambda o: o, 4)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "e3a7f25b34a531962f6bb8580001adf5053d2480b70a248bf41c4f4d168a8b58",
+   "kind": "preserving",
+   "operator": "out-json-indent",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper only re-indents summary.json, which remains the same JSON object with the same keys and values.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "e3a7f25b34a531962f6bb8580001adf5053d2480b70a248bf41c4f4d168a8b58"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,23 @@\n+import json\n+from collections import Counter\n+\n+orders = []\n+with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n+    for line in fh:\n+        if line.strip():\n+            orders.append(json.loads(line))\n+\n+units = Counter()\n+revenue = 0.0\n+for order in orders:\n+    units[order[\"product\"]] += order[\"quantity\"]\n+    revenue += order[\"quantity\"] * order[\"unit_price\"]\n+\n+summary = {\n+    \"orders\": len(orders),\n+    \"units\": sum(units.values()),\n+    \"revenue\": round(revenue, 2),\n+    \"top_product\": units.most_common(1)[0][0],\n+}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(json.dumps(summary) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,40 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['summary.json']\n+\n+\n+def reorder(obj):\n+    if isinstance(obj, dict):\n+        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n+    if isinstance(obj, list):\n+        return [reorder(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    return rewrite_json(text, reorder, 2)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,23 +1,14 @@\n-import json\n-from collections import Counter\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-orders = []\n-with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n-    for line in fh:\n-        if line.strip():\n-            orders.append(json.loads(line))\n-\n-units = Counter()\n-revenue = 0.0\n-for order in orders:\n-    units[order[\"product\"]] += order[\"quantity\"]\n-    revenue += order[\"quantity\"] * order[\"unit_price\"]\n-\n-summary = {\n-    \"orders\": len(orders),\n-    \"units\": sum(units.values()),\n-    \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n-}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['summary.json']\n\n\ndef reorder(obj):\n    if isinstance(obj, dict):\n        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n    if isinstance(obj, list):\n        return [reorder(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    return rewrite_json(text, reorder, 2)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false,
+    false,
+    false
+   ],
+   "id": "a730cba917d46e70a83e60965a532d5fe2fba5958a6d5c9e92de28e27d91ac9e",
+   "kind": "preserving",
+   "operator": "out-json-key-order",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper only reorders keys and re-indents summary.json, and the task leaves key order and formatting open.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "a730cba917d46e70a83e60965a532d5fe2fba5958a6d5c9e92de28e27d91ac9e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,23 @@\n+import json\n+from collections import Counter\n+\n+orders = []\n+with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n+    for line in fh:\n+        if line.strip():\n+            orders.append(json.loads(line))\n+\n+units = Counter()\n+revenue = 0.0\n+for order in orders:\n+    units[order[\"product\"]] += order[\"quantity\"]\n+    revenue += order[\"quantity\"] * order[\"unit_price\"]\n+\n+summary = {\n+    \"orders\": len(orders),\n+    \"units\": sum(units.values()),\n+    \"revenue\": round(revenue, 2),\n+    \"top_product\": units.most_common(1)[0][0],\n+}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(json.dumps(summary) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['summary.json']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,23 +1,14 @@\n-import json\n-from collections import Counter\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-orders = []\n-with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n-    for line in fh:\n-        if line.strip():\n-            orders.append(json.loads(line))\n-\n-units = Counter()\n-revenue = 0.0\n-for order in orders:\n-    units[order[\"product\"]] += order[\"quantity\"]\n-    revenue += order[\"quantity\"] * order[\"unit_price\"]\n-\n-summary = {\n-    \"orders\": len(orders),\n-    \"units\": sum(units.values()),\n-    \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n-}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['summary.json']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "5ffdeb488e13892b0011ec9bf1d7e2ad88ca32519a8a045457a86ab3c7e0edd7",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the trailing newline of summary.json is removed; the JSON object and its keys and values are unchanged and the task does not require a trailing newline.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "5ffdeb488e13892b0011ec9bf1d7e2ad88ca32519a8a045457a86ab3c7e0edd7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,23 @@\n+import json\n+from collections import Counter\n+\n+orders = []\n+with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n+    for line in fh:\n+        if line.strip():\n+            orders.append(json.loads(line))\n+\n+units = Counter()\n+revenue = 0.0\n+for order in orders:\n+    units[order[\"product\"]] += order[\"quantity\"]\n+    revenue += order[\"quantity\"] * order[\"unit_price\"]\n+\n+summary = {\n+    \"orders\": len(orders),\n+    \"units\": sum(units.values()),\n+    \"revenue\": round(revenue, 2),\n+    \"top_product\": units.most_common(1)[0][0],\n+}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(json.dumps(summary) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,23 +1,14 @@\n-import json\n-from collections import Counter\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-orders = []\n-with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n-    for line in fh:\n-        if line.strip():\n-            orders.append(json.loads(line))\n-\n-units = Counter()\n-revenue = 0.0\n-for order in orders:\n-    units[order[\"product\"]] += order[\"quantity\"]\n-    revenue += order[\"quantity\"] * order[\"unit_price\"]\n-\n-summary = {\n-    \"orders\": len(orders),\n-    \"units\": sum(units.values()),\n-    \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n-}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(3.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(3.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "edfade3939228cfb358efb29c17bdf33e6092b50047f1e796a0df9a07809520f",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper only adds a delay and a no-op transform; summary.json content is identical to the reference.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "edfade3939228cfb358efb29c17bdf33e6092b50047f1e796a0df9a07809520f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,7 +11,7 @@\n revenue = 0.0\n for order in orders:\n     units[order[\"product\"]] += order[\"quantity\"]\n-    revenue += order[\"quantity\"] * order[\"unit_price\"]\n+    revenue += (order[\"quantity\"]) // (order[\"unit_price\"])\n \n summary = {\n     \"orders\": len(orders),\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += (order[\"quantity\"]) // (order[\"unit_price\"])\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "492868a86281f1a04b10e0f4cf2bf7feac9306aa54f072ae2661911094a52016",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json  = {'orders': 5, 'units': 11, 'revenue': 0.0, 'top_product': 'espresso beans 1kg'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "revenue is the sum of quantity times unit_price: Floor division replaces multiplication, giving a wrong revenue.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json  = {'orders': 5, 'units': 11, 'revenue': 0.0, 'top_product': 'espresso beans 1kg'}"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json /revenue = 0.0"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "492868a86281f1a04b10e0f4cf2bf7feac9306aa54f072ae2661911094a52016"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -20,4 +20,4 @@\n     \"top_product\": units.most_common(1)[0][0],\n }\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+    fh.write((json.dumps(summary)) - (\"\\n\"))\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write((json.dumps(summary)) - (\"\\n\"))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8758077a22e4ce7832b8656c6dd49cd9225e1cc30a38737b16179763716e3d49",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write summary.json: Subtracting two strings raises TypeError, so summary.json is never written correctly.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8758077a22e4ce7832b8656c6dd49cd9225e1cc30a38737b16179763716e3d49"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,7 +8,7 @@\n             orders.append(json.loads(line))\n \n units = Counter()\n-revenue = 0.0\n+revenue = 1.0\n for order in orders:\n     units[order[\"product\"]] += order[\"quantity\"]\n     revenue += order[\"quantity\"] * order[\"unit_price\"]\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 1.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7d0bb97f7426fa84d054d02591e132bf25dafe2900e96bc294dd2e18f9786f16",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json  = {'orders': 5, 'units': 11, 'revenue': 176.4, 'top_product': 'espresso beans 1kg'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "revenue is the sum of quantity x unit_price: Revenue starts at 1.0, so it is overstated by 1.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json  = {'orders': 5, 'units': 11, 'revenue': 176.4, 'top_product': 'espresso beans 1kg'}"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json /revenue = 176.4"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7d0bb97f7426fa84d054d02591e132bf25dafe2900e96bc294dd2e18f9786f16"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,7 +11,7 @@\n revenue = 0.0\n for order in orders:\n     units[order[\"product\"]] += order[\"quantity\"]\n-    revenue += order[\"quantity\"] * order[\"unit_price\"]\n+    revenue += order[''] * order[\"unit_price\"]\n \n summary = {\n     \"orders\": len(orders),\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[''] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a479d0f37fd2ee126958abe19f07d3c6f2c0ecc9bf22554edaa0f708db3d7647",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Compute revenue as quantity times unit_price: order[''] raises KeyError, so the program crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a479d0f37fd2ee126958abe19f07d3c6f2c0ecc9bf22554edaa0f708db3d7647"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,7 +11,7 @@\n revenue = 0.0\n for order in orders:\n     units[order[\"product\"]] += order[\"quantity\"]\n-    revenue += order[\"quantity\"] * order[\"unit_price\"]\n+    revenue += order['quantit'] * order[\"unit_price\"]\n \n summary = {\n     \"orders\": len(orders),\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order['quantit'] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fb3fbb1a7329e3935acf502ef03a3559ee902301ef75c8d1cd4f326730155dc1",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Compute revenue as quantity times unit_price: The key 'quantit' does not exist, raising KeyError so summary.json is never written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fb3fbb1a7329e3935acf502ef03a3559ee902301ef75c8d1cd4f326730155dc1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -14,7 +14,7 @@\n     revenue += order[\"quantity\"] * order[\"unit_price\"]\n \n summary = {\n-    \"orders\": len(orders),\n+    '': len(orders),\n     \"units\": sum(units.values()),\n     \"revenue\": round(revenue, 2),\n     \"top_product\": units.most_common(1)[0][0],\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    '': len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b9573106343a8e1b12c41ddd9868a28ff279f9a8c43470c9e199493faea0d2e0",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json  = {'': 5, 'units': 11, 'revenue': 175.4, 'top_product': 'espresso beans 1kg'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "summary.json has the key orders: The key orders is replaced by an empty-string key.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json  = {'': 5, 'units': 11, 'revenue': 175.4, 'top_product': 'espresso beans 1kg'}"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json /orders missing"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b9573106343a8e1b12c41ddd9868a28ff279f9a8c43470c9e199493faea0d2e0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -17,7 +17,7 @@\n     \"orders\": len(orders),\n     \"units\": sum(units.values()),\n     \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n+    'top_produc': units.most_common(1)[0][0],\n }\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n     fh.write(json.dumps(summary) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    'top_produc': units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e836dc66734129f6fa1daf1aa45338205872b03e58865595ac315a15faa9ef61",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json  = {'orders': 5, 'units': 11, 'revenue': 175.4, 'top_produc': 'espresso beans 1kg'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "summary.json key top_product: The key is misspelled as top_produc, so the required key is missing and an extra key is present.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json  = {'orders': 5, 'units': 11, 'revenue': 175.4, 'top_produc': 'espresso beans 1kg'}"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json /top_product missing"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e836dc66734129f6fa1daf1aa45338205872b03e58865595ac315a15faa9ef61"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -17,7 +17,7 @@\n     \"orders\": len(orders),\n     \"units\": sum(units.values()),\n     \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n+    \"top_product\": units.most_common(1)[1][0],\n }\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n     fh.write(json.dumps(summary) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[1][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4f38ade80a6f96e17df626e01a2b8a955c6d146c9d98dad8b1b4dd57a77ce5b7",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "top_product is the product with the largest total quantity: most_common(1)[1] raises IndexError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4f38ade80a6f96e17df626e01a2b8a955c6d146c9d98dad8b1b4dd57a77ce5b7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,7 +4,7 @@\n orders = []\n with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n     for line in fh:\n-        if line.strip():\n+        if not (line.strip()):\n             orders.append(json.loads(line))\n \n units = Counter()\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if not (line.strip()):\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4f1e4ab63cf92fb45e7c4d8c9037a34c1c4fbeedb6bdf7235e6e92e4e32b2a3f",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "count every order: The condition is inverted, so only blank lines are parsed and json.loads fails on them.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4f1e4ab63cf92fb45e7c4d8c9037a34c1c4fbeedb6bdf7235e6e92e4e32b2a3f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,7 +9,7 @@\n \n units = Counter()\n revenue = 0.0\n-for order in orders:\n+for order in list(orders)[:-1]:\n     units[order[\"product\"]] += order[\"quantity\"]\n     revenue += order[\"quantity\"] * order[\"unit_price\"]\n \n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in list(orders)[:-1]:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4f5d035392189e2945101412f72269695976eb57a6dbc14aeeb84cc48a90755c",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json  = {'orders': 5, 'units': 10, 'revenue': 151.5, 'top_product': 'espresso beans 1kg'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "units and revenue cover all orders: The last order is skipped in the totals.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json  = {'orders': 5, 'units': 10, 'revenue': 151.5, 'top_product': 'espresso beans 1kg'}"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json /units = 10"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json /revenue = 151.5"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4f5d035392189e2945101412f72269695976eb57a6dbc14aeeb84cc48a90755c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,7 +3,7 @@\n \n orders = []\n with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n-    for line in fh:\n+    for line in list(fh)[:-1]:\n         if line.strip():\n             orders.append(json.loads(line))\n \n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in list(fh)[:-1]:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ed916bdc47859bc46b4366d5fffb009af048ca29f645b0e3b9d12c48df212402",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json  = {'orders': 4, 'units': 10, 'revenue': 151.5, 'top_product': 'espresso beans 1kg'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "summarize all orders: list(fh)[:-1] drops the last line of orders.jsonl, so the last order is omitted from all totals.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json  = {'orders': 4, 'units': 10, 'revenue': 151.5, 'top_product': 'espresso beans 1kg'}"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json /orders = 4"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json /units = 10"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json /revenue = 151.5"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ed916bdc47859bc46b4366d5fffb009af048ca29f645b0e3b9d12c48df212402"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,7 +8,7 @@\n             orders.append(json.loads(line))\n \n units = Counter()\n-revenue = 0.0\n+pass\n for order in orders:\n     units[order[\"product\"]] += order[\"quantity\"]\n     revenue += order[\"quantity\"] * order[\"unit_price\"]\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\npass\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2f23fdcfdf84f44d2552b7b6cb21e48c865e4bdc3fb9aefada11f2fd8ea6f514",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write summary.json with revenue: revenue is never initialised, so the loop raises UnboundLocalError/NameError and no summary is written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2f23fdcfdf84f44d2552b7b6cb21e48c865e4bdc3fb9aefada11f2fd8ea6f514"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -13,11 +13,6 @@\n     units[order[\"product\"]] += order[\"quantity\"]\n     revenue += order[\"quantity\"] * order[\"unit_price\"]\n \n-summary = {\n-    \"orders\": len(orders),\n-    \"units\": sum(units.values()),\n-    \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n-}\n+pass\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n     fh.write(json.dumps(summary) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\npass\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a985a1dde08ae950550d071677b0429154326824eef7901193b134de7b487be2",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write summary.json with the required keys: summary is never defined, so the script raises NameError and writes no valid summary.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a985a1dde08ae950550d071677b0429154326824eef7901193b134de7b487be2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -19,5 +19,4 @@\n     \"revenue\": round(revenue, 2),\n     \"top_product\": units.most_common(1)[0][0],\n }\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+pass\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\npass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "64de6b21c068f8c746ef433ddbf5ad1f16eca125140b5e2a5b8da8b25b2e2628",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "write summary.json: The file write was removed so no output is produced.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "64de6b21c068f8c746ef433ddbf5ad1f16eca125140b5e2a5b8da8b25b2e2628"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -20,4 +20,4 @@\n     \"top_product\": units.most_common(1)[0][0],\n }\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+    pass\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9457c1a13bc6ecb8eb962ade13c76499355db71b695b510b091c4bc7af206428",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write summary.json: Nothing is written to summary.json, leaving it empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9457c1a13bc6ecb8eb962ade13c76499355db71b695b510b091c4bc7af206428"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,8 +4,7 @@\n orders = []\n with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n     for line in fh:\n-        if line.strip():\n-            orders.append(json.loads(line))\n+        pass\n \n units = Counter()\n revenue = 0.0\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        pass\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3aab9e8f054d934bb76bd7db96aacdf8d81ebfb089c5396e816185046373c457",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Summarize all orders: No orders are read, so the summary is empty and most_common fails with IndexError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3aab9e8f054d934bb76bd7db96aacdf8d81ebfb089c5396e816185046373c457"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n     for line in fh:\n         if line.strip():\n-            orders.append(json.loads(line))\n+            pass\n \n units = Counter()\n revenue = 0.0\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            pass\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "cd3518174a3b362963db91cf68e0b5d1dc7450273a6c8a4bc56456fe3230c841",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Summarize orders from orders.jsonl: Parsing was replaced with pass, so orders is empty and the script crashes on top_product.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "cd3518174a3b362963db91cf68e0b5d1dc7450273a6c8a4bc56456fe3230c841"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -19,5 +19,5 @@\n     \"revenue\": round(revenue, 2),\n     \"top_product\": units.most_common(1)[0][0],\n }\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+with open('summary.json.bak', \"w\", encoding=\"utf-8\") as fh:\n     fh.write(json.dumps(summary) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open('summary.json.bak', \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "95e95ab350997c86e5ac3ef67a7b0d550e448792dd32e31760eefeb84030499f",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write summary.json: The output goes to summary.json.bak, so summary.json is not produced.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "95e95ab350997c86e5ac3ef67a7b0d550e448792dd32e31760eefeb84030499f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,7 +2,7 @@\n from collections import Counter\n \n orders = []\n-with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n+with open('orders.jsonl.bak', encoding=\"utf-8\") as fh:\n     for line in fh:\n         if line.strip():\n             orders.append(json.loads(line))\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open('orders.jsonl.bak', encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "29d9a510312b3a9929cc3c8cff7a6191530faa22cee19645933ecb01b0a0677c",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read orders.jsonl: It reads orders.jsonl.bak instead, which is the wrong input.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R4",
+      "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number)."
+     },
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R5",
+      "text": "`top_product`: the product with the largest total quantity (a string)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "29d9a510312b3a9929cc3c8cff7a6191530faa22cee19645933ecb01b0a0677c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -18,6 +18,7 @@\n     \"units\": sum(units.values()),\n     \"revenue\": round(revenue, 2),\n     \"top_product\": units.most_common(1)[0][0],\n+    \"avg_price\": round(revenue / sum(units.values()), 2),\n }\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n     fh.write(json.dumps(summary) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n    \"avg_price\": round(revenue / sum(units.values()), 2),\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dc6adc775f4920eb8ada1304a52df420b8c2f21dfdd391fbaa686f8d89271e31",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json  = {'orders': 5, 'units': 11, 'revenue': 175.4, 'top_product': 'espresso beans 1kg', 'avg_price': 15.95}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "summary.json has exactly the four listed keys: It adds an extra avg_price key.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json  = {'orders': 5, 'units': 11, 'revenue': 175.4, 'top_product': 'espresso beans 1kg', 'avg_price': 15.95}"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "dc6adc775f4920eb8ada1304a52df420b8c2f21dfdd391fbaa686f8d89271e31"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -14,7 +14,7 @@\n     revenue += order[\"quantity\"] * order[\"unit_price\"]\n \n summary = {\n-    \"orders\": len(orders),\n+    \"orders\": len(units),\n     \"units\": sum(units.values()),\n     \"revenue\": round(revenue, 2),\n     \"top_product\": units.most_common(1)[0][0],\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(units),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a1c8414be31720ecf216c62eddfdba4841422983986954a5b306262a42c1564a",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json  = {'orders': 4, 'units': 11, 'revenue': 175.4, 'top_product': 'espresso beans 1kg'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "orders is the number of orders: It counts distinct products rather than orders.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json  = {'orders': 4, 'units': 11, 'revenue': 175.4, 'top_product': 'espresso beans 1kg'}"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json /orders = 4"
+      ],
+      "requirement": "R2",
+      "text": "`orders`: the number of orders (an integer)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a1c8414be31720ecf216c62eddfdba4841422983986954a5b306262a42c1564a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -15,7 +15,7 @@\n \n summary = {\n     \"orders\": len(orders),\n-    \"units\": sum(units.values()),\n+    \"units\": sum(o[\"quantity\"] for o in orders[1:]),\n     \"revenue\": round(revenue, 2),\n     \"top_product\": units.most_common(1)[0][0],\n }\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(o[\"quantity\"] for o in orders[1:]),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4b8c44fe925c9e6c3547a3df67306f3ea6f04b30c6257c6c088491eb20673262",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json  = {'orders': 5, 'units': 9, 'revenue': 175.4, 'top_product': 'espresso beans 1kg'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "units is the total quantity over all orders: The first order is skipped in the units sum.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json  = {'orders': 5, 'units': 9, 'revenue': 175.4, 'top_product': 'espresso beans 1kg'}"
+      ],
+      "requirement": "R1",
+      "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product."
+     },
+     {
+      "failed": [
+       "summary.json /units = 9"
+      ],
+      "requirement": "R3",
+      "text": "`units`: the total quantity over all orders (an integer)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4b8c44fe925c9e6c3547a3df67306f3ea6f04b30c6257c6c088491eb20673262"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -16,7 +16,7 @@\n summary = {\n     \"orders\": len(orders),\n     \"units\": sum(units.values()),\n-    \"revenue\": round(revenue, 2),\n+    \"revenue\": round(revenue, 1),\n     \"top_product\": units.most_common(1)[0][0],\n }\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 1),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ce5fe19bd7f3633e1ea5bf0fd2fe2036f8c56591f09e5d001123c0c83d2ceb1d",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "order-summary",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "revenue rounded to 2 decimal places: Revenue is rounded to 1 decimal place instead of 2.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,16 +8,18 @@\n             orders.append(json.loads(line))\n \n units = Counter()\n+counts = Counter()\n revenue = 0.0\n for order in orders:\n     units[order[\"product\"]] += order[\"quantity\"]\n+    counts[order[\"product\"]] += 1\n     revenue += order[\"quantity\"] * order[\"unit_price\"]\n \n summary = {\n     \"orders\": len(orders),\n     \"units\": sum(units.values()),\n     \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n+    \"top_product\": counts.most_common(1)[0][0],\n }\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n     fh.write(json.dumps(summary) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\ncounts = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    counts[order[\"product\"]] += 1\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": counts.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "289797303e2188bb66a104444e5b39ef78ab981208951f6edd9fff45bd280e25",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "order-summary",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "top_product is the product with the largest total quantity: It picks the product with the most orders rather than the largest total quantity.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -20,4 +20,4 @@\n     \"top_product\": units.most_common(1)[0][0],\n }\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+    json.dump(summary, fh, indent=2, sort_keys=True)\n",
+   "files": {
+    "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh, indent=2, sort_keys=True)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false,
+    false,
+    false
+   ],
+   "id": "c9e1eb294066442aadcb6a76881bc5c50b6739f74ac587e4602f6ebad1a5c1e9",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "summary.json still holds a single JSON object with the same keys and values; only whitespace, key order, and the trailing newline differ.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "c9e1eb294066442aadcb6a76881bc5c50b6739f74ac587e4602f6ebad1a5c1e9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,23 +1,17 @@\n import json\n-from collections import Counter\n+import math\n \n-orders = []\n-with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n-    for line in fh:\n-        if line.strip():\n-            orders.append(json.loads(line))\n+rows = [json.loads(line) for line in open(\"orders.jsonl\", encoding=\"utf-8\") if line.strip()]\n \n-units = Counter()\n-revenue = 0.0\n-for order in orders:\n-    units[order[\"product\"]] += order[\"quantity\"]\n-    revenue += order[\"quantity\"] * order[\"unit_price\"]\n+totals = {}\n+for row in rows:\n+    totals[row[\"product\"]] = totals.get(row[\"product\"], 0) + row[\"quantity\"]\n \n summary = {\n-    \"orders\": len(orders),\n-    \"units\": sum(units.values()),\n-    \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n+    \"top_product\": max(totals, key=totals.get),\n+    \"revenue\": round(math.fsum(r[\"quantity\"] * r[\"unit_price\"] for r in rows), 2),\n+    \"units\": sum(r[\"quantity\"] for r in rows),\n+    \"orders\": len(rows),\n }\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+    fh.write(json.dumps(summary, separators=(\",\", \":\")))\n",
+   "files": {
+    "solve.py": "import json\nimport math\n\nrows = [json.loads(line) for line in open(\"orders.jsonl\", encoding=\"utf-8\") if line.strip()]\n\ntotals = {}\nfor row in rows:\n    totals[row[\"product\"]] = totals.get(row[\"product\"], 0) + row[\"quantity\"]\n\nsummary = {\n    \"top_product\": max(totals, key=totals.get),\n    \"revenue\": round(math.fsum(r[\"quantity\"] * r[\"unit_price\"] for r in rows), 2),\n    \"units\": sum(r[\"quantity\"] for r in rows),\n    \"orders\": len(rows),\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary, separators=(\",\", \":\")))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false,
+    false,
+    false
+   ],
+   "id": "e93ac4f2d7ad2ab435fdd90cbdaaddf53e3ee9c265a0a3bc8aa1ae2a2455948d",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It writes the same four keys with the same values as one valid JSON object; only key order, spacing and the trailing newline differ.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "e93ac4f2d7ad2ab435fdd90cbdaaddf53e3ee9c265a0a3bc8aa1ae2a2455948d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,23 +1,21 @@\n import json\n-from collections import Counter\n \n-orders = []\n+n_orders = 0\n+n_units = 0\n+revenue = 0.0\n+per_product = {}\n with open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n     for line in fh:\n-        if line.strip():\n-            orders.append(json.loads(line))\n+        line = line.strip()\n+        if not line:\n+            continue\n+        rec = json.loads(line)\n+        n_orders += 1\n+        n_units += rec[\"quantity\"]\n+        revenue += rec[\"quantity\"] * rec[\"unit_price\"]\n+        per_product[rec[\"product\"]] = per_product.get(rec[\"product\"], 0) + rec[\"quantity\"]\n \n-units = Counter()\n-revenue = 0.0\n-for order in orders:\n-    units[order[\"product\"]] += order[\"quantity\"]\n-    revenue += order[\"quantity\"] * order[\"unit_price\"]\n-\n-summary = {\n-    \"orders\": len(orders),\n-    \"units\": sum(units.values()),\n-    \"revenue\": round(revenue, 2),\n-    \"top_product\": units.most_common(1)[0][0],\n-}\n+best = sorted(per_product.items(), key=lambda kv: kv[1], reverse=True)[0][0]\n+summary = {\"orders\": n_orders, \"units\": n_units, \"revenue\": round(revenue, 2), \"top_product\": best}\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(json.dumps(summary) + \"\\n\")\n+    fh.write(json.dumps(summary, indent=4) + \"\\n\\n\")\n",
+   "files": {
+    "solve.py": "import json\n\nn_orders = 0\nn_units = 0\nrevenue = 0.0\nper_product = {}\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        line = line.strip()\n        if not line:\n            continue\n        rec = json.loads(line)\n        n_orders += 1\n        n_units += rec[\"quantity\"]\n        revenue += rec[\"quantity\"] * rec[\"unit_price\"]\n        per_product[rec[\"product\"]] = per_product.get(rec[\"product\"], 0) + rec[\"quantity\"]\n\nbest = sorted(per_product.items(), key=lambda kv: kv[1], reverse=True)[0][0]\nsummary = {\"orders\": n_orders, \"units\": n_units, \"revenue\": round(revenue, 2), \"top_product\": best}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary, indent=4) + \"\\n\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ca36d51a07cf720d305f379b11dd75671d47dacef97060d773617315f0ef9669",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "order-summary",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The computed orders, units, revenue, and top_product are the same and the output is a valid single JSON object; only formatting differs.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ca36d51a07cf720d305f379b11dd75671d47dacef97060d773617315f0ef9669"
+   }
+  }
+ ]
+}

@@ -1,0 +1,1183 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "photos/2026-07-12_14-30-05.jpg": "placeholder image data for IMG_20260712_143005\n",
+   "photos/2026-07-12_14-35-22.jpg": "placeholder image data for IMG_20260712_143522\n",
+   "photos/2026-08-01_09-00-00.jpg": "placeholder image data for IMG_20260801_090000\n",
+   "photos/2026-10-31_23-59-59.jpg": "placeholder image data for IMG_20261031_235959\n",
+   "photos/IMG_20260712_143005.jpeg": "placeholder image data for IMG_20260712_143005 edited\n",
+   "photos/IMG_2026_0901.jpg": "placeholder image data for IMG_2026_0901\n",
+   "photos/img_20260901_101010.jpg": "placeholder image data for img_20260901_101010\n",
+   "photos/notes.txt": "Trip to the coast, July 2026.\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "photos/2026-07-12_14-30-05.jpg",
+     "type": "file_exists"
+    },
+    {
+     "path": "photos/2026-07-12_14-35-22.jpg",
+     "type": "file_exists"
+    },
+    {
+     "path": "photos/2026-08-01_09-00-00.jpg",
+     "type": "file_exists"
+    },
+    {
+     "path": "photos/2026-10-31_23-59-59.jpg",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist)."
+  },
+  {
+   "checks": [
+    {
+     "path": "photos/IMG_20260712_143005.jpg",
+     "type": "file_absent"
+    },
+    {
+     "path": "photos/IMG_20260712_143522.jpg",
+     "type": "file_absent"
+    },
+    {
+     "path": "photos/IMG_20260801_090000.jpg",
+     "type": "file_absent"
+    },
+    {
+     "path": "photos/IMG_20261031_235959.jpg",
+     "type": "file_absent"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "The matching files are renamed, not copied: the old names no longer exist."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "photos/2026-07-12_14-30-05.jpg",
+     "text": "placeholder image data for IMG_20260712_143005\n",
+     "type": "file_equals"
+    },
+    {
+     "normalize": "none",
+     "path": "photos/2026-07-12_14-35-22.jpg",
+     "text": "placeholder image data for IMG_20260712_143522\n",
+     "type": "file_equals"
+    },
+    {
+     "normalize": "none",
+     "path": "photos/2026-08-01_09-00-00.jpg",
+     "text": "placeholder image data for IMG_20260801_090000\n",
+     "type": "file_equals"
+    },
+    {
+     "normalize": "none",
+     "path": "photos/2026-10-31_23-59-59.jpg",
+     "text": "placeholder image data for IMG_20261031_235959\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Do not change any file's contents: renamed files keep their original contents."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "photos/IMG_20260712_143005.jpeg",
+     "text": "placeholder image data for IMG_20260712_143005 edited\n",
+     "type": "file_equals"
+    },
+    {
+     "normalize": "none",
+     "path": "photos/IMG_2026_0901.jpg",
+     "text": "placeholder image data for IMG_2026_0901\n",
+     "type": "file_equals"
+    },
+    {
+     "normalize": "none",
+     "path": "photos/img_20260901_101010.jpg",
+     "text": "placeholder image data for img_20260901_101010\n",
+     "type": "file_equals"
+    },
+    {
+     "normalize": "none",
+     "path": "photos/notes.txt",
+     "text": "Trip to the coast, July 2026.\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Leave every other file in photos/ exactly as it is (same name, same contents): the .jpeg file, the wrongly patterned IMG_2026_0901.jpg, the lowercase img_ file and notes.txt."
+  },
+  {
+   "checks": [
+    {
+     "path": "photos/2026-07-12_14-30-05.jpeg",
+     "type": "file_absent"
+    },
+    {
+     "path": "photos/2026-09-01_10-10-10.jpg",
+     "type": "file_absent"
+    },
+    {
+     "path": "photos/2026-09-01.jpg",
+     "type": "file_absent"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Non-matching names are not renamed into the new format."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:photo-rename",
+ "task_hash": "22bdbc86941e25ba2d1c946dab3de6c1a038c96d62176c612de1550f65df5284",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+for path in photos/*; do\n+  name=${path#photos/}\n+  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n+    m=(\"${BASH_REMATCH[@]}\")\n+    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+  fi\n+done\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['photos/2026-07-12_14-30-05.jpg', 'photos/2026-07-12_14-35-22.jpg', 'photos/2026-08-01_09-00-00.jpg', 'photos/2026-10-31_23-59-59.jpg']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-for path in photos/*; do\n-  name=${path#photos/}\n-  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n-    m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n-  fi\n-done\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['photos/2026-07-12_14-30-05.jpg', 'photos/2026-07-12_14-35-22.jpg', 'photos/2026-08-01_09-00-00.jpg', 'photos/2026-10-31_23-59-59.jpg']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5aca41a7e2483457b7cda88a14a48d3e33b2329d6e1241ebce2de9cc9513274d",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: photos/2026-07-12_14-30-05.jpg differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not change any file's contents: The post-step rewrites the renamed photos and drops their last line, changing file contents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg differs from expected text",
+       "photos/2026-07-12_14-35-22.jpg differs from expected text",
+       "photos/2026-08-01_09-00-00.jpg differs from expected text",
+       "photos/2026-10-31_23-59-59.jpg differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5aca41a7e2483457b7cda88a14a48d3e33b2329d6e1241ebce2de9cc9513274d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+for path in photos/*; do\n+  name=${path#photos/}\n+  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n+    m=(\"${BASH_REMATCH[@]}\")\n+    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+  fi\n+done\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['photos/2026-07-12_14-30-05.jpg', 'photos/2026-07-12_14-35-22.jpg', 'photos/2026-08-01_09-00-00.jpg', 'photos/2026-10-31_23-59-59.jpg']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-for path in photos/*; do\n-  name=${path#photos/}\n-  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n-    m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n-  fi\n-done\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['photos/2026-07-12_14-30-05.jpg', 'photos/2026-07-12_14-35-22.jpg', 'photos/2026-08-01_09-00-00.jpg', 'photos/2026-10-31_23-59-59.jpg']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9b241677ce949af5398285469d82184858305e6ac03de79263524675444aaa71",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: photos/2026-07-12_14-30-05.jpg differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not change any file's contents: The post-step appends an extra line to each renamed photo, altering file contents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg differs from expected text",
+       "photos/2026-07-12_14-35-22.jpg differs from expected text",
+       "photos/2026-08-01_09-00-00.jpg differs from expected text",
+       "photos/2026-10-31_23-59-59.jpg differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9b241677ce949af5398285469d82184858305e6ac03de79263524675444aaa71"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+for path in photos/*; do\n+  name=${path#photos/}\n+  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n+    m=(\"${BASH_REMATCH[@]}\")\n+    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+  fi\n+done\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['photos/2026-07-12_14-30-05.jpg', 'photos/2026-07-12_14-35-22.jpg', 'photos/2026-08-01_09-00-00.jpg', 'photos/2026-10-31_23-59-59.jpg']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-for path in photos/*; do\n-  name=${path#photos/}\n-  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n-    m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n-  fi\n-done\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['photos/2026-07-12_14-30-05.jpg', 'photos/2026-07-12_14-35-22.jpg', 'photos/2026-08-01_09-00-00.jpg', 'photos/2026-10-31_23-59-59.jpg']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "18b1d65e5f6cb130454332f7b1e000ea9475271aec6397e7e881b676332f8ab1",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "photo-rename",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R3: photos/2026-07-12_14-30-05.jpg differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not change any file's contents: The transform toggles the trailing newline of the renamed photos, which changes their contents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+for path in photos/*; do\n+  name=${path#photos/}\n+  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n+    m=(\"${BASH_REMATCH[@]}\")\n+    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+  fi\n+done\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['photos/2026-07-12_14-30-05.jpg', 'photos/2026-07-12_14-35-22.jpg', 'photos/2026-08-01_09-00-00.jpg', 'photos/2026-10-31_23-59-59.jpg']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-for path in photos/*; do\n-  name=${path#photos/}\n-  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n-    m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n-  fi\n-done\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['photos/2026-07-12_14-30-05.jpg', 'photos/2026-07-12_14-35-22.jpg', 'photos/2026-08-01_09-00-00.jpg', 'photos/2026-10-31_23-59-59.jpg']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "99fba0355b173f278697565798281eecfcc5b3038f06713c89e8822b1ab0e749",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "photo-rename",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R3: photos/2026-07-12_14-30-05.jpg differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not change any file's contents: The post-step appends trailing spaces to the lines of the renamed photo files, altering their contents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+for path in photos/*; do\n+  name=${path#photos/}\n+  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n+    m=(\"${BASH_REMATCH[@]}\")\n+    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+  fi\n+done\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-for path in photos/*; do\n-  name=${path#photos/}\n-  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n-    m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n-  fi\n-done\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 3.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 3.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7f509142deb95c67c7688445b86b75a6b5aa39c952f8049223193b3635545868",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper runs the original rename logic with an identity transform and only adds a delay.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "7f509142deb95c67c7688445b86b75a6b5aa39c952f8049223193b3635545868"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    mv -- \"$path\" \"photos/${m[2]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n   fi\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[2]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "bffda61d65053bb45b355e21bfd2eb8cc087125250865b73f3b62692402568f2",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: photos/2026-07-12_14-30-05.jpg missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename to YYYY-MM-DD_HH-MM-SS.jpg: The year field is replaced by the month, so names come out wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R1",
+      "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist)."
+     },
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "bffda61d65053bb45b355e21bfd2eb8cc087125250865b73f3b62692402568f2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    mv -- \"$path\" \"photos/${m[1]}-${m[3]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n   fi\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[3]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a88ffdbae979da7a7428ef67a5c494f12ab6c4c73710146a0f098f151e21ffc4",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: photos/2026-07-12_14-30-05.jpg missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename to YYYY-MM-DD_HH-MM-SS.jpg: The month group is replaced by the day group, so the month is wrong in the new name.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R1",
+      "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist)."
+     },
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a88ffdbae979da7a7428ef67a5c494f12ab6c4c73710146a0f098f151e21ffc4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[4]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n   fi\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[4]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e611449fd993a8df0fee5ac3156d425d7b68c6ca531e7e2403843b60bc1aeef1",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: photos/2026-07-12_14-30-05.jpg missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename to YYYY-MM-DD_HH-MM-SS.jpg: The day field uses the hour capture group, so the new name is wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R1",
+      "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist)."
+     },
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e611449fd993a8df0fee5ac3156d425d7b68c6ca531e7e2403843b60bc1aeef1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[5]}-${m[5]}-${m[6]}.jpg\"\n   fi\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[5]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "47dc5f382e79b8552b20770684b22668def7833d480b3a938fb89b07a36f6317",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: photos/2026-07-12_14-30-05.jpg missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename to YYYY-MM-DD_HH-MM-SS.jpg: The hour is replaced by the minutes (m[5] used twice), giving wrong filenames.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R1",
+      "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist)."
+     },
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "47dc5f382e79b8552b20770684b22668def7833d480b3a938fb89b07a36f6317"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[6]}-${m[6]}.jpg\"\n   fi\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[6]}-${m[6]}.jpg\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "37097bae912918da49e9fd188443ab9bb9d875d817a2005af164b69abcca258c",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: photos/2026-07-12_14-30-05.jpg missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename to YYYY-MM-DD_HH-MM-SS.jpg: The minutes field is replaced by the seconds value, so the new name is wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing"
+      ],
+      "requirement": "R1",
+      "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist)."
+     },
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "37097bae912918da49e9fd188443ab9bb9d875d817a2005af164b69abcca258c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[7]}.jpg\"\n   fi\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[7]}.jpg\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "26114956125ef425dc3c9cf0d6140ddd7c07c83790c86e4077b9ea577be6cae1",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: photos/2026-07-12_14-30-05.jpg missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename to YYYY-MM-DD_HH-MM-SS.jpg: The seconds use m[7], which does not exist, so the rename fails or produces a wrong name.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R1",
+      "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist)."
+     },
+     {
+      "failed": [
+       "photos/IMG_20260712_143005.jpg present",
+       "photos/IMG_20260712_143522.jpg present",
+       "photos/IMG_20260801_090000.jpg present",
+       "photos/IMG_20261031_235959.jpg present"
+      ],
+      "requirement": "R2",
+      "text": "The matching files are renamed, not copied: the old names no longer exist."
+     },
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "26114956125ef425dc3c9cf0d6140ddd7c07c83790c86e4077b9ea577be6cae1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -euo pipefail\n for path in photos/*; do\n-  name=${path#photos/}\n+  :\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n     mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  :\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4bdf9f86a40f80145f9f8d2ca71ef107c819e80503ac79f7a7ee69c341f89d3c",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: photos/2026-07-12_14-30-05.jpg missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "rename matching photos: The name variable is never set, so with set -u the script aborts and no photo is renamed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R1",
+      "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist)."
+     },
+     {
+      "failed": [
+       "photos/IMG_20260712_143005.jpg present",
+       "photos/IMG_20260712_143522.jpg present",
+       "photos/IMG_20260801_090000.jpg present",
+       "photos/IMG_20261031_235959.jpg present"
+      ],
+      "requirement": "R2",
+      "text": "The matching files are renamed, not copied: the old names no longer exist."
+     },
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4bdf9f86a40f80145f9f8d2ca71ef107c819e80503ac79f7a7ee69c341f89d3c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -3,7 +3,7 @@\n for path in photos/*; do\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n-    m=(\"${BASH_REMATCH[@]}\")\n+    :\n     mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n   fi\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    :\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "878d9ba6d09feff835838fc7c7e6fa67695387da9cc4698fd0381f0f15a54c26",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: photos/2026-07-12_14-30-05.jpg missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename matching photos to YYYY-MM-DD_HH-MM-SS.jpg: The array m is never set, so under set -u the script fails and no photo is renamed correctly.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R1",
+      "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist)."
+     },
+     {
+      "failed": [
+       "photos/IMG_20260712_143005.jpg present",
+       "photos/IMG_20260712_143522.jpg present",
+       "photos/IMG_20260801_090000.jpg present",
+       "photos/IMG_20261031_235959.jpg present"
+      ],
+      "requirement": "R2",
+      "text": "The matching files are renamed, not copied: the old names no longer exist."
+     },
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "878d9ba6d09feff835838fc7c7e6fa67695387da9cc4698fd0381f0f15a54c26"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    :\n   fi\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    :\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "68ad17d5d886715fe4952815d46995583768e26c8225f876f400fee154be612f",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: photos/2026-07-12_14-30-05.jpg missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "rename matching photos: The mv was replaced with a no-op so nothing is renamed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R1",
+      "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist)."
+     },
+     {
+      "failed": [
+       "photos/IMG_20260712_143005.jpg present",
+       "photos/IMG_20260712_143522.jpg present",
+       "photos/IMG_20260801_090000.jpg present",
+       "photos/IMG_20261031_235959.jpg present"
+      ],
+      "requirement": "R2",
+      "text": "The matching files are renamed, not copied: the old names no longer exist."
+     },
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "68ad17d5d886715fe4952815d46995583768e26c8225f876f400fee154be612f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    mv -- \"$path\" \"photos/${m[1]}-${m[3]}-${m[2]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n   fi\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[3]}-${m[2]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "84e2e5da226988766027667b3d87e0e60fe44efae38e2244a8186b9bf168c333",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: photos/2026-07-12_14-30-05.jpg missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "rename to YYYY-MM-DD_HH-MM-SS.jpg: Month and day are swapped in the new name.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R1",
+      "text": "Rename every file in photos/ named exactly IMG_YYYYMMDD_HHMMSS.jpg to YYYY-MM-DD_HH-MM-SS.jpg (new names exist)."
+     },
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg missing",
+       "photos/2026-07-12_14-35-22.jpg missing",
+       "photos/2026-08-01_09-00-00.jpg missing",
+       "photos/2026-10-31_23-59-59.jpg missing"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "84e2e5da226988766027667b3d87e0e60fe44efae38e2244a8186b9bf168c333"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    cp -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n   fi\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    cp -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "55f72898c5691d30cfdea94e6fb95156c0cb028b8aa6cec7ef3899301f3aba88",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: photos/IMG_20260712_143005.jpg present",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename matching files: cp leaves the original IMG_ files in place, so they are copied rather than renamed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/IMG_20260712_143005.jpg present",
+       "photos/IMG_20260712_143522.jpg present",
+       "photos/IMG_20260801_090000.jpg present",
+       "photos/IMG_20261031_235959.jpg present"
+      ],
+      "requirement": "R2",
+      "text": "The matching files are renamed, not copied: the old names no longer exist."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "55f72898c5691d30cfdea94e6fb95156c0cb028b8aa6cec7ef3899301f3aba88"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,8 @@\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    dest=\"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    printf '%s' \"$(cat -- \"$path\")\" > \"$dest\"\n+    rm -- \"$path\"\n   fi\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    dest=\"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n    printf '%s' \"$(cat -- \"$path\")\" > \"$dest\"\n    rm -- \"$path\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "919b283365c23a6f3ec8ae0aeee0930aae1c3a57675c32ddee9ba1993ee997e4",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: photos/2026-07-12_14-30-05.jpg differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "do not change any file's contents: Command substitution strips trailing newlines and cannot hold NUL bytes, so file contents can change.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/2026-07-12_14-30-05.jpg differs from expected text",
+       "photos/2026-07-12_14-35-22.jpg differs from expected text",
+       "photos/2026-08-01_09-00-00.jpg differs from expected text",
+       "photos/2026-10-31_23-59-59.jpg differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any file's contents: renamed files keep their original contents."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "919b283365c23a6f3ec8ae0aeee0930aae1c3a57675c32ddee9ba1993ee997e4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,5 +1,6 @@\n #!/usr/bin/env bash\n set -euo pipefail\n+shopt -s nocasematch\n for path in photos/*; do\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nocasematch\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d8be333479ffbf66c75551e284a28ed07fa6bdbbb35bfad7c3b4355613048408",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: photos/img_20260901_101010.jpg missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename only files matching the exact pattern (uppercase IMG_, .jpg); leave every other file as it is: nocasematch makes the match case-insensitive, so files like img_... or ....JPG would be renamed too.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/img_20260901_101010.jpg missing"
+      ],
+      "requirement": "R4",
+      "text": "Leave every other file in photos/ exactly as it is (same name, same contents): the .jpeg file, the wrongly patterned IMG_2026_0901.jpg, the lowercase img_ file and notes.txt."
+     },
+     {
+      "failed": [
+       "photos/2026-09-01_10-10-10.jpg present"
+      ],
+      "requirement": "R5",
+      "text": "Non-matching names are not renamed into the new format."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d8be333479ffbf66c75551e284a28ed07fa6bdbbb35bfad7c3b4355613048408"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,7 +2,7 @@\n set -euo pipefail\n for path in photos/*; do\n   name=${path#photos/}\n-  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n+  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpe?g$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n     mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n   fi\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpe?g$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "877605084a5baea267f05884f7407f1c2248aa44de51490ba827bddb17a316ce",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: photos/IMG_20260712_143005.jpeg missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "rename only files whose names match the .jpg pattern exactly; leave other files unchanged: The regex also matches .jpeg files, which would be renamed although the task says to leave them as they are.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "photos/IMG_20260712_143005.jpeg missing"
+      ],
+      "requirement": "R4",
+      "text": "Leave every other file in photos/ exactly as it is (same name, same contents): the .jpeg file, the wrongly patterned IMG_2026_0901.jpg, the lowercase img_ file and notes.txt."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "877605084a5baea267f05884f7407f1c2248aa44de51490ba827bddb17a316ce"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-for path in photos/*; do\n+for path in photos/IMG_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9].jpg; do\n+  [[ -f \"$path\" ]] || continue\n   name=${path#photos/}\n-  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n-    m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n-  fi\n+  d=${name:4:8}\n+  t=${name:13:6}\n+  mv -- \"$path\" \"photos/${d:0:4}-${d:4:2}-${d:6:2}_${t:0:2}-${t:2:2}-${t:4:2}.jpg\"\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/IMG_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9].jpg; do\n  [[ -f \"$path\" ]] || continue\n  name=${path#photos/}\n  d=${name:4:8}\n  t=${name:13:6}\n  mv -- \"$path\" \"photos/${d:0:4}-${d:4:2}-${d:6:2}_${t:0:2}-${t:2:2}-${t:4:2}.jpg\"\ndone\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "4dca3d07f54ec4b4ddb5abb4a4fa2d865e7bac0702e6e68717269f4d810bca36",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The glob matches the exact IMG_8digits_6digits.jpg pattern, regular files are renamed to the required format, and other files are untouched.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "4dca3d07f54ec4b4ddb5abb4a4fa2d865e7bac0702e6e68717269f4d810bca36"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,10 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-for path in photos/*; do\n-  name=${path#photos/}\n-  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n-    m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+cd photos\n+for f in *; do\n+  [[ -f $f ]] || continue\n+  if printf '%s\\n' \"$f\" | grep -Eq '^IMG_[0-9]{8}_[0-9]{6}\\.jpg$'; then\n+    new=$(printf '%s\\n' \"$f\" | sed -E 's/^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$/\\1-\\2-\\3_\\4-\\5-\\6.jpg/')\n+    mv -- \"$f\" \"$new\"\n   fi\n done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd photos\nfor f in *; do\n  [[ -f $f ]] || continue\n  if printf '%s\\n' \"$f\" | grep -Eq '^IMG_[0-9]{8}_[0-9]{6}\\.jpg$'; then\n    new=$(printf '%s\\n' \"$f\" | sed -E 's/^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$/\\1-\\2-\\3_\\4-\\5-\\6.jpg/')\n    mv -- \"$f\" \"$new\"\n  fi\ndone\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "64816d5241a9144d97332359a35434be7db0bc829b369145a6a6b1acbb4f0469",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "photo-rename",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It renames the same matching files with the same target names using grep and sed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "64816d5241a9144d97332359a35434be7db0bc829b369145a6a6b1acbb4f0469"
+   }
+  }
+ ]
+}

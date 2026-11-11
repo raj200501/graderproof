@@ -1,0 +1,919 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "logs/app.log": "",
+   "logs/app.log.1": "2026-11-04 00:00:01 INFO rotate check\n2026-11-04 06:12:40 WARN slow query 2140 ms\n",
+   "logs/app.log.2": "2026-11-03 00:00:01 INFO rotate check\n2026-11-03 18:44:02 INFO deploy 4.12.0\n",
+   "logs/app.log.3": "2026-11-02 00:00:01 INFO rotate check\n",
+   "logs/audit.log": "2026-11-04 06:00:00 AUDIT admin login from 10.0.4.7\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "logs/app.log.3",
+     "text": "2026-11-02 00:00:01 INFO rotate check\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Delete app.log.3 (its old content, the 2026-11-01 entries, must no longer exist anywhere in logs/)."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "logs/app.log.3",
+     "text": "2026-11-02 00:00:01 INFO rotate check\n",
+     "type": "file_equals"
+    },
+    {
+     "normalize": "none",
+     "path": "logs/app.log.2",
+     "text": "2026-11-03 00:00:01 INFO rotate check\n2026-11-03 18:44:02 INFO deploy 4.12.0\n",
+     "type": "file_equals"
+    },
+    {
+     "normalize": "none",
+     "path": "logs/app.log.1",
+     "text": "2026-11-04 00:00:01 INFO rotate check\n2026-11-04 06:12:40 WARN slow query 2140 ms\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Rename app.log.2 to app.log.3, app.log.1 to app.log.2, and app.log to app.log.1, with contents unchanged by the renames."
+  },
+  {
+   "checks": [
+    {
+     "path": "logs/app.log",
+     "type": "file_exists"
+    },
+    {
+     "normalize": "none",
+     "path": "logs/app.log",
+     "text": "",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Create a new, empty app.log."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "logs/audit.log",
+     "text": "2026-11-04 06:00:00 AUDIT admin login from 10.0.4.7\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Other files in logs/ must be left as they are."
+  },
+  {
+   "checks": [
+    {
+     "path": "logs/app.log.4",
+     "type": "file_absent"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Only three old copies are kept; no app.log.4 exists."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:log-rotate",
+ "task_hash": "4a3b957bdc5240204aa71bcb07c93341dc47dacce349e739182411b1bdcf0b9f",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,8 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cd logs\n+rm -f -- app.log.3\n+mv -- app.log.2 app.log.3\n+mv -- app.log.1 app.log.2\n+mv -- app.log app.log.1\n+: > app.log\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['logs/app.log', 'logs/app.log.1', 'logs/app.log.2', 'logs/app.log.3']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,8 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cd logs\n-rm -f -- app.log.3\n-mv -- app.log.2 app.log.3\n-mv -- app.log.1 app.log.2\n-mv -- app.log app.log.1\n-: > app.log\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['logs/app.log', 'logs/app.log.1', 'logs/app.log.2', 'logs/app.log.3']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6afaed6491148cc8c74a0cf0b4e34639fb93c2565a0361383974b58eb324d9bf",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: logs/app.log.3 differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "file contents must not change during renames: The transform drops the last line of each rotated log file.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "logs/app.log.3 differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "Delete app.log.3 (its old content, the 2026-11-01 entries, must no longer exist anywhere in logs/)."
+     },
+     {
+      "failed": [
+       "logs/app.log.3 differs from expected text",
+       "logs/app.log.2 differs from expected text",
+       "logs/app.log.1 differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "Rename app.log.2 to app.log.3, app.log.1 to app.log.2, and app.log to app.log.1, with contents unchanged by the renames."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6afaed6491148cc8c74a0cf0b4e34639fb93c2565a0361383974b58eb324d9bf"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,8 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cd logs\n+rm -f -- app.log.3\n+mv -- app.log.2 app.log.3\n+mv -- app.log.1 app.log.2\n+mv -- app.log app.log.1\n+: > app.log\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['logs/app.log', 'logs/app.log.1', 'logs/app.log.2', 'logs/app.log.3']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,8 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cd logs\n-rm -f -- app.log.3\n-mv -- app.log.2 app.log.3\n-mv -- app.log.1 app.log.2\n-mv -- app.log app.log.1\n-: > app.log\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['logs/app.log', 'logs/app.log.1', 'logs/app.log.2', 'logs/app.log.3']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f9745ce578dc19048e10a6d45513e34c8bd452a85c8c7de0b7886dd0e7830a33",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: logs/app.log.3 differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "File contents must not change; new app.log must be empty: A post-step appends 'extra' lines to every log file, changing contents and making app.log non-empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "logs/app.log.3 differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "Delete app.log.3 (its old content, the 2026-11-01 entries, must no longer exist anywhere in logs/)."
+     },
+     {
+      "failed": [
+       "logs/app.log.3 differs from expected text",
+       "logs/app.log.2 differs from expected text",
+       "logs/app.log.1 differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "Rename app.log.2 to app.log.3, app.log.1 to app.log.2, and app.log to app.log.1, with contents unchanged by the renames."
+     },
+     {
+      "failed": [
+       "logs/app.log differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Create a new, empty app.log."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f9745ce578dc19048e10a6d45513e34c8bd452a85c8c7de0b7886dd0e7830a33"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,8 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cd logs\n+rm -f -- app.log.3\n+mv -- app.log.2 app.log.3\n+mv -- app.log.1 app.log.2\n+mv -- app.log app.log.1\n+: > app.log\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['logs/app.log', 'logs/app.log.1', 'logs/app.log.2', 'logs/app.log.3']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,8 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cd logs\n-rm -f -- app.log.3\n-mv -- app.log.2 app.log.3\n-mv -- app.log.1 app.log.2\n-mv -- app.log app.log.1\n-: > app.log\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['logs/app.log', 'logs/app.log.1', 'logs/app.log.2', 'logs/app.log.3']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e6063449f738b19e5bd228230b4c7a2f80eb412d8cd1f7e8e5ab1c7623b2af09",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "log-rotate",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R1: logs/app.log.3 differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "File contents must not change during the renames: The post-step toggles the trailing newline of every log file, changing their contents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,8 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cd logs\n+rm -f -- app.log.3\n+mv -- app.log.2 app.log.3\n+mv -- app.log.1 app.log.2\n+mv -- app.log app.log.1\n+: > app.log\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['logs/app.log', 'logs/app.log.1', 'logs/app.log.2', 'logs/app.log.3']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,8 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cd logs\n-rm -f -- app.log.3\n-mv -- app.log.2 app.log.3\n-mv -- app.log.1 app.log.2\n-mv -- app.log app.log.1\n-: > app.log\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['logs/app.log', 'logs/app.log.1', 'logs/app.log.2', 'logs/app.log.3']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "91f23895d01e0a048a42f774a391e980e42e6ee99ec7b31f128b9410c3159ca0",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "log-rotate",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R1: logs/app.log.3 differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "File contents must not change during the renames: A post-step appends two trailing spaces to every nonempty line of the rotated log files, changing their contents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,8 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cd logs\n+rm -f -- app.log.3\n+mv -- app.log.2 app.log.3\n+mv -- app.log.1 app.log.2\n+mv -- app.log app.log.1\n+: > app.log\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,8 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cd logs\n-rm -f -- app.log.3\n-mv -- app.log.2 app.log.3\n-mv -- app.log.1 app.log.2\n-mv -- app.log app.log.1\n-: > app.log\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 3.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 3.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "cb322447a9bf4e8baf5b03b0b109a4051dc3f3e0420b6f4cfc59994de1958990",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same rotation is performed after a 3 second delay, and the task states no timing requirement.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "cb322447a9bf4e8baf5b03b0b109a4051dc3f3e0420b6f4cfc59994de1958990"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,6 +1,6 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cd logs\n+:\n rm -f -- app.log.3\n mv -- app.log.2 app.log.3\n mv -- app.log.1 app.log.2\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n:\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c0292be8709a16cb8a0d7c6f7de723075fccf5520d5a5a2bf0d37f71a73bb078",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: logs/app.log.3 differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rotate the files inside logs/: The cd logs step was removed, so the commands run in the wrong directory and fail or touch the wrong files.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "logs/app.log.3 differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "Delete app.log.3 (its old content, the 2026-11-01 entries, must no longer exist anywhere in logs/)."
+     },
+     {
+      "failed": [
+       "logs/app.log.3 differs from expected text",
+       "logs/app.log.2 differs from expected text",
+       "logs/app.log.1 differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "Rename app.log.2 to app.log.3, app.log.1 to app.log.2, and app.log to app.log.1, with contents unchanged by the renames."
+     },
+     {
+      "failed": [
+       "logs/app.log differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Create a new, empty app.log."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c0292be8709a16cb8a0d7c6f7de723075fccf5520d5a5a2bf0d37f71a73bb078"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -euo pipefail\n cd logs\n-rm -f -- app.log.3\n+:\n mv -- app.log.2 app.log.3\n mv -- app.log.1 app.log.2\n mv -- app.log app.log.1\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\n:\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "4a7bbdc9ab2ea1acee1e14be7b76030d1c32fbf55e00d58bd59a551378db68d2",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "log-rotate",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The mv of app.log.2 onto app.log.3 overwrites the old file, so the end state is the same as deleting it first.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,7 +2,7 @@\n set -euo pipefail\n cd logs\n rm -f -- app.log.3\n-mv -- app.log.2 app.log.3\n+:\n mv -- app.log.1 app.log.2\n mv -- app.log app.log.1\n : > app.log\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\n:\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "82bd59734a729ee3328cb50a96add3cd5e2f522b0d122231d94faa3778b4fc36",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: logs/app.log.3 missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename app.log.2 to app.log.3: The rename was skipped, so app.log.2 content is lost by overwrite and app.log.3 is missing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "logs/app.log.3 missing"
+      ],
+      "requirement": "R1",
+      "text": "Delete app.log.3 (its old content, the 2026-11-01 entries, must no longer exist anywhere in logs/)."
+     },
+     {
+      "failed": [
+       "logs/app.log.3 missing"
+      ],
+      "requirement": "R2",
+      "text": "Rename app.log.2 to app.log.3, app.log.1 to app.log.2, and app.log to app.log.1, with contents unchanged by the renames."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "82bd59734a729ee3328cb50a96add3cd5e2f522b0d122231d94faa3778b4fc36"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -3,6 +3,6 @@\n cd logs\n rm -f -- app.log.3\n mv -- app.log.2 app.log.3\n-mv -- app.log.1 app.log.2\n+:\n mv -- app.log app.log.1\n : > app.log\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\n:\nmv -- app.log app.log.1\n: > app.log\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8b2683323f19b35bd76921c6b28c5afd7f0a82de9a7e145775f14459edc1b8e8",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: logs/app.log.2 missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename app.log.1 to app.log.2: That rename is skipped, so the old app.log.1 is overwritten by app.log and its contents are lost.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "logs/app.log.2 missing"
+      ],
+      "requirement": "R2",
+      "text": "Rename app.log.2 to app.log.3, app.log.1 to app.log.2, and app.log to app.log.1, with contents unchanged by the renames."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8b2683323f19b35bd76921c6b28c5afd7f0a82de9a7e145775f14459edc1b8e8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,5 +4,5 @@\n rm -f -- app.log.3\n mv -- app.log.2 app.log.3\n mv -- app.log.1 app.log.2\n-mv -- app.log app.log.1\n+:\n : > app.log\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\n:\n: > app.log\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "70a914721103f1b43d61353b2aad2f8a001e8d1e7746b1e88b62c966cd0565fa",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: logs/app.log.1 missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename app.log to app.log.1: The rename was replaced by a no-op, so app.log.1 is not created and app.log is truncated, losing its contents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "logs/app.log.1 missing"
+      ],
+      "requirement": "R2",
+      "text": "Rename app.log.2 to app.log.3, app.log.1 to app.log.2, and app.log to app.log.1, with contents unchanged by the renames."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "70a914721103f1b43d61353b2aad2f8a001e8d1e7746b1e88b62c966cd0565fa"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -5,4 +5,4 @@\n mv -- app.log.2 app.log.3\n mv -- app.log.1 app.log.2\n mv -- app.log app.log.1\n-: > app.log\n+:\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n:\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0c2c9f2daad8b09b2c11ece06976dd631b2d908f0b5a9d8473cf3a4b9207337b",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: logs/app.log missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Create a new, empty app.log: No new app.log is created after rotation.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "logs/app.log missing",
+       "logs/app.log missing"
+      ],
+      "requirement": "R3",
+      "text": "Create a new, empty app.log."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0c2c9f2daad8b09b2c11ece06976dd631b2d908f0b5a9d8473cf3a4b9207337b"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -5,4 +5,4 @@\n mv -- app.log.2 app.log.3\n mv -- app.log.1 app.log.2\n mv -- app.log app.log.1\n-: > app.log\n+: | head -n 1 > app.log\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: | head -n 1 > app.log\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "11a81648110195c2e7ebc71173d50fa43cb415ef10e37408e85dc42148bad49a",
+   "kind": "violating",
+   "operator": "sh-partial-output",
+   "task_id": "log-rotate",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The pipeline still creates a new empty app.log, so the result is the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -5,4 +5,4 @@\n mv -- app.log.2 app.log.3\n mv -- app.log.1 app.log.2\n mv -- app.log app.log.1\n-: > app.log\n+: > app.log.wrong\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log.wrong\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f5e9aa9be8388f54de32a5ac0012ead96e45d686e834d7f16af483aefc69e089",
+   "kind": "violating",
+   "operator": "sh-target-file",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: logs/app.log missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "create a new, empty app.log: An empty file named app.log.wrong is created instead and app.log is not recreated.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "logs/app.log missing",
+       "logs/app.log missing"
+      ],
+      "requirement": "R3",
+      "text": "Create a new, empty app.log."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f5e9aa9be8388f54de32a5ac0012ead96e45d686e834d7f16af483aefc69e089"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -3,6 +3,5 @@\n cd logs\n rm -f -- app.log.3\n mv -- app.log.2 app.log.3\n-mv -- app.log.1 app.log.2\n mv -- app.log app.log.1\n : > app.log\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log app.log.1\n: > app.log\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "142a0c6f3d7bb2aa65e8c1bda1e2274a5fea7f79f86e69351c78b4db02e0ddc5",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: logs/app.log.2 missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Rename app.log.1 to app.log.2: The app.log.1 to app.log.2 rename is skipped and the old app.log.1 is overwritten.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "logs/app.log.2 missing"
+      ],
+      "requirement": "R2",
+      "text": "Rename app.log.2 to app.log.3, app.log.1 to app.log.2, and app.log to app.log.1, with contents unchanged by the renames."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "142a0c6f3d7bb2aa65e8c1bda1e2274a5fea7f79f86e69351c78b4db02e0ddc5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -5,4 +5,3 @@\n mv -- app.log.2 app.log.3\n mv -- app.log.1 app.log.2\n mv -- app.log app.log.1\n-: > app.log\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b6e084223d0e96334d35f9092ba991cb57b45dd33aebb53a09f269f5d80ded15",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: logs/app.log missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Create a new, empty app.log: The step creating the new empty app.log was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "logs/app.log missing",
+       "logs/app.log missing"
+      ],
+      "requirement": "R3",
+      "text": "Create a new, empty app.log."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b6e084223d0e96334d35f9092ba991cb57b45dd33aebb53a09f269f5d80ded15"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -euo pipefail\n cd logs\n-rm -f -- app.log.3\n+rm -f -- app.log.3*\n mv -- app.log.2 app.log.3\n mv -- app.log.1 app.log.2\n mv -- app.log app.log.1\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3*\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1c9b98247b881f0e580cf772eb987a0c342c6b97aeb249c441840a79b0a23ddf",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "log-rotate",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Other files in logs/ must be left as they are: The glob app.log.3* also deletes any other file whose name starts with app.log.3, not just app.log.3.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -euo pipefail\n cd logs\n-rm -f -- app.log.3\n+mv -- app.log.3 app.log.4\n mv -- app.log.2 app.log.3\n mv -- app.log.1 app.log.2\n mv -- app.log app.log.1\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nmv -- app.log.3 app.log.4\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e1c739c03860a4666e615ef624f23d7ce6c1c119043acc820748680bdfb550df",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: logs/app.log.4 present",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Delete app.log.3 and leave other files in logs/ as they are: It renames app.log.3 to app.log.4 instead of deleting it, leaving an extra file.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "logs/app.log.4 present"
+      ],
+      "requirement": "R5",
+      "text": "Only three old copies are kept; no app.log.4 exists."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e1c739c03860a4666e615ef624f23d7ce6c1c119043acc820748680bdfb550df"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,7 +2,8 @@\n set -euo pipefail\n cd logs\n rm -f -- app.log.3\n-mv -- app.log.2 app.log.3\n-mv -- app.log.1 app.log.2\n+for i in 2 1; do\n+  mv -- \"app.log.$i\" \"app.log.$((i + 1))\"\n+done\n mv -- app.log app.log.1\n-: > app.log\n+printf '' > app.log\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nfor i in 2 1; do\n  mv -- \"app.log.$i\" \"app.log.$((i + 1))\"\ndone\nmv -- app.log app.log.1\nprintf '' > app.log\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "263b1b15a39badcb9c9bd6dfed2687b35a5648296d8e717bc5d66d7630af1f23",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The loop performs the same renames in the same order, and printf '' creates the same empty file.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "263b1b15a39badcb9c9bd6dfed2687b35a5648296d8e717bc5d66d7630af1f23"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,8 +1,8 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cd logs\n-rm -f -- app.log.3\n-mv -- app.log.2 app.log.3\n-mv -- app.log.1 app.log.2\n-mv -- app.log app.log.1\n-: > app.log\n+rm -f logs/app.log.3\n+mv -f logs/app.log.2 logs/app.log.3\n+mv -f logs/app.log.1 logs/app.log.2\n+mv -f logs/app.log logs/app.log.1\n+touch logs/app.log\n+truncate -s 0 logs/app.log\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nrm -f logs/app.log.3\nmv -f logs/app.log.2 logs/app.log.3\nmv -f logs/app.log.1 logs/app.log.2\nmv -f logs/app.log logs/app.log.1\ntouch logs/app.log\ntruncate -s 0 logs/app.log\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "8978314d3f9d14679763d0e397f3ea458b3b04fee6954460593eb5bd27403876",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same delete, rename chain and empty new app.log result; touch and truncate just add redundant steps.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "8978314d3f9d14679763d0e397f3ea458b3b04fee6954460593eb5bd27403876"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,8 +1,9 @@\n #!/usr/bin/env bash\n set -euo pipefail\n cd logs\n-rm -f -- app.log.3\n+mv -- app.log.3 .app.log.discard\n mv -- app.log.2 app.log.3\n mv -- app.log.1 app.log.2\n mv -- app.log app.log.1\n : > app.log\n+rm -f -- .app.log.discard\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nmv -- app.log.3 .app.log.discard\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\nrm -f -- .app.log.discard\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0b5936a609048510a8af9cf0e61469f8c07cc795fa89c65ec55128a4dd7a6975",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "log-rotate",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The old oldest copy is moved aside and removed at the end, giving the same final state with no content changes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "0b5936a609048510a8af9cf0e61469f8c07cc795fa89c65ec55128a4dd7a6975"
+   }
+  }
+ ]
+}

@@ -1,0 +1,1062 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "bookings": {
+    "R-2040": {
+     "check_in": "2026-12-04",
+     "check_out": "2026-12-05",
+     "guest_name": "Arjun Mehta",
+     "room_type": "double",
+     "status": "confirmed"
+    },
+    "R-2041": {
+     "check_in": "2026-12-03",
+     "check_out": "2026-12-06",
+     "guest_name": "Hannah Becker",
+     "room_type": "double",
+     "status": "confirmed"
+    }
+   },
+   "inventory": {
+    "double": 2,
+    "family": 1,
+    "single": 3
+   },
+   "next_ref": 2042,
+   "outbox": [
+    {
+     "body": "Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.",
+     "subject": "Booking confirmed",
+     "to": "hannah.becker@example.com"
+    }
+   ]
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "check_in": "2026-12-03",
+     "check_out": "2026-12-06",
+     "guests": 2
+    },
+    "result": {
+     "available": {
+      "double": 1,
+      "family": 1
+     },
+     "ok": true
+    },
+    "tool": "search_rooms"
+   },
+   {
+    "args": {
+     "check_in": "2026-12-03",
+     "check_out": "2026-12-06",
+     "guest_name": "Hannah Becker",
+     "room_type": "double"
+    },
+    "result": {
+     "booking_ref": "R-2041",
+     "ok": true
+    },
+    "tool": "book_room"
+   },
+   {
+    "args": {
+     "body": "Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.",
+     "subject": "Booking confirmed",
+     "to": "hannah.becker@example.com"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "send_email"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "check_in": "2026-12-03",
+      "check_out": "2026-12-06",
+      "guest_name": "Hannah Becker",
+      "room_type": "double"
+     },
+     "tool": "book_room",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "Hannah Becker",
+     "pointer": "/bookings/R-2041/guest_name",
+     "type": "state_equals"
+    },
+    {
+     "equals": "double",
+     "pointer": "/bookings/R-2041/room_type",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-12-03",
+     "pointer": "/bookings/R-2041/check_in",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-12-06",
+     "pointer": "/bookings/R-2041/check_out",
+     "type": "state_equals"
+    },
+    {
+     "equals": "confirmed",
+     "pointer": "/bookings/R-2041/status",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Book a double room for Hannah Becker, check-in 2026-12-03, check-out 2026-12-06, using book_room"
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "subject": "Booking confirmed",
+      "to": "hannah.becker@example.com"
+     },
+     "tool": "send_email",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "hannah.becker@example.com",
+     "pointer": "/outbox/0/to",
+     "type": "state_equals"
+    },
+    {
+     "equals": "Booking confirmed",
+     "pointer": "/outbox/0/subject",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Email hannah.becker@example.com with send_email, subject Booking confirmed"
+  },
+  {
+   "checks": [
+    {
+     "first": {
+      "args": {
+       "guest_name": "Hannah Becker"
+      },
+      "tool": "book_room"
+     },
+     "then": {
+      "args": {
+       "to": "hannah.becker@example.com"
+      },
+      "tool": "send_email"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Ordering: book the room first, then send the email"
+  },
+  {
+   "checks": [
+    {
+     "equals": 2042,
+     "pointer": "/next_ref",
+     "type": "state_equals"
+    },
+    {
+     "equals": "Arjun Mehta",
+     "pointer": "/bookings/R-2040/guest_name",
+     "type": "state_equals"
+    },
+    {
+     "equals": "confirmed",
+     "pointer": "/bookings/R-2040/status",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "room_type": "single"
+     },
+     "tool": "book_room",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "room_type": "family"
+     },
+     "tool": "book_room",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Make no other bookings: the sequence advances only once and the existing booking is untouched"
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "to": "arjun.mehta@example.com"
+     },
+     "tool": "send_email",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": "hannah.becker@example.com",
+     "pointer": "/outbox/0/to",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Send no other emails: only to the guest"
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:booking-email",
+ "task_hash": "ce8651d35a45f7dae395b6c60ba4235ef7a68d29e71fa49af53afd644fd6d24c",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,35 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\",\n+      \"guests\": 2\n+    }\n+  },\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\",\n+      \"guests\": 2\n+    }\n+  },\n+  {\n+    \"tool\": \"book_room\",\n+    \"args\": {\n+      \"guest_name\": \"Hannah Becker\",\n+      \"room_type\": \"double\",\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_email\",\n+    \"args\": {\n+      \"to\": \"hannah.becker@example.com\",\n+      \"subject\": \"Booking confirmed\",\n+      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\",\n      \"guests\": 2\n    }\n  },\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\",\n      \"guests\": 2\n    }\n  },\n  {\n    \"tool\": \"book_room\",\n    \"args\": {\n      \"guest_name\": \"Hannah Becker\",\n      \"room_type\": \"double\",\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\"\n    }\n  },\n  {\n    \"tool\": \"send_email\",\n    \"args\": {\n      \"to\": \"hannah.becker@example.com\",\n      \"subject\": \"Booking confirmed\",\n      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "fa1fdfa9ee89ee8378a82b2f78c104033911cb1af1582d3c3c660f4f685718b0",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only a redundant read-only search_rooms call was added; the booking and the confirmation email are unchanged and in order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "fa1fdfa9ee89ee8378a82b2f78c104033911cb1af1582d3c3c660f4f685718b0"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,27 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06-x\",\n+      \"guests\": 2\n+    }\n+  },\n+  {\n+    \"tool\": \"book_room\",\n+    \"args\": {\n+      \"guest_name\": \"Hannah Becker\",\n+      \"room_type\": \"double\",\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_email\",\n+    \"args\": {\n+      \"to\": \"hannah.becker@example.com\",\n+      \"subject\": \"Booking confirmed\",\n+      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06-x\",\n      \"guests\": 2\n    }\n  },\n  {\n    \"tool\": \"book_room\",\n    \"args\": {\n      \"guest_name\": \"Hannah Becker\",\n      \"room_type\": \"double\",\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\"\n    }\n  },\n  {\n    \"tool\": \"send_email\",\n    \"args\": {\n      \"to\": \"hannah.becker@example.com\",\n      \"subject\": \"Booking confirmed\",\n      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1e3e885431d288dee8b4091b5476efb0bce9ff859da098513af884b71114c156",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "booking-email",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The task does not require search_rooms; the altered read-only search call does not affect the required booking and email steps.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,27 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\",\n+      \"guests\": 3\n+    }\n+  },\n+  {\n+    \"tool\": \"book_room\",\n+    \"args\": {\n+      \"guest_name\": \"Hannah Becker\",\n+      \"room_type\": \"double\",\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_email\",\n+    \"args\": {\n+      \"to\": \"hannah.becker@example.com\",\n+      \"subject\": \"Booking confirmed\",\n+      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\",\n      \"guests\": 3\n    }\n  },\n  {\n    \"tool\": \"book_room\",\n    \"args\": {\n      \"guest_name\": \"Hannah Becker\",\n      \"room_type\": \"double\",\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\"\n    }\n  },\n  {\n    \"tool\": \"send_email\",\n    \"args\": {\n      \"to\": \"hannah.becker@example.com\",\n      \"subject\": \"Booking confirmed\",\n      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "93ba674f825be3fa5bdd7c3c481c2226cc431bb14bce4e5a13b1429d85a4c9d7",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "booking-email",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only search_rooms guest count differs; the booking and email match the requirements.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,27 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\",\n+      \"guests\": 2\n+    }\n+  },\n+  {\n+    \"tool\": \"book_room\",\n+    \"args\": {\n+      \"guest_name\": \"Hannah Becker\",\n+      \"room_type\": \"double\",\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_email\",\n+    \"args\": {\n+      \"to\": \"hannah.becker@example.com\",\n+      \"subject\": \"Booking confirmed\",\n+      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\",\n      \"guests\": 2\n    }\n  },\n  {\n    \"tool\": \"book_room\",\n    \"args\": {\n      \"guest_name\": \"Hannah Becker\",\n      \"room_type\": \"double\",\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06-x\"\n    }\n  },\n  {\n    \"tool\": \"send_email\",\n    \"args\": {\n      \"to\": \"hannah.becker@example.com\",\n      \"subject\": \"Booking confirmed\",\n      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "56617143116ac476f8dd5d27562d05809afa92cfbd930c4fc06fa61aef4a8d70",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks book_room",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Book with check-out 2026-12-06: book_room is called with check_out 2026-12-06-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks book_room",
+       "state /bookings/R-2041/check_out = '2026-12-06-x'"
+      ],
+      "requirement": "R1",
+      "text": "Book a double room for Hannah Becker, check-in 2026-12-03, check-out 2026-12-06, using book_room"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "56617143116ac476f8dd5d27562d05809afa92cfbd930c4fc06fa61aef4a8d70"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,27 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\",\n+      \"guests\": 2\n+    }\n+  },\n+  {\n+    \"tool\": \"book_room\",\n+    \"args\": {\n+      \"guest_name\": \"Hannah Becker-x\",\n+      \"room_type\": \"double\",\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_email\",\n+    \"args\": {\n+      \"to\": \"hannah.becker@example.com\",\n+      \"subject\": \"Booking confirmed\",\n+      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\",\n      \"guests\": 2\n    }\n  },\n  {\n    \"tool\": \"book_room\",\n    \"args\": {\n      \"guest_name\": \"Hannah Becker-x\",\n      \"room_type\": \"double\",\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\"\n    }\n  },\n  {\n    \"tool\": \"send_email\",\n    \"args\": {\n      \"to\": \"hannah.becker@example.com\",\n      \"subject\": \"Booking confirmed\",\n      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "81171e35121db7473a0ce6da56e645c7d8648f4f156093e09218e0cb8563872e",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks book_room",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Book for guest Hannah Becker: The guest name was changed to 'Hannah Becker-x'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks book_room",
+       "state /bookings/R-2041/guest_name = 'Hannah Becker-x'"
+      ],
+      "requirement": "R1",
+      "text": "Book a double room for Hannah Becker, check-in 2026-12-03, check-out 2026-12-06, using book_room"
+     },
+     {
+      "failed": [
+       "order book_room < send_email: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: book the room first, then send the email"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "81171e35121db7473a0ce6da56e645c7d8648f4f156093e09218e0cb8563872e"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,27 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\",\n+      \"guests\": 2\n+    }\n+  },\n+  {\n+    \"tool\": \"book_room\",\n+    \"args\": {\n+      \"guest_name\": \"Hannah Becker\",\n+      \"room_type\": \"double\",\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_email\",\n+    \"args\": {\n+      \"to\": \"hannah.becker@example.com\",\n+      \"subject\": \"Booking confirmed\",\n+      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\",\n      \"guests\": 2\n    }\n  },\n  {\n    \"tool\": \"book_room\",\n    \"args\": {\n      \"guest_name\": \"Hannah Becker\",\n      \"room_type\": \"double\",\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\"\n    }\n  },\n  {\n    \"tool\": \"send_email\",\n    \"args\": {\n      \"to\": \"hannah.becker@example.com\",\n      \"subject\": \"Booking confirmed\",\n      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "94a36ce1414436ce3f7c9f1642c394aec80b83f902fa8acc1660c4df20a64ed3",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "booking-email",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The body still mentions R-2041 and both dates; the extra trailing text is allowed since wording is free.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,27 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\",\n+      \"guests\": 2\n+    }\n+  },\n+  {\n+    \"tool\": \"book_room\",\n+    \"args\": {\n+      \"guest_name\": \"Hannah Becker\",\n+      \"room_type\": \"double\",\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_email\",\n+    \"args\": {\n+      \"to\": \"hannah.becker@example.com-x\",\n+      \"subject\": \"Booking confirmed\",\n+      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\",\n      \"guests\": 2\n    }\n  },\n  {\n    \"tool\": \"book_room\",\n    \"args\": {\n      \"guest_name\": \"Hannah Becker\",\n      \"room_type\": \"double\",\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\"\n    }\n  },\n  {\n    \"tool\": \"send_email\",\n    \"args\": {\n      \"to\": \"hannah.becker@example.com-x\",\n      \"subject\": \"Booking confirmed\",\n      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d1cc27e8ee665e5693b522962aed016d004f462022a9b3ffb4ffe0c74ffac84b",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks send_email",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Email Hannah at hannah.becker@example.com: The recipient address has a '-x' suffix.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks send_email",
+       "state /outbox/0/to = 'hannah.becker@example.com-x'"
+      ],
+      "requirement": "R2",
+      "text": "Email hannah.becker@example.com with send_email, subject Booking confirmed"
+     },
+     {
+      "failed": [
+       "order book_room < send_email: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: book the room first, then send the email"
+     },
+     {
+      "failed": [
+       "state /outbox/0/to = 'hannah.becker@example.com-x'"
+      ],
+      "requirement": "R5",
+      "text": "Send no other emails: only to the guest"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d1cc27e8ee665e5693b522962aed016d004f462022a9b3ffb4ffe0c74ffac84b"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,19 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\n+    \"tool\": \"book_room\",\n+    \"args\": {\n+      \"guest_name\": \"Hannah Becker\",\n+      \"room_type\": \"double\",\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_email\",\n+    \"args\": {\n+      \"to\": \"hannah.becker@example.com\",\n+      \"subject\": \"Booking confirmed\",\n+      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"book_room\",\n    \"args\": {\n      \"guest_name\": \"Hannah Becker\",\n      \"room_type\": \"double\",\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\"\n    }\n  },\n  {\n    \"tool\": \"send_email\",\n    \"args\": {\n      \"to\": \"hannah.becker@example.com\",\n      \"subject\": \"Booking confirmed\",\n      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "6f859c39981a9ecedbaaeaac7da662f28ce22c40af68eeb28fd9526cf034d42d",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "booking-email",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the optional read-only search_rooms call is dropped; the booking and the email remain in the required order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,18 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\",\n+      \"guests\": 2\n+    }\n+  },\n+  {\n+    \"tool\": \"send_email\",\n+    \"args\": {\n+      \"to\": \"hannah.becker@example.com\",\n+      \"subject\": \"Booking confirmed\",\n+      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\",\n      \"guests\": 2\n    }\n  },\n  {\n    \"tool\": \"send_email\",\n    \"args\": {\n      \"to\": \"hannah.becker@example.com\",\n      \"subject\": \"Booking confirmed\",\n      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a8f679a1a25f868d0967c38d45dc06cfeb577e0e1d6957f8f172d358595c7314",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks book_room",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Book a double room with book_room: The book_room call was removed, so no booking is made.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks book_room",
+       "state /bookings/R-2041/guest_name missing",
+       "state /bookings/R-2041/room_type missing",
+       "state /bookings/R-2041/check_in missing",
+       "state /bookings/R-2041/check_out missing",
+       "state /bookings/R-2041/status missing"
+      ],
+      "requirement": "R1",
+      "text": "Book a double room for Hannah Becker, check-in 2026-12-03, check-out 2026-12-06, using book_room"
+     },
+     {
+      "failed": [
+       "order book_room < send_email: None, 1"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: book the room first, then send the email"
+     },
+     {
+      "failed": [
+       "state /next_ref = 2041"
+      ],
+      "requirement": "R4",
+      "text": "Make no other bookings: the sequence advances only once and the existing booking is untouched"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a8f679a1a25f868d0967c38d45dc06cfeb577e0e1d6957f8f172d358595c7314"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,19 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\",\n+      \"guests\": 2\n+    }\n+  },\n+  {\n+    \"tool\": \"book_room\",\n+    \"args\": {\n+      \"guest_name\": \"Hannah Becker\",\n+      \"room_type\": \"double\",\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\",\n      \"guests\": 2\n    }\n  },\n  {\n    \"tool\": \"book_room\",\n    \"args\": {\n      \"guest_name\": \"Hannah Becker\",\n      \"room_type\": \"double\",\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f0c58d4eed65ac644a7811144fc270553e74461c68742d7f8560cf4f0451a648",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks send_email",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "email the guest with send_email after booking: The send_email confirmation step was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks send_email",
+       "state /outbox/0/to missing",
+       "state /outbox/0/subject missing"
+      ],
+      "requirement": "R2",
+      "text": "Email hannah.becker@example.com with send_email, subject Booking confirmed"
+     },
+     {
+      "failed": [
+       "order book_room < send_email: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: book the room first, then send the email"
+     },
+     {
+      "failed": [
+       "state /outbox/0/to missing"
+      ],
+      "requirement": "R5",
+      "text": "Send no other emails: only to the guest"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f0c58d4eed65ac644a7811144fc270553e74461c68742d7f8560cf4f0451a648"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,27 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\n+    \"tool\": \"book_room\",\n+    \"args\": {\n+      \"guest_name\": \"Hannah Becker\",\n+      \"room_type\": \"double\",\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\"\n+    }\n+  },\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\",\n+      \"guests\": 2\n+    }\n+  },\n+  {\n+    \"tool\": \"send_email\",\n+    \"args\": {\n+      \"to\": \"hannah.becker@example.com\",\n+      \"subject\": \"Booking confirmed\",\n+      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"book_room\",\n    \"args\": {\n      \"guest_name\": \"Hannah Becker\",\n      \"room_type\": \"double\",\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\"\n    }\n  },\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\",\n      \"guests\": 2\n    }\n  },\n  {\n    \"tool\": \"send_email\",\n    \"args\": {\n      \"to\": \"hannah.becker@example.com\",\n      \"subject\": \"Booking confirmed\",\n      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "6f2e57e479b4667ca6189d04449ad641697004c18d83c8ed8ff1263896076708",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "booking-email",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The read-only search_rooms call is moved after the booking, and the task does not require searching; booking still precedes the email.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,27 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\",\n+      \"guests\": 2\n+    }\n+  },\n+  {\n+    \"tool\": \"send_email\",\n+    \"args\": {\n+      \"to\": \"hannah.becker@example.com\",\n+      \"subject\": \"Booking confirmed\",\n+      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n+    }\n+  },\n+  {\n+    \"tool\": \"book_room\",\n+    \"args\": {\n+      \"guest_name\": \"Hannah Becker\",\n+      \"room_type\": \"double\",\n+      \"check_in\": \"2026-12-03\",\n+      \"check_out\": \"2026-12-06\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\",\n      \"guests\": 2\n    }\n  },\n  {\n    \"tool\": \"send_email\",\n    \"args\": {\n      \"to\": \"hannah.becker@example.com\",\n      \"subject\": \"Booking confirmed\",\n      \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"\n    }\n  },\n  {\n    \"tool\": \"book_room\",\n    \"args\": {\n      \"guest_name\": \"Hannah Becker\",\n      \"room_type\": \"double\",\n      \"check_in\": \"2026-12-03\",\n      \"check_out\": \"2026-12-06\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "90c50bd2e0d9af9e912d2eb7a2feb7b85d503ee8a66975a0c78ef5a241d8b4b4",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "booking-email",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R3: order book_room < send_email: 2, 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Email only after booking the room: The email is sent before book_room, but the task says to email after booking.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n+  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"single\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n   {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"single\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "da4cc418ff856a76bbb715aa26aaee040589a46fcb039820cddddcb5987e6fc0",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks book_room",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Book a `double` room: The room_type was changed to `single`.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks book_room",
+       "state /bookings/R-2041/room_type = 'single'"
+      ],
+      "requirement": "R1",
+      "text": "Book a double room for Hannah Becker, check-in 2026-12-03, check-out 2026-12-06, using book_room"
+     },
+     {
+      "failed": [
+       "trajectory has book_room"
+      ],
+      "requirement": "R4",
+      "text": "Make no other bookings: the sequence advances only once and the existing booking is untouched"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "da4cc418ff856a76bbb715aa26aaee040589a46fcb039820cddddcb5987e6fc0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n   {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Reservation received\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Reservation received\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c3372a3956076cd0a43feaf57dc4d438e650738a0b278ff4b9848ac646a1c247",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks send_email",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Email subject must be `Booking confirmed`: The subject was changed to `Reservation received`, which is not the required subject.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks send_email",
+       "state /outbox/0/subject = 'Reservation received'"
+      ],
+      "requirement": "R2",
+      "text": "Email hannah.becker@example.com with send_email, subject Booking confirmed"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c3372a3956076cd0a43feaf57dc4d438e650738a0b278ff4b9848ac646a1c247"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}},\n+  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "bd2859f3c6a72b06143e7a66f976b4fdaf9f2ff1c90446a6406deb73e7f46450",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: order book_room < send_email: 2, 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Email her after booking the room: The confirmation email is sent before the room is booked.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order book_room < send_email: 2, 1"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: book the room first, then send the email"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "bd2859f3c6a72b06143e7a66f976b4fdaf9f2ff1c90446a6406deb73e7f46450"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n   {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n+  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n   {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "bd43c00c0bd85bd12326a8923862d3c4d530c8334b80c3f43436fb6cbaa86f6a",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "booking-email",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Make no other bookings: The room is booked twice.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n   {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}},\n+  {\"tool\": \"send_email\", \"args\": {\"to\": \"frontdesk@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Booking R-2041 for Hannah Becker, 2026-12-03 to 2026-12-06.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"frontdesk@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Booking R-2041 for Hannah Becker, 2026-12-03 to 2026-12-06.\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9a6ae9e58f2cd0a91ee0b57aa18a1349e287291c003e3ee8d6a42dd69ffee212",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "booking-email",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Send no other emails: An additional email is sent to the front desk.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n   {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Hello,\\n\\nWe look forward to welcoming you. Reference R-2041, arriving 2026-12-03 and leaving 2026-12-06.\\n\\nThe Front Desk\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Hello,\\n\\nWe look forward to welcoming you. Reference R-2041, arriving 2026-12-03 and leaving 2026-12-06.\\n\\nThe Front Desk\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false,
+    false,
+    false
+   ],
+   "id": "78ac440e8301386db1fb0993c7a99288924e7b4ab6873889e4621e3838623271",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The reworded email body still mentions R-2041, 2026-12-03 and 2026-12-06.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "78ac440e8301386db1fb0993c7a99288924e7b4ab6873889e4621e3838623271"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n-  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n-]\n+[{\"tool\":\"search_rooms\",\"args\":{\"guests\":2,\"check_out\":\"2026-12-06\",\"check_in\":\"2026-12-03\"}},{\"tool\":\"book_room\",\"args\":{\"check_out\":\"2026-12-06\",\"check_in\":\"2026-12-03\",\"room_type\":\"double\",\"guest_name\":\"Hannah Becker\"}},{\"tool\":\"send_email\",\"args\":{\"body\":\"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\",\"subject\":\"Booking confirmed\",\"to\":\"hannah.becker@example.com\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"search_rooms\",\"args\":{\"guests\":2,\"check_out\":\"2026-12-06\",\"check_in\":\"2026-12-03\"}},{\"tool\":\"book_room\",\"args\":{\"check_out\":\"2026-12-06\",\"check_in\":\"2026-12-03\",\"room_type\":\"double\",\"guest_name\":\"Hannah Becker\"}},{\"tool\":\"send_email\",\"args\":{\"body\":\"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\",\"subject\":\"Booking confirmed\",\"to\":\"hannah.becker@example.com\"}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b858842f928acaae0d5a22d0287dc1e92001d23278a6dc78115f83a1acf2b7f1",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same three calls with identical arguments in the same order; only JSON formatting and key order differ.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "b858842f928acaae0d5a22d0287dc1e92001d23278a6dc78115f83a1acf2b7f1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n   {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n   {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "be40eb910261ec2ee21fe46a366bd95ca45f09ecd1f8ad2e7700d1b9df1fc406",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only search_rooms call was dropped; the required booking and email remain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "be40eb910261ec2ee21fe46a366bd95ca45f09ecd1f8ad2e7700d1b9df1fc406"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n+  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 1}},\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n   {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n   {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 1}},\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "123411cdcb3609148d603a6f433dbb6997217b6b93abcc2daf7a6a5583e8befa",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "booking-email",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "An extra read-only search_rooms call does not change state.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "123411cdcb3609148d603a6f433dbb6997217b6b93abcc2daf7a6a5583e8befa"
+   }
+  }
+ ]
+}

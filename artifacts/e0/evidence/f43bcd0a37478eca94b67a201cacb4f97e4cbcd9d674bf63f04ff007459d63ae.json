@@ -1,0 +1,932 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "refunds": [
+    {
+     "amount_cents": 8900,
+     "rma_id": "RMA-7712"
+    }
+   ],
+   "rmas": {
+    "RMA-7712": {
+     "amount_cents": 8900,
+     "condition": "good",
+     "item": "Trail running shoes",
+     "order_id": "ORD-61200",
+     "status": "refunded"
+    },
+    "RMA-7720": {
+     "amount_cents": 2450,
+     "condition": null,
+     "item": "Insulated bottle",
+     "order_id": "ORD-61377",
+     "status": "awaiting_return"
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "rma_id": "RMA-7712"
+    },
+    "result": {
+     "ok": true,
+     "rma": {
+      "amount_cents": 8900,
+      "condition": null,
+      "item": "Trail running shoes",
+      "order_id": "ORD-61200",
+      "status": "awaiting_return"
+     }
+    },
+    "tool": "get_rma"
+   },
+   {
+    "args": {
+     "condition": "good",
+     "rma_id": "RMA-7712"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "mark_received"
+   },
+   {
+    "args": {
+     "rma_id": "RMA-7712"
+    },
+    "result": {
+     "amount_cents": 8900,
+     "ok": true
+    },
+    "tool": "refund_rma"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "condition": "good",
+      "rma_id": "RMA-7712"
+     },
+     "tool": "mark_received",
+     "type": "trajectory_includes"
+    },
+    {
+     "args": {
+      "condition": "damaged",
+      "rma_id": "RMA-7712"
+     },
+     "tool": "mark_received",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Mark return RMA-7712 as received with `mark_received`, condition `good`."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "rma_id": "RMA-7712"
+     },
+     "tool": "refund_rma",
+     "type": "trajectory_includes"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Refund RMA-7712 to the original payment method with `refund_rma`."
+  },
+  {
+   "checks": [
+    {
+     "first": {
+      "args": {
+       "condition": "good",
+       "rma_id": "RMA-7712"
+      },
+      "tool": "mark_received"
+     },
+     "then": {
+      "args": {
+       "rma_id": "RMA-7712"
+      },
+      "tool": "refund_rma"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Ordering: mark the return received first (step 1), then refund (step 2); refund is only possible after receipt in good condition."
+  },
+  {
+   "checks": [
+    {
+     "equals": "refunded",
+     "pointer": "/rmas/RMA-7712/status",
+     "type": "state_equals"
+    },
+    {
+     "equals": "good",
+     "pointer": "/rmas/RMA-7712/condition",
+     "type": "state_equals"
+    },
+    {
+     "equals": [
+      {
+       "amount_cents": 8900,
+       "rma_id": "RMA-7712"
+      }
+     ],
+     "pointer": "/refunds",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "The refund must actually be issued: final state shows RMA-7712 refunded and a refund record of its amount."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "rma_id": "RMA-7720"
+     },
+     "tool": "mark_received",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "rma_id": "RMA-7720"
+     },
+     "tool": "refund_rma",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": {
+      "amount_cents": 2450,
+      "condition": null,
+      "item": "Insulated bottle",
+      "order_id": "ORD-61377",
+      "status": "awaiting_return"
+     },
+     "pointer": "/rmas/RMA-7720",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Do not change any other return."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:return-refund",
+ "task_hash": "f43bcd0a37478eca94b67a201cacb4f97e4cbcd9d674bf63f04ff007459d63ae",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,27 @@\n [\n-  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n+  {\n+    \"tool\": \"get_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  },\n+  {\n+    \"tool\": \"mark_received\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\",\n+      \"condition\": \"good\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  },\n  {\n    \"tool\": \"get_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  },\n  {\n    \"tool\": \"mark_received\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\",\n      \"condition\": \"good\"\n    }\n  },\n  {\n    \"tool\": \"refund_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "647e44c47ab1abf6fc1142de49320fb368edeeca955b79e6c9c933d6d284e404",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "return-refund",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "An extra read-only get_rma call changes nothing; mark_received and refund_rma still happen in order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "647e44c47ab1abf6fc1142de49320fb368edeeca955b79e6c9c933d6d284e404"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n+  {\n+    \"tool\": \"get_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"mark_received\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\",\n+      \"condition\": \"good\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712-x\"\n    }\n  },\n  {\n    \"tool\": \"mark_received\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\",\n      \"condition\": \"good\"\n    }\n  },\n  {\n    \"tool\": \"refund_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ad15ec38ba542d8e71a4424c9dd9a65aa08f57d20cdf9f2edaa5e5b3150689a3",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "return-refund",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the optional read-only get_rma lookup has a garbled id; the required mark_received and refund_rma calls on RMA-7712 are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n+  {\n+    \"tool\": \"get_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  },\n+  {\n+    \"tool\": \"mark_received\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\",\n+      \"condition\": \"good-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  },\n  {\n    \"tool\": \"mark_received\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\",\n      \"condition\": \"good-x\"\n    }\n  },\n  {\n    \"tool\": \"refund_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f148ccefb3e5a75fce1b87ca599b6b387f1da0f32f29fe86579dc1f2e12ed4c8",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "return-refund",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks mark_received",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "mark_received with condition good: Condition is 'good-x', which is not a valid value, so the return is not marked good and the refund cannot be issued.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks mark_received"
+      ],
+      "requirement": "R1",
+      "text": "Mark return RMA-7712 as received with `mark_received`, condition `good`."
+     },
+     {
+      "failed": [
+       "order mark_received < refund_rma: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: mark the return received first (step 1), then refund (step 2); refund is only possible after receipt in good condition."
+     },
+     {
+      "failed": [
+       "state /rmas/RMA-7712/status = 'awaiting_return'",
+       "state /rmas/RMA-7712/condition = None",
+       "state /refunds = []"
+      ],
+      "requirement": "R4",
+      "text": "The refund must actually be issued: final state shows RMA-7712 refunded and a refund record of its amount."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f148ccefb3e5a75fce1b87ca599b6b387f1da0f32f29fe86579dc1f2e12ed4c8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n+  {\n+    \"tool\": \"get_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  },\n+  {\n+    \"tool\": \"mark_received\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712-x\",\n+      \"condition\": \"good\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  },\n  {\n    \"tool\": \"mark_received\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712-x\",\n      \"condition\": \"good\"\n    }\n  },\n  {\n    \"tool\": \"refund_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2ac729f012a237ec0b2c73c98b21a7d316ca1fbacb0f328e762898195732caf7",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "return-refund",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks mark_received",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Mark RMA-7712 as received in good condition: mark_received is called with rma_id RMA-7712-x, so the real return is not marked received.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks mark_received"
+      ],
+      "requirement": "R1",
+      "text": "Mark return RMA-7712 as received with `mark_received`, condition `good`."
+     },
+     {
+      "failed": [
+       "order mark_received < refund_rma: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: mark the return received first (step 1), then refund (step 2); refund is only possible after receipt in good condition."
+     },
+     {
+      "failed": [
+       "state /rmas/RMA-7712/status = 'awaiting_return'",
+       "state /rmas/RMA-7712/condition = None",
+       "state /refunds = []"
+      ],
+      "requirement": "R4",
+      "text": "The refund must actually be issued: final state shows RMA-7712 refunded and a refund record of its amount."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2ac729f012a237ec0b2c73c98b21a7d316ca1fbacb0f328e762898195732caf7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n+  {\n+    \"tool\": \"get_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  },\n+  {\n+    \"tool\": \"mark_received\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\",\n+      \"condition\": \"good\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  },\n  {\n    \"tool\": \"mark_received\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\",\n      \"condition\": \"good\"\n    }\n  },\n  {\n    \"tool\": \"refund_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "39d15417bf4e9bb36dc1dd8ad9c4f40eebfc5e55e0a512facdd3bdcddb5f7fe6",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "return-refund",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks refund_rma",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Refund RMA-7712: refund_rma is called with the nonexistent id RMA-7712-x, so the refund is not issued.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks refund_rma"
+      ],
+      "requirement": "R2",
+      "text": "Refund RMA-7712 to the original payment method with `refund_rma`."
+     },
+     {
+      "failed": [
+       "order mark_received < refund_rma: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: mark the return received first (step 1), then refund (step 2); refund is only possible after receipt in good condition."
+     },
+     {
+      "failed": [
+       "state /rmas/RMA-7712/status = 'received'",
+       "state /refunds = []"
+      ],
+      "requirement": "R4",
+      "text": "The refund must actually be issued: final state shows RMA-7712 refunded and a refund record of its amount."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "39d15417bf4e9bb36dc1dd8ad9c4f40eebfc5e55e0a512facdd3bdcddb5f7fe6"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n+  {\n+    \"tool\": \"mark_received\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\",\n+      \"condition\": \"good\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"mark_received\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\",\n      \"condition\": \"good\"\n    }\n  },\n  {\n    \"tool\": \"refund_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "91ce63e0f334dd11d4549d2e0eae2448779d0ef6e481c69a0c953b1a2a3fc4e3",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "return-refund",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only get_rma lookup is dropped; the required mark_received and refund_rma calls are intact and in order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,14 @@\n [\n-  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n+  {\n+    \"tool\": \"get_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  },\n  {\n    \"tool\": \"refund_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3f3b7d95f5b951ea34412f3ed9a6671da3460ed8eeda5afeb32b006603d0aab3",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "return-refund",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks mark_received",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Mark the return as received with condition good: The mark_received step is omitted, so the refund cannot be issued for a return not received.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks mark_received"
+      ],
+      "requirement": "R1",
+      "text": "Mark return RMA-7712 as received with `mark_received`, condition `good`."
+     },
+     {
+      "failed": [
+       "order mark_received < refund_rma: None, 1"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: mark the return received first (step 1), then refund (step 2); refund is only possible after receipt in good condition."
+     },
+     {
+      "failed": [
+       "state /rmas/RMA-7712/status = 'awaiting_return'",
+       "state /rmas/RMA-7712/condition = None",
+       "state /refunds = []"
+      ],
+      "requirement": "R4",
+      "text": "The refund must actually be issued: final state shows RMA-7712 refunded and a refund record of its amount."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3f3b7d95f5b951ea34412f3ed9a6671da3460ed8eeda5afeb32b006603d0aab3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n+  {\n+    \"tool\": \"get_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  },\n+  {\n+    \"tool\": \"mark_received\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\",\n+      \"condition\": \"good\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  },\n  {\n    \"tool\": \"mark_received\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\",\n      \"condition\": \"good\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b8bc6de2b8ff17e14137d2d9b5f82fa8765ccb1e912c421bbbf9f1dd96937287",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "return-refund",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks refund_rma",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "refund the return with refund_rma: The refund_rma step is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks refund_rma"
+      ],
+      "requirement": "R2",
+      "text": "Refund RMA-7712 to the original payment method with `refund_rma`."
+     },
+     {
+      "failed": [
+       "order mark_received < refund_rma: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: mark the return received first (step 1), then refund (step 2); refund is only possible after receipt in good condition."
+     },
+     {
+      "failed": [
+       "state /rmas/RMA-7712/status = 'received'",
+       "state /refunds = []"
+      ],
+      "requirement": "R4",
+      "text": "The refund must actually be issued: final state shows RMA-7712 refunded and a refund record of its amount."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b8bc6de2b8ff17e14137d2d9b5f82fa8765ccb1e912c421bbbf9f1dd96937287"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n+  {\n+    \"tool\": \"mark_received\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\",\n+      \"condition\": \"good\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"mark_received\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\",\n      \"condition\": \"good\"\n    }\n  },\n  {\n    \"tool\": \"get_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  },\n  {\n    \"tool\": \"refund_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a0702cc19a0f5850095792204136f626fda3317c5c610571f87dae06e27f5b74",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "return-refund",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "get_rma is a read-only lookup, mark_received still precedes refund_rma, and the task does not require get_rma to come first.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n+  {\n+    \"tool\": \"get_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  },\n+  {\n+    \"tool\": \"refund_rma\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\"\n+    }\n+  },\n+  {\n+    \"tool\": \"mark_received\",\n+    \"args\": {\n+      \"rma_id\": \"RMA-7712\",\n+      \"condition\": \"good\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  },\n  {\n    \"tool\": \"refund_rma\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\"\n    }\n  },\n  {\n    \"tool\": \"mark_received\",\n    \"args\": {\n      \"rma_id\": \"RMA-7712\",\n      \"condition\": \"good\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "045b5d2070ce5000dfd59dd88f4d47736b654b437c004a7259386744858723ff",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "return-refund",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: order mark_received < refund_rma: 2, 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Mark the return received before refunding: refund_rma is called before mark_received, and it is only possible for a received return, so the refund fails.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order mark_received < refund_rma: 2, 1"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: mark the return received first (step 1), then refund (step 2); refund is only possible after receipt in good condition."
+     },
+     {
+      "failed": [
+       "state /rmas/RMA-7712/status = 'received'",
+       "state /refunds = []"
+      ],
+      "requirement": "R4",
+      "text": "The refund must actually be issued: final state shows RMA-7712 refunded and a refund record of its amount."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "045b5d2070ce5000dfd59dd88f4d47736b654b437c004a7259386744858723ff"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n+  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"damaged\"}},\n   {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"damaged\"}},\n  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "375663d62fbdf5d582dd8445756f1d10f94f1c147ce7827542113333d910f2eb",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "return-refund",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks mark_received",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "mark the return received with condition good: Condition changed to damaged, so the refund is not possible.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks mark_received",
+       "trajectory has mark_received"
+      ],
+      "requirement": "R1",
+      "text": "Mark return RMA-7712 as received with `mark_received`, condition `good`."
+     },
+     {
+      "failed": [
+       "order mark_received < refund_rma: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: mark the return received first (step 1), then refund (step 2); refund is only possible after receipt in good condition."
+     },
+     {
+      "failed": [
+       "state /rmas/RMA-7712/status = 'received'",
+       "state /rmas/RMA-7712/condition = 'damaged'",
+       "state /refunds = []"
+      ],
+      "requirement": "R4",
+      "text": "The refund must actually be issued: final state shows RMA-7712 refunded and a refund record of its amount."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "375663d62fbdf5d582dd8445756f1d10f94f1c147ce7827542113333d910f2eb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n   {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n+  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "da2b2c5910b3d85a6e7820ace164970bb37d5f3708052afc884a74b86d9bfa58",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "return-refund",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks refund_rma",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Refund the return with refund_rma; the refund must actually be issued: The refund_rma call was removed, so no refund is issued.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks refund_rma"
+      ],
+      "requirement": "R2",
+      "text": "Refund RMA-7712 to the original payment method with `refund_rma`."
+     },
+     {
+      "failed": [
+       "order mark_received < refund_rma: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: mark the return received first (step 1), then refund (step 2); refund is only possible after receipt in good condition."
+     },
+     {
+      "failed": [
+       "state /rmas/RMA-7712/status = 'received'",
+       "state /refunds = []"
+      ],
+      "requirement": "R4",
+      "text": "The refund must actually be issued: final state shows RMA-7712 refunded and a refund record of its amount."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "da2b2c5910b3d85a6e7820ace164970bb37d5f3708052afc884a74b86d9bfa58"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n+  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n+  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "2dae2321521a8edabcbec6fe6c1214e2aa17e3e1690fdc0a573bb28be41db09c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "return-refund",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: order mark_received < refund_rma: 2, 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "mark the return received before refunding it: refund_rma is called before mark_received, so the refund cannot be issued.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order mark_received < refund_rma: 2, 1"
+      ],
+      "requirement": "R3",
+      "text": "Ordering: mark the return received first (step 1), then refund (step 2); refund is only possible after receipt in good condition."
+     },
+     {
+      "failed": [
+       "state /rmas/RMA-7712/status = 'received'",
+       "state /refunds = []"
+      ],
+      "requirement": "R4",
+      "text": "The refund must actually be issued: final state shows RMA-7712 refunded and a refund record of its amount."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2dae2321521a8edabcbec6fe6c1214e2aa17e3e1690fdc0a573bb28be41db09c"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n   {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n+  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7713\", \"condition\": \"good\"}},\n   {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7713\", \"condition\": \"good\"}},\n  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "eba892923cd38d07864966d98e541427df2659444c4a97f6df378ef8af0b6358",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "return-refund",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Do not change any other return: It marks RMA-7713 as received.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n-  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n-  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n-]\n+[{\"args\":{\"rma_id\":\"RMA-7712\"},\"tool\":\"get_rma\"},{\"args\":{\"condition\":\"good\",\"rma_id\":\"RMA-7712\"},\"tool\":\"mark_received\"},{\"args\":{\"rma_id\":\"RMA-7712\"},\"tool\":\"refund_rma\"}]\n",
+   "files": {
+    "trajectory.json": "[{\"args\":{\"rma_id\":\"RMA-7712\"},\"tool\":\"get_rma\"},{\"args\":{\"condition\":\"good\",\"rma_id\":\"RMA-7712\"},\"tool\":\"mark_received\"},{\"args\":{\"rma_id\":\"RMA-7712\"},\"tool\":\"refund_rma\"}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f566255f5c8778404c23c88d849e7c15d83397274aba5a765d68b0e26ba13b40",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "return-refund",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The trajectory has the same calls in the same order with the same arguments, only the JSON formatting and key order differ.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "f566255f5c8778404c23c88d849e7c15d83397274aba5a765d68b0e26ba13b40"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n   {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n   {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "2b439f3181467bfe2267a178a6e5eac832a9f3fc111df331dce883f88fb5784b",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "return-refund",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the optional read-only get_rma call was dropped; mark_received then refund_rma remain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "2b439f3181467bfe2267a178a6e5eac832a9f3fc111df331dce883f88fb5784b"
+   }
+  }
+ ]
+}

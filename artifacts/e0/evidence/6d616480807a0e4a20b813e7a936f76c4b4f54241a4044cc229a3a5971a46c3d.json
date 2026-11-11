@@ -1,0 +1,1261 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+  },
+  "probes": {
+   "2cc08fd154dba9f1": {
+    "ok": true,
+    "value": "one-two-three"
+   },
+   "3070273ddb3ddffc": {
+    "ok": true,
+    "value": ""
+   },
+   "3b82a40a63a57c2b": {
+    "ok": true,
+    "value": "hello-world"
+   },
+   "56b43b42b7789ef1": {
+    "ok": true,
+    "value": "route66"
+   },
+   "63691f2b656db1d9": {
+    "ok": true,
+    "value": ""
+   },
+   "789e2e1fd2067e2e": {
+    "ok": true,
+    "value": "clair"
+   },
+   "7b6342390c44d1aa": {
+    "ok": true,
+    "value": "na-ve-test"
+   },
+   "80bb6b59546efc74": {
+    "ok": true,
+    "value": ""
+   },
+   "8d9d1cbb29fa4924": {
+    "ok": true,
+    "value": "hello"
+   },
+   "908573c4bb20ba32": {
+    "ok": true,
+    "value": "caf-au-lait"
+   },
+   "a5c7e3806f85e4c7": {
+    "ok": true,
+    "value": "hi"
+   },
+   "bf84d6edea0bf389": {
+    "ok": true,
+    "value": "a-b-c"
+   },
+   "e417654782ddb12a": {
+    "ok": true,
+    "value": "abc-xyz-123"
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "slug.py",
+     "type": "file_exists"
+    },
+    {
+     "path": "slug.py",
+     "pattern": "def\\s+slugify\\s*\\(\\s*title",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write a Python module `slug.py` with a function `slugify(title)`."
+  },
+  {
+   "checks": [
+    {
+     "equals": "abc-xyz-123",
+     "probe": {
+      "args": [
+       "ABC xyz 123"
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "hello-world",
+     "probe": {
+      "args": [
+       "Hello, World!"
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "route66",
+     "probe": {
+      "args": [
+       "Route66"
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+  },
+  {
+   "checks": [
+    {
+     "equals": "caf-au-lait",
+     "probe": {
+      "args": [
+       "Caf\u00e9 au lait"
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "a-b-c",
+     "probe": {
+      "args": [
+       "a   b---c"
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "na-ve-test",
+     "probe": {
+      "args": [
+       "na\u00efve\u00e9\u00e9test"
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "one-two-three",
+     "probe": {
+      "args": [
+       "one, two; three"
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+  },
+  {
+   "checks": [
+    {
+     "equals": "hello",
+     "probe": {
+      "args": [
+       "  --Hello--  "
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "hi",
+     "probe": {
+      "args": [
+       "!Hi!"
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "clair",
+     "probe": {
+      "args": [
+       "\u00e9clair"
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Remove any `-` at the start or end of the result."
+  },
+  {
+   "checks": [
+    {
+     "equals": "",
+     "probe": {
+      "args": [
+       ""
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "",
+     "probe": {
+      "args": [
+       "!!! ???"
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "",
+     "probe": {
+      "args": [
+       "\u00e9\u00e8\u00e0"
+      ],
+      "function": "slugify",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Return the slug as a string; it is \"\" when the title has no ASCII letters or digits."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:slugify",
+ "task_hash": "6d616480807a0e4a20b813e7a936f76c4b4f54241a4044cc229a3a5971a46c3d",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -1,6 +1,6 @@\n import re\n \n-_OTHER = re.compile(r\"[^a-z0-9]+\")\n+_OTHER = re.compile('')\n \n \n def slugify(title):\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile('')\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5803bd85f0f95b92884c6d4a6db14caba4097df81453e7442206e5c34c9340da",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned 'a-b-c- -x-y-z- -1-2-3'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Runs of non-alphanumerics become a single -: The empty regex matches between every character, inserting dashes everywhere.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned 'a-b-c- -x-y-z- -1-2-3'",
+       "slugify returned 'h-e-l-l-o-,- -w-o-r-l-d-!'",
+       "slugify returned 'r-o-u-t-e-6-6'"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned 'c-a-f-\u00e9- -a-u- -l-a-i-t'",
+       "slugify returned 'a- - - -b-------c'",
+       "slugify returned 'n-a-\u00ef-v-e-\u00e9-\u00e9-t-e-s-t'",
+       "slugify returned 'o-n-e-,- -t-w-o-;- -t-h-r-e-e'"
+      ],
+      "requirement": "R3",
+      "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+     },
+     {
+      "failed": [
+       "slugify returned ' - -----h-e-l-l-o----- - '",
+       "slugify returned '!-h-i-!'",
+       "slugify returned '\u00e9-c-l-a-i-r'"
+      ],
+      "requirement": "R4",
+      "text": "Remove any `-` at the start or end of the result."
+     },
+     {
+      "failed": [
+       "slugify returned '!-!-!- -?-?-?'",
+       "slugify returned '\u00e9-\u00e8-\u00e0'"
+      ],
+      "requirement": "R5",
+      "text": "Return the slug as a string; it is \"\" when the title has no ASCII letters or digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5803bd85f0f95b92884c6d4a6db14caba4097df81453e7442206e5c34c9340da"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -1,6 +1,6 @@\n import re\n \n-_OTHER = re.compile(r\"[^a-z0-9]+\")\n+_OTHER = re.compile('[^a-z0-9]')\n \n \n def slugify(title):\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile('[^a-z0-9]')\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "445a2631401814f0feb9b626120219735302f70df2faff6be8069cb754bfd705",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned 'hello--world'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Every maximal run of other characters becomes a single -: The regex lacks +, so runs produce multiple hyphens (e.g. 'hello--world').",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned 'hello--world'"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned 'caf--au-lait'",
+       "slugify returned 'a---b---c'",
+       "slugify returned 'na-ve--test'",
+       "slugify returned 'one--two--three'"
+      ],
+      "requirement": "R3",
+      "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "445a2631401814f0feb9b626120219735302f70df2faff6be8069cb754bfd705"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -1,6 +1,6 @@\n import re\n \n-_OTHER = re.compile(r\"[^a-z0-9]+\")\n+_OTHER = re.compile('[^a-z0-9]+x')\n \n \n def slugify(title):\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile('[^a-z0-9]+x')\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a2cc4f3e67cca350a827784a03de9c9abc5c90d55850c74dbcd2bc95632d1c75",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned 'abc-yz 123'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Collapse each run of non-alphanumeric characters into one dash: The regex now needs a trailing x after the run, so ordinary separators are no longer replaced.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned 'abc-yz 123'",
+       "slugify returned 'hello, world!'"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned 'caf\u00e9 au lait'",
+       "slugify returned 'a   b---c'",
+       "slugify returned 'na\u00efve\u00e9\u00e9test'",
+       "slugify returned 'one, two; three'"
+      ],
+      "requirement": "R3",
+      "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+     },
+     {
+      "failed": [
+       "slugify returned '  --hello--  '",
+       "slugify returned '!hi!'",
+       "slugify returned '\u00e9clair'"
+      ],
+      "requirement": "R4",
+      "text": "Remove any `-` at the start or end of the result."
+     },
+     {
+      "failed": [
+       "slugify returned '!!! ???'",
+       "slugify returned '\u00e9\u00e8\u00e0'"
+      ],
+      "requirement": "R5",
+      "text": "Return the slug as a string; it is \"\" when the title has no ASCII letters or digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a2cc4f3e67cca350a827784a03de9c9abc5c90d55850c74dbcd2bc95632d1c75"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -4,5 +4,5 @@\n \n \n def slugify(title):\n-    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n+    lowered = \"\".join(ch.lower() if '' <= ch <= \"Z\" else ch for ch in title)\n     return _OTHER.sub(\"-\", lowered).strip(\"-\")\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if '' <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "6ed1c5c648087a1ca6c43de2c927d283d189f79cb51d2ee32ec78a9196793695",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "slugify",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The empty-string lower bound only widens the range, but lower() changes only A-Z, so the output is identical for all inputs.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -5,4 +5,4 @@\n \n def slugify(title):\n     lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n-    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n+    return _OTHER.sub('', lowered).strip(\"-\")\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub('', lowered).strip(\"-\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3e19a9a540b4d6f33c8c87cfecbd0322db272ec03fd3638596dac516553f5572",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned 'abcxyz123'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Each run of other characters becomes a single -: Runs are replaced with an empty string, so 'Hello, World!' gives 'helloworld'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned 'abcxyz123'",
+       "slugify returned 'helloworld'"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned 'cafaulait'",
+       "slugify returned 'abc'",
+       "slugify returned 'navetest'",
+       "slugify returned 'onetwothree'"
+      ],
+      "requirement": "R3",
+      "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3e19a9a540b4d6f33c8c87cfecbd0322db272ec03fd3638596dac516553f5572"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -5,4 +5,4 @@\n \n def slugify(title):\n     lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n-    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n+    return _OTHER.sub(\"-\", lowered).strip('')\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip('')\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5fa8b12f1a1db99dd4cbccc965041bc9d1e0e946e90ba150227fd143e6003d79",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned 'hello-world-'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove any - at the start or end of the result: strip('') strips nothing, so leading and trailing hyphens remain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned 'hello-world-'"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned '-hello-'",
+       "slugify returned '-hi-'",
+       "slugify returned '-clair'"
+      ],
+      "requirement": "R4",
+      "text": "Remove any `-` at the start or end of the result."
+     },
+     {
+      "failed": [
+       "slugify returned '-'",
+       "slugify returned '-'"
+      ],
+      "requirement": "R5",
+      "text": "Return the slug as a string; it is \"\" when the title has no ASCII letters or digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5fa8b12f1a1db99dd4cbccc965041bc9d1e0e946e90ba150227fd143e6003d79"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -4,5 +4,5 @@\n \n \n def slugify(title):\n-    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n+    lowered = \"\".join(ch.lower() if not (\"A\" <= ch <= \"Z\") else ch for ch in title)\n     return _OTHER.sub(\"-\", lowered).strip(\"-\")\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if not (\"A\" <= ch <= \"Z\") else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "38c9dc75cc7eaa1904634ae0b3f395ce68e5e52e199ef9c927fffbdf86d19775",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned 'xyz-123'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Convert ASCII uppercase to lowercase: The condition is inverted, so uppercase letters stay uppercase and are then replaced by hyphens.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned 'xyz-123'",
+       "slugify returned 'ello-orld'",
+       "slugify returned 'oute66'"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned 'af-au-lait'"
+      ],
+      "requirement": "R3",
+      "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+     },
+     {
+      "failed": [
+       "slugify returned 'ello'",
+       "slugify returned 'i'"
+      ],
+      "requirement": "R4",
+      "text": "Remove any `-` at the start or end of the result."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "38c9dc75cc7eaa1904634ae0b3f395ce68e5e52e199ef9c927fffbdf86d19775"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -4,5 +4,5 @@\n \n \n def slugify(title):\n-    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n-    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n+    lowered_gp = \"\".join(ch_gp.lower() if \"A\" <= ch_gp <= \"Z\" else ch_gp for ch_gp in title)\n+    return _OTHER.sub(\"-\", lowered_gp).strip(\"-\")\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered_gp = \"\".join(ch_gp.lower() if \"A\" <= ch_gp <= \"Z\" else ch_gp for ch_gp in title)\n    return _OTHER.sub(\"-\", lowered_gp).strip(\"-\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "af2621a22e3333b1012f6b210cedf4708cb2d36766566f2b3d83b218caf605ad",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variable names changed; behavior is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "af2621a22e3333b1012f6b210cedf4708cb2d36766566f2b3d83b218caf605ad"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -5,4 +5,4 @@\n \n def slugify(title):\n     lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n-    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n+    return None\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "43e7581e516157dccc77b6dc5b97b1a58baae6c3f9b27e682090979bb070378f",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the slug as a string: slugify always returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R3",
+      "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+     },
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R4",
+      "text": "Remove any `-` at the start or end of the result."
+     },
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return the slug as a string; it is \"\" when the title has no ASCII letters or digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "43e7581e516157dccc77b6dc5b97b1a58baae6c3f9b27e682090979bb070378f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -1,6 +1,6 @@\n import re\n \n-_OTHER = re.compile(r\"[^a-z0-9]+\")\n+pass\n \n \n def slugify(title):\n",
+   "files": {
+    "slug.py": "import re\n\npass\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c7af6fa2480713f0cfefe9019a40d1dd3cbd3db7a7a0330311252c49959a0b76",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "slugify returns a slug: The _OTHER regex definition was removed, so slugify raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R3",
+      "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+     },
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R4",
+      "text": "Remove any `-` at the start or end of the result."
+     },
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return the slug as a string; it is \"\" when the title has no ASCII letters or digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c7af6fa2480713f0cfefe9019a40d1dd3cbd3db7a7a0330311252c49959a0b76"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -4,5 +4,5 @@\n \n \n def slugify(title):\n-    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n+    pass\n     return _OTHER.sub(\"-\", lowered).strip(\"-\")\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    pass\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "07d57699fd953c6373e0ce2ede9107fc671ede2a31683ab6101eeff42876d47c",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "slugify returns the slug string: The variable lowered is no longer defined, so the function raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R3",
+      "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+     },
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R4",
+      "text": "Remove any `-` at the start or end of the result."
+     },
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return the slug as a string; it is \"\" when the title has no ASCII letters or digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "07d57699fd953c6373e0ce2ede9107fc671ede2a31683ab6101eeff42876d47c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -5,4 +5,4 @@\n \n def slugify(title):\n     lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n-    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n+    pass\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dd90d15f7580b0bdbd51f25e7c54a76e93353658233bec3f1bfd28240e7e940d",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the slug as a string: slugify returns None instead of the slug.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R3",
+      "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+     },
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R4",
+      "text": "Remove any `-` at the start or end of the result."
+     },
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return the slug as a string; it is \"\" when the title has no ASCII letters or digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "dd90d15f7580b0bdbd51f25e7c54a76e93353658233bec3f1bfd28240e7e940d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -1,8 +1,7 @@\n import re\n \n-_OTHER = re.compile(r\"[^a-z0-9]+\")\n+_OTHER = re.compile(r\"[^A-Za-z0-9]+\")\n \n \n def slugify(title):\n-    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n-    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n+    return _OTHER.sub(\"-\", title).strip(\"-\")\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile(r\"[^A-Za-z0-9]+\")\n\n\ndef slugify(title):\n    return _OTHER.sub(\"-\", title).strip(\"-\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "594fc87e6c363926f65fab7846d6c25665ec66281b881f325fe108aeb7fb9e37",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned 'ABC-xyz-123'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Convert ASCII uppercase letters to lowercase: Uppercase letters are now kept rather than lowercased.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned 'ABC-xyz-123'",
+       "slugify returned 'Hello-World'",
+       "slugify returned 'Route66'"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned 'Caf-au-lait'"
+      ],
+      "requirement": "R3",
+      "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+     },
+     {
+      "failed": [
+       "slugify returned 'Hello'",
+       "slugify returned 'Hi'"
+      ],
+      "requirement": "R4",
+      "text": "Remove any `-` at the start or end of the result."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "594fc87e6c363926f65fab7846d6c25665ec66281b881f325fe108aeb7fb9e37"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -1,6 +1,6 @@\n import re\n \n-_OTHER = re.compile(r\"[^a-z0-9]+\")\n+_OTHER = re.compile(r\"[^a-z0-9]\")\n \n \n def slugify(title):\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "15e35f53249a3a736c1bb9e16adfe0e7077107780090071af012b5349c4b042d",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned 'hello--world'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Every maximal run of other characters becomes a single '-': Without '+' each non-alphanumeric character becomes its own '-', so 'Hello, World!' gives 'hello--world'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned 'hello--world'"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned 'caf--au-lait'",
+       "slugify returned 'a---b---c'",
+       "slugify returned 'na-ve--test'",
+       "slugify returned 'one--two--three'"
+      ],
+      "requirement": "R3",
+      "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as \u00e9) becomes a single `-`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "15e35f53249a3a736c1bb9e16adfe0e7077107780090071af012b5349c4b042d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -5,4 +5,4 @@\n \n def slugify(title):\n     lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n-    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n+    return _OTHER.sub(\"-\", lowered)\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "27a2c73c925a8847113a69751a73f5ba0f702e562a1268e9182177f7ed9d9df1",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: slugify returned 'hello-world-'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove any '-' at the start or end of the result: The strip('-') call was removed, so leading and trailing dashes remain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned 'hello-world-'"
+      ],
+      "requirement": "R2",
+      "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits."
+     },
+     {
+      "failed": [
+       "slugify returned '-hello-'",
+       "slugify returned '-hi-'",
+       "slugify returned '-clair'"
+      ],
+      "requirement": "R4",
+      "text": "Remove any `-` at the start or end of the result."
+     },
+     {
+      "failed": [
+       "slugify returned '-'",
+       "slugify returned '-'"
+      ],
+      "requirement": "R5",
+      "text": "Return the slug as a string; it is \"\" when the title has no ASCII letters or digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "27a2c73c925a8847113a69751a73f5ba0f702e562a1268e9182177f7ed9d9df1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -5,4 +5,5 @@\n \n def slugify(title):\n     lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n-    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n+    slug = _OTHER.sub(\"-\", lowered).strip(\"-\")\n+    return slug or None\n",
+   "files": {
+    "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    slug = _OTHER.sub(\"-\", lowered).strip(\"-\")\n    return slug or None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5fd8aafef38fb45733f331bb044c3bc6b4a3273b502771af8d4f1c6258c1f068",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: slugify returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the slug as a string, \"\" when no ASCII letters or digits: It returns None instead of an empty string.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "slugify returned None",
+       "slugify returned None",
+       "slugify returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return the slug as a string; it is \"\" when the title has no ASCII letters or digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5fd8aafef38fb45733f331bb044c3bc6b4a3273b502771af8d4f1c6258c1f068"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -1,8 +1,14 @@\n-import re\n-\n-_OTHER = re.compile(r\"[^a-z0-9]+\")\n-\n-\n def slugify(title):\n-    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n-    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n+    out = []\n+    pending = False\n+    for ch in title:\n+        if \"A\" <= ch <= \"Z\":\n+            ch = chr(ord(ch) + 32)\n+        if (\"a\" <= ch <= \"z\") or (\"0\" <= ch <= \"9\"):\n+            if pending and out:\n+                out.append(\"-\")\n+            pending = False\n+            out.append(ch)\n+        else:\n+            pending = True\n+    return \"\".join(out)\n",
+   "files": {
+    "slug.py": "def slugify(title):\n    out = []\n    pending = False\n    for ch in title:\n        if \"A\" <= ch <= \"Z\":\n            ch = chr(ord(ch) + 32)\n        if (\"a\" <= ch <= \"z\") or (\"0\" <= ch <= \"9\"):\n            if pending and out:\n                out.append(\"-\")\n            pending = False\n            out.append(ch)\n        else:\n            pending = True\n    return \"\".join(out)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3fb62c992e0bc0d3803b7d13129f6253843f04137e104358f3391583dcf5455d",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The loop lowercases ASCII uppercase, collapses runs of other characters to one dash, and omits leading and trailing dashes, matching the spec.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "3fb62c992e0bc0d3803b7d13129f6253843f04137e104358f3391583dcf5455d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/slug.py\n+++ b/slug.py\n@@ -1,8 +1,10 @@\n import re\n+import string\n \n-_OTHER = re.compile(r\"[^a-z0-9]+\")\n+_LOWER = str.maketrans(string.ascii_uppercase, string.ascii_lowercase)\n+_RUN = re.compile(\"[^a-z0-9]+\")\n \n \n def slugify(title):\n-    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n-    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n+    text = title.translate(_LOWER)\n+    return _RUN.sub(\"-\", text).strip(\"-\")\n",
+   "files": {
+    "slug.py": "import re\nimport string\n\n_LOWER = str.maketrans(string.ascii_uppercase, string.ascii_lowercase)\n_RUN = re.compile(\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    text = title.translate(_LOWER)\n    return _RUN.sub(\"-\", text).strip(\"-\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "336e5bcfedd7378db5ea487895747267df773fef75a159c4d7c6bc2371c249cb",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "slugify",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "translate of ASCII uppercase then collapsing non-alphanumeric runs gives the same slugs.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "336e5bcfedd7378db5ea487895747267df773fef75a159c4d7c6bc2371c249cb"
+   }
+  }
+ ]
+}

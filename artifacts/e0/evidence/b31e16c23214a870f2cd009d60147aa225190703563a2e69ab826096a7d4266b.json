@@ -1,0 +1,598 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "orders": {
+    "ORD-55087": {
+     "customer": "Iain Murray",
+     "items": [
+      "Rain jacket"
+     ],
+     "shipping_address": "27 Comely Bank Avenue, Edinburgh EH4 1EL",
+     "status": "shipped"
+    },
+    "ORD-55120": {
+     "customer": "Iain Murray",
+     "items": [
+      "Hiking boots (UK 9)"
+     ],
+     "shipping_address": "Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP",
+     "status": "processing"
+    },
+    "ORD-55133": {
+     "customer": "Freya Lund",
+     "items": [
+      "Two-person tent"
+     ],
+     "shipping_address": "9 Rose Street, Aberdeen AB10 1UB",
+     "status": "processing"
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "order_id": "ORD-55120"
+    },
+    "result": {
+     "ok": true,
+     "order": {
+      "customer": "Iain Murray",
+      "items": [
+       "Hiking boots (UK 9)"
+      ],
+      "shipping_address": "27 Comely Bank Avenue, Edinburgh EH4 1EL",
+      "status": "processing"
+     }
+    },
+    "tool": "get_order"
+   },
+   {
+    "args": {
+     "address": "Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP",
+     "order_id": "ORD-55120"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "update_shipping_address"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "address": "Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP",
+      "order_id": "ORD-55120"
+     },
+     "tool": "update_shipping_address",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP",
+     "pointer": "/orders/ORD-55120/shipping_address",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Use update_shipping_address to set the shipping address of ORD-55120 to exactly 'Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP'."
+  },
+  {
+   "checks": [
+    {
+     "equals": "Iain Murray",
+     "pointer": "/orders/ORD-55120/customer",
+     "type": "state_equals"
+    },
+    {
+     "equals": [
+      "Hiking boots (UK 9)"
+     ],
+     "pointer": "/orders/ORD-55120/items",
+     "type": "state_equals"
+    },
+    {
+     "equals": "processing",
+     "pointer": "/orders/ORD-55120/status",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Do not change any other field of order ORD-55120."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "customer": "Iain Murray",
+      "items": [
+       "Rain jacket"
+      ],
+      "shipping_address": "27 Comely Bank Avenue, Edinburgh EH4 1EL",
+      "status": "shipped"
+     },
+     "pointer": "/orders/ORD-55087",
+     "type": "state_equals"
+    },
+    {
+     "equals": {
+      "customer": "Freya Lund",
+      "items": [
+       "Two-person tent"
+      ],
+      "shipping_address": "9 Rose Street, Aberdeen AB10 1UB",
+      "status": "processing"
+     },
+     "pointer": "/orders/ORD-55133",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Do not change any other order."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:address-change",
+ "task_hash": "b31e16c23214a870f2cd009d60147aa225190703563a2e69ab826096a7d4266b",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,21 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_shipping_address\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120\",\n+      \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-55120\"\n    }\n  },\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-55120\"\n    }\n  },\n  {\n    \"tool\": \"update_shipping_address\",\n    \"args\": {\n      \"order_id\": \"ORD-55120\",\n      \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "50ca8594f8827777a05734e97f6d507e886d6da73e8e19d914954f0545b97d35",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "address-change",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "An extra read-only get_order call does not change state; the update is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "50ca8594f8827777a05734e97f6d507e886d6da73e8e19d914954f0545b97d35"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,15 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_shipping_address\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120\",\n+      \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-55120-x\"\n    }\n  },\n  {\n    \"tool\": \"update_shipping_address\",\n    \"args\": {\n      \"order_id\": \"ORD-55120\",\n      \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c889eff8507fa167d4f32629cec96bc6f9c6ad00c7dc02cbcb3aa7da1bf38652",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "address-change",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only get_order call uses a bad id (ORD-55120-x); the update is correct, but the lookup may error.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": null
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,15 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_shipping_address\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120\",\n+      \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-55120\"\n    }\n  },\n  {\n    \"tool\": \"update_shipping_address\",\n    \"args\": {\n      \"order_id\": \"ORD-55120\",\n      \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "ae19a905e8fe24e159bbee735f35a3eddafe4dc55662c4b93b0b1a221c6cbc1f",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "address-change",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks update_shipping_address",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Set the address to exactly the given string: The address has an extra -x suffix.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks update_shipping_address",
+       "state /orders/ORD-55120/shipping_address = 'Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP-x'"
+      ],
+      "requirement": "R1",
+      "text": "Use update_shipping_address to set the shipping address of ORD-55120 to exactly 'Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ae19a905e8fe24e159bbee735f35a3eddafe4dc55662c4b93b0b1a221c6cbc1f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,15 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_shipping_address\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120-x\",\n+      \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-55120\"\n    }\n  },\n  {\n    \"tool\": \"update_shipping_address\",\n    \"args\": {\n      \"order_id\": \"ORD-55120-x\",\n      \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c5c928b0b441d4cfab78f9ee046ff321909e383f1cdbbb09b5bc66727b99d962",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "address-change",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks update_shipping_address",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Update the address of order ORD-55120: The update targets order ORD-55120-x instead of ORD-55120.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks update_shipping_address",
+       "state /orders/ORD-55120/shipping_address = '27 Comely Bank Avenue, Edinburgh EH4 1EL'"
+      ],
+      "requirement": "R1",
+      "text": "Use update_shipping_address to set the shipping address of ORD-55120 to exactly 'Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c5c928b0b441d4cfab78f9ee046ff321909e383f1cdbbb09b5bc66727b99d962"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,9 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n+  {\n+    \"tool\": \"update_shipping_address\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120\",\n+      \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"update_shipping_address\",\n    \"args\": {\n      \"order_id\": \"ORD-55120\",\n      \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "6ae708ed3f946c49a4f8a76e568315f21b76907a3378c8fa6688f2986a560691",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "address-change",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The task only requires update_shipping_address; the omitted get_order is a read-only lookup.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,8 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-55120\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5ec4b8ad40560a1b3aa5e6960700cf7b817744dcc075605f3d6aafc9c587c7a9",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "address-change",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks update_shipping_address",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Use update_shipping_address to set the address: The update_shipping_address call was removed, so the address is never changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks update_shipping_address",
+       "state /orders/ORD-55120/shipping_address = '27 Comely Bank Avenue, Edinburgh EH4 1EL'"
+      ],
+      "requirement": "R1",
+      "text": "Use update_shipping_address to set the shipping address of ORD-55120 to exactly 'Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5ec4b8ad40560a1b3aa5e6960700cf7b817744dcc075605f3d6aafc9c587c7a9"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,15 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n+  {\n+    \"tool\": \"update_shipping_address\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120\",\n+      \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-55120\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"update_shipping_address\",\n    \"args\": {\n      \"order_id\": \"ORD-55120\",\n      \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"\n    }\n  },\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-55120\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "01b10af56c52ff499df8f76f7c7f93bec3cffecac22b49f45a4444877f12ebea",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "address-change",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same address update is made and the read-only get_order merely moves after it.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n+  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3c8ab6dc9ec8005e58ba00b69aa3eead7fa00031bc23dcbf12df84f5b85cd160",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "address-change",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks update_shipping_address",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "set the address to exactly 'Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP': The 'Flat 3, ' prefix is missing from the address.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks update_shipping_address",
+       "state /orders/ORD-55120/shipping_address = '14 Harbour Street, Leith, Edinburgh EH6 6QP'"
+      ],
+      "requirement": "R1",
+      "text": "Use update_shipping_address to set the shipping address of ORD-55120 to exactly 'Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3c8ab6dc9ec8005e58ba00b69aa3eead7fa00031bc23dcbf12df84f5b85cd160"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n+  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55121\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55121\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e0d5a7162837419b7351956684f361c49d75f5ab1119c90eaae81e220f625ff9",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "address-change",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks update_shipping_address",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Update the address of order ORD-55120 only: It updates ORD-55121, a different order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks update_shipping_address",
+       "state /orders/ORD-55120/shipping_address = '27 Comely Bank Avenue, Edinburgh EH4 1EL'"
+      ],
+      "requirement": "R1",
+      "text": "Use update_shipping_address to set the shipping address of ORD-55120 to exactly 'Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e0d5a7162837419b7351956684f361c49d75f5ab1119c90eaae81e220f625ff9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,3 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n   {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0f88f59bae19baa72f3f716ac47e72653b2928ce96a60bff80f263bf7de6d842",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "address-change",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "get_order is read-only and not required; the address update is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "0f88f59bae19baa72f3f716ac47e72653b2928ce96a60bff80f263bf7de6d842"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n+  {\"tool\": \"update_shipping_address\", \"args\": {\"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\", \"order_id\": \"ORD-55120\"}},\n+  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"update_shipping_address\", \"args\": {\"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\", \"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b2f163274a8b8e9d88489c3f1f75c27a8172971a43f2438a20de9e6a700d5793",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "address-change",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The required address update is made exactly with the same arguments; the read-only get_order merely moved after it and key order changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "b2f163274a8b8e9d88489c3f1f75c27a8172971a43f2438a20de9e6a700d5793"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1 @@\n-[\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n-]\n+[{\"tool\":\"get_order\",\"args\":{\"order_id\":\"ORD-55120\"}},{\"tool\":\"update_shipping_address\",\"args\":{\"order_id\":\"ORD-55120\",\"address\":\"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"get_order\",\"args\":{\"order_id\":\"ORD-55120\"}},{\"tool\":\"update_shipping_address\",\"args\":{\"order_id\":\"ORD-55120\",\"address\":\"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "5bae683770e36b9f2848bcef8b97783b15499b3447ed615c073a9baafb518e5f",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "address-change",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only JSON formatting changed; the calls are identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "5bae683770e36b9f2848bcef8b97783b15499b3447ed615c073a9baafb518e5f"
+   }
+  }
+ ]
+}

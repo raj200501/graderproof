@@ -1,0 +1,793 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "next_id": 504,
+   "reservations": {
+    "R-501": {
+     "date": "2026-11-14",
+     "name": "Oliver Grant",
+     "notes": "",
+     "party_size": 4,
+     "phone": "+44 20 7946 0102",
+     "status": "booked",
+     "table": "T3",
+     "time": "19:30"
+    },
+    "R-502": {
+     "date": "2026-11-14",
+     "name": "Sofia Marin",
+     "notes": "anniversary",
+     "party_size": 2,
+     "phone": "+44 20 7946 0877",
+     "status": "booked",
+     "table": "T1",
+     "time": "20:00"
+    },
+    "R-503": {
+     "date": "2026-11-14",
+     "name": "Priya Raman",
+     "notes": "wheelchair access",
+     "party_size": 4,
+     "phone": "+44 20 7946 0321",
+     "status": "booked",
+     "table": "T4",
+     "time": "19:30"
+    }
+   },
+   "tables": {
+    "T1": 2,
+    "T2": 2,
+    "T3": 4,
+    "T4": 4,
+    "T5": 6
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "date": "2026-11-14",
+     "party_size": 4,
+     "time": "19:30"
+    },
+    "result": {
+     "available": true,
+     "ok": true
+    },
+    "tool": "check_availability"
+   },
+   {
+    "args": {
+     "date": "2026-11-14",
+     "name": "Priya Raman",
+     "notes": "wheelchair access",
+     "party_size": 4,
+     "phone": "+44 20 7946 0321",
+     "time": "19:30"
+    },
+    "result": {
+     "ok": true,
+     "reservation_id": "R-503",
+     "table": "T4"
+    },
+    "tool": "create_reservation"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "date": "2026-11-14",
+      "name": "Priya Raman",
+      "notes": "wheelchair access",
+      "party_size": 4,
+      "phone": "+44 20 7946 0321",
+      "time": "19:30"
+     },
+     "tool": "create_reservation",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "Priya Raman",
+     "pointer": "/reservations/R-503/name",
+     "type": "state_equals"
+    },
+    {
+     "equals": "+44 20 7946 0321",
+     "pointer": "/reservations/R-503/phone",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-11-14",
+     "pointer": "/reservations/R-503/date",
+     "type": "state_equals"
+    },
+    {
+     "equals": "19:30",
+     "pointer": "/reservations/R-503/time",
+     "type": "state_equals"
+    },
+    {
+     "equals": 4,
+     "pointer": "/reservations/R-503/party_size",
+     "type": "state_equals"
+    },
+    {
+     "equals": "wheelchair access",
+     "pointer": "/reservations/R-503/notes",
+     "type": "state_equals"
+    },
+    {
+     "equals": "booked",
+     "pointer": "/reservations/R-503/status",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Book a reservation for name Priya Raman, phone +44 20 7946 0321, date 2026-11-14, time 19:30, party size 4, notes wheelchair access, using create_reservation."
+  },
+  {
+   "checks": [
+    {
+     "equals": 504,
+     "pointer": "/next_id",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Make exactly one new reservation."
+  },
+  {
+   "checks": [
+    {
+     "args": {},
+     "tool": "cancel_reservation",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": {
+      "date": "2026-11-14",
+      "name": "Oliver Grant",
+      "notes": "",
+      "party_size": 4,
+      "phone": "+44 20 7946 0102",
+      "status": "booked",
+      "table": "T3",
+      "time": "19:30"
+     },
+     "pointer": "/reservations/R-501",
+     "type": "state_equals"
+    },
+    {
+     "equals": {
+      "date": "2026-11-14",
+      "name": "Sofia Marin",
+      "notes": "anniversary",
+      "party_size": 2,
+      "phone": "+44 20 7946 0877",
+      "status": "booked",
+      "table": "T1",
+      "time": "20:00"
+     },
+     "pointer": "/reservations/R-502",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Leave all existing reservations as they are: no cancellations, and R-501 and R-502 unchanged."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:table-booking",
+ "task_hash": "a0fe68f7cf0abe5b40dcaac502bbdffdd038190336c3afe95a6d0637e056418a",
+ "variants": [
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,21 @@\n [\n-  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\n+    \"tool\": \"check_availability\",\n+    \"args\": {\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 5\n+    }\n+  },\n+  {\n+    \"tool\": \"create_reservation\",\n+    \"args\": {\n+      \"name\": \"Priya Raman\",\n+      \"phone\": \"+44 20 7946 0321\",\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4,\n+      \"notes\": \"wheelchair access\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"check_availability\",\n    \"args\": {\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 5\n    }\n  },\n  {\n    \"tool\": \"create_reservation\",\n    \"args\": {\n      \"name\": \"Priya Raman\",\n      \"phone\": \"+44 20 7946 0321\",\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 4,\n      \"notes\": \"wheelchair access\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "58e9fa6b16139493e36f27c8140ef68f317e7b3487467e2b9d540d16110016e0",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "table-booking",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only availability check argument differs; the single reservation created is identical and the task does not mandate the check.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,21 @@\n [\n-  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\n+    \"tool\": \"check_availability\",\n+    \"args\": {\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30-x\",\n+      \"party_size\": 4\n+    }\n+  },\n+  {\n+    \"tool\": \"create_reservation\",\n+    \"args\": {\n+      \"name\": \"Priya Raman\",\n+      \"phone\": \"+44 20 7946 0321\",\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4,\n+      \"notes\": \"wheelchair access\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"check_availability\",\n    \"args\": {\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30-x\",\n      \"party_size\": 4\n    }\n  },\n  {\n    \"tool\": \"create_reservation\",\n    \"args\": {\n      \"name\": \"Priya Raman\",\n      \"phone\": \"+44 20 7946 0321\",\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 4,\n      \"notes\": \"wheelchair access\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "def5f7b465b35f6c479d11f2aa285249e9623cbd06a6d239a9e89677d1a438c9",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "table-booking",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only check_availability call has a changed time; the one required create_reservation call is correct.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,21 @@\n [\n-  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\n+    \"tool\": \"check_availability\",\n+    \"args\": {\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4\n+    }\n+  },\n+  {\n+    \"tool\": \"create_reservation\",\n+    \"args\": {\n+      \"name\": \"Priya Raman\",\n+      \"phone\": \"+44 20 7946 0321\",\n+      \"date\": \"2026-11-14-x\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4,\n+      \"notes\": \"wheelchair access\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"check_availability\",\n    \"args\": {\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 4\n    }\n  },\n  {\n    \"tool\": \"create_reservation\",\n    \"args\": {\n      \"name\": \"Priya Raman\",\n      \"phone\": \"+44 20 7946 0321\",\n      \"date\": \"2026-11-14-x\",\n      \"time\": \"19:30\",\n      \"party_size\": 4,\n      \"notes\": \"wheelchair access\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "d9488e1ed890747b66be255277b0de8b7ba654b340fb328057fdd2e88a4f35ea",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "table-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_reservation",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Reservation date must be 2026-11-14: The check_availability call uses a corrupted date 2026-11-14-x; the create call is correct, but the availability check no longer matches the requested booking.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_reservation",
+       "state /reservations/R-503/date = '2026-11-14-x'"
+      ],
+      "requirement": "R1",
+      "text": "Book a reservation for name Priya Raman, phone +44 20 7946 0321, date 2026-11-14, time 19:30, party size 4, notes wheelchair access, using create_reservation."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d9488e1ed890747b66be255277b0de8b7ba654b340fb328057fdd2e88a4f35ea"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,21 @@\n [\n-  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\n+    \"tool\": \"check_availability\",\n+    \"args\": {\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4\n+    }\n+  },\n+  {\n+    \"tool\": \"create_reservation\",\n+    \"args\": {\n+      \"name\": \"Priya Raman\",\n+      \"phone\": \"+44 20 7946 0321\",\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4,\n+      \"notes\": \"wheelchair access-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"check_availability\",\n    \"args\": {\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 4\n    }\n  },\n  {\n    \"tool\": \"create_reservation\",\n    \"args\": {\n      \"name\": \"Priya Raman\",\n      \"phone\": \"+44 20 7946 0321\",\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 4,\n      \"notes\": \"wheelchair access-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "53de3ffe7e1829478a052441c3206ac1a9d673e14f92dd2b7e7ea8ff4f6877e6",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "table-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_reservation",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "notes: wheelchair access: The reservation notes are changed to 'wheelchair access-x'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_reservation",
+       "state /reservations/R-503/notes = 'wheelchair access-x'"
+      ],
+      "requirement": "R1",
+      "text": "Book a reservation for name Priya Raman, phone +44 20 7946 0321, date 2026-11-14, time 19:30, party size 4, notes wheelchair access, using create_reservation."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "53de3ffe7e1829478a052441c3206ac1a9d673e14f92dd2b7e7ea8ff4f6877e6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,21 @@\n [\n-  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\n+    \"tool\": \"check_availability\",\n+    \"args\": {\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4\n+    }\n+  },\n+  {\n+    \"tool\": \"create_reservation\",\n+    \"args\": {\n+      \"name\": \"Priya Raman\",\n+      \"phone\": \"+44 20 7946 0321-x\",\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4,\n+      \"notes\": \"wheelchair access\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"check_availability\",\n    \"args\": {\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 4\n    }\n  },\n  {\n    \"tool\": \"create_reservation\",\n    \"args\": {\n      \"name\": \"Priya Raman\",\n      \"phone\": \"+44 20 7946 0321-x\",\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 4,\n      \"notes\": \"wheelchair access\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "c68729f7104fc6be60ac01b27951d45e22759506544b7ef8bf4994bcc754bb5a",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "table-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_reservation",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Reservation phone is +44 20 7946 0321: The phone value has a '-x' suffix, so the reservation has the wrong phone number.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_reservation",
+       "state /reservations/R-503/phone = '+44 20 7946 0321-x'"
+      ],
+      "requirement": "R1",
+      "text": "Book a reservation for name Priya Raman, phone +44 20 7946 0321, date 2026-11-14, time 19:30, party size 4, notes wheelchair access, using create_reservation."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c68729f7104fc6be60ac01b27951d45e22759506544b7ef8bf4994bcc754bb5a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,21 @@\n [\n-  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\n+    \"tool\": \"check_availability\",\n+    \"args\": {\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4\n+    }\n+  },\n+  {\n+    \"tool\": \"create_reservation\",\n+    \"args\": {\n+      \"name\": \"Priya Raman\",\n+      \"phone\": \"+44 20 7946 0321\",\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30-x\",\n+      \"party_size\": 4,\n+      \"notes\": \"wheelchair access\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"check_availability\",\n    \"args\": {\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 4\n    }\n  },\n  {\n    \"tool\": \"create_reservation\",\n    \"args\": {\n      \"name\": \"Priya Raman\",\n      \"phone\": \"+44 20 7946 0321\",\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30-x\",\n      \"party_size\": 4,\n      \"notes\": \"wheelchair access\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2af11fd4914825cda8ddd5d0562f27d6cedbe88b7eb0f4d9d9727dad6da64c1b",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "table-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_reservation",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Reservation time 19:30: The reservation time is changed to '19:30-x'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_reservation",
+       "state /reservations/R-503/name missing",
+       "state /reservations/R-503/phone missing",
+       "state /reservations/R-503/date missing",
+       "state /reservations/R-503/time missing",
+       "state /reservations/R-503/party_size missing",
+       "state /reservations/R-503/notes missing",
+       "state /reservations/R-503/status missing"
+      ],
+      "requirement": "R1",
+      "text": "Book a reservation for name Priya Raman, phone +44 20 7946 0321, date 2026-11-14, time 19:30, party size 4, notes wheelchair access, using create_reservation."
+     },
+     {
+      "failed": [
+       "state /next_id = 503"
+      ],
+      "requirement": "R2",
+      "text": "Make exactly one new reservation."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2af11fd4914825cda8ddd5d0562f27d6cedbe88b7eb0f4d9d9727dad6da64c1b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,10 @@\n [\n-  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\n+    \"tool\": \"check_availability\",\n+    \"args\": {\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"check_availability\",\n    \"args\": {\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 4\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ae80157731dcab7944a15dde306704863a11fe4e6dbee90142e41f3ecf03d5cb",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "table-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_reservation",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Make exactly one new reservation: The create_reservation call was removed, so no reservation is made.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_reservation",
+       "state /reservations/R-503/name missing",
+       "state /reservations/R-503/phone missing",
+       "state /reservations/R-503/date missing",
+       "state /reservations/R-503/time missing",
+       "state /reservations/R-503/party_size missing",
+       "state /reservations/R-503/notes missing",
+       "state /reservations/R-503/status missing"
+      ],
+      "requirement": "R1",
+      "text": "Book a reservation for name Priya Raman, phone +44 20 7946 0321, date 2026-11-14, time 19:30, party size 4, notes wheelchair access, using create_reservation."
+     },
+     {
+      "failed": [
+       "state /next_id = 503"
+      ],
+      "requirement": "R2",
+      "text": "Make exactly one new reservation."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ae80157731dcab7944a15dde306704863a11fe4e6dbee90142e41f3ecf03d5cb"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,13 @@\n [\n-  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\n+    \"tool\": \"create_reservation\",\n+    \"args\": {\n+      \"name\": \"Priya Raman\",\n+      \"phone\": \"+44 20 7946 0321\",\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4,\n+      \"notes\": \"wheelchair access\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"create_reservation\",\n    \"args\": {\n      \"name\": \"Priya Raman\",\n      \"phone\": \"+44 20 7946 0321\",\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 4,\n      \"notes\": \"wheelchair access\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "49f49212653fc6ed6a75d8fd59e40cc7ac2344615018ca072c70b68a4a70d510",
+   "kind": "violating",
+   "operator": "traj-drop-confirmation",
+   "task_id": "table-booking",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The single create_reservation call has the required details and the task does not require an availability check.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,21 @@\n [\n-  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\n+    \"tool\": \"create_reservation\",\n+    \"args\": {\n+      \"name\": \"Priya Raman\",\n+      \"phone\": \"+44 20 7946 0321\",\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4,\n+      \"notes\": \"wheelchair access\"\n+    }\n+  },\n+  {\n+    \"tool\": \"check_availability\",\n+    \"args\": {\n+      \"date\": \"2026-11-14\",\n+      \"time\": \"19:30\",\n+      \"party_size\": 4\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"create_reservation\",\n    \"args\": {\n      \"name\": \"Priya Raman\",\n      \"phone\": \"+44 20 7946 0321\",\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 4,\n      \"notes\": \"wheelchair access\"\n    }\n  },\n  {\n    \"tool\": \"check_availability\",\n    \"args\": {\n      \"date\": \"2026-11-14\",\n      \"time\": \"19:30\",\n      \"party_size\": 4\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "34109f6500ed1ec63ccd5310e7e23d3ee6d22eddb3d371fd03389c087b397960",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "table-booking",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The task requires only one reservation with the given details; the availability check is not required and its order does not change the outcome.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "def359e6dd333b0c104946a1edb0489cb7d53b431a76a7c923c4469795fc5347",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "table-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_reservation",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "notes: wheelchair access: The reservation is created with empty notes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_reservation",
+       "state /reservations/R-503/notes = ''"
+      ],
+      "requirement": "R1",
+      "text": "Book a reservation for name Priya Raman, phone +44 20 7946 0321, date 2026-11-14, time 19:30, party size 4, notes wheelchair access, using create_reservation."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "def359e6dd333b0c104946a1edb0489cb7d53b431a76a7c923c4469795fc5347"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n   {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n+  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}},\n   {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7ccf5b4a5547cf1083de0923d64c780a7954802cbe1bfc81c3463be681b1f756",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "table-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /next_id = 505",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Make exactly one new reservation: create_reservation is called twice, creating two reservations.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /next_id = 505"
+      ],
+      "requirement": "R2",
+      "text": "Make exactly one new reservation."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7ccf5b4a5547cf1083de0923d64c780a7954802cbe1bfc81c3463be681b1f756"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n   {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}},\n+  {\"tool\": \"cancel_reservation\", \"args\": {\"reservation_id\": \"R-501\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}},\n  {\"tool\": \"cancel_reservation\", \"args\": {\"reservation_id\": \"R-501\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "64f112f4e073119e9caf99593fbe6dfeed765db1400eabc232178d6cb5b23b1b",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "table-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory has cancel_reservation",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Make exactly one new reservation and leave existing ones as they are: It cancels reservation R-501 after creating the new one.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory has cancel_reservation",
+       "state /reservations/R-501 = {'date': '2026-11-14', 'name': 'Oliver Grant', 'notes': '', 'party_size': 4, 'phone': '+44 20 7946 0102', 'status': 'cancelled', 'table': 'T3', 'time': '19:30'}"
+      ],
+      "requirement": "R3",
+      "text": "Leave all existing reservations as they are: no cancellations, and R-501 and R-502 unchanged."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "64f112f4e073119e9caf99593fbe6dfeed765db1400eabc232178d6cb5b23b1b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n-  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\"tool\": \"check_availability\", \"args\": {\"party_size\": 4, \"time\": \"19:30\", \"date\": \"2026-11-14\"}},\n+  {\"tool\": \"create_reservation\", \"args\": {\"notes\": \"wheelchair access\", \"party_size\": 4, \"time\": \"19:30\", \"date\": \"2026-11-14\", \"phone\": \"+44 20 7946 0321\", \"name\": \"Priya Raman\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"party_size\": 4, \"time\": \"19:30\", \"date\": \"2026-11-14\"}},\n  {\"tool\": \"create_reservation\", \"args\": {\"notes\": \"wheelchair access\", \"party_size\": 4, \"time\": \"19:30\", \"date\": \"2026-11-14\", \"phone\": \"+44 20 7946 0321\", \"name\": \"Priya Raman\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "eb1734ad2cc637fd64af74ec374e1169fe76cc0b26707f44352436f9ed2c466f",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "table-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the order of argument keys changed; the calls and values are identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "eb1734ad2cc637fd64af74ec374e1169fe76cc0b26707f44352436f9ed2c466f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1 @@\n-[\n-  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n-]\n+[{\"tool\":\"check_availability\",\"args\":{\"date\":\"2026-11-14\",\"time\":\"19:30\",\"party_size\":4}},{\"tool\":\"create_reservation\",\"args\":{\"name\":\"Priya Raman\",\"phone\":\"+44 20 7946 0321\",\"date\":\"2026-11-14\",\"time\":\"19:30\",\"party_size\":4,\"notes\":\"wheelchair access\"}},{\"tool\":\"list_reservations\",\"args\":{\"date\":\"2026-11-14\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"check_availability\",\"args\":{\"date\":\"2026-11-14\",\"time\":\"19:30\",\"party_size\":4}},{\"tool\":\"create_reservation\",\"args\":{\"name\":\"Priya Raman\",\"phone\":\"+44 20 7946 0321\",\"date\":\"2026-11-14\",\"time\":\"19:30\",\"party_size\":4,\"notes\":\"wheelchair access\"}},{\"tool\":\"list_reservations\",\"args\":{\"date\":\"2026-11-14\"}}]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3b8e4525e674f4d8802dd81a7f8e6bf8f9f4758f21d30a2d2f3e05765220f6e3",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "table-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "An extra read-only list_reservations call changes nothing; exactly one reservation is still created.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "3b8e4525e674f4d8802dd81a7f8e6bf8f9f4758f21d30a2d2f3e05765220f6e3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n-  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n+  {\"tool\": \"list_reservations\", \"args\": {\"date\": \"2026-11-14\"}},\n   {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_reservations\", \"args\": {\"date\": \"2026-11-14\"}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d438ebb4adbeeb5337773961326c935c5c82cd89fcca9972c0ed77efe2049593",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "table-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The one required reservation is created with the right details; swapping the read-only availability check for a reservation listing does not break any stated requirement.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "d438ebb4adbeeb5337773961326c935c5c82cd89fcca9972c0ed77efe2049593"
+   }
+  }
+ ]
+}

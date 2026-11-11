@@ -1,0 +1,2522 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "users.csv": "id,first_name,last_name,email,signup_date\n101,Amara,Okafor,amara.okafor@example.com,03/03/2025\n102,Bruno,Silva,Bruno.Silva@Example.com,11/02/2025\n103,Chen,Wei,chen.wei@EXAMPLE.COM,01/30/2026\n104,Dana,Kowalski,dana.k@example.com,07/04/2026\n",
+   "users.jsonl": "{\"id\": 101, \"name\": \"Amara Okafor\", \"email\": \"amara.okafor@example.com\", \"signup\": \"2025-03-03\"}\n{\"id\": 102, \"name\": \"Bruno Silva\", \"email\": \"bruno.silva@example.com\", \"signup\": \"2025-11-02\"}\n{\"id\": 103, \"name\": \"Chen Wei\", \"email\": \"chen.wei@example.com\", \"signup\": \"2026-01-30\"}\n{\"id\": 104, \"name\": \"Dana Kowalski\", \"email\": \"dana.k@example.com\", \"signup\": \"2026-07-04\"}\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "users.jsonl",
+     "type": "file_exists"
+    },
+    {
+     "count": 4,
+     "path": "users.jsonl",
+     "type": "file_lines"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+  },
+  {
+   "checks": [
+    {
+     "path": "users.jsonl",
+     "pattern": "(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Rows are in the same order as the CSV."
+  },
+  {
+   "checks": [
+    {
+     "path": "users.jsonl",
+     "pattern": "\"id\":\\s*101\\s*[,}]",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "\"id\":\\s*104\\s*[,}]",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "`id` is the id as an integer."
+  },
+  {
+   "checks": [
+    {
+     "path": "users.jsonl",
+     "pattern": "\"name\":\\s*\"Amara Okafor\"",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "\"name\":\\s*\"Bruno Silva\"",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "\"name\":\\s*\"Chen Wei\"",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "\"name\":\\s*\"Dana Kowalski\"",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "`name` is the first name and last name separated by a single space."
+  },
+  {
+   "checks": [
+    {
+     "path": "users.jsonl",
+     "pattern": "\"email\":\\s*\"amara\\.okafor@example\\.com\"",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "\"email\":\\s*\"bruno\\.silva@example\\.com\"",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "\"email\":\\s*\"chen\\.wei@example\\.com\"",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "\"email\":\\s*\"dana\\.k@example\\.com\"",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "`email` is the email address converted to lowercase."
+  },
+  {
+   "checks": [
+    {
+     "path": "users.jsonl",
+     "pattern": "\"signup\":\\s*\"2025-03-03\"",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "\"signup\":\\s*\"2025-11-02\"",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "\"signup\":\\s*\"2026-01-30\"",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "\"signup\":\\s*\"2026-07-04\"",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+  },
+  {
+   "checks": [
+    {
+     "path": "users.jsonl",
+     "pattern": "(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$",
+     "type": "file_regex"
+    },
+    {
+     "path": "users.jsonl",
+     "pattern": "(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R7",
+   "source": "model:requirements/v1",
+   "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:user-export",
+ "task_hash": "7a61e8561a68e4be0c081c93e3ff3dbd062304d6d8a80fb537c5a3713798250e",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,16 @@\n+import csv\n+import json\n+\n+with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n+    for row in rows:\n+        month, day, year = row[\"signup_date\"].split(\"/\")\n+        record = {\n+            \"id\": int(row[\"id\"]),\n+            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n+            \"email\": row[\"email\"].lower(),\n+            \"signup\": \"%s-%s-%s\" % (year, month, day),\n+        }\n+        fh.write(json.dumps(record) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['users.jsonl']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,14 @@\n-import csv\n-import json\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n-    for row in rows:\n-        month, day, year = row[\"signup_date\"].split(\"/\")\n-        record = {\n-            \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n-            \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n-        }\n-        fh.write(json.dumps(record) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['users.jsonl']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "aa326cbf44754a212abc29235eafb0afca6dbf0b4e4ee7c4180c0d8278ddae14",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 3 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One line per CSV row in users.jsonl: The transform removes the last line of users.jsonl.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 3 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "aa326cbf44754a212abc29235eafb0afca6dbf0b4e4ee7c4180c0d8278ddae14"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,16 @@\n+import csv\n+import json\n+\n+with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n+    for row in rows:\n+        month, day, year = row[\"signup_date\"].split(\"/\")\n+        record = {\n+            \"id\": int(row[\"id\"]),\n+            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n+            \"email\": row[\"email\"].lower(),\n+            \"signup\": \"%s-%s-%s\" % (year, month, day),\n+        }\n+        fh.write(json.dumps(record) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['users.jsonl']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,14 @@\n-import csv\n-import json\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n-    for row in rows:\n-        month, day, year = row[\"signup_date\"].split(\"/\")\n-        record = {\n-            \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n-            \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n-        }\n-        fh.write(json.dumps(record) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['users.jsonl']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ea84a1766dfaf73ffd577942673463dcb6bcf82876d6d402c7fd5ed5d7a5c203",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 5 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "users.jsonl has one line per CSV row: A post-processing step appends an extra line to users.jsonl.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 5 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ea84a1766dfaf73ffd577942673463dcb6bcf82876d6d402c7fd5ed5d7a5c203"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,16 @@\n+import csv\n+import json\n+\n+with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n+    for row in rows:\n+        month, day, year = row[\"signup_date\"].split(\"/\")\n+        record = {\n+            \"id\": int(row[\"id\"]),\n+            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n+            \"email\": row[\"email\"].lower(),\n+            \"signup\": \"%s-%s-%s\" % (year, month, day),\n+        }\n+        fh.write(json.dumps(record) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['users.jsonl']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,14 @@\n-import csv\n-import json\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n-    for row in rows:\n-        month, day, year = row[\"signup_date\"].split(\"/\")\n-        record = {\n-            \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n-            \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n-        }\n-        fh.write(json.dumps(record) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['users.jsonl']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "957d6d9bfec92988adf43f6ef0edff6e5088caa0e15d4bddaba60da37c37203e",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "user-export",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "users.jsonl has one JSON object per line: A post-processing step removes the final newline from users.jsonl, so the last record is not newline-terminated.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "957d6d9bfec92988adf43f6ef0edff6e5088caa0e15d4bddaba60da37c37203e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,16 @@\n+import csv\n+import json\n+\n+with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n+    for row in rows:\n+        month, day, year = row[\"signup_date\"].split(\"/\")\n+        record = {\n+            \"id\": int(row[\"id\"]),\n+            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n+            \"email\": row[\"email\"].lower(),\n+            \"signup\": \"%s-%s-%s\" % (year, month, day),\n+        }\n+        fh.write(json.dumps(record) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['users.jsonl']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,14 @@\n-import csv\n-import json\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n-    for row in rows:\n-        month, day, year = row[\"signup_date\"].split(\"/\")\n-        record = {\n-            \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n-            \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n-        }\n-        fh.write(json.dumps(record) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['users.jsonl']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "559d1b92b478d0b053cb23bc031ab1030cace373cf032309b3178b15e468b248",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Trailing spaces after each JSON object are insignificant whitespace; each line is still a valid JSON object with the right content.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "559d1b92b478d0b053cb23bc031ab1030cace373cf032309b3178b15e468b248"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,16 @@\n+import csv\n+import json\n+\n+with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    rows = list(csv.DictReader(fh))\n+\n+with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n+    for row in rows:\n+        month, day, year = row[\"signup_date\"].split(\"/\")\n+        record = {\n+            \"id\": int(row[\"id\"]),\n+            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n+            \"email\": row[\"email\"].lower(),\n+            \"signup\": \"%s-%s-%s\" % (year, month, day),\n+        }\n+        fh.write(json.dumps(record) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,14 @@\n-import csv\n-import json\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n-\n-with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n-    for row in rows:\n-        month, day, year = row[\"signup_date\"].split(\"/\")\n-        record = {\n-            \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n-            \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n-        }\n-        fh.write(json.dumps(record) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(3.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(3.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "e29f98ccb3b4b82cb981228b06a1c49a0ad2d6d6a7eaccc121bc0c461df40808",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper delays 3 seconds, then runs the unchanged original logic with an identity transform, so users.jsonl content is the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "e29f98ccb3b4b82cb981228b06a1c49a0ad2d6d6a7eaccc121bc0c461df40808"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,7 +9,7 @@\n         month, day, year = row[\"signup_date\"].split(\"/\")\n         record = {\n             \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n+            \"name\": (\"%s %s\") // ((row[\"first_name\"], row[\"last_name\"])),\n             \"email\": row[\"email\"].lower(),\n             \"signup\": \"%s-%s-%s\" % (year, month, day),\n         }\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": (\"%s %s\") // ((row[\"first_name\"], row[\"last_name\"])),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "de81b51688a09bc53fee00beb7b3509281038b12c9b55d6c819a9c48c0592548",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 0 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "name is first and last name separated by a space: Using // on a string and a tuple raises TypeError, so the script crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 0 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"amara\\.okafor@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "de81b51688a09bc53fee00beb7b3509281038b12c9b55d6c819a9c48c0592548"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,6 +11,6 @@\n             \"id\": int(row[\"id\"]),\n             \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n             \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n+            \"signup\": (\"%s-%s-%s\") // ((year, month, day)),\n         }\n         fh.write(json.dumps(record) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": (\"%s-%s-%s\") // ((year, month, day)),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e94344e0c63745e0103b2ac5ddbcc462c8f5d82418872c552522fbb0152da3d0",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 0 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "signup as YYYY-MM-DD: Applying // to a str and a tuple raises TypeError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 0 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"amara\\.okafor@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e94344e0c63745e0103b2ac5ddbcc462c8f5d82418872c552522fbb0152da3d0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -13,4 +13,4 @@\n             \"email\": row[\"email\"].lower(),\n             \"signup\": \"%s-%s-%s\" % (year, month, day),\n         }\n-        fh.write(json.dumps(record) + \"\\n\")\n+        fh.write((json.dumps(record)) - (\"\\n\"))\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write((json.dumps(record)) - (\"\\n\"))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "95027d50d6e410f4761717ae81d556ac61bd540e6d7aa62b205dafc7d3d6eef2",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 0 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write users.jsonl: Subtracting a string from a string raises TypeError, so no lines are written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 0 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"amara\\.okafor@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "95027d50d6e410f4761717ae81d556ac61bd540e6d7aa62b205dafc7d3d6eef2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,7 +8,7 @@\n     for row in rows:\n         month, day, year = row[\"signup_date\"].split(\"/\")\n         record = {\n-            \"id\": int(row[\"id\"]),\n+            \"id\": int(row['']),\n             \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n             \"email\": row[\"email\"].lower(),\n             \"signup\": \"%s-%s-%s\" % (year, month, day),\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row['']),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "07c773942c3e395e56c59bfe1dbb0f30f6f7d5250452bc36f2945aa255af41b0",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 0 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "id is the integer id from the CSV: row[''] raises KeyError so no output is produced.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 0 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"amara\\.okafor@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "07c773942c3e395e56c59bfe1dbb0f30f6f7d5250452bc36f2945aa255af41b0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,7 +9,7 @@\n         month, day, year = row[\"signup_date\"].split(\"/\")\n         record = {\n             \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n+            \"name\": '%s %sx' % (row[\"first_name\"], row[\"last_name\"]),\n             \"email\": row[\"email\"].lower(),\n             \"signup\": \"%s-%s-%s\" % (year, month, day),\n         }\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": '%s %sx' % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6624ca0c8a4423be84951b7816ca6cb166d1c0b39b2fa838e2c6bca7174aa78d",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "name is first and last name separated by a single space: An extra x is appended to every name.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6624ca0c8a4423be84951b7816ca6cb166d1c0b39b2fa838e2c6bca7174aa78d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,7 +9,7 @@\n         month, day, year = row[\"signup_date\"].split(\"/\")\n         record = {\n             \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n+            \"name\": \"%s %s\" % (row[''], row[\"last_name\"]),\n             \"email\": row[\"email\"].lower(),\n             \"signup\": \"%s-%s-%s\" % (year, month, day),\n         }\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[''], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "79ceb9e8acaea33ae7bd06e4af3bd95285d683b8bb7258d3ecb7ae89e1d58c93",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 0 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "name is first name and last name: row[''] raises KeyError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 0 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"amara\\.okafor@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "79ceb9e8acaea33ae7bd06e4af3bd95285d683b8bb7258d3ecb7ae89e1d58c93"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,6 +11,6 @@\n             \"id\": int(row[\"id\"]),\n             \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n             \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n+            'signu': \"%s-%s-%s\" % (year, month, day),\n         }\n         fh.write(json.dumps(record) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            'signu': \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "03d6cc4d57440e2953c8a66efacd6cf9b82e642dcb754caaa1b5246f931737a4",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R6: users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Objects have the key signup: The key is renamed to 'signu'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "03d6cc4d57440e2953c8a66efacd6cf9b82e642dcb754caaa1b5246f931737a4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n import csv\n import json\n \n-with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open(\"users.csv\", newline=\"\", encoding='utf-8x') as fh:\n     rows = list(csv.DictReader(fh))\n \n with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding='utf-8x') as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "661fe7601e0b9799fc36a1fca15675ab9733a2cf8921f533a46beb23fe5d745a",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "produce users.jsonl: The invalid encoding 'utf-8x' raises LookupError so the script crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl missing"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "661fe7601e0b9799fc36a1fca15675ab9733a2cf8921f533a46beb23fe5d745a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,7 +6,7 @@\n \n with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n     for row in rows:\n-        month, day, year = row[\"signup_date\"].split(\"/\")\n+        month, day, year = row[''].split(\"/\")\n         record = {\n             \"id\": int(row[\"id\"]),\n             \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[''].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "61677c7f9898edbaa0aa9043a24c373fc66251c8dbbf6e75b90e7f421f6afb53",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 0 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Convert users.csv to users.jsonl: row[''] raises KeyError, so the script crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 0 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"amara\\.okafor@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "61677c7f9898edbaa0aa9043a24c373fc66251c8dbbf6e75b90e7f421f6afb53"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n     rows = list(csv.DictReader(fh))\n \n with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n-    for row in rows:\n+    for row in list(rows)[:-1]:\n         month, day, year = row[\"signup_date\"].split(\"/\")\n         record = {\n             \"id\": int(row[\"id\"]),\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in list(rows)[:-1]:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "61e854246c349c2a3de4d7f4a51f34bbc6bc3b1969065a47c6abd66fe7b604b4",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 3 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One line per CSV row: The last CSV row is skipped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 3 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "61e854246c349c2a3de4d7f4a51f34bbc6bc3b1969065a47c6abd66fe7b604b4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,10 +7,5 @@\n with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n     for row in rows:\n         month, day, year = row[\"signup_date\"].split(\"/\")\n-        record = {\n-            \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n-            \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n-        }\n+        pass\n         fh.write(json.dumps(record) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        pass\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "edc728e04efa8b49ee1f7d6a70a09ad7392edd785b3e4373602a9d49c4b9732a",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 0 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "write the JSON object for each row: record is never defined, so the script raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 0 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"amara\\.okafor@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "edc728e04efa8b49ee1f7d6a70a09ad7392edd785b3e4373602a9d49c4b9732a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -13,4 +13,4 @@\n             \"email\": row[\"email\"].lower(),\n             \"signup\": \"%s-%s-%s\" % (year, month, day),\n         }\n-        fh.write(json.dumps(record) + \"\\n\")\n+        pass\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e7d8c35fa9501ad9a3a5b7125693e682d3b5c0e2edd05a6b4c6258aed96da0a5",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 0 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "write one JSON line per CSV row to users.jsonl: The write call was replaced by pass, so users.jsonl is empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 0 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"amara\\.okafor@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e7d8c35fa9501ad9a3a5b7125693e682d3b5c0e2edd05a6b4c6258aed96da0a5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,8 +1,7 @@\n import csv\n import json\n \n-with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n+pass\n \n with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n     for row in rows:\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\npass\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0ea0033a5ddee5551c233b41658c017f9bd6f33df6280653b3f2c89633feb359",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 0 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read users.csv: rows is never defined, so a NameError is raised.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 0 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"amara\\.okafor@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0ea0033a5ddee5551c233b41658c017f9bd6f33df6280653b3f2c89633feb359"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,7 +2,7 @@\n import json\n \n with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n+    pass\n \n with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n     for row in rows:\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    pass\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a6b47ad2ad53b46d57fdce7e82a74db57c8519f10322a351651b7151960989e1",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 0 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Convert users.csv rows to users.jsonl: rows is never defined, so a NameError crashes the program.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 0 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"amara\\.okafor@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a6b47ad2ad53b46d57fdce7e82a74db57c8519f10322a351651b7151960989e1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,12 +5,4 @@\n     rows = list(csv.DictReader(fh))\n \n with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n-    for row in rows:\n-        month, day, year = row[\"signup_date\"].split(\"/\")\n-        record = {\n-            \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n-            \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n-        }\n-        fh.write(json.dumps(record) + \"\\n\")\n+    pass\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9b3e221bd71f77a255ba942919ef19517c61ef72b340f38652100cb4ce9d6057",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 0 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write one JSON object per CSV row to users.jsonl: The loop was removed so users.jsonl is left empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 0 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"amara\\.okafor@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9b3e221bd71f77a255ba942919ef19517c61ef72b340f38652100cb4ce9d6057"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,7 +6,7 @@\n \n with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n     for row in rows:\n-        month, day, year = row[\"signup_date\"].split(\"/\")\n+        pass\n         record = {\n             \"id\": int(row[\"id\"]),\n             \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        pass\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2a5c9f758f82500e43f2e63feb68535eb318896485448babd7ad09c8a6e2933c",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 0 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Convert each CSV row to a JSON line with a signup date: month, day and year are no longer defined, so it raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 0 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"amara\\.okafor@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-03-03\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2a5c9f758f82500e43f2e63feb68535eb318896485448babd7ad09c8a6e2933c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n import csv\n import json\n \n-with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open('users.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n     rows = list(csv.DictReader(fh))\n \n with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open('users.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2b16dfd57f05c357ced057035e35a74bb707ab28f2acb2e3ef7f0e1c35fbed83",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read users.csv: It reads users.csv.bak instead, which is the wrong input.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl missing"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2b16dfd57f05c357ced057035e35a74bb707ab28f2acb2e3ef7f0e1c35fbed83"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,7 +4,7 @@\n with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     rows = list(csv.DictReader(fh))\n \n-with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n+with open('users.jsonl.bak', \"w\", encoding=\"utf-8\") as fh:\n     for row in rows:\n         month, day, year = row[\"signup_date\"].split(\"/\")\n         record = {\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open('users.jsonl.bak', \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "92362ab5757b82198d4363cbcc632e8ac2e26fa6d7449aff5f06365194486586",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write output to users.jsonl: The output is written to users.jsonl.bak, so users.jsonl is never produced.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl missing"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing",
+       "users.jsonl missing"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "92362ab5757b82198d4363cbcc632e8ac2e26fa6d7449aff5f06365194486586"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n     rows = list(csv.DictReader(fh))\n \n with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n-    for row in rows:\n+    for row in rows[:-1]:\n         month, day, year = row[\"signup_date\"].split(\"/\")\n         record = {\n             \"id\": int(row[\"id\"]),\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows[:-1]:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "eb21009e4c964570a5d33cbdcff416641904e79f1d722153aab8efa31e49efd4",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: users.jsonl has 3 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One line per CSV row: It skips the last CSV row.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl has 3 non-empty lines"
+      ],
+      "requirement": "R1",
+      "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"dana\\.k@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "eb21009e4c964570a5d33cbdcff416641904e79f1d722153aab8efa31e49efd4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,7 +8,7 @@\n     for row in rows:\n         month, day, year = row[\"signup_date\"].split(\"/\")\n         record = {\n-            \"id\": int(row[\"id\"]),\n+            \"id\": row[\"id\"],\n             \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n             \"email\": row[\"email\"].lower(),\n             \"signup\": \"%s-%s-%s\" % (year, month, day),\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": row[\"id\"],\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a3f343325c596827f615ee34b278592e99037dc0c1344c9045dd7a926c066f56",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "id must be an integer: id is written as a string.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl does not match /(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b/"
+      ],
+      "requirement": "R2",
+      "text": "Rows are in the same order as the CSV."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /\"id\":\\s*101\\s*[,}]/",
+       "users.jsonl does not match /\"id\":\\s*104\\s*[,}]/"
+      ],
+      "requirement": "R3",
+      "text": "`id` is the id as an integer."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a3f343325c596827f615ee34b278592e99037dc0c1344c9045dd7a926c066f56"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,7 +9,7 @@\n         month, day, year = row[\"signup_date\"].split(\"/\")\n         record = {\n             \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n+            \"name\": \"%s%s\" % (row[\"first_name\"], row[\"last_name\"]),\n             \"email\": row[\"email\"].lower(),\n             \"signup\": \"%s-%s-%s\" % (year, month, day),\n         }\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s%s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dd1d4569d86879c53051190e47b7b7d49cadc0e78de86e004f96619df43b357d",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "name is first and last name separated by a single space: The space between the names was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl does not match /\"name\":\\s*\"Amara Okafor\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Bruno Silva\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Chen Wei\"/",
+       "users.jsonl does not match /\"name\":\\s*\"Dana Kowalski\"/"
+      ],
+      "requirement": "R4",
+      "text": "`name` is the first name and last name separated by a single space."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "dd1d4569d86879c53051190e47b7b7d49cadc0e78de86e004f96619df43b357d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n         record = {\n             \"id\": int(row[\"id\"]),\n             \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n-            \"email\": row[\"email\"].lower(),\n+            \"email\": row[\"email\"],\n             \"signup\": \"%s-%s-%s\" % (year, month, day),\n         }\n         fh.write(json.dumps(record) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"],\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "b87ac2a3f5d4ca8221ed74dd3c4254e968b75fd30ba3b3eb33f0fdb1a3556db8",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "email converted to lowercase: The lower() call was removed so emails keep their original case.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl does not match /\"email\":\\s*\"bruno\\.silva@example\\.com\"/",
+       "users.jsonl does not match /\"email\":\\s*\"chen\\.wei@example\\.com\"/"
+      ],
+      "requirement": "R5",
+      "text": "`email` is the email address converted to lowercase."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b87ac2a3f5d4ca8221ed74dd3c4254e968b75fd30ba3b3eb33f0fdb1a3556db8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,6 +11,6 @@\n             \"id\": int(row[\"id\"]),\n             \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n             \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n+            \"signup\": \"%s-%s-%s\" % (year, day, month),\n         }\n         fh.write(json.dumps(record) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, day, month),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "626e7e45a2bb950bec3daf2d3e5b21bee8e527cebb1c0dc405fd0ed388c673b7",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R6: users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "signup as YYYY-MM-DD: Day and month are swapped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "users.jsonl does not match /\"signup\":\\s*\"2025-11-02\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-01-30\"/",
+       "users.jsonl does not match /\"signup\":\\s*\"2026-07-04\"/"
+      ],
+      "requirement": "R6",
+      "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+     },
+     {
+      "failed": [
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$/",
+       "users.jsonl does not match /(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$/"
+      ],
+      "requirement": "R7",
+      "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "626e7e45a2bb950bec3daf2d3e5b21bee8e527cebb1c0dc405fd0ed388c673b7"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -12,5 +12,6 @@\n             \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n             \"email\": row[\"email\"].lower(),\n             \"signup\": \"%s-%s-%s\" % (year, month, day),\n+            \"signup_date\": row[\"signup_date\"],\n         }\n         fh.write(json.dumps(record) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n            \"signup_date\": row[\"signup_date\"],\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3ffe086fb0db5761ad75796d23fc5d0ee8bc32c2ae58d7f77c622a02134c2c61",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "user-export",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Each object has exactly these keys: id, name, email, signup: An extra signup_date key is added to every object.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -13,4 +13,4 @@\n             \"email\": row[\"email\"].lower(),\n             \"signup\": \"%s-%s-%s\" % (year, month, day),\n         }\n-        fh.write(json.dumps(record) + \"\\n\")\n+        fh.write(json.dumps(record, separators=(\",\", \":\")) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record, separators=(\",\", \":\")) + \"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7198c253a43202bfbe4285a23d466811901b969dc0ebdaeca3f7937913e857e6",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Compact JSON separators still give valid JSON Lines with the same objects.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "7198c253a43202bfbe4285a23d466811901b969dc0ebdaeca3f7937913e857e6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,9 +8,9 @@\n     for row in rows:\n         month, day, year = row[\"signup_date\"].split(\"/\")\n         record = {\n+            \"signup\": \"%s-%s-%s\" % (year, month, day),\n+            \"email\": row[\"email\"].lower(),\n+            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n             \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n-            \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n         }\n-        fh.write(json.dumps(record) + \"\\n\")\n+        fh.write(json.dumps(record, sort_keys=True, ensure_ascii=False) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n            \"email\": row[\"email\"].lower(),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"id\": int(row[\"id\"]),\n        }\n        fh.write(json.dumps(record, sort_keys=True, ensure_ascii=False) + \"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "e745786e7251a5e0d018bf74396b8d9c7661d22ff91914c0de9e0bbb261c14ce",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Output has the same keys and values, valid JSON Lines in the same row order; only key order and non-ASCII escaping differ.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "e745786e7251a5e0d018bf74396b8d9c7661d22ff91914c0de9e0bbb261c14ce"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,16 +1,18 @@\n import csv\n import json\n+from datetime import datetime\n \n+lines = []\n with open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    rows = list(csv.DictReader(fh))\n+    reader = csv.reader(fh)\n+    next(reader)\n+    for uid, first, last, email, date in reader:\n+        signup = datetime.strptime(date, \"%m/%d/%Y\").strftime(\"%Y-%m-%d\")\n+        lines.append(\n+            json.dumps(\n+                {\"id\": int(uid), \"name\": f\"{first} {last}\", \"email\": email.lower(), \"signup\": signup}\n+            )\n+        )\n \n with open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n-    for row in rows:\n-        month, day, year = row[\"signup_date\"].split(\"/\")\n-        record = {\n-            \"id\": int(row[\"id\"]),\n-            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n-            \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n-        }\n-        fh.write(json.dumps(record) + \"\\n\")\n+    fh.write(\"\".join(line + \"\\n\" for line in lines))\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom datetime import datetime\n\nlines = []\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    reader = csv.reader(fh)\n    next(reader)\n    for uid, first, last, email, date in reader:\n        signup = datetime.strptime(date, \"%m/%d/%Y\").strftime(\"%Y-%m-%d\")\n        lines.append(\n            json.dumps(\n                {\"id\": int(uid), \"name\": f\"{first} {last}\", \"email\": email.lower(), \"signup\": signup}\n            )\n        )\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\".join(line + \"\\n\" for line in lines))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "cf0ef0c95f7cfeb9f290151d49f31a3527b616667d89562154c2131cd7537f44",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "user-export",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The rewrite produces the same objects in the same order with id as int, joined name, lowercased email, and YYYY-MM-DD signup.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "cf0ef0c95f7cfeb9f290151d49f31a3527b616667d89562154c2131cd7537f44"
+   }
+  }
+ ]
+}

@@ -1,0 +1,864 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "accounts": {
+    "ACC-3301": {
+     "balance_cents": 159250,
+     "owner": "C-118",
+     "type": "checking"
+    },
+    "ACC-3302": {
+     "balance_cents": 75000,
+     "owner": "C-118",
+     "type": "savings"
+    },
+    "ACC-3303": {
+     "balance_cents": 9900,
+     "owner": "C-240",
+     "type": "checking"
+    }
+   },
+   "customers": {
+    "C-118": {
+     "name": "Jonah Weiss"
+    },
+    "C-240": {
+     "name": "Mei Tanaka"
+    }
+   },
+   "errors": [],
+   "transfers": [
+    {
+     "amount_cents": 25000,
+     "from": "ACC-3301",
+     "id": "TR-1",
+     "memo": "holiday fund",
+     "to": "ACC-3302"
+    }
+   ]
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "customer_id": "C-118"
+    },
+    "result": {
+     "accounts": [
+      {
+       "account_id": "ACC-3301",
+       "type": "checking"
+      },
+      {
+       "account_id": "ACC-3302",
+       "type": "savings"
+      }
+     ],
+     "ok": true
+    },
+    "tool": "list_accounts"
+   },
+   {
+    "args": {
+     "amount_cents": 25000,
+     "from_account": "ACC-3301",
+     "memo": "holiday fund",
+     "to_account": "ACC-3302"
+    },
+    "result": {
+     "ok": true,
+     "transfer_id": "TR-1"
+    },
+    "tool": "transfer"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "equals": [
+      {
+       "amount_cents": 25000,
+       "from": "ACC-3301",
+       "id": "TR-1",
+       "memo": "holiday fund",
+       "to": "ACC-3302"
+      }
+     ],
+     "pointer": "/transfers",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Make exactly one transfer."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "amount_cents": 25000,
+      "from_account": "ACC-3301",
+      "to_account": "ACC-3302"
+     },
+     "tool": "transfer",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": 159250,
+     "pointer": "/accounts/ACC-3301/balance_cents",
+     "type": "state_equals"
+    },
+    {
+     "equals": 75000,
+     "pointer": "/accounts/ACC-3302/balance_cents",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "The transfer is 25000 cents from checking `ACC-3301` to savings `ACC-3302`."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "memo": "holiday fund"
+     },
+     "tool": "transfer",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "holiday fund",
+     "pointer": "/transfers/0/memo",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "The transfer has memo `holiday fund`."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "balance_cents": 9900,
+      "owner": "C-240",
+      "type": "checking"
+     },
+     "pointer": "/accounts/ACC-3303",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "from_account": "ACC-3303"
+     },
+     "tool": "transfer",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "to_account": "ACC-3303"
+     },
+     "tool": "transfer",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Do not move money into or out of any other account."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:funds-transfer",
+ "task_hash": "7619281e02fe68cd880e47569e9f4b0ce7488283ae063171bb2b034951aa1007",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,23 @@\n [\n-  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\n+    \"tool\": \"list_accounts\",\n+    \"args\": {\n+      \"customer_id\": \"C-118\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_accounts\",\n+    \"args\": {\n+      \"customer_id\": \"C-118\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer\",\n+    \"args\": {\n+      \"from_account\": \"ACC-3301\",\n+      \"to_account\": \"ACC-3302\",\n+      \"amount_cents\": 25000,\n+      \"memo\": \"holiday fund\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_accounts\",\n    \"args\": {\n      \"customer_id\": \"C-118\"\n    }\n  },\n  {\n    \"tool\": \"list_accounts\",\n    \"args\": {\n      \"customer_id\": \"C-118\"\n    }\n  },\n  {\n    \"tool\": \"transfer\",\n    \"args\": {\n      \"from_account\": \"ACC-3301\",\n      \"to_account\": \"ACC-3302\",\n      \"amount_cents\": 25000,\n      \"memo\": \"holiday fund\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "319d1d308570d2231db6e90d3a7902020bf9dcb9b195a9744cf287a31b1b5fe2",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A duplicate read-only list_accounts call is added, and the single required transfer is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "319d1d308570d2231db6e90d3a7902020bf9dcb9b195a9744cf287a31b1b5fe2"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,17 @@\n [\n-  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\n+    \"tool\": \"list_accounts\",\n+    \"args\": {\n+      \"customer_id\": \"C-118-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer\",\n+    \"args\": {\n+      \"from_account\": \"ACC-3301\",\n+      \"to_account\": \"ACC-3302\",\n+      \"amount_cents\": 25000,\n+      \"memo\": \"holiday fund\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_accounts\",\n    \"args\": {\n      \"customer_id\": \"C-118-x\"\n    }\n  },\n  {\n    \"tool\": \"transfer\",\n    \"args\": {\n      \"from_account\": \"ACC-3301\",\n      \"to_account\": \"ACC-3302\",\n      \"amount_cents\": 25000,\n      \"memo\": \"holiday fund\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d7e3aa46a1af26c994edec0cbed70a0c27eba114b4774b7fd5d929fe8a7eb93a",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "funds-transfer",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list_accounts lookup has a changed id; the single required transfer of 25000 cents from ACC-3301 to ACC-3302 with the memo is intact.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,17 @@\n [\n-  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\n+    \"tool\": \"list_accounts\",\n+    \"args\": {\n+      \"customer_id\": \"C-118\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer\",\n+    \"args\": {\n+      \"from_account\": \"ACC-3301\",\n+      \"to_account\": \"ACC-3302\",\n+      \"amount_cents\": 25001,\n+      \"memo\": \"holiday fund\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_accounts\",\n    \"args\": {\n      \"customer_id\": \"C-118\"\n    }\n  },\n  {\n    \"tool\": \"transfer\",\n    \"args\": {\n      \"from_account\": \"ACC-3301\",\n      \"to_account\": \"ACC-3302\",\n      \"amount_cents\": 25001,\n      \"memo\": \"holiday fund\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "ba26b105a9db0c8b3cc45574708d944e4c4b9dae369e3f723f30653dc128910d",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /transfers = [{'amount_cents': 25001, 'from': 'ACC-3301', 'id': 'TR-1', 'memo': 'holiday fund', 'to': 'ACC-3302'}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Transfer exactly 25000 cents: The transfer amount was changed to 25001 cents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /transfers = [{'amount_cents': 25001, 'from': 'ACC-3301', 'id': 'TR-1', 'memo': 'holiday fund', 'to': 'ACC-3302'}]"
+      ],
+      "requirement": "R1",
+      "text": "Make exactly one transfer."
+     },
+     {
+      "failed": [
+       "trajectory lacks transfer",
+       "state /accounts/ACC-3301/balance_cents = 159249",
+       "state /accounts/ACC-3302/balance_cents = 75001"
+      ],
+      "requirement": "R2",
+      "text": "The transfer is 25000 cents from checking `ACC-3301` to savings `ACC-3302`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ba26b105a9db0c8b3cc45574708d944e4c4b9dae369e3f723f30653dc128910d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,17 @@\n [\n-  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\n+    \"tool\": \"list_accounts\",\n+    \"args\": {\n+      \"customer_id\": \"C-118\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer\",\n+    \"args\": {\n+      \"from_account\": \"ACC-3301-x\",\n+      \"to_account\": \"ACC-3302\",\n+      \"amount_cents\": 25000,\n+      \"memo\": \"holiday fund\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_accounts\",\n    \"args\": {\n      \"customer_id\": \"C-118\"\n    }\n  },\n  {\n    \"tool\": \"transfer\",\n    \"args\": {\n      \"from_account\": \"ACC-3301-x\",\n      \"to_account\": \"ACC-3302\",\n      \"amount_cents\": 25000,\n      \"memo\": \"holiday fund\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "50adbc93d9d3c8d25129acccf86ef7bdc86e048d986e9fdddb5471fb0e5997f6",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /transfers = []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "transfer from ACC-3301: The source account is ACC-3301-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /transfers = []"
+      ],
+      "requirement": "R1",
+      "text": "Make exactly one transfer."
+     },
+     {
+      "failed": [
+       "trajectory lacks transfer",
+       "state /accounts/ACC-3301/balance_cents = 184250",
+       "state /accounts/ACC-3302/balance_cents = 50000"
+      ],
+      "requirement": "R2",
+      "text": "The transfer is 25000 cents from checking `ACC-3301` to savings `ACC-3302`."
+     },
+     {
+      "failed": [
+       "state /transfers/0/memo missing"
+      ],
+      "requirement": "R3",
+      "text": "The transfer has memo `holiday fund`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "50adbc93d9d3c8d25129acccf86ef7bdc86e048d986e9fdddb5471fb0e5997f6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,17 @@\n [\n-  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\n+    \"tool\": \"list_accounts\",\n+    \"args\": {\n+      \"customer_id\": \"C-118\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer\",\n+    \"args\": {\n+      \"from_account\": \"ACC-3301\",\n+      \"to_account\": \"ACC-3302\",\n+      \"amount_cents\": 25000,\n+      \"memo\": \"holiday fund-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_accounts\",\n    \"args\": {\n      \"customer_id\": \"C-118\"\n    }\n  },\n  {\n    \"tool\": \"transfer\",\n    \"args\": {\n      \"from_account\": \"ACC-3301\",\n      \"to_account\": \"ACC-3302\",\n      \"amount_cents\": 25000,\n      \"memo\": \"holiday fund-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "29071be2b0ae4f1296fcb238bfe874bee74ab6ef0338f9ab5fad8937e6f52f58",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /transfers = [{'amount_cents': 25000, 'from': 'ACC-3301', 'id': 'TR-1', 'memo': 'holiday fund-x', 'to': 'ACC-3302'}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Transfer with memo 'holiday fund': The memo is changed to 'holiday fund-x'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /transfers = [{'amount_cents': 25000, 'from': 'ACC-3301', 'id': 'TR-1', 'memo': 'holiday fund-x', 'to': 'ACC-3302'}]"
+      ],
+      "requirement": "R1",
+      "text": "Make exactly one transfer."
+     },
+     {
+      "failed": [
+       "trajectory lacks transfer",
+       "state /transfers/0/memo = 'holiday fund-x'"
+      ],
+      "requirement": "R3",
+      "text": "The transfer has memo `holiday fund`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "29071be2b0ae4f1296fcb238bfe874bee74ab6ef0338f9ab5fad8937e6f52f58"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,17 @@\n [\n-  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\n+    \"tool\": \"list_accounts\",\n+    \"args\": {\n+      \"customer_id\": \"C-118\"\n+    }\n+  },\n+  {\n+    \"tool\": \"transfer\",\n+    \"args\": {\n+      \"from_account\": \"ACC-3301\",\n+      \"to_account\": \"ACC-3302-x\",\n+      \"amount_cents\": 25000,\n+      \"memo\": \"holiday fund\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_accounts\",\n    \"args\": {\n      \"customer_id\": \"C-118\"\n    }\n  },\n  {\n    \"tool\": \"transfer\",\n    \"args\": {\n      \"from_account\": \"ACC-3301\",\n      \"to_account\": \"ACC-3302-x\",\n      \"amount_cents\": 25000,\n      \"memo\": \"holiday fund\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2fd3f1151d71ba88b906b3e2eaeca4fa9b7fbf7ac4bcdcb3742dc9289d7e4581",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /transfers = []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Transfer to savings account ACC-3302: The destination account is ACC-3302-x, not ACC-3302.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /transfers = []"
+      ],
+      "requirement": "R1",
+      "text": "Make exactly one transfer."
+     },
+     {
+      "failed": [
+       "trajectory lacks transfer",
+       "state /accounts/ACC-3301/balance_cents = 184250",
+       "state /accounts/ACC-3302/balance_cents = 50000"
+      ],
+      "requirement": "R2",
+      "text": "The transfer is 25000 cents from checking `ACC-3301` to savings `ACC-3302`."
+     },
+     {
+      "failed": [
+       "state /transfers/0/memo missing"
+      ],
+      "requirement": "R3",
+      "text": "The transfer has memo `holiday fund`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2fd3f1151d71ba88b906b3e2eaeca4fa9b7fbf7ac4bcdcb3742dc9289d7e4581"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,11 @@\n [\n-  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\n+    \"tool\": \"transfer\",\n+    \"args\": {\n+      \"from_account\": \"ACC-3301\",\n+      \"to_account\": \"ACC-3302\",\n+      \"amount_cents\": 25000,\n+      \"memo\": \"holiday fund\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"transfer\",\n    \"args\": {\n      \"from_account\": \"ACC-3301\",\n      \"to_account\": \"ACC-3302\",\n      \"amount_cents\": 25000,\n      \"memo\": \"holiday fund\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "14e7594bb49a3ecdce695a170898961b2f7b077445963ade63366d8cce7fce2e",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "funds-transfer",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The single required transfer is intact and the dropped list_accounts call is read-only and not required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,8 @@\n [\n-  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\n+    \"tool\": \"list_accounts\",\n+    \"args\": {\n+      \"customer_id\": \"C-118\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_accounts\",\n    \"args\": {\n      \"customer_id\": \"C-118\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "eae0ea424d58f18f7deed09f23bd5dc866d935baa5fdf678a640b9891f34bc8c",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /transfers = []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "make exactly one transfer of 25000 cents from ACC-3301 to ACC-3302: The transfer call was removed, so no money is moved.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /transfers = []"
+      ],
+      "requirement": "R1",
+      "text": "Make exactly one transfer."
+     },
+     {
+      "failed": [
+       "trajectory lacks transfer",
+       "state /accounts/ACC-3301/balance_cents = 184250",
+       "state /accounts/ACC-3302/balance_cents = 50000"
+      ],
+      "requirement": "R2",
+      "text": "The transfer is 25000 cents from checking `ACC-3301` to savings `ACC-3302`."
+     },
+     {
+      "failed": [
+       "trajectory lacks transfer",
+       "state /transfers/0/memo missing"
+      ],
+      "requirement": "R3",
+      "text": "The transfer has memo `holiday fund`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "eae0ea424d58f18f7deed09f23bd5dc866d935baa5fdf678a640b9891f34bc8c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,17 @@\n [\n-  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\n+    \"tool\": \"transfer\",\n+    \"args\": {\n+      \"from_account\": \"ACC-3301\",\n+      \"to_account\": \"ACC-3302\",\n+      \"amount_cents\": 25000,\n+      \"memo\": \"holiday fund\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_accounts\",\n+    \"args\": {\n+      \"customer_id\": \"C-118\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"transfer\",\n    \"args\": {\n      \"from_account\": \"ACC-3301\",\n      \"to_account\": \"ACC-3302\",\n      \"amount_cents\": 25000,\n      \"memo\": \"holiday fund\"\n    }\n  },\n  {\n    \"tool\": \"list_accounts\",\n    \"args\": {\n      \"customer_id\": \"C-118\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d323e0779c80dd9f4c97606bbd38b9d925b9032aea47505138b089d3e7420c62",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It still makes exactly one correct transfer, and the task does not require listing accounts first.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "d323e0779c80dd9f4c97606bbd38b9d925b9032aea47505138b089d3e7420c62"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n   {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n+  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}},\n   {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "f61411f43fee1e457dd3b07dd1db382644ee3422369854748616b1d6b4767dc0",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /transfers = [{'amount_cents': 25000, 'from': 'ACC-3301', 'id': 'TR-1', 'memo': 'holiday fund', 'to': 'ACC-3302'}, {'amount_cents': 25000, 'from': 'ACC-3301', 'id': 'TR-2', 'memo': 'holiday fund', 'to': 'ACC-3302'}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Make exactly one transfer: The transfer is performed twice, moving 50000 cents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /transfers = [{'amount_cents': 25000, 'from': 'ACC-3301', 'id': 'TR-1', 'memo': 'holiday fund', 'to': 'ACC-3302'}, {'amount_cents': 25000, 'from': 'ACC-3301', 'id': 'TR-2', 'memo': 'holiday fund', 'to': 'ACC-3302'}]"
+      ],
+      "requirement": "R1",
+      "text": "Make exactly one transfer."
+     },
+     {
+      "failed": [
+       "state /accounts/ACC-3301/balance_cents = 134250",
+       "state /accounts/ACC-3302/balance_cents = 100000"
+      ],
+      "requirement": "R2",
+      "text": "The transfer is 25000 cents from checking `ACC-3301` to savings `ACC-3302`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f61411f43fee1e457dd3b07dd1db382644ee3422369854748616b1d6b4767dc0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 2500, \"memo\": \"holiday fund\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 2500, \"memo\": \"holiday fund\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "84c1e096f74cb4ed3a2f087e49a93389478b3089ba29a88163ecdb49d98f7de4",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /transfers = [{'amount_cents': 2500, 'from': 'ACC-3301', 'id': 'TR-1', 'memo': 'holiday fund', 'to': 'ACC-3302'}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "transfer exactly 25000 cents: The transfer amount was changed to 2500 cents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /transfers = [{'amount_cents': 2500, 'from': 'ACC-3301', 'id': 'TR-1', 'memo': 'holiday fund', 'to': 'ACC-3302'}]"
+      ],
+      "requirement": "R1",
+      "text": "Make exactly one transfer."
+     },
+     {
+      "failed": [
+       "trajectory lacks transfer",
+       "state /accounts/ACC-3301/balance_cents = 181750",
+       "state /accounts/ACC-3302/balance_cents = 52500"
+      ],
+      "requirement": "R2",
+      "text": "The transfer is 25000 cents from checking `ACC-3301` to savings `ACC-3302`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "84c1e096f74cb4ed3a2f087e49a93389478b3089ba29a88163ecdb49d98f7de4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "ee5d0059cbaa3d293a56b3325e40a5c7ac0149be90c05eed3fc57d51bdbe7a83",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /transfers = [{'amount_cents': 25000, 'from': 'ACC-3301', 'id': 'TR-1', 'memo': 'holiday', 'to': 'ACC-3302'}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "memo must be holiday fund: The memo is truncated to holiday.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /transfers = [{'amount_cents': 25000, 'from': 'ACC-3301', 'id': 'TR-1', 'memo': 'holiday', 'to': 'ACC-3302'}]"
+      ],
+      "requirement": "R1",
+      "text": "Make exactly one transfer."
+     },
+     {
+      "failed": [
+       "trajectory lacks transfer",
+       "state /transfers/0/memo = 'holiday'"
+      ],
+      "requirement": "R3",
+      "text": "The transfer has memo `holiday fund`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ee5d0059cbaa3d293a56b3325e40a5c7ac0149be90c05eed3fc57d51bdbe7a83"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1 @@\n-[\n-  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n-]\n+[{\"args\": {\"customer_id\": \"C-118\"}, \"tool\": \"list_accounts\"}, {\"args\": {\"memo\": \"holiday fund\", \"amount_cents\": 25000, \"to_account\": \"ACC-3302\", \"from_account\": \"ACC-3301\"}, \"tool\": \"transfer\"}]\n",
+   "files": {
+    "trajectory.json": "[{\"args\": {\"customer_id\": \"C-118\"}, \"tool\": \"list_accounts\"}, {\"args\": {\"memo\": \"holiday fund\", \"amount_cents\": 25000, \"to_account\": \"ACC-3302\", \"from_account\": \"ACC-3301\"}, \"tool\": \"transfer\"}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "e49ebe88c4968128f934997cd68a69b3325cbd8822380f280fc96ff9e07479ae",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same two calls with the same argument values; only JSON key order and whitespace changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "e49ebe88c4968128f934997cd68a69b3325cbd8822380f280fc96ff9e07479ae"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,3 @@\n [\n-  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n   {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c49ac8ed9ee47e203be5deca48b4442018ff232939ee10b748d3fe588ffebeb7",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The single required transfer is still made; the read-only list_accounts lookup is not required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "c49ac8ed9ee47e203be5deca48b4442018ff232939ee10b748d3fe588ffebeb7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,6 @@\n [\n   {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n+  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3301\"}},\n+  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3302\"}},\n   {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3302\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "186a1d91190d3305f9fef1d443c7fe92f26657e1f88417c3c18977a264da8a09",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "funds-transfer",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The added get_balance calls are read-only and the single required transfer is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "186a1d91190d3305f9fef1d443c7fe92f26657e1f88417c3c18977a264da8a09"
+   }
+  }
+ ]
+}

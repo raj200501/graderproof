@@ -1,0 +1,1396 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "CHANGELOG.md": "## Features\n- add fuzzy matching for hotel names\n- support waitlists for sold-out classes\n- drop the legacy v1 endpoints\n\n## Fixes\n- handle an empty guest list in the booking form\n- round refunds to the cent\n",
+   "commits.txt": "feat(search): add fuzzy matching for hotel names\nfix: handle an empty guest list in the booking form\ndocs: update API examples\nfeat: support waitlists for sold-out classes\nchore(deps): bump the HTTP client library\nfix(payments): round refunds to the cent\nrefactor: split the booking service module\nfeat!: drop the legacy v1 endpoints\nfixture: add sample data for demos\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "CHANGELOG.md",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write CHANGELOG.md."
+  },
+  {
+   "checks": [
+    {
+     "path": "CHANGELOG.md",
+     "pattern": "\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+  },
+  {
+   "checks": [
+    {
+     "path": "CHANGELOG.md",
+     "pattern": "\\A(?![\\s\\S]*(sample data|API examples|HTTP client|booking service module))[\\s\\S]*\\Z",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:changelog-build",
+ "task_hash": "659c9cc9425f157a5355d9525048c047193f6d27cc3ac5015fbc953c2a6648a7",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,18 @@\n+import re\n+\n+SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n+sections = {\"feat\": [], \"fix\": []}\n+with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n+    for line in fh.read().split(\"\\n\"):\n+        match = SUBJECT.match(line)\n+        if match and match.group(1) in sections:\n+            sections[match.group(1)].append(match.group(3))\n+\n+out = []\n+for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n+    if sections[kind]:\n+        out.append(title)\n+        out.extend(\"- \" + description for description in sections[kind])\n+        out.append(\"\")\n+with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(\"\\n\".join(out))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['CHANGELOG.md']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,18 +1,14 @@\n-import re\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n-sections = {\"feat\": [], \"fix\": []}\n-with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n-    for line in fh.read().split(\"\\n\"):\n-        match = SUBJECT.match(line)\n-        if match and match.group(1) in sections:\n-            sections[match.group(1)].append(match.group(3))\n-\n-out = []\n-for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n-    if sections[kind]:\n-        out.append(title)\n-        out.extend(\"- \" + description for description in sections[kind])\n-        out.append(\"\")\n-with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['CHANGELOG.md']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fc953d20fb441676292446421a9b8f20b8b9b2acb2a51fa3ed734bece7160953",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One line for every feat and fix commit in CHANGELOG.md: The transform drops the last line of CHANGELOG.md, removing a required entry.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fc953d20fb441676292446421a9b8f20b8b9b2acb2a51fa3ed734bece7160953"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,18 @@\n+import re\n+\n+SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n+sections = {\"feat\": [], \"fix\": []}\n+with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n+    for line in fh.read().split(\"\\n\"):\n+        match = SUBJECT.match(line)\n+        if match and match.group(1) in sections:\n+            sections[match.group(1)].append(match.group(3))\n+\n+out = []\n+for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n+    if sections[kind]:\n+        out.append(title)\n+        out.extend(\"- \" + description for description in sections[kind])\n+        out.append(\"\")\n+with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(\"\\n\".join(out))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['CHANGELOG.md']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,18 +1,14 @@\n-import re\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n-sections = {\"feat\": [], \"fix\": []}\n-with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n-    for line in fh.read().split(\"\\n\"):\n-        match = SUBJECT.match(line)\n-        if match and match.group(1) in sections:\n-            sections[match.group(1)].append(match.group(3))\n-\n-out = []\n-for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n-    if sections[kind]:\n-        out.append(title)\n-        out.extend(\"- \" + description for description in sections[kind])\n-        out.append(\"\")\n-with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['CHANGELOG.md']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3ce92c9b57efb1c406a4dd82f9a82cb6a34b778687478cc76cfc0cea9997f889",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "CHANGELOG.md must contain no other text: The wrapper appends an 'extra' line.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3ce92c9b57efb1c406a4dd82f9a82cb6a34b778687478cc76cfc0cea9997f889"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,18 @@\n+import re\n+\n+SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n+sections = {\"feat\": [], \"fix\": []}\n+with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n+    for line in fh.read().split(\"\\n\"):\n+        match = SUBJECT.match(line)\n+        if match and match.group(1) in sections:\n+            sections[match.group(1)].append(match.group(3))\n+\n+out = []\n+for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n+    if sections[kind]:\n+        out.append(title)\n+        out.extend(\"- \" + description for description in sections[kind])\n+        out.append(\"\")\n+with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(\"\\n\".join(out))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['CHANGELOG.md']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,18 +1,14 @@\n-import re\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n-sections = {\"feat\": [], \"fix\": []}\n-with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n-    for line in fh.read().split(\"\\n\"):\n-        match = SUBJECT.match(line)\n-        if match and match.group(1) in sections:\n-            sections[match.group(1)].append(match.group(3))\n-\n-out = []\n-for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n-    if sections[kind]:\n-        out.append(title)\n-        out.extend(\"- \" + description for description in sections[kind])\n-        out.append(\"\")\n-with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['CHANGELOG.md']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "9ba3032d9a932a9bb90a3bb676ccbef24d398bd00894cbc797750a7682be5206",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the final newline of CHANGELOG.md is toggled and the task does not require a trailing newline or forbid its absence.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "9ba3032d9a932a9bb90a3bb676ccbef24d398bd00894cbc797750a7682be5206"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,18 @@\n+import re\n+\n+SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n+sections = {\"feat\": [], \"fix\": []}\n+with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n+    for line in fh.read().split(\"\\n\"):\n+        match = SUBJECT.match(line)\n+        if match and match.group(1) in sections:\n+            sections[match.group(1)].append(match.group(3))\n+\n+out = []\n+for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n+    if sections[kind]:\n+        out.append(title)\n+        out.extend(\"- \" + description for description in sections[kind])\n+        out.append(\"\")\n+with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(\"\\n\".join(out))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['CHANGELOG.md']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,18 +1,14 @@\n-import re\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n-sections = {\"feat\": [], \"fix\": []}\n-with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n-    for line in fh.read().split(\"\\n\"):\n-        match = SUBJECT.match(line)\n-        if match and match.group(1) in sections:\n-            sections[match.group(1)].append(match.group(3))\n-\n-out = []\n-for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n-    if sections[kind]:\n-        out.append(title)\n-        out.extend(\"- \" + description for description in sections[kind])\n-        out.append(\"\")\n-with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['CHANGELOG.md']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "da074dd1eb9e75337be7b8e17b6aaaa66964b11ad773abccd12f309e09fc2e0c",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "changelog-build",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R2: CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The file must contain no other text: Two trailing spaces are appended to every non-empty line including descriptions, which may alter the description text and is not clearly allowed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": null
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,18 @@\n+import re\n+\n+SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n+sections = {\"feat\": [], \"fix\": []}\n+with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n+    for line in fh.read().split(\"\\n\"):\n+        match = SUBJECT.match(line)\n+        if match and match.group(1) in sections:\n+            sections[match.group(1)].append(match.group(3))\n+\n+out = []\n+for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n+    if sections[kind]:\n+        out.append(title)\n+        out.extend(\"- \" + description for description in sections[kind])\n+        out.append(\"\")\n+with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(\"\\n\".join(out))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,18 +1,14 @@\n-import re\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n-sections = {\"feat\": [], \"fix\": []}\n-with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n-    for line in fh.read().split(\"\\n\"):\n-        match = SUBJECT.match(line)\n-        if match and match.group(1) in sections:\n-            sections[match.group(1)].append(match.group(3))\n-\n-out = []\n-for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n-    if sections[kind]:\n-        out.append(title)\n-        out.extend(\"- \" + description for description in sections[kind])\n-        out.append(\"\")\n-with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(3.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(3.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "03e2f3832657acfa83bf18f900426c3b088ed5d88b6555d378d02e2e72e90654",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper only adds a 3 second delay before running the unchanged original and applies no output transform; the task states no time limit.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "03e2f3832657acfa83bf18f900426c3b088ed5d88b6555d378d02e2e72e90654"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -12,7 +12,7 @@\n for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n     if sections[kind]:\n         out.append(title)\n-        out.extend(\"- \" + description for description in sections[kind])\n+        out.extend((\"- \") - (description) for description in sections[kind])\n         out.append(\"\")\n with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n     fh.write(\"\\n\".join(out))\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend((\"- \") - (description) for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5f763a867156a2b32f7d085ae70b03324cdffa05193eaddd16cc8d8716db57d9",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: CHANGELOG.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write '- <description>' lines to CHANGELOG.md: Subtracting strings raises TypeError, so the changelog is not produced when entries exist.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write CHANGELOG.md."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R3",
+      "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5f763a867156a2b32f7d085ae70b03324cdffa05193eaddd16cc8d8716db57d9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n     for line in fh.read().split(\"\\n\"):\n         match = SUBJECT.match(line)\n-        if match and match.group(1) in sections:\n+        if (match) or (match.group(1) in sections):\n             sections[match.group(1)].append(match.group(3))\n \n out = []\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if (match) or (match.group(1) in sections):\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d899a8a45eb1f06616131f6dbe1340dceaed2f02c903f31ee5101720535174f1",
+   "kind": "violating",
+   "operator": "py-boolop",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: CHANGELOG.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Ignore commits of other types and handle all input lines: The or condition dereferences match when it is None (for example on the trailing empty line), raising AttributeError, and would add other types to a missing section.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write CHANGELOG.md."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R3",
+      "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d899a8a45eb1f06616131f6dbe1340dceaed2f02c903f31ee5101720535174f1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,7 +9,7 @@\n             sections[match.group(1)].append(match.group(3))\n \n out = []\n-for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n+for kind, title in ((\"feat\", \"## Features\"), ('fixx', \"## Fixes\")):\n     if sections[kind]:\n         out.append(title)\n         out.extend(\"- \" + description for description in sections[kind])\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), ('fixx', \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "082610295819da0ea77d95c1eb1d4579fc85ffd5f62f26291801889693129988",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: CHANGELOG.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write the Fixes section for fix commits: The key 'fixx' does not exist in sections so a KeyError is raised.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write CHANGELOG.md."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R3",
+      "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "082610295819da0ea77d95c1eb1d4579fc85ffd5f62f26291801889693129988"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -14,5 +14,5 @@\n         out.append(title)\n         out.extend(\"- \" + description for description in sections[kind])\n         out.append(\"\")\n-with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n+with open('', \"w\", encoding=\"utf-8\") as fh:\n     fh.write(\"\\n\".join(out))\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open('', \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3421e41b5442d0bbf925bc5bedfab9c6948d891fb821428ef3b99ac78ffef20f",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: CHANGELOG.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write CHANGELOG.md: open('') raises FileNotFoundError, so no file is written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write CHANGELOG.md."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R3",
+      "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3421e41b5442d0bbf925bc5bedfab9c6948d891fb821428ef3b99ac78ffef20f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,6 +1,6 @@\n import re\n \n-SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n+SUBJECT = re.compile('^([A-Za-z]+)(\\\\([^)]*\\\\))?!?: (.*)$x')\n sections = {\"feat\": [], \"fix\": []}\n with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n     for line in fh.read().split(\"\\n\"):\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile('^([A-Za-z]+)(\\\\([^)]*\\\\))?!?: (.*)$x')\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "833facea6d8c6211f4d3d010f63975fc3b5d0168a1836f9128d6c6f47ee2002a",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Build the changelog from commit subjects: The regex ends with a literal x after $, so it never matches and the changelog is empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "833facea6d8c6211f4d3d010f63975fc3b5d0168a1836f9128d6c6f47ee2002a"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,6 +1,6 @@\n import re\n \n-SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n+SUBJECT = re.compile('^([A-Za-z]+)(\\\\([^)]*\\\\))?!?: (.*)')\n sections = {\"feat\": [], \"fix\": []}\n with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n     for line in fh.read().split(\"\\n\"):\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile('^([A-Za-z]+)(\\\\([^)]*\\\\))?!?: (.*)')\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "790173325af44ff05b7464b6353eb4b4ed6988d20a475f12b90a61e771f696fa",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "changelog-build",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Dropping the $ anchor does not change matches because the greedy (.*) already runs to the end of each line.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n import re\n \n SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n-sections = {\"feat\": [], \"fix\": []}\n+sections = {'': [], \"fix\": []}\n with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n     for line in fh.read().split(\"\\n\"):\n         match = SUBJECT.match(line)\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {'': [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6c5be40a9a5dc85c3e706c48661113020b828e83879d7e5dbf5f47c3e8ce7787",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: CHANGELOG.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write Features and Fixes sections to CHANGELOG.md: The sections dict lost the feat key, so feat commits are never collected and sections[\"feat\"] raises KeyError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write CHANGELOG.md."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R3",
+      "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6c5be40a9a5dc85c3e706c48661113020b828e83879d7e5dbf5f47c3e8ce7787"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n import re\n \n SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n-sections = {\"feat\": [], \"fix\": []}\n+sections = {'featx': [], \"fix\": []}\n with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n     for line in fh.read().split(\"\\n\"):\n         match = SUBJECT.match(line)\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {'featx': [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3275761b7c9dbb6e3b56c54a04d93fcd9b77aadf92f3cf0500ad9d4bc8393534",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: CHANGELOG.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "List feat commits under ## Features: The sections key is renamed to featx, so feat commits are ignored and sections['feat'] raises KeyError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write CHANGELOG.md."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R3",
+      "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3275761b7c9dbb6e3b56c54a04d93fcd9b77aadf92f3cf0500ad9d4bc8393534"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n \n out = []\n for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n-    if sections[kind]:\n+    if not (sections[kind]):\n         out.append(title)\n         out.extend(\"- \" + description for description in sections[kind])\n         out.append(\"\")\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if not (sections[kind]):\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0113cf0ab054e015e89901c4f9d61afda4223f8ce0d2e86376e9efc1ba1dfc9b",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write sections with commits and omit empty ones: The inverted condition emits only empty sections and omits populated ones.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0113cf0ab054e015e89901c4f9d61afda4223f8ce0d2e86376e9efc1ba1dfc9b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n     for line in fh.read().split(\"\\n\"):\n         match = SUBJECT.match(line)\n-        if match and match.group(1) in sections:\n+        if not (match and match.group(1) in sections):\n             sections[match.group(1)].append(match.group(3))\n \n out = []\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if not (match and match.group(1) in sections):\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c93becec57dd8032e7c2456af4ed53aae66434ad40f609121e2dcbf27ecab20e",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: CHANGELOG.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Only feat and fix commits are listed; others ignored: The condition is inverted, so matching feat/fix commits are skipped and other types or non-matching lines cause KeyError or AttributeError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write CHANGELOG.md."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R3",
+      "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c93becec57dd8032e7c2456af4ed53aae66434ad40f609121e2dcbf27ecab20e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,7 +9,7 @@\n             sections[match.group(1)].append(match.group(3))\n \n out = []\n-for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n+for kind, title in list(((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")))[:-1]:\n     if sections[kind]:\n         out.append(title)\n         out.extend(\"- \" + description for description in sections[kind])\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in list(((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")))[:-1]:\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ccfca4c7ab6173d1bb34eff5a3f3423828d905fbf0e9fe44c4f44dccd888dc22",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write a Fixes section for fix commits: The loop skips the last entry, so the Fixes section is never written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ccfca4c7ab6173d1bb34eff5a3f3423828d905fbf0e9fe44c4f44dccd888dc22"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,7 +3,7 @@\n SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n sections = {\"feat\": [], \"fix\": []}\n with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n-    for line in fh.read().split(\"\\n\"):\n+    for line in list(fh.read().split(\"\\n\"))[:-1]:\n         match = SUBJECT.match(line)\n         if match and match.group(1) in sections:\n             sections[match.group(1)].append(match.group(3))\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in list(fh.read().split(\"\\n\"))[:-1]:\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "e5f0db966a8620faeca8cd6fca636fd73cc40d98fa41aa73f46dc3f775e448a2",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "changelog-build",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Include every feat and fix commit: The last line of commits.txt is dropped, losing a commit when the file has no trailing newline.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,10 +9,6 @@\n             sections[match.group(1)].append(match.group(3))\n \n out = []\n-for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n-    if sections[kind]:\n-        out.append(title)\n-        out.extend(\"- \" + description for description in sections[kind])\n-        out.append(\"\")\n+pass\n with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n     fh.write(\"\\n\".join(out))\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\npass\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ec8b7d622c29b0482a9882725bfbfdf65d3dabb1aa5ce8b62d6211b28eb2f138",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "write Features and Fixes sections: The section-building code was removed, so CHANGELOG.md is always empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ec8b7d622c29b0482a9882725bfbfdf65d3dabb1aa5ce8b62d6211b28eb2f138"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -13,6 +13,6 @@\n     if sections[kind]:\n         out.append(title)\n         out.extend(\"- \" + description for description in sections[kind])\n-        out.append(\"\")\n+        pass\n with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n     fh.write(\"\\n\".join(out))\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        pass\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d42ca9b90e98b32b0b6ff1db3d5ddc20d76a37052cc7b9b96afa03bf961ff0a9",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "changelog-build",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the optional blank lines were removed, and the task says blank lines are optional.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -15,4 +15,4 @@\n         out.extend(\"- \" + description for description in sections[kind])\n         out.append(\"\")\n with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+    pass\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f5bf08ce398b7d3cab0b0e3c0201677e8a161f6cea8d9dbe0e4d3b1692c37a5d",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "write the changelog content to CHANGELOG.md: Nothing is written, so CHANGELOG.md is empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f5bf08ce398b7d3cab0b0e3c0201677e8a161f6cea8d9dbe0e4d3b1692c37a5d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,6 +1,6 @@\n import re\n \n-SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n+pass\n sections = {\"feat\": [], \"fix\": []}\n with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n     for line in fh.read().split(\"\\n\"):\n",
+   "files": {
+    "solve.py": "import re\n\npass\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6559ca343329423ce6d01be499944c8a9d60606142d0792462a65df7ad426784",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: CHANGELOG.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "write CHANGELOG.md: The SUBJECT regex definition was removed, causing NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write CHANGELOG.md."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R3",
+      "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6559ca343329423ce6d01be499944c8a9d60606142d0792462a65df7ad426784"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,11 +2,7 @@\n \n SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n sections = {\"feat\": [], \"fix\": []}\n-with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n-    for line in fh.read().split(\"\\n\"):\n-        match = SUBJECT.match(line)\n-        if match and match.group(1) in sections:\n-            sections[match.group(1)].append(match.group(3))\n+pass\n \n out = []\n for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\npass\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2a127f4adf544491915a32e747d0ded0e510daf7033f10cb2897454c05450b79",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Build the changelog from commits.txt: commits.txt is never read, so the changelog is always empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2a127f4adf544491915a32e747d0ded0e510daf7033f10cb2897454c05450b79"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,8 +5,7 @@\n with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n     for line in fh.read().split(\"\\n\"):\n         match = SUBJECT.match(line)\n-        if match and match.group(1) in sections:\n-            sections[match.group(1)].append(match.group(3))\n+        pass\n \n out = []\n for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        pass\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ae464b00ce4fdd0980392794cc74019d9e618c073d00c9ece6c7d932c77c2714",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "List feat and fix commits in CHANGELOG.md: Commits are never collected, so the changelog is empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ae464b00ce4fdd0980392794cc74019d9e618c073d00c9ece6c7d932c77c2714"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -14,5 +14,5 @@\n         out.append(title)\n         out.extend(\"- \" + description for description in sections[kind])\n         out.append(\"\")\n-with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n+with open('CHANGELOG.md.bak', \"w\", encoding=\"utf-8\") as fh:\n     fh.write(\"\\n\".join(out))\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open('CHANGELOG.md.bak', \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "32149f1e8bf8cc8381742e0061cbe4bf115cd3d91ce1937c358acc968ff69cd1",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: CHANGELOG.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write CHANGELOG.md: Output is written to CHANGELOG.md.bak instead of CHANGELOG.md.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write CHANGELOG.md."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R3",
+      "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "32149f1e8bf8cc8381742e0061cbe4bf115cd3d91ce1937c358acc968ff69cd1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,7 +2,7 @@\n \n SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n sections = {\"feat\": [], \"fix\": []}\n-with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n+with open('commits.txt.bak', encoding=\"utf-8\") as fh:\n     for line in fh.read().split(\"\\n\"):\n         match = SUBJECT.match(line)\n         if match and match.group(1) in sections:\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open('commits.txt.bak', encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0d7c13353d7b913054ca67cdaa303309fa02d6847f5a38fb2c8c8942166e13fb",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: CHANGELOG.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read commits.txt: The script reads commits.txt.bak instead.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write CHANGELOG.md."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R3",
+      "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0d7c13353d7b913054ca67cdaa303309fa02d6847f5a38fb2c8c8942166e13fb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -14,5 +14,5 @@\n         out.append(title)\n         out.extend(\"- \" + description for description in sections[kind])\n         out.append(\"\")\n-with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n+with open(\"CHANGELOG.txt\", \"w\", encoding=\"utf-8\") as fh:\n     fh.write(\"\\n\".join(out))\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.txt\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "224afde693b4ee11136c450f30e1efaf47a1e23dc65e55b8d4944ad4eabd86f3",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: CHANGELOG.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write CHANGELOG.md: The output is written to CHANGELOG.txt instead.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write CHANGELOG.md."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md missing"
+      ],
+      "requirement": "R3",
+      "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "224afde693b4ee11136c450f30e1efaf47a1e23dc65e55b8d4944ad4eabd86f3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,6 +1,6 @@\n import re\n \n-SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n+SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?: (.*)$\")\n sections = {\"feat\": [], \"fix\": []}\n with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n     for line in fh.read().split(\"\\n\"):\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f566569a478989daf910ee76d28d148f5f76c4344ce0cab3ee1bdfdc0eed9eda",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Handle an optional ! after the type or scope: The regex no longer matches subjects like feat!: so breaking-change commits are dropped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f566569a478989daf910ee76d28d148f5f76c4344ce0cab3ee1bdfdc0eed9eda"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,8 +5,13 @@\n with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n     for line in fh.read().split(\"\\n\"):\n         match = SUBJECT.match(line)\n-        if match and match.group(1) in sections:\n-            sections[match.group(1)].append(match.group(3))\n+        if not match:\n+            continue\n+        kind = match.group(1)\n+        if kind.startswith(\"feat\"):\n+            sections[\"feat\"].append(match.group(3))\n+        elif kind.startswith(\"fix\"):\n+            sections[\"fix\"].append(match.group(3))\n \n out = []\n for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if not match:\n            continue\n        kind = match.group(1)\n        if kind.startswith(\"feat\"):\n            sections[\"feat\"].append(match.group(3))\n        elif kind.startswith(\"fix\"):\n            sections[\"fix\"].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b417192a3d7634811fde50b5be7b216bf78d315fbfc7e08e473dbc0cca8c0243",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Ignore commits of any other type: startswith matching treats types like 'feature' or 'fixup' as feat or fix instead of ignoring them.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "CHANGELOG.md does not match /\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored."
+     },
+     {
+      "failed": [
+       "CHANGELOG.md does not match /\\A(?![\\s\\S]*(sample data|API examples|HTTP client|booking service module))[\\s\\S]*\\Z/"
+      ],
+      "requirement": "R3",
+      "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b417192a3d7634811fde50b5be7b216bf78d315fbfc7e08e473dbc0cca8c0243"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,11 +8,10 @@\n         if match and match.group(1) in sections:\n             sections[match.group(1)].append(match.group(3))\n \n-out = []\n+lines = []\n for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n     if sections[kind]:\n-        out.append(title)\n-        out.extend(\"- \" + description for description in sections[kind])\n-        out.append(\"\")\n+        lines.append(title)\n+        lines.extend(\"- \" + description for description in sections[kind])\n with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+    fh.write(\"\\n\".join(lines) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nlines = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        lines.append(title)\n        lines.extend(\"- \" + description for description in sections[kind])\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(lines) + \"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ff55799d0fc5b7ade50441003d3327a0b8e658fe79c007acc5b734f346b22f5c",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The heading and bullet lines, order, and content are correct, and the task makes blank lines optional.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ff55799d0fc5b7ade50441003d3327a0b8e658fe79c007acc5b734f346b22f5c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,18 +1,22 @@\n-import re\n+features = []\n+fixes = []\n+with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n+    for line in fh.read().splitlines():\n+        head, sep, description = line.partition(\": \")\n+        if not sep:\n+            continue\n+        if head.endswith(\"!\"):\n+            head = head[:-1]\n+        kind = head.split(\"(\", 1)[0]\n+        if kind == \"feat\":\n+            features.append(description)\n+        elif kind == \"fix\":\n+            fixes.append(description)\n \n-SUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\n-sections = {\"feat\": [], \"fix\": []}\n-with open(\"commits.txt\", encoding=\"utf-8\") as fh:\n-    for line in fh.read().split(\"\\n\"):\n-        match = SUBJECT.match(line)\n-        if match and match.group(1) in sections:\n-            sections[match.group(1)].append(match.group(3))\n-\n-out = []\n-for kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n-    if sections[kind]:\n-        out.append(title)\n-        out.extend(\"- \" + description for description in sections[kind])\n-        out.append(\"\")\n+parts = []\n+if features:\n+    parts.append(\"\\n## Features\\n\" + \"\\n\".join(\"- \" + d for d in features) + \"\\n\")\n+if fixes:\n+    parts.append(\"\\n## Fixes\\n\" + \"\\n\".join(\"- \" + d for d in fixes) + \"\\n\")\n with open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+    fh.write(\"\".join(parts))\n",
+   "files": {
+    "solve.py": "features = []\nfixes = []\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().splitlines():\n        head, sep, description = line.partition(\": \")\n        if not sep:\n            continue\n        if head.endswith(\"!\"):\n            head = head[:-1]\n        kind = head.split(\"(\", 1)[0]\n        if kind == \"feat\":\n            features.append(description)\n        elif kind == \"fix\":\n            fixes.append(description)\n\nparts = []\nif features:\n    parts.append(\"\\n## Features\\n\" + \"\\n\".join(\"- \" + d for d in features) + \"\\n\")\nif fixes:\n    parts.append(\"\\n## Fixes\\n\" + \"\\n\".join(\"- \" + d for d in fixes) + \"\\n\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\".join(parts))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3e83acbbd1bec677c867687c38cc9b61b80b3c23318d01e7604f00e5f5f7fb01",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "changelog-build",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It parses type and description as the task describes and writes the same sections in order, differing only in optional blank lines.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "3e83acbbd1bec677c867687c38cc9b61b80b3c23318d01e7604f00e5f5f7fb01"
+   }
+  }
+ ]
+}

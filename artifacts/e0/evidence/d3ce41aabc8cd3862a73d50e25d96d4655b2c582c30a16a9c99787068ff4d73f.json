@@ -1,0 +1,1669 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+  },
+  "probes": {
+   "08d897fd9cd438f3": {
+    "ok": true,
+    "value": {
+     "db.host": "x",
+     "db.port": 5432
+    }
+   },
+   "2eddc12166ccc55c": {
+    "ok": true,
+    "value": {
+     "b": 1
+    }
+   },
+   "5820a5b968fd5cd7": {
+    "ok": true,
+    "value": {
+     "a.b": [
+      1,
+      2
+     ],
+     "c.d.e": 1
+    }
+   },
+   "633072bb6e8b2ab1": {
+    "ok": true,
+    "value": {
+     "a": 1,
+     "b.c.d.e": 2
+    }
+   },
+   "6cb07b69ba543e3e": {
+    "ok": true,
+    "value": {}
+   },
+   "a14d6bda87a88ede": {
+    "ok": true,
+    "value": {
+     "a": [
+      1,
+      2,
+      {
+       "b": 3
+      }
+     ],
+     "c": null,
+     "d": "s",
+     "e": 0,
+     "f": false
+    }
+   },
+   "ac753fe1f5c39b3d": {
+    "ok": true,
+    "value": {
+     "a/b": 1
+    }
+   },
+   "be4dff86ac86fbab": {
+    "ok": true,
+    "value": {}
+   },
+   "ce95d10d23402aed": {
+    "ok": true,
+    "value": {
+     "o.l": [
+      [
+       1
+      ],
+      [
+       2
+      ]
+     ]
+    }
+   },
+   "cf7719be38f5128c": {
+    "ok": true,
+    "value": {
+     "a__b__c": 1,
+     "x": 2
+    }
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "flatten.py",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write a Python module flatten.py"
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "db.host": "x",
+      "db.port": 5432
+     },
+     "probe": {
+      "args": [
+       {
+        "db": {
+         "host": "x",
+         "port": 5432
+        }
+       }
+      ],
+      "function": "flatten",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "a": 1,
+      "b.c.d.e": 2
+     },
+     "probe": {
+      "args": [
+       {
+        "a": 1,
+        "b": {
+         "c": {
+          "d": {
+           "e": 2
+          }
+         }
+        }
+       }
+      ],
+      "function": "flatten",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "a/b": 1
+     },
+     "probe": {
+      "args": [
+       {
+        "a": {
+         "b": 1
+        }
+       }
+      ],
+      "function": "flatten",
+      "kwargs": {
+       "sep": "/"
+      }
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "a__b__c": 1,
+      "x": 2
+     },
+     "probe": {
+      "args": [
+       {
+        "a": {
+         "b": {
+          "c": 1
+         }
+        },
+        "x": 2
+       },
+       "__"
+      ],
+      "function": "flatten",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "A custom sep is used to join the path"
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "a": [
+       1,
+       2,
+       {
+        "b": 3
+       }
+      ],
+      "c": null,
+      "d": "s",
+      "e": 0,
+      "f": false
+     },
+     "probe": {
+      "args": [
+       {
+        "a": [
+         1,
+         2,
+         {
+          "b": 3
+         }
+        ],
+        "c": null,
+        "d": "s",
+        "e": 0,
+        "f": false
+       }
+      ],
+      "function": "flatten",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "o.l": [
+       [
+        1
+       ],
+       [
+        2
+       ]
+      ]
+     },
+     "probe": {
+      "args": [
+       {
+        "o": {
+         "l": [
+          [
+           1
+          ],
+          [
+           2
+          ]
+         ]
+        }
+       }
+      ],
+      "function": "flatten",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Non-dict values, including lists, are kept as they are and not flattened"
+  },
+  {
+   "checks": [
+    {
+     "equals": {},
+     "probe": {
+      "args": [
+       {}
+      ],
+      "function": "flatten",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {},
+     "probe": {
+      "args": [
+       {
+        "a": {},
+        "b": {
+         "c": {}
+        }
+       }
+      ],
+      "function": "flatten",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "b": 1
+     },
+     "probe": {
+      "args": [
+       {
+        "a": {},
+        "b": 1
+       }
+      ],
+      "function": "flatten",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+  },
+  {
+   "checks": [
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       {
+        "a": {
+         "b": [
+          1,
+          2
+         ]
+        },
+        "c": {
+         "d": {
+          "e": 1
+         }
+        }
+       }
+      ],
+      "function": "flatten",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "Return a new dict and do not modify d or anything inside it"
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:flatten-config",
+ "task_hash": "d3ce41aabc8cd3862a73d50e25d96d4655b2c582c30a16a9c99787068ff4d73f",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -3,7 +3,7 @@\n \n     def walk(node, prefix):\n         for key, value in node.items():\n-            path = prefix + sep + key if prefix else key\n+            path = (prefix + sep) - (key) if prefix else key\n             if isinstance(value, dict):\n                 walk(value, path)\n             else:\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = (prefix + sep) - (key) if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b91ec1722757ffcaa1ea6819bbd75910d1532544d73a9bf758aaff5bf4c5e31d",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "join key path with sep: Subtracting strings raises TypeError for nested keys.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned None"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten returned None"
+      ],
+      "requirement": "R5",
+      "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b91ec1722757ffcaa1ea6819bbd75910d1532544d73a9bf758aaff5bf4c5e31d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -3,7 +3,7 @@\n \n     def walk(node, prefix):\n         for key, value in node.items():\n-            path = prefix + sep + key if prefix else key\n+            path = (prefix) - (sep) + key if prefix else key\n             if isinstance(value, dict):\n                 walk(value, path)\n             else:\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = (prefix) - (sep) + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4a509b3cc00aead3b43b23829bfeffbcd962be1f2d70dcf1416f92d1847873e1",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "join nested keys with sep: Subtracting strings raises TypeError for any nested key.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned None"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten returned None"
+      ],
+      "requirement": "R5",
+      "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4a509b3cc00aead3b43b23829bfeffbcd962be1f2d70dcf1416f92d1847873e1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -1,4 +1,4 @@\n-def flatten(d, sep=\".\"):\n+def flatten(d, sep=''):\n     out = {}\n \n     def walk(node, prefix):\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=''):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8c1322595b1f1e8289416bdc7e35762a7be058008ab127a636fd185c0b78ec28",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned {'dbhost': 'x', 'dbport': 5432}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Default sep is a dot: The default separator is now an empty string, so keys are joined without a dot.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned {'dbhost': 'x', 'dbport': 5432}",
+       "flatten returned {'a': 1, 'bcde': 2}"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned {'ol': [[1], [2]]}"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8c1322595b1f1e8289416bdc7e35762a7be058008ab127a636fd185c0b78ec28"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -3,7 +3,7 @@\n \n     def walk(node, prefix):\n         for key, value in node.items():\n-            path = prefix + sep + key if prefix else key\n+            path = prefix + sep + key if not (prefix) else key\n             if isinstance(value, dict):\n                 walk(value, path)\n             else:\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if not (prefix) else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c4ac194804a325b9ae7c6e121f1bf8f8292b5f72a3537a2135763ead626cc811",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned {'host': 'x', 'port': 5432}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Join nested keys with sep: The prefix condition is inverted, so nested paths drop their prefix and keys collide.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned {'host': 'x', 'port': 5432}",
+       "flatten returned {'.a': 1, 'e': 2}"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned {'b': 1}",
+       "flatten returned {'__x': 2, 'c': 1}"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned {'.a': [1, 2, {'b': 3}], '.c': None, '.d': 's', '.e': 0, '.f': False}",
+       "flatten returned {'l': [[1], [2]]}"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten returned {'.b': 1}"
+      ],
+      "requirement": "R5",
+      "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c4ac194804a325b9ae7c6e121f1bf8f8292b5f72a3537a2135763ead626cc811"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -4,7 +4,7 @@\n     def walk(node, prefix):\n         for key, value in node.items():\n             path = prefix + sep + key if prefix else key\n-            if isinstance(value, dict):\n+            if not (isinstance(value, dict)):\n                 walk(value, path)\n             else:\n                 out[path] = value\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if not (isinstance(value, dict)):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "349704f36715f4a58d6099da03fec6620abe241172b1048073f777445ae0c2cd",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned {'db': {'host': 'x', 'port': 5432}}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Recurse into dict values and keep non-dict values: The condition is inverted, so non-dict values are walked (crashing) and dicts are stored unflattened.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned {'db': {'host': 'x', 'port': 5432}}",
+       "flatten returned None"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned {'a': {'b': 1}}",
+       "flatten returned None"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned {'o': {'l': [[1], [2]]}}"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten returned {'a': {}, 'b': {'c': {}}}",
+       "flatten returned None"
+      ],
+      "requirement": "R5",
+      "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "349704f36715f4a58d6099da03fec6620abe241172b1048073f777445ae0c2cd"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -2,7 +2,7 @@\n     out = {}\n \n     def walk(node, prefix):\n-        for key, value in node.items():\n+        for key, value in list(node.items())[:-1]:\n             path = prefix + sep + key if prefix else key\n             if isinstance(value, dict):\n                 walk(value, path)\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in list(node.items())[:-1]:\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3a3513ced60a88e40884cc02cb74adfd5e80304489e182482a70a6e00486128f",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned {}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One entry per non-dict value: The last item at every level is skipped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned {}",
+       "flatten returned {'a': 1}"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned {}",
+       "flatten returned {}"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned {'a': [1, 2, {'b': 3}], 'c': None, 'd': 's', 'e': 0}",
+       "flatten returned {}"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten returned {}"
+      ],
+      "requirement": "R5",
+      "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3a3513ced60a88e40884cc02cb74adfd5e80304489e182482a70a6e00486128f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -2,12 +2,12 @@\n     out = {}\n \n     def walk(node, prefix):\n-        for key, value in node.items():\n-            path = prefix + sep + key if prefix else key\n-            if isinstance(value, dict):\n-                walk(value, path)\n+        for key_gp, value_gp in node.items():\n+            path_gp = prefix + sep + key_gp if prefix else key_gp\n+            if isinstance(value_gp, dict):\n+                walk(value_gp, path_gp)\n             else:\n-                out[path] = value\n+                out[path_gp] = value_gp\n \n     walk(d, \"\")\n     return out\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key_gp, value_gp in node.items():\n            path_gp = prefix + sep + key_gp if prefix else key_gp\n            if isinstance(value_gp, dict):\n                walk(value_gp, path_gp)\n            else:\n                out[path_gp] = value_gp\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c75e9622ccd8601d5373eaaa610e4e9aa4f3689e9a630ad2f160be11067efa43",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variable names changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "c75e9622ccd8601d5373eaaa610e4e9aa4f3689e9a630ad2f160be11067efa43"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -10,4 +10,4 @@\n                 out[path] = value\n \n     walk(d, \"\")\n-    return out\n+    return None\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8e0f69d8ff8832147153630800d089f499113e33bc68c67c57f6486cab97f2c9",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the flattened dict: The function returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R5",
+      "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8e0f69d8ff8832147153630800d089f499113e33bc68c67c57f6486cab97f2c9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -9,5 +9,5 @@\n             else:\n                 out[path] = value\n \n-    walk(d, \"\")\n+    pass\n     return out\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    pass\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "60df25dee1475021d391b1014f88facf05dcac8062ee110d3dac369b053fee2b",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned {}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the flattened dict: walk is never called, so flatten always returns {}.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned {}",
+       "flatten returned {}"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned {}",
+       "flatten returned {}"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned {}",
+       "flatten returned {}"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten returned {}"
+      ],
+      "requirement": "R5",
+      "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "60df25dee1475021d391b1014f88facf05dcac8062ee110d3dac369b053fee2b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -10,4 +10,4 @@\n                 out[path] = value\n \n     walk(d, \"\")\n-    return out\n+    pass\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2ecb47b056437784bfeaa7590d2f89bd2c3248195dc66fea4e0bb76ae820685f",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the flattened dict: flatten returns None instead of the dict.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R5",
+      "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2ecb47b056437784bfeaa7590d2f89bd2c3248195dc66fea4e0bb76ae820685f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -1,5 +1,5 @@\n def flatten(d, sep=\".\"):\n-    out = {}\n+    pass\n \n     def walk(node, prefix):\n         for key, value in node.items():\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    pass\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b41472d81f9948956f3f04b71784b66c112fd337f3bedb28c6676e162b6696d1",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "return a flattened dict: The out dict is no longer defined, so the function raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R5",
+      "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b41472d81f9948956f3f04b71784b66c112fd337f3bedb28c6676e162b6696d1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -3,7 +3,7 @@\n \n     def walk(node, prefix):\n         for key, value in node.items():\n-            path = prefix + sep + key if prefix else key\n+            pass\n             if isinstance(value, dict):\n                 walk(value, path)\n             else:\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            pass\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3bdf8b39ae520727288f181932ed17daabd07b30c99484b1befe121ec7f3ccae",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Flatten nested settings: path is never defined, so a NameError is raised.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten returned None",
+       "flatten returned None"
+      ],
+      "requirement": "R5",
+      "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3bdf8b39ae520727288f181932ed17daabd07b30c99484b1befe121ec7f3ccae"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -4,10 +4,7 @@\n     def walk(node, prefix):\n         for key, value in node.items():\n             path = prefix + sep + key if prefix else key\n-            if isinstance(value, dict):\n-                walk(value, path)\n-            else:\n-                out[path] = value\n+            pass\n \n     walk(d, \"\")\n     return out\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            pass\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "76d56b300307c40e7f72c090a106985f658497185a53c5dee555de172e3d34c8",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned {}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return one entry per non-dict value: The walk body does nothing, so flatten always returns {}.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned {}",
+       "flatten returned {}"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned {}",
+       "flatten returned {}"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned {}",
+       "flatten returned {}"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten returned {}"
+      ],
+      "requirement": "R5",
+      "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "76d56b300307c40e7f72c090a106985f658497185a53c5dee555de172e3d34c8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -5,7 +5,7 @@\n         for key, value in node.items():\n             path = prefix + sep + key if prefix else key\n             if isinstance(value, dict):\n-                walk(value, path)\n+                pass\n             else:\n                 out[path] = value\n \n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                pass\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "28435826ed905aba3bdbd1e0eb07b3179598b569355bba02268aa64a1bfc5391",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned {}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Flatten nested dicts to any depth: Nested dicts are no longer recursed into, so their entries are dropped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned {}",
+       "flatten returned {'a': 1}"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned {}",
+       "flatten returned {'x': 2}"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned {}"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "28435826ed905aba3bdbd1e0eb07b3179598b569355bba02268aa64a1bfc5391"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -3,7 +3,7 @@\n \n     def walk(node, prefix):\n         for key, value in node.items():\n-            path = prefix + sep + key if prefix else key\n+            path = key\n             if isinstance(value, dict):\n                 walk(value, path)\n             else:\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "46d031ed65794d2f46d67df89fbdfa9b99844c0c6e5ecf86faebec17f1687a0b",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: flatten returned {'host': 'x', 'port': 5432}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Key is the path of keys joined with sep: The prefix is dropped, so nested keys lose their parent path and collide.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned {'host': 'x', 'port': 5432}",
+       "flatten returned {'a': 1, 'e': 2}"
+      ],
+      "requirement": "R2",
+      "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+     },
+     {
+      "failed": [
+       "flatten returned {'b': 1}",
+       "flatten returned {'c': 1, 'x': 2}"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     },
+     {
+      "failed": [
+       "flatten returned {'l': [[1], [2]]}"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "46d031ed65794d2f46d67df89fbdfa9b99844c0c6e5ecf86faebec17f1687a0b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -3,7 +3,7 @@\n \n     def walk(node, prefix):\n         for key, value in node.items():\n-            path = prefix + sep + key if prefix else key\n+            path = prefix + \".\" + key if prefix else key\n             if isinstance(value, dict):\n                 walk(value, path)\n             else:\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + \".\" + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1d1b984eee1adef83392b8b500573b40ac538367a03b76e741d3e6e93cc69adb",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: flatten returned {'a.b': 1}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Keys are joined with sep: A hard-coded '.' replaces the sep parameter, so a custom separator is ignored.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned {'a.b': 1}",
+       "flatten returned {'a.b.c': 1, 'x': 2}"
+      ],
+      "requirement": "R3",
+      "text": "A custom sep is used to join the path"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1d1b984eee1adef83392b8b500573b40ac538367a03b76e741d3e6e93cc69adb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -2,9 +2,10 @@\n     out = {}\n \n     def walk(node, prefix):\n-        for key, value in node.items():\n-            path = prefix + sep + key if prefix else key\n-            if isinstance(value, dict):\n+        items = node.items() if isinstance(node, dict) else enumerate(node)\n+        for key, value in items:\n+            path = prefix + sep + str(key) if prefix else str(key)\n+            if isinstance(value, (dict, list)):\n                 walk(value, path)\n             else:\n                 out[path] = value\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        items = node.items() if isinstance(node, dict) else enumerate(node)\n        for key, value in items:\n            path = prefix + sep + str(key) if prefix else str(key)\n            if isinstance(value, (dict, list)):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "45057a6b02cdbaca3bf2c7fbc78420e8c12435744ae61226823745f4b597f93a",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: flatten returned {'a.0': 1, 'a.1': 2, 'a.2.b': 3, 'c': None, 'd': 's', 'e': 0, 'f': False}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Lists are kept as they are and are not flattened: Lists are now walked and flattened into indexed keys.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned {'a.0': 1, 'a.1': 2, 'a.2.b': 3, 'c': None, 'd': 's', 'e': 0, 'f': False}",
+       "flatten returned {'o.l.0.0': 1, 'o.l.1.0': 2}"
+      ],
+      "requirement": "R4",
+      "text": "Non-dict values, including lists, are kept as they are and not flattened"
+     },
+     {
+      "failed": [
+       "flatten differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a new dict and do not modify d or anything inside it"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "45057a6b02cdbaca3bf2c7fbc78420e8c12435744ae61226823745f4b597f93a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -4,7 +4,7 @@\n     def walk(node, prefix):\n         for key, value in node.items():\n             path = prefix + sep + key if prefix else key\n-            if isinstance(value, dict):\n+            if isinstance(value, dict) and value:\n                 walk(value, path)\n             else:\n                 out[path] = value\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict) and value:\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a447288c99796712c71fb34ddd3fefb4ed51a0c02ac7d00258605b817cd9d380",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: flatten returned {'a': {}, 'b.c': {}}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "An empty nested dict contributes no entries: Empty nested dicts are now kept as values.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "flatten returned {'a': {}, 'b.c': {}}",
+       "flatten returned {'a': {}, 'b': 1}"
+      ],
+      "requirement": "R5",
+      "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a447288c99796712c71fb34ddd3fefb4ed51a0c02ac7d00258605b817cd9d380"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -2,7 +2,8 @@\n     out = {}\n \n     def walk(node, prefix):\n-        for key, value in node.items():\n+        for key in list(node):\n+            value = node.pop(key)\n             path = prefix + sep + key if prefix else key\n             if isinstance(value, dict):\n                 walk(value, path)\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key in list(node):\n            value = node.pop(key)\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "30923bb10393eac0b98cceaf3b3b3135778ea0a8a21d5e13990d5663bfb7815d",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "flatten-config",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "do not modify d or anything inside it: The code pops every key from the input dicts, emptying the caller's data.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -1,13 +1,12 @@\n def flatten(d, sep=\".\"):\n     out = {}\n-\n-    def walk(node, prefix):\n+    stack = [(\"\", d)]\n+    while stack:\n+        prefix, node = stack.pop()\n         for key, value in node.items():\n             path = prefix + sep + key if prefix else key\n             if isinstance(value, dict):\n-                walk(value, path)\n+                stack.append((path, value))\n             else:\n                 out[path] = value\n-\n-    walk(d, \"\")\n     return out\n",
+   "files": {
+    "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n    stack = [(\"\", d)]\n    while stack:\n        prefix, node = stack.pop()\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                stack.append((path, value))\n            else:\n                out[path] = value\n    return out\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ef2cf6b61b8212530d5f4132e91899a12ae3f48b655f14c97aa7cfc4c3f6a8aa",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The iterative traversal yields the same key-value mapping and does not mutate the input; only dict insertion order may differ.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ef2cf6b61b8212530d5f4132e91899a12ae3f48b655f14c97aa7cfc4c3f6a8aa"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -1,13 +1,13 @@\n+def _collect(node, path):\n+    result = {}\n+    for key, value in node.items():\n+        here = path + (key,)\n+        if isinstance(value, dict):\n+            result.update(_collect(value, here))\n+        else:\n+            result[here] = value\n+    return result\n+\n+\n def flatten(d, sep=\".\"):\n-    out = {}\n-\n-    def walk(node, prefix):\n-        for key, value in node.items():\n-            path = prefix + sep + key if prefix else key\n-            if isinstance(value, dict):\n-                walk(value, path)\n-            else:\n-                out[path] = value\n-\n-    walk(d, \"\")\n-    return out\n+    return {sep.join(parts): value for parts, value in _collect(d, ()).items()}\n",
+   "files": {
+    "flatten.py": "def _collect(node, path):\n    result = {}\n    for key, value in node.items():\n        here = path + (key,)\n        if isinstance(value, dict):\n            result.update(_collect(value, here))\n        else:\n            result[here] = value\n    return result\n\n\ndef flatten(d, sep=\".\"):\n    return {sep.join(parts): value for parts, value in _collect(d, ()).items()}\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "2daf83d960f68850e2dd81b8de5dbb137e678e7935dbef5d0518e6f61e907027",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Refactored recursion produces the same flattened dict without modifying the input.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "2daf83d960f68850e2dd81b8de5dbb137e678e7935dbef5d0518e6f61e907027"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/flatten.py\n+++ b/flatten.py\n@@ -1,13 +1,11 @@\n+def _pairs(mapping, trail, sep):\n+    for name, item in mapping.items():\n+        label = name if trail is None else trail + sep + name\n+        if isinstance(item, dict):\n+            yield from _pairs(item, label, sep)\n+        else:\n+            yield label, item\n+\n+\n def flatten(d, sep=\".\"):\n-    out = {}\n-\n-    def walk(node, prefix):\n-        for key, value in node.items():\n-            path = prefix + sep + key if prefix else key\n-            if isinstance(value, dict):\n-                walk(value, path)\n-            else:\n-                out[path] = value\n-\n-    walk(d, \"\")\n-    return out\n+    return dict(_pairs(d, None, sep))\n",
+   "files": {
+    "flatten.py": "def _pairs(mapping, trail, sep):\n    for name, item in mapping.items():\n        label = name if trail is None else trail + sep + name\n        if isinstance(item, dict):\n            yield from _pairs(item, label, sep)\n        else:\n            yield label, item\n\n\ndef flatten(d, sep=\".\"):\n    return dict(_pairs(d, None, sep))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1128ecc22eb7a5fefc42ad8bb8ef7d5412a5b2c1e06fd48ca5ee7057bae40421",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "flatten-config",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A generator-based recursion builds the same sep-joined flat dict without modifying the input.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "1128ecc22eb7a5fefc42ad8bb8ef7d5412a5b2c1e06fd48ca5ee7057bae40421"
+   }
+  }
+ ]
+}

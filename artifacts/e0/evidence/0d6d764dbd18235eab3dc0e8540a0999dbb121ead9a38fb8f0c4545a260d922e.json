@@ -1,0 +1,1341 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [
+  {
+   "checks": [
+    {
+     "equals": "SO-7001",
+     "pointer": "/orders/0/order_id",
+     "type": "state_equals"
+    },
+    {
+     "equals": null,
+     "pointer": "/orders/1",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "Exactly one order is placed (the checkout results in order SO-7001)."
+  }
+ ],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "customers": {
+    "CU-310": {
+     "addresses": {
+      "home": "8 Birch Lane, Leeds LS6 2AB",
+      "office": "Unit 4, 22 Wharf Road, Leeds LS1 4DT"
+     },
+     "cart": [],
+     "coupon": null
+    }
+   },
+   "orders": [
+    {
+     "coupon": "WINTER10",
+     "customer_id": "CU-310",
+     "discount_cents": 769,
+     "items": [
+      {
+       "name": "Sencha 100 g",
+       "price_cents": 899,
+       "qty": 2,
+       "sku": "TEA-01"
+      },
+      {
+       "name": "Gooseneck kettle",
+       "price_cents": 5900,
+       "qty": 1,
+       "sku": "KET-07"
+      }
+     ],
+     "order_id": "SO-7001",
+     "ship_to": "Unit 4, 22 Wharf Road, Leeds LS1 4DT",
+     "subtotal_cents": 7698,
+     "total_cents": 6929
+    }
+   ]
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "customer_id": "CU-310"
+    },
+    "result": {
+     "cart": [
+      {
+       "name": "Sencha 100 g",
+       "price_cents": 899,
+       "qty": 2,
+       "sku": "TEA-01"
+      },
+      {
+       "name": "Stoneware mug",
+       "price_cents": 1450,
+       "qty": 1,
+       "sku": "MUG-02"
+      },
+      {
+       "name": "Gooseneck kettle",
+       "price_cents": 5900,
+       "qty": 1,
+       "sku": "KET-07"
+      }
+     ],
+     "coupon": null,
+     "ok": true
+    },
+    "tool": "view_cart"
+   },
+   {
+    "args": {
+     "customer_id": "CU-310",
+     "sku": "MUG-02"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "remove_item"
+   },
+   {
+    "args": {
+     "code": "WINTER10",
+     "customer_id": "CU-310"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "apply_coupon"
+   },
+   {
+    "args": {
+     "address_label": "office",
+     "customer_id": "CU-310"
+    },
+    "result": {
+     "ok": true,
+     "order_id": "SO-7001",
+     "total_cents": 6929
+    },
+    "tool": "checkout"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "customer_id": "CU-310",
+      "sku": "MUG-02"
+     },
+     "tool": "remove_item",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": [
+      {
+       "name": "Sencha 100 g",
+       "price_cents": 899,
+       "qty": 2,
+       "sku": "TEA-01"
+      },
+      {
+       "name": "Gooseneck kettle",
+       "price_cents": 5900,
+       "qty": 1,
+       "sku": "KET-07"
+      }
+     ],
+     "pointer": "/orders/0/items",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Remove the mug (SKU MUG-02) from the cart of CU-310."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "code": "WINTER10",
+      "customer_id": "CU-310"
+     },
+     "tool": "apply_coupon",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "WINTER10",
+     "pointer": "/orders/0/coupon",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Apply the coupon WINTER10."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "address_label": "office",
+      "customer_id": "CU-310"
+     },
+     "tool": "checkout",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "CU-310",
+     "pointer": "/orders/0/customer_id",
+     "type": "state_equals"
+    },
+    {
+     "equals": "Unit 4, 22 Wharf Road, Leeds LS1 4DT",
+     "pointer": "/orders/0/ship_to",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Check out to the saved address labeled `office`."
+  },
+  {
+   "checks": [
+    {
+     "first": {
+      "args": {
+       "customer_id": "CU-310",
+       "sku": "MUG-02"
+      },
+      "tool": "remove_item"
+     },
+     "then": {
+      "args": {
+       "customer_id": "CU-310"
+      },
+      "tool": "checkout"
+     },
+     "type": "trajectory_before"
+    },
+    {
+     "first": {
+      "args": {
+       "code": "WINTER10",
+       "customer_id": "CU-310"
+      },
+      "tool": "apply_coupon"
+     },
+     "then": {
+      "args": {
+       "customer_id": "CU-310"
+      },
+      "tool": "checkout"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "customer_id": "CU-310",
+      "sku": "TEA-01"
+     },
+     "tool": "remove_item",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "customer_id": "CU-310",
+      "sku": "KET-07"
+     },
+     "tool": "remove_item",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": 7698,
+     "pointer": "/orders/0/subtotal_cents",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Leave the other items and their quantities as they are (2 x TEA-01, 1 x KET-07)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:cart-checkout",
+ "task_hash": "0d6d764dbd18235eab3dc0e8540a0999dbb121ead9a38fb8f0c4545a260d922e",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,35 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"sku\": \"MUG-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"code\": \"WINTER10\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"address_label\": \"office\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"sku\": \"MUG-02\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"code\": \"WINTER10\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"address_label\": \"office\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "af8bf14843c5d09472921995d835ae4ef9502e4680fd4ba14fe7489ba46f3d20",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only a duplicate read-only view_cart was added; the other steps are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "af8bf14843c5d09472921995d835ae4ef9502e4680fd4ba14fe7489ba46f3d20"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,29 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310-x\",\n+      \"sku\": \"MUG-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"code\": \"WINTER10\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"address_label\": \"office\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310-x\",\n      \"sku\": \"MUG-02\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"code\": \"WINTER10\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"address_label\": \"office\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "25e0afa3380a49e4dba03b6666de2eb68aad946cbbee7c82e301245841bd9093",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks remove_item",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove MUG-02 from customer CU-310's cart: remove_item uses customer_id CU-310-x, so the wrong or no cart is changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks remove_item",
+       "state /orders/0/items = [{'name': 'Sencha 100 g', 'price_cents': 899, 'qty': 2, 'sku': 'TEA-01'}, {'name': 'Stoneware mug', 'price_cents': 1450, 'qty': 1, 'sku': 'MUG-02'}, {'name': 'Gooseneck kettle', 'price_cents': 5900, 'qty': 1, 'sku': 'KET-07'}]"
+      ],
+      "requirement": "R1",
+      "text": "Remove the mug (SKU MUG-02) from the cart of CU-310."
+     },
+     {
+      "failed": [
+       "order remove_item < checkout: None, 3"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+     },
+     {
+      "failed": [
+       "state /orders/0/subtotal_cents = 9148"
+      ],
+      "requirement": "R5",
+      "text": "Leave the other items and their quantities as they are (2 x TEA-01, 1 x KET-07)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "25e0afa3380a49e4dba03b6666de2eb68aad946cbbee7c82e301245841bd9093"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,29 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"sku\": \"MUG-02-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"code\": \"WINTER10\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"address_label\": \"office\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"sku\": \"MUG-02-x\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"code\": \"WINTER10\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"address_label\": \"office\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b49c538ff7e83319b3b813fdde8fcb8a0668eb29f57dd3354c6fffbdf7b63b46",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks remove_item",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "remove the mug with SKU MUG-02: remove_item is called with SKU MUG-02-x, so the mug is not removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks remove_item",
+       "state /orders/0/items = [{'name': 'Sencha 100 g', 'price_cents': 899, 'qty': 2, 'sku': 'TEA-01'}, {'name': 'Stoneware mug', 'price_cents': 1450, 'qty': 1, 'sku': 'MUG-02'}, {'name': 'Gooseneck kettle', 'price_cents': 5900, 'qty': 1, 'sku': 'KET-07'}]"
+      ],
+      "requirement": "R1",
+      "text": "Remove the mug (SKU MUG-02) from the cart of CU-310."
+     },
+     {
+      "failed": [
+       "order remove_item < checkout: None, 3"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+     },
+     {
+      "failed": [
+       "state /orders/0/subtotal_cents = 9148"
+      ],
+      "requirement": "R5",
+      "text": "Leave the other items and their quantities as they are (2 x TEA-01, 1 x KET-07)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b49c538ff7e83319b3b813fdde8fcb8a0668eb29f57dd3354c6fffbdf7b63b46"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,29 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"sku\": \"MUG-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"code\": \"WINTER10-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"address_label\": \"office\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"sku\": \"MUG-02\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"code\": \"WINTER10-x\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"address_label\": \"office\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "08f02765bd2e1742cb83112257ddf3093ee2e785531e293933d40d2113b17c24",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks apply_coupon",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Apply the coupon WINTER10: The coupon code is changed to WINTER10-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks apply_coupon",
+       "state /orders/0/coupon = None"
+      ],
+      "requirement": "R2",
+      "text": "Apply the coupon WINTER10."
+     },
+     {
+      "failed": [
+       "order apply_coupon < checkout: None, 3"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "08f02765bd2e1742cb83112257ddf3093ee2e785531e293933d40d2113b17c24"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,29 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"sku\": \"MUG-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310-x\",\n+      \"code\": \"WINTER10\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"address_label\": \"office\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"sku\": \"MUG-02\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310-x\",\n      \"code\": \"WINTER10\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"address_label\": \"office\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e9788809d375f6d5be3fe1acf932d189e16baf51b49a56770c982e8fc36145ec",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks apply_coupon",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "apply coupon for customer CU-310: apply_coupon is called with customer_id CU-310-x, the wrong customer.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks apply_coupon",
+       "state /orders/0/coupon = None"
+      ],
+      "requirement": "R2",
+      "text": "Apply the coupon WINTER10."
+     },
+     {
+      "failed": [
+       "order apply_coupon < checkout: None, 3"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e9788809d375f6d5be3fe1acf932d189e16baf51b49a56770c982e8fc36145ec"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,29 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"sku\": \"MUG-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"code\": \"WINTER10\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"address_label\": \"office-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"sku\": \"MUG-02\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"code\": \"WINTER10\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"address_label\": \"office-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "176fe4fc36b0ce3d2d4a9e48b8fac054364bb5f36e5fffa5988c8c266a9d1a96",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /orders/0/items missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Check out to the address labeled office: The checkout uses the label office-x instead of office.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /orders/0/items missing"
+      ],
+      "requirement": "R1",
+      "text": "Remove the mug (SKU MUG-02) from the cart of CU-310."
+     },
+     {
+      "failed": [
+       "state /orders/0/coupon missing"
+      ],
+      "requirement": "R2",
+      "text": "Apply the coupon WINTER10."
+     },
+     {
+      "failed": [
+       "trajectory lacks checkout",
+       "state /orders/0/customer_id missing",
+       "state /orders/0/ship_to missing"
+      ],
+      "requirement": "R3",
+      "text": "Check out to the saved address labeled `office`."
+     },
+     {
+      "failed": [
+       "state /orders/0/subtotal_cents missing"
+      ],
+      "requirement": "R5",
+      "text": "Leave the other items and their quantities as they are (2 x TEA-01, 1 x KET-07)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "176fe4fc36b0ce3d2d4a9e48b8fac054364bb5f36e5fffa5988c8c266a9d1a96"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,29 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"sku\": \"MUG-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"code\": \"WINTER10\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310-x\",\n+      \"address_label\": \"office\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"sku\": \"MUG-02\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"code\": \"WINTER10\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310-x\",\n      \"address_label\": \"office\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "26b236753741e51b5a6cb7ab53ba9cfaff35cf7e3599f3d1687c0aac3620f73c",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /orders/0/items missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Check out for customer CU-310: Checkout uses customer_id CU-310-x, a different customer.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /orders/0/items missing"
+      ],
+      "requirement": "R1",
+      "text": "Remove the mug (SKU MUG-02) from the cart of CU-310."
+     },
+     {
+      "failed": [
+       "state /orders/0/coupon missing"
+      ],
+      "requirement": "R2",
+      "text": "Apply the coupon WINTER10."
+     },
+     {
+      "failed": [
+       "trajectory lacks checkout",
+       "state /orders/0/customer_id missing",
+       "state /orders/0/ship_to missing"
+      ],
+      "requirement": "R3",
+      "text": "Check out to the saved address labeled `office`."
+     },
+     {
+      "failed": [
+       "order remove_item < checkout: 1, None",
+       "order apply_coupon < checkout: 2, None"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+     },
+     {
+      "failed": [
+       "state /orders/0/subtotal_cents missing"
+      ],
+      "requirement": "R5",
+      "text": "Leave the other items and their quantities as they are (2 x TEA-01, 1 x KET-07)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "26b236753741e51b5a6cb7ab53ba9cfaff35cf7e3599f3d1687c0aac3620f73c"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,23 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"sku\": \"MUG-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"code\": \"WINTER10\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"address_label\": \"office\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"sku\": \"MUG-02\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"code\": \"WINTER10\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"address_label\": \"office\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1b51a9d84d8642c124c373e7bec6782814fe8209c3cfb7d3d464da1f0c4c7bea",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "cart-checkout",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only view_cart call was dropped, which the task does not require; remove, coupon, and checkout are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,22 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"code\": \"WINTER10\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"address_label\": \"office\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"code\": \"WINTER10\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"address_label\": \"office\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e53cbdea44b8613720c2054423c034bce795f498fe2e227fc98bc31768f94a79",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks remove_item",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove the mug MUG-02 from the cart: The remove_item step is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks remove_item",
+       "state /orders/0/items = [{'name': 'Sencha 100 g', 'price_cents': 899, 'qty': 2, 'sku': 'TEA-01'}, {'name': 'Stoneware mug', 'price_cents': 1450, 'qty': 1, 'sku': 'MUG-02'}, {'name': 'Gooseneck kettle', 'price_cents': 5900, 'qty': 1, 'sku': 'KET-07'}]"
+      ],
+      "requirement": "R1",
+      "text": "Remove the mug (SKU MUG-02) from the cart of CU-310."
+     },
+     {
+      "failed": [
+       "order remove_item < checkout: None, 2"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+     },
+     {
+      "failed": [
+       "state /orders/0/subtotal_cents = 9148"
+      ],
+      "requirement": "R5",
+      "text": "Leave the other items and their quantities as they are (2 x TEA-01, 1 x KET-07)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e53cbdea44b8613720c2054423c034bce795f498fe2e227fc98bc31768f94a79"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,22 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"sku\": \"MUG-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"address_label\": \"office\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"sku\": \"MUG-02\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"address_label\": \"office\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c504f54f1620d29d27cc7725092462098b0353b690ec4852ac2cff5594dfb946",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks apply_coupon",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Apply the coupon WINTER10: The apply_coupon step was removed from the trajectory.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks apply_coupon",
+       "state /orders/0/coupon = None"
+      ],
+      "requirement": "R2",
+      "text": "Apply the coupon WINTER10."
+     },
+     {
+      "failed": [
+       "order apply_coupon < checkout: None, 2"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c504f54f1620d29d27cc7725092462098b0353b690ec4852ac2cff5594dfb946"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,22 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"sku\": \"MUG-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"code\": \"WINTER10\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"sku\": \"MUG-02\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"code\": \"WINTER10\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7f271fa00a9d7911a48883afdf454d3efc06f76808147428495ca3b3402af071",
+   "kind": "violating",
+   "operator": "traj-drop-confirmation",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /orders/0/items missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Check out to the saved address labeled office: The checkout call was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /orders/0/items missing"
+      ],
+      "requirement": "R1",
+      "text": "Remove the mug (SKU MUG-02) from the cart of CU-310."
+     },
+     {
+      "failed": [
+       "state /orders/0/coupon missing"
+      ],
+      "requirement": "R2",
+      "text": "Apply the coupon WINTER10."
+     },
+     {
+      "failed": [
+       "trajectory lacks checkout",
+       "state /orders/0/customer_id missing",
+       "state /orders/0/ship_to missing"
+      ],
+      "requirement": "R3",
+      "text": "Check out to the saved address labeled `office`."
+     },
+     {
+      "failed": [
+       "order remove_item < checkout: 1, None",
+       "order apply_coupon < checkout: 2, None"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+     },
+     {
+      "failed": [
+       "state /orders/0/subtotal_cents missing"
+      ],
+      "requirement": "R5",
+      "text": "Leave the other items and their quantities as they are (2 x TEA-01, 1 x KET-07)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7f271fa00a9d7911a48883afdf454d3efc06f76808147428495ca3b3402af071"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,29 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"sku\": \"MUG-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"code\": \"WINTER10\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"address_label\": \"office\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"sku\": \"MUG-02\"\n    }\n  },\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"code\": \"WINTER10\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"address_label\": \"office\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "4ddfb381f61eb4b1f2d64edd9852673211e4b32c74f9584ca3675beb6f8d78fe",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "cart-checkout",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same remove, coupon and checkout steps are done and the task does not require viewing the cart first.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,29 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"code\": \"WINTER10\"\n+    }\n+  },\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"sku\": \"MUG-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"address_label\": \"office\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"code\": \"WINTER10\"\n    }\n  },\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"sku\": \"MUG-02\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"address_label\": \"office\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c77c2d1a69890f6f938ac8d084c54c2f98731b031d63ca90e26d85c269e8509d",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "cart-checkout",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Remove the mug, then apply the coupon, then check out (numbered order): The coupon is applied before the mug is removed, so the order of the stated steps changes and the discount may be computed on a different cart.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,29 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\n+    \"tool\": \"view_cart\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\"\n+    }\n+  },\n+  {\n+    \"tool\": \"remove_item\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"sku\": \"MUG-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"checkout\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"address_label\": \"office\"\n+    }\n+  },\n+  {\n+    \"tool\": \"apply_coupon\",\n+    \"args\": {\n+      \"customer_id\": \"CU-310\",\n+      \"code\": \"WINTER10\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"view_cart\",\n    \"args\": {\n      \"customer_id\": \"CU-310\"\n    }\n  },\n  {\n    \"tool\": \"remove_item\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"sku\": \"MUG-02\"\n    }\n  },\n  {\n    \"tool\": \"checkout\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"address_label\": \"office\"\n    }\n  },\n  {\n    \"tool\": \"apply_coupon\",\n    \"args\": {\n      \"customer_id\": \"CU-310\",\n      \"code\": \"WINTER10\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4228bf983ec726a4fc1f48cf791af8e61aeaca1673c24533d024a7d14a9fed9d",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /orders/0/coupon = None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Apply the coupon, then check out: The coupon is applied after checkout, so the order is placed without the discount.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /orders/0/coupon = None"
+      ],
+      "requirement": "R2",
+      "text": "Apply the coupon WINTER10."
+     },
+     {
+      "failed": [
+       "order apply_coupon < checkout: 3, 2"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4228bf983ec726a4fc1f48cf791af8e61aeaca1673c24533d024a7d14a9fed9d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,5 @@\n [\n   {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n   {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n   {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b042de78b89ce8ba8fdca906c35b9dd693e9560fa6ebf56ebc7dd4a5dbca192f",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks remove_item",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove the mug SKU MUG-02 from the cart: The remove_item call is omitted so the mug stays in the cart.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks remove_item",
+       "state /orders/0/items = [{'name': 'Sencha 100 g', 'price_cents': 899, 'qty': 2, 'sku': 'TEA-01'}, {'name': 'Stoneware mug', 'price_cents': 1450, 'qty': 1, 'sku': 'MUG-02'}, {'name': 'Gooseneck kettle', 'price_cents': 5900, 'qty': 1, 'sku': 'KET-07'}]"
+      ],
+      "requirement": "R1",
+      "text": "Remove the mug (SKU MUG-02) from the cart of CU-310."
+     },
+     {
+      "failed": [
+       "order remove_item < checkout: None, 2"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+     },
+     {
+      "failed": [
+       "state /orders/0/subtotal_cents = 9148"
+      ],
+      "requirement": "R5",
+      "text": "Leave the other items and their quantities as they are (2 x TEA-01, 1 x KET-07)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b042de78b89ce8ba8fdca906c35b9dd693e9560fa6ebf56ebc7dd4a5dbca192f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,5 @@\n [\n   {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n   {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n   {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "78f72b0858cc2c29b9addd2a0b20918000a3151a96b83392b6763c0e633842d7",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks apply_coupon",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Apply the coupon WINTER10: The apply_coupon step was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks apply_coupon",
+       "state /orders/0/coupon = None"
+      ],
+      "requirement": "R2",
+      "text": "Apply the coupon WINTER10."
+     },
+     {
+      "failed": [
+       "order apply_coupon < checkout: None, 2"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "78f72b0858cc2c29b9addd2a0b20918000a3151a96b83392b6763c0e633842d7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -2,5 +2,5 @@\n   {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n   {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n   {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"home\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"home\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6dac108af8bf1fd3200b37e1ce5e9a3f13e51c1436a2700dd371a7d2ba3a2c59",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks checkout",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Check out to the saved address labeled office: Checkout uses address label home instead of office.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks checkout",
+       "state /orders/0/ship_to = '8 Birch Lane, Leeds LS6 2AB'"
+      ],
+      "requirement": "R3",
+      "text": "Check out to the saved address labeled `office`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6dac108af8bf1fd3200b37e1ce5e9a3f13e51c1436a2700dd371a7d2ba3a2c59"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,6 @@\n [\n   {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n   {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n+  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}},\n+  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "47c28946b5539c061588ebdd93bc468495c15b9fa8913b9196b0c82bc8ebfdf1",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /orders/0/coupon = None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Apply the coupon WINTER10 and then check out: The coupon is applied after checkout, so the order is completed without the discount.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /orders/0/coupon = None"
+      ],
+      "requirement": "R2",
+      "text": "Apply the coupon WINTER10."
+     },
+     {
+      "failed": [
+       "order apply_coupon < checkout: 3, 2"
+      ],
+      "requirement": "R4",
+      "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "47c28946b5539c061588ebdd93bc468495c15b9fa8913b9196b0c82bc8ebfdf1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,7 @@\n [\n   {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n   {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n+  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"KET-07\"}},\n   {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n   {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"KET-07\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ccdf28e5632416c6711b092e72ab29b513ed3b2b2ec018557b40d8f8931ce13c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /orders/0/items = [{'name': 'Sencha 100 g', 'price_cents': 899, 'qty': 2, 'sku': 'TEA-01'}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Leave the other items and their quantities as they are: It removes an additional item (KET-07) from the cart.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /orders/0/items = [{'name': 'Sencha 100 g', 'price_cents': 899, 'qty': 2, 'sku': 'TEA-01'}]"
+      ],
+      "requirement": "R1",
+      "text": "Remove the mug (SKU MUG-02) from the cart of CU-310."
+     },
+     {
+      "failed": [
+       "trajectory has remove_item",
+       "state /orders/0/subtotal_cents = 1798"
+      ],
+      "requirement": "R5",
+      "text": "Leave the other items and their quantities as they are (2 x TEA-01, 1 x KET-07)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ccdf28e5632416c6711b092e72ab29b513ed3b2b2ec018557b40d8f8931ce13c"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,6 @@\n [\n   {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n+  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n   {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n   {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c72ab0a10d676074499318ebe926bba343565126d67790b4fd935e0da80612a0",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "cart-checkout",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Numbered order: remove mug, then apply coupon, then check out: The coupon is applied before the mug is removed, and the task lists numbered steps without explicitly requiring order, so it is unclear whether this matters (a coupon could depend on cart contents).",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": null
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "c72ab0a10d676074499318ebe926bba343565126d67790b4fd935e0da80612a0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n   {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n   {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n   {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "8a3772bf70d3794c2eaaab97dbb79fb8e130b64278bf6b9b91492fa19f8fb09a",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only view_cart was dropped; remove, coupon and checkout remain as required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "8a3772bf70d3794c2eaaab97dbb79fb8e130b64278bf6b9b91492fa19f8fb09a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1 @@\n-[\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n-  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n-  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n-  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n-]\n+[{\"tool\":\"view_cart\",\"args\":{\"customer_id\":\"CU-310\"}},{\"tool\":\"remove_item\",\"args\":{\"sku\":\"MUG-02\",\"customer_id\":\"CU-310\"}},{\"tool\":\"apply_coupon\",\"args\":{\"code\":\"WINTER10\",\"customer_id\":\"CU-310\"}},{\"tool\":\"checkout\",\"args\":{\"address_label\":\"office\",\"customer_id\":\"CU-310\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"view_cart\",\"args\":{\"customer_id\":\"CU-310\"}},{\"tool\":\"remove_item\",\"args\":{\"sku\":\"MUG-02\",\"customer_id\":\"CU-310\"}},{\"tool\":\"apply_coupon\",\"args\":{\"code\":\"WINTER10\",\"customer_id\":\"CU-310\"}},{\"tool\":\"checkout\",\"args\":{\"address_label\":\"office\",\"customer_id\":\"CU-310\"}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "064c056e8ba95b914f9ecb4d1bc8218e328fd13a9a7aedb2103bc746e811bdf0",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "cart-checkout",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Same calls in the same order with the same arguments; only JSON formatting and key order differ.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "064c056e8ba95b914f9ecb4d1bc8218e328fd13a9a7aedb2103bc746e811bdf0"
+   }
+  }
+ ]
+}

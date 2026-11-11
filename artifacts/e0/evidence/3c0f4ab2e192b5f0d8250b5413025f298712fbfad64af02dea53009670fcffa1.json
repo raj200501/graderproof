@@ -1,0 +1,974 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "appointments": {
+    "APT-6620": {
+     "date": "2026-11-18",
+     "patient_id": "P-3307",
+     "provider": "Dr. Hale",
+     "status": "scheduled",
+     "time": "10:15"
+    },
+    "APT-6655": {
+     "date": "2026-11-18",
+     "patient_id": "P-4410",
+     "provider": "Dr. Hale",
+     "status": "scheduled",
+     "time": "11:00"
+    }
+   },
+   "open_slots": {
+    "Dr. Hale": {
+     "2026-11-11": [
+      "09:00"
+     ],
+     "2026-11-18": [
+      "09:30",
+      "14:00"
+     ],
+     "2026-11-19": [
+      "08:45"
+     ]
+    }
+   },
+   "patients": {
+    "P-3307": {
+     "mobile": "+44 7700 900412",
+     "name": "Gareth Lowe"
+    },
+    "P-4410": {
+     "mobile": "+44 7700 900877",
+     "name": "Ines Duarte"
+    }
+   },
+   "sms_outbox": [
+    {
+     "patient_id": "P-3307",
+     "text": "Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15."
+    }
+   ]
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "date": "2026-11-18",
+     "provider": "Dr. Hale"
+    },
+    "result": {
+     "ok": true,
+     "slots": [
+      "09:30",
+      "10:15",
+      "14:00"
+     ]
+    },
+    "tool": "find_slots"
+   },
+   {
+    "args": {
+     "appointment_id": "APT-6620",
+     "date": "2026-11-18",
+     "time": "10:15"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "reschedule"
+   },
+   {
+    "args": {
+     "patient_id": "P-3307",
+     "text": "Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15."
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "send_sms"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "appointment_id": "APT-6620",
+      "date": "2026-11-18",
+      "time": "10:15"
+     },
+     "tool": "reschedule",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "2026-11-18",
+     "pointer": "/appointments/APT-6620/date",
+     "type": "state_equals"
+    },
+    {
+     "equals": "10:15",
+     "pointer": "/appointments/APT-6620/time",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Move appointment APT-6620 to 2026-11-18 at 10:15 with reschedule."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "patient_id": "P-3307"
+     },
+     "tool": "send_sms",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "P-3307",
+     "pointer": "/sms_outbox/0/patient_id",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Text the patient P-3307 with send_sms to confirm; the message must include the new date written as 2026-11-18 and the new time written as 10:15."
+  },
+  {
+   "checks": [
+    {
+     "first": {
+      "args": {
+       "appointment_id": "APT-6620",
+       "date": "2026-11-18",
+       "time": "10:15"
+      },
+      "tool": "reschedule"
+     },
+     "then": {
+      "args": {
+       "patient_id": "P-3307"
+      },
+      "tool": "send_sms"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "The SMS is sent after the appointment has been moved (reschedule before send_sms)."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "appointment_id": "APT-6655"
+     },
+     "tool": "reschedule",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": {
+      "date": "2026-11-18",
+      "patient_id": "P-4410",
+      "provider": "Dr. Hale",
+      "status": "scheduled",
+      "time": "11:00"
+     },
+     "pointer": "/appointments/APT-6655",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Do not change any other appointment."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "patient_id": "P-4410"
+     },
+     "tool": "send_sms",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Only the single named patient is texted (no SMS to other patients)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:appointment-move",
+ "task_hash": "3c0f4ab2e192b5f0d8250b5413025f298712fbfad64af02dea53009670fcffa1",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,31 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\n+    \"tool\": \"find_slots\",\n+    \"args\": {\n+      \"provider\": \"Dr. Hale\",\n+      \"date\": \"2026-11-18\"\n+    }\n+  },\n+  {\n+    \"tool\": \"find_slots\",\n+    \"args\": {\n+      \"provider\": \"Dr. Hale\",\n+      \"date\": \"2026-11-18\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reschedule\",\n+    \"args\": {\n+      \"appointment_id\": \"APT-6620\",\n+      \"date\": \"2026-11-18\",\n+      \"time\": \"10:15\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_sms\",\n+    \"args\": {\n+      \"patient_id\": \"P-3307\",\n+      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_slots\",\n    \"args\": {\n      \"provider\": \"Dr. Hale\",\n      \"date\": \"2026-11-18\"\n    }\n  },\n  {\n    \"tool\": \"find_slots\",\n    \"args\": {\n      \"provider\": \"Dr. Hale\",\n      \"date\": \"2026-11-18\"\n    }\n  },\n  {\n    \"tool\": \"reschedule\",\n    \"args\": {\n      \"appointment_id\": \"APT-6620\",\n      \"date\": \"2026-11-18\",\n      \"time\": \"10:15\"\n    }\n  },\n  {\n    \"tool\": \"send_sms\",\n    \"args\": {\n      \"patient_id\": \"P-3307\",\n      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f78503032050ac5608bf8e9e66b826e472f3274442eb840450ea0c91f6bfa989",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "appointment-move",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only a redundant read-only find_slots call was added; reschedule and the SMS are unchanged and in the required order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "f78503032050ac5608bf8e9e66b826e472f3274442eb840450ea0c91f6bfa989"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\n+    \"tool\": \"find_slots\",\n+    \"args\": {\n+      \"provider\": \"Dr. Hale\",\n+      \"date\": \"2026-11-18-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reschedule\",\n+    \"args\": {\n+      \"appointment_id\": \"APT-6620\",\n+      \"date\": \"2026-11-18\",\n+      \"time\": \"10:15\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_sms\",\n+    \"args\": {\n+      \"patient_id\": \"P-3307\",\n+      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_slots\",\n    \"args\": {\n      \"provider\": \"Dr. Hale\",\n      \"date\": \"2026-11-18-x\"\n    }\n  },\n  {\n    \"tool\": \"reschedule\",\n    \"args\": {\n      \"appointment_id\": \"APT-6620\",\n      \"date\": \"2026-11-18\",\n      \"time\": \"10:15\"\n    }\n  },\n  {\n    \"tool\": \"send_sms\",\n    \"args\": {\n      \"patient_id\": \"P-3307\",\n      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "59cad279adf75061b66deb40d0652f93182436953b4c3049734c61165430787a",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "appointment-move",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only find_slots date argument differs; the reschedule and SMS steps are identical and the task does not mandate find_slots.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\n+    \"tool\": \"find_slots\",\n+    \"args\": {\n+      \"provider\": \"Dr. Hale-x\",\n+      \"date\": \"2026-11-18\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reschedule\",\n+    \"args\": {\n+      \"appointment_id\": \"APT-6620\",\n+      \"date\": \"2026-11-18\",\n+      \"time\": \"10:15\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_sms\",\n+    \"args\": {\n+      \"patient_id\": \"P-3307\",\n+      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_slots\",\n    \"args\": {\n      \"provider\": \"Dr. Hale-x\",\n      \"date\": \"2026-11-18\"\n    }\n  },\n  {\n    \"tool\": \"reschedule\",\n    \"args\": {\n      \"appointment_id\": \"APT-6620\",\n      \"date\": \"2026-11-18\",\n      \"time\": \"10:15\"\n    }\n  },\n  {\n    \"tool\": \"send_sms\",\n    \"args\": {\n      \"patient_id\": \"P-3307\",\n      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f80783169cf138d8789274e50941d32d8bb7d8581c4a05759ecd0f97fe795c4a",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "appointment-move",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The required reschedule and send_sms calls are unchanged; only an optional read-only find_slots lookup has a different provider string, and the task does not require that call.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\n+    \"tool\": \"find_slots\",\n+    \"args\": {\n+      \"provider\": \"Dr. Hale\",\n+      \"date\": \"2026-11-18\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reschedule\",\n+    \"args\": {\n+      \"appointment_id\": \"APT-6620-x\",\n+      \"date\": \"2026-11-18\",\n+      \"time\": \"10:15\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_sms\",\n+    \"args\": {\n+      \"patient_id\": \"P-3307\",\n+      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_slots\",\n    \"args\": {\n      \"provider\": \"Dr. Hale\",\n      \"date\": \"2026-11-18\"\n    }\n  },\n  {\n    \"tool\": \"reschedule\",\n    \"args\": {\n      \"appointment_id\": \"APT-6620-x\",\n      \"date\": \"2026-11-18\",\n      \"time\": \"10:15\"\n    }\n  },\n  {\n    \"tool\": \"send_sms\",\n    \"args\": {\n      \"patient_id\": \"P-3307\",\n      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a4b5afdeda4df04edb4332f00d7ad2f0941c67013652746ba07c126dfd27a850",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "appointment-move",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks reschedule",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Reschedule appointment APT-6620: The appointment id is APT-6620-x, which is the wrong appointment.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks reschedule",
+       "state /appointments/APT-6620/date = '2026-11-11'",
+       "state /appointments/APT-6620/time = '09:00'"
+      ],
+      "requirement": "R1",
+      "text": "Move appointment APT-6620 to 2026-11-18 at 10:15 with reschedule."
+     },
+     {
+      "failed": [
+       "order reschedule < send_sms: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "The SMS is sent after the appointment has been moved (reschedule before send_sms)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a4b5afdeda4df04edb4332f00d7ad2f0941c67013652746ba07c126dfd27a850"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\n+    \"tool\": \"find_slots\",\n+    \"args\": {\n+      \"provider\": \"Dr. Hale\",\n+      \"date\": \"2026-11-18\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reschedule\",\n+    \"args\": {\n+      \"appointment_id\": \"APT-6620\",\n+      \"date\": \"2026-11-18-x\",\n+      \"time\": \"10:15\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_sms\",\n+    \"args\": {\n+      \"patient_id\": \"P-3307\",\n+      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_slots\",\n    \"args\": {\n      \"provider\": \"Dr. Hale\",\n      \"date\": \"2026-11-18\"\n    }\n  },\n  {\n    \"tool\": \"reschedule\",\n    \"args\": {\n      \"appointment_id\": \"APT-6620\",\n      \"date\": \"2026-11-18-x\",\n      \"time\": \"10:15\"\n    }\n  },\n  {\n    \"tool\": \"send_sms\",\n    \"args\": {\n      \"patient_id\": \"P-3307\",\n      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "87799723cf0f4f8232dbc85f007db8dcc20de98137f9031266ecaa77cc15cd63",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "appointment-move",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks reschedule",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Move APT-6620 to 2026-11-18: The reschedule call uses the date 2026-11-18-x instead of 2026-11-18.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks reschedule",
+       "state /appointments/APT-6620/date = '2026-11-11'",
+       "state /appointments/APT-6620/time = '09:00'"
+      ],
+      "requirement": "R1",
+      "text": "Move appointment APT-6620 to 2026-11-18 at 10:15 with reschedule."
+     },
+     {
+      "failed": [
+       "order reschedule < send_sms: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "The SMS is sent after the appointment has been moved (reschedule before send_sms)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "87799723cf0f4f8232dbc85f007db8dcc20de98137f9031266ecaa77cc15cd63"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\n+    \"tool\": \"find_slots\",\n+    \"args\": {\n+      \"provider\": \"Dr. Hale\",\n+      \"date\": \"2026-11-18\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reschedule\",\n+    \"args\": {\n+      \"appointment_id\": \"APT-6620\",\n+      \"date\": \"2026-11-18\",\n+      \"time\": \"10:15-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_sms\",\n+    \"args\": {\n+      \"patient_id\": \"P-3307\",\n+      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_slots\",\n    \"args\": {\n      \"provider\": \"Dr. Hale\",\n      \"date\": \"2026-11-18\"\n    }\n  },\n  {\n    \"tool\": \"reschedule\",\n    \"args\": {\n      \"appointment_id\": \"APT-6620\",\n      \"date\": \"2026-11-18\",\n      \"time\": \"10:15-x\"\n    }\n  },\n  {\n    \"tool\": \"send_sms\",\n    \"args\": {\n      \"patient_id\": \"P-3307\",\n      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "06fc8202c31c9a719da7bf792b9c1e665ba93a55467e81dc0f5d0e9f66b9f329",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "appointment-move",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks reschedule",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Reschedule APT-6620 to time 10:15: The reschedule call uses time 10:15-x instead of 10:15.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks reschedule",
+       "state /appointments/APT-6620/date = '2026-11-11'",
+       "state /appointments/APT-6620/time = '09:00'"
+      ],
+      "requirement": "R1",
+      "text": "Move appointment APT-6620 to 2026-11-18 at 10:15 with reschedule."
+     },
+     {
+      "failed": [
+       "order reschedule < send_sms: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "The SMS is sent after the appointment has been moved (reschedule before send_sms)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "06fc8202c31c9a719da7bf792b9c1e665ba93a55467e81dc0f5d0e9f66b9f329"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\n+    \"tool\": \"find_slots\",\n+    \"args\": {\n+      \"provider\": \"Dr. Hale\",\n+      \"date\": \"2026-11-18\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reschedule\",\n+    \"args\": {\n+      \"appointment_id\": \"APT-6620\",\n+      \"date\": \"2026-11-18\",\n+      \"time\": \"10:15\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_sms\",\n+    \"args\": {\n+      \"patient_id\": \"P-3307\",\n+      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_slots\",\n    \"args\": {\n      \"provider\": \"Dr. Hale\",\n      \"date\": \"2026-11-18\"\n    }\n  },\n  {\n    \"tool\": \"reschedule\",\n    \"args\": {\n      \"appointment_id\": \"APT-6620\",\n      \"date\": \"2026-11-18\",\n      \"time\": \"10:15\"\n    }\n  },\n  {\n    \"tool\": \"send_sms\",\n    \"args\": {\n      \"patient_id\": \"P-3307\",\n      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "4cb070a0e4ebcf1e60544195dccafee6c3cadc6d4e8d946a48bb1dd7826741c5",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "appointment-move",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The SMS text still contains 2026-11-18 and 10:15 and follows the reschedule, as the task requires.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,17 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\n+    \"tool\": \"reschedule\",\n+    \"args\": {\n+      \"appointment_id\": \"APT-6620\",\n+      \"date\": \"2026-11-18\",\n+      \"time\": \"10:15\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_sms\",\n+    \"args\": {\n+      \"patient_id\": \"P-3307\",\n+      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"reschedule\",\n    \"args\": {\n      \"appointment_id\": \"APT-6620\",\n      \"date\": \"2026-11-18\",\n      \"time\": \"10:15\"\n    }\n  },\n  {\n    \"tool\": \"send_sms\",\n    \"args\": {\n      \"patient_id\": \"P-3307\",\n      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b5c1119c5c47a72ef5085543508de4b24c81b55120866cf20d6be78cba4d3635",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "appointment-move",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "find_slots is read-only and not required; reschedule then send_sms with the required date and time are still performed in order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,16 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\n+    \"tool\": \"find_slots\",\n+    \"args\": {\n+      \"provider\": \"Dr. Hale\",\n+      \"date\": \"2026-11-18\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_sms\",\n+    \"args\": {\n+      \"patient_id\": \"P-3307\",\n+      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_slots\",\n    \"args\": {\n      \"provider\": \"Dr. Hale\",\n      \"date\": \"2026-11-18\"\n    }\n  },\n  {\n    \"tool\": \"send_sms\",\n    \"args\": {\n      \"patient_id\": \"P-3307\",\n      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "910af1fc13869a8a7564c79ca89f373ef0d48a252f80699413b121874cc82fb4",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "appointment-move",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks reschedule",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Move APT-6620 with reschedule: The reschedule call is removed, so the appointment is never moved but the patient is told it was.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks reschedule",
+       "state /appointments/APT-6620/date = '2026-11-11'",
+       "state /appointments/APT-6620/time = '09:00'"
+      ],
+      "requirement": "R1",
+      "text": "Move appointment APT-6620 to 2026-11-18 at 10:15 with reschedule."
+     },
+     {
+      "failed": [
+       "order reschedule < send_sms: None, 1"
+      ],
+      "requirement": "R3",
+      "text": "The SMS is sent after the appointment has been moved (reschedule before send_sms)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "910af1fc13869a8a7564c79ca89f373ef0d48a252f80699413b121874cc82fb4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,17 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\n+    \"tool\": \"find_slots\",\n+    \"args\": {\n+      \"provider\": \"Dr. Hale\",\n+      \"date\": \"2026-11-18\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reschedule\",\n+    \"args\": {\n+      \"appointment_id\": \"APT-6620\",\n+      \"date\": \"2026-11-18\",\n+      \"time\": \"10:15\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_slots\",\n    \"args\": {\n      \"provider\": \"Dr. Hale\",\n      \"date\": \"2026-11-18\"\n    }\n  },\n  {\n    \"tool\": \"reschedule\",\n    \"args\": {\n      \"appointment_id\": \"APT-6620\",\n      \"date\": \"2026-11-18\",\n      \"time\": \"10:15\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "f07b4d823690b1860b49866f0e923671426bfcf1803a3e9e25d0d4930307ad74",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "appointment-move",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks send_sms",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "text the patient with send_sms after rescheduling: The send_sms confirmation step was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks send_sms",
+       "state /sms_outbox/0/patient_id missing"
+      ],
+      "requirement": "R2",
+      "text": "Text the patient P-3307 with send_sms to confirm; the message must include the new date written as 2026-11-18 and the new time written as 10:15."
+     },
+     {
+      "failed": [
+       "order reschedule < send_sms: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "The SMS is sent after the appointment has been moved (reschedule before send_sms)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f07b4d823690b1860b49866f0e923671426bfcf1803a3e9e25d0d4930307ad74"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\n+    \"tool\": \"reschedule\",\n+    \"args\": {\n+      \"appointment_id\": \"APT-6620\",\n+      \"date\": \"2026-11-18\",\n+      \"time\": \"10:15\"\n+    }\n+  },\n+  {\n+    \"tool\": \"find_slots\",\n+    \"args\": {\n+      \"provider\": \"Dr. Hale\",\n+      \"date\": \"2026-11-18\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_sms\",\n+    \"args\": {\n+      \"patient_id\": \"P-3307\",\n+      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"reschedule\",\n    \"args\": {\n      \"appointment_id\": \"APT-6620\",\n      \"date\": \"2026-11-18\",\n      \"time\": \"10:15\"\n    }\n  },\n  {\n    \"tool\": \"find_slots\",\n    \"args\": {\n      \"provider\": \"Dr. Hale\",\n      \"date\": \"2026-11-18\"\n    }\n  },\n  {\n    \"tool\": \"send_sms\",\n    \"args\": {\n      \"patient_id\": \"P-3307\",\n      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f11c779a2975555f88184393b96913899b026cc632df27a4eb3ca2666672c49c",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "appointment-move",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The reschedule still happens before the SMS and find_slots is a read-only call not required by the task, so only ordering of an optional lookup changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\n+    \"tool\": \"find_slots\",\n+    \"args\": {\n+      \"provider\": \"Dr. Hale\",\n+      \"date\": \"2026-11-18\"\n+    }\n+  },\n+  {\n+    \"tool\": \"send_sms\",\n+    \"args\": {\n+      \"patient_id\": \"P-3307\",\n+      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reschedule\",\n+    \"args\": {\n+      \"appointment_id\": \"APT-6620\",\n+      \"date\": \"2026-11-18\",\n+      \"time\": \"10:15\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_slots\",\n    \"args\": {\n      \"provider\": \"Dr. Hale\",\n      \"date\": \"2026-11-18\"\n    }\n  },\n  {\n    \"tool\": \"send_sms\",\n    \"args\": {\n      \"patient_id\": \"P-3307\",\n      \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"\n    }\n  },\n  {\n    \"tool\": \"reschedule\",\n    \"args\": {\n      \"appointment_id\": \"APT-6620\",\n      \"date\": \"2026-11-18\",\n      \"time\": \"10:15\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a4573676c9f79e5b5e79b65d54bf16a103eff1dc571ae3aef935b1abe93f055e",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "appointment-move",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R3: order reschedule < send_sms: 2, 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Send the SMS after the appointment has been moved: send_sms is called before reschedule.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n+  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:30\"}},\n   {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:30\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e2ecb0f59c4cba42728dcf7d5947ea63c6f123173cdb40c48385b5302d766f53",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "appointment-move",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks reschedule",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Move the appointment to 10:15: It reschedules to 10:30, not the requested 10:15.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks reschedule",
+       "state /appointments/APT-6620/date = '2026-11-11'",
+       "state /appointments/APT-6620/time = '09:00'"
+      ],
+      "requirement": "R1",
+      "text": "Move appointment APT-6620 to 2026-11-18 at 10:15 with reschedule."
+     },
+     {
+      "failed": [
+       "order reschedule < send_sms: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "The SMS is sent after the appointment has been moved (reschedule before send_sms)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e2ecb0f59c4cba42728dcf7d5947ea63c6f123173cdb40c48385b5302d766f53"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n   {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 18 Nov at 10:15.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 18 Nov at 10:15.\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f7f53b95daf59bd4315aa3e46dd13236bbd06116b3e7e7add48af3f534219476",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "appointment-move",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "SMS must include the new date written as 2026-11-18: The message writes the date as 18 Nov instead of 2026-11-18.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}},\n+  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "36f28435322c4ddca9eeaa53fea9cca49b13509ef4f7bf0e01cc3d339822e0aa",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "appointment-move",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: order reschedule < send_sms: 2, 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "text the patient after the appointment has been moved: send_sms is called before reschedule.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order reschedule < send_sms: 2, 1"
+      ],
+      "requirement": "R3",
+      "text": "The SMS is sent after the appointment has been moved (reschedule before send_sms)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "36f28435322c4ddca9eeaa53fea9cca49b13509ef4f7bf0e01cc3d339822e0aa"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n   {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n+  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6621\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n   {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6621\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "01aad908f4c57288c5c2c56f15d3f64a5bb200732009e418cfba802d718503ec",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "appointment-move",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Do not change any other appointment: It adds a reschedule of APT-6621, a different appointment.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n   {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}},\n+  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3308\", \"text\": \"Hello, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3308\", \"text\": \"Hello, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d775d8d705dfb50d0dac3c4e2c3fe8d5ae0443db44c347988a6623d225372045",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "appointment-move",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Text only the patient (P-3307) and change nothing else: It sends an extra SMS to a different patient (P-3308) that the task does not ask for.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n   {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n   {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d2033eeb1b35662843a76fee79bba52eed2e59181b40d11898d09ac8a94bfe60",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "appointment-move",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The required reschedule followed by the confirming SMS is intact; the read-only find_slots lookup is not required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "d2033eeb1b35662843a76fee79bba52eed2e59181b40d11898d09ac8a94bfe60"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\"tool\": \"find_slots\", \"args\": {\"date\": \"2026-11-18\", \"provider\": \"Dr. Hale\"}},\n+  {\"tool\": \"reschedule\", \"args\": {\"time\": \"10:15\", \"date\": \"2026-11-18\", \"appointment_id\": \"APT-6620\"}},\n+  {\"tool\": \"send_sms\", \"args\": {\"text\": \"Confirmed: Dr. Hale will see you on 2026-11-18 at 10:15. Reply to this clinic if you need to change it.\", \"patient_id\": \"P-3307\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"date\": \"2026-11-18\", \"provider\": \"Dr. Hale\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"time\": \"10:15\", \"date\": \"2026-11-18\", \"appointment_id\": \"APT-6620\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"text\": \"Confirmed: Dr. Hale will see you on 2026-11-18 at 10:15. Reply to this clinic if you need to change it.\", \"patient_id\": \"P-3307\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b56a2aa0591fd891cc90850984a16c6f83f9df478ae6dad1fb25d49b5bba0322",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "appointment-move",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The SMS still follows the reschedule and contains 2026-11-18 and 10:15, and the wording is otherwise free.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "b56a2aa0591fd891cc90850984a16c6f83f9df478ae6dad1fb25d49b5bba0322"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n-  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n-]\n+[{\"tool\":\"find_slots\",\"args\":{\"provider\":\"Dr. Hale\",\"date\":\"2026-11-18\"}},{\"tool\":\"reschedule\",\"args\":{\"appointment_id\":\"APT-6620\",\"date\":\"2026-11-18\",\"time\":\"10:15\"}},{\"tool\":\"send_sms\",\"args\":{\"patient_id\":\"P-3307\",\"text\":\"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"find_slots\",\"args\":{\"provider\":\"Dr. Hale\",\"date\":\"2026-11-18\"}},{\"tool\":\"reschedule\",\"args\":{\"appointment_id\":\"APT-6620\",\"date\":\"2026-11-18\",\"time\":\"10:15\"}},{\"tool\":\"send_sms\",\"args\":{\"patient_id\":\"P-3307\",\"text\":\"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "77c4e384da292c49b904a2ea54dc918180b4c4a3e60dfcf816210166f119a11f",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "appointment-move",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only whitespace formatting of the JSON changed; the calls and order are identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "77c4e384da292c49b904a2ea54dc918180b4c4a3e60dfcf816210166f119a11f"
+   }
+  }
+ ]
+}

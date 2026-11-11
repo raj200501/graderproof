@@ -1,0 +1,1563 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "invoice.csv": "item,quantity,unit_price\nStanding desk frame,2,329.00\nOak desk top,2,149.50\nCable tray,4,18.75\nMonitor arm,3,64.90\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "Total: $1,327.90\n",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "code": 0,
+     "type": "exit_code"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "The script runs successfully."
+  },
+  {
+   "checks": [
+    {
+     "text": "Total: $1,327.90",
+     "type": "stdout_contains"
+    },
+    {
+     "normalize": "none",
+     "target": "stdout",
+     "type": "same_as_reference"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+  },
+  {
+   "checks": [
+    {
+     "pattern": "^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$",
+     "type": "stdout_regex"
+    },
+    {
+     "pattern": "^Total: \\$1,327\\.90\\n?$",
+     "type": "stdout_regex"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+  },
+  {
+   "checks": [
+    {
+     "pattern": "\\A[^\\n]*\\n?\\Z",
+     "type": "stdout_regex"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Print nothing else to standard output."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:invoice-total",
+ "task_hash": "fe684a0d29c4a010334da69cc00a441f07a14a29d3795d2aceac331b32b6b186",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,11 @@\n+import csv\n+from decimal import ROUND_HALF_UP, Decimal\n+\n+subtotal = Decimal(\"0\")\n+with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+\n+tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n+total = subtotal + tax\n+print(\"Total: ${:,.2f}\".format(total))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,11 +1,14 @@\n-import csv\n-from decimal import ROUND_HALF_UP, Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-subtotal = Decimal(\"0\")\n-with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n-\n-tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n-total = subtotal + tax\n-print(\"Total: ${:,.2f}\".format(total))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(3.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(3.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "9ceedf518537222786dca4bb79ae9a51040a9be7fbacc44b2996fbb02c39086e",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The output is unchanged and only a 3 second delay was added, which the task does not forbid.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "9ceedf518537222786dca4bb79ae9a51040a9be7fbacc44b2996fbb02c39086e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,5 +7,5 @@\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n-total = subtotal + tax\n+total = (subtotal) - (tax)\n print(\"Total: ${:,.2f}\".format(total))\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = (subtotal) - (tax)\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9f1a4cc26ce24dc42dd0973643d07600bafde9a5fa2a6a37f7cf4b7adf1e9f80",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: stdout lacks 'Total: $1,327.90'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "total = subtotal + tax: The tax is subtracted from the subtotal instead of added.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9f1a4cc26ce24dc42dd0973643d07600bafde9a5fa2a6a37f7cf4b7adf1e9f80"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,7 +4,7 @@\n subtotal = Decimal(\"0\")\n with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+        subtotal += (Decimal(row[\"quantity\"])) // (Decimal(row[\"unit_price\"]))\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += (Decimal(row[\"quantity\"])) // (Decimal(row[\"unit_price\"]))\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e2fdbfba8f5d4dba91c80c4b491c41a185c0200aedde96fd9bf777dd52f5d152",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: stdout lacks 'Total: $1,327.90'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "subtotal = sum of quantity times unit_price: Floor division of quantity by unit_price replaces multiplication, giving wrong totals.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e2fdbfba8f5d4dba91c80c4b491c41a185c0200aedde96fd9bf777dd52f5d152"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,6 +6,6 @@\n     for row in csv.DictReader(fh):\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n \n-tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n+tax = ((subtotal) // (Decimal(\"0.0825\"))).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n print(\"Total: ${:,.2f}\".format(total))\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = ((subtotal) // (Decimal(\"0.0825\"))).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "501373d5a5bc5753850b1e97f893d97fbf9818b3f37e249cd8edb50761a95209",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: stdout lacks 'Total: $1,327.90'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "tax is 8.25% of the subtotal: Floor division by 0.0825 gives a wrong tax amount.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "501373d5a5bc5753850b1e97f893d97fbf9818b3f37e249cd8edb50761a95209"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,4 +8,4 @@\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n-print(\"Total: ${:,.2f}\".format(total))\n+print('Total: ${:,.2f'.format(total))\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint('Total: ${:,.2f'.format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7849df281bb3c536636c456dd60284e42b318dea6021e6c4eef8c370e7bd76be",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Print the total line: The format spec '{:,.2f' is malformed and raises ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "The script runs successfully."
+     },
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7849df281bb3c536636c456dd60284e42b318dea6021e6c4eef8c370e7bd76be"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,4 +8,4 @@\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n-print(\"Total: ${:,.2f}\".format(total))\n+print('Total: ${:,.2f}x'.format(total))\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint('Total: ${:,.2f}x'.format(total))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "6cfb072f153ed412539415fdc3175eb550ee8d719e55503cede3d0cd7d40635c",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: stdout differs from reference",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Print exactly one line in the form Total: $1,234.56: An extra x is appended to the printed total.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6cfb072f153ed412539415fdc3175eb550ee8d719e55503cede3d0cd7d40635c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,7 +2,7 @@\n from decimal import ROUND_HALF_UP, Decimal\n \n subtotal = Decimal(\"0\")\n-with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open(\"invoice.csv\", newline=\"\", encoding='') as fh:\n     for row in csv.DictReader(fh):\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n \n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding='') as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "89a5baa413c4df94f90bd91941a0386b51e5823aa85515872d909e35325b2a9f",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read invoice.csv and print the total: An empty encoding string makes open() fail with an unknown-encoding error.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "The script runs successfully."
+     },
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "89a5baa413c4df94f90bd91941a0386b51e5823aa85515872d909e35325b2a9f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,7 +4,7 @@\n subtotal = Decimal(\"0\")\n with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+        subtotal += Decimal(row['']) * Decimal(row[\"unit_price\"])\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row['']) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d65c100a7f5ce26e7fddead9c125ac8ecc365789440e3c82bb7ee789fdc33ef5",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Compute subtotal from the quantity column: It reads the nonexistent column '', which raises KeyError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "The script runs successfully."
+     },
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d65c100a7f5ce26e7fddead9c125ac8ecc365789440e3c82bb7ee789fdc33ef5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,7 +4,7 @@\n subtotal = Decimal(\"0\")\n with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+        subtotal += Decimal(row['quantit']) * Decimal(row[\"unit_price\"])\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row['quantit']) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0c70d467add325757ff925560441ea2ca3050908a54bdceff68c34724e7ae91f",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Compute total from quantity and unit_price: The column 'quantit' does not exist so a KeyError is raised.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "The script runs successfully."
+     },
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0c70d467add325757ff925560441ea2ca3050908a54bdceff68c34724e7ae91f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,7 +4,7 @@\n subtotal = Decimal(\"0\")\n with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[''])\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[''])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "18baa6e066d70d3b4ce001565b55891ccdf90b87450848ece329a5b28e2179ca",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Compute subtotal from quantity times unit_price: row[''] raises KeyError because no such column exists.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "The script runs successfully."
+     },
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "18baa6e066d70d3b4ce001565b55891ccdf90b87450848ece329a5b28e2179ca"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,7 +3,7 @@\n \n subtotal = Decimal(\"0\")\n with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n+    for row in list(csv.DictReader(fh))[:-1]:\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in list(csv.DictReader(fh))[:-1]:\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ffb3aad3eefa3738858a37820de2fa8c6a2238a22a41b91de30391374cf48887",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: stdout lacks 'Total: $1,327.90'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Subtotal is the sum over all rows: The last row is skipped, so the subtotal and total are wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ffb3aad3eefa3738858a37820de2fa8c6a2238a22a41b91de30391374cf48887"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,5 +7,5 @@\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n-total = subtotal + tax\n+pass\n print(\"Total: ${:,.2f}\".format(total))\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\npass\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "89bf926dca823d56e97a496da7ef1e74de9e2ad829bbb01b2dc61df8a0bbf23e",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Print the total: total is never assigned, so the print raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "The script runs successfully."
+     },
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "89bf926dca823d56e97a496da7ef1e74de9e2ad829bbb01b2dc61df8a0bbf23e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n import csv\n from decimal import ROUND_HALF_UP, Decimal\n \n-subtotal = Decimal(\"0\")\n+pass\n with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\npass\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "596e8fccb06ebef6f3ad03520c11bd7194b21ee9b9b42a0d54c1d382dcebee49",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Print the invoice total: subtotal is never initialized, causing a NameError crash.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "The script runs successfully."
+     },
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "596e8fccb06ebef6f3ad03520c11bd7194b21ee9b9b42a0d54c1d382dcebee49"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,9 +2,7 @@\n from decimal import ROUND_HALF_UP, Decimal\n \n subtotal = Decimal(\"0\")\n-with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+pass\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\npass\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "111aae15c5ac50ea38cf4cab12207539281a0d01960722a814076425d48e59c7",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: stdout lacks 'Total: $1,327.90'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Compute subtotal from invoice.csv: The CSV is never read, so the total printed is always $0.00.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "111aae15c5ac50ea38cf4cab12207539281a0d01960722a814076425d48e59c7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,8 +3,7 @@\n \n subtotal = Decimal(\"0\")\n with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+    pass\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    pass\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f10809405b4b2afc9de1b1eb95b4a0042a472d2a39efdda38b8a6c54a673e0f6",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: stdout lacks 'Total: $1,327.90'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "subtotal is the sum of quantity times unit_price: The CSV is never summed, so the total is always 0.00.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f10809405b4b2afc9de1b1eb95b4a0042a472d2a39efdda38b8a6c54a673e0f6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,7 +4,7 @@\n subtotal = Decimal(\"0\")\n with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+        pass\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        pass\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e1f8a777317b059192215735a423526b0aa74699be7b7b5f88e3d83ab6c2ece3",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: stdout lacks 'Total: $1,327.90'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Subtotal is the sum of quantity times unit_price: Rows are never accumulated, so the subtotal stays 0 and the total is wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e1f8a777317b059192215735a423526b0aa74699be7b7b5f88e3d83ab6c2ece3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,6 +6,6 @@\n     for row in csv.DictReader(fh):\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n \n-tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n+pass\n total = subtotal + tax\n print(\"Total: ${:,.2f}\".format(total))\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\npass\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2d66b7bac75f7e94f6e04aed7888c01c6ea39b8809db7253aab7109b343e28ee",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Compute tax of 8.25% and print the total: tax is never defined, so it raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "The script runs successfully."
+     },
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2d66b7bac75f7e94f6e04aed7888c01c6ea39b8809db7253aab7109b343e28ee"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,7 +2,7 @@\n from decimal import ROUND_HALF_UP, Decimal\n \n subtotal = Decimal(\"0\")\n-with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open('invoice.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n \n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open('invoice.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b69b825e2e3b7d2e72d78011f25a89df5f60ae99804d6c4d5cd99889bbf934d1",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "read invoice.csv: The script opens invoice.csv.bak, a different file.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "The script runs successfully."
+     },
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b69b825e2e3b7d2e72d78011f25a89df5f60ae99804d6c4d5cd99889bbf934d1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,6 +6,6 @@\n     for row in csv.DictReader(fh):\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n \n-tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n+tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal('0.01.bak'), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n print(\"Total: ${:,.2f}\".format(total))\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal('0.01.bak'), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "36e0d3b317190c2cbe0956568abdce5408567f080f9da0798cf8632008d1a2fd",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Print the total line: quantize with the invalid exponent '0.01.bak' raises InvalidOperation so nothing is printed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "The script runs successfully."
+     },
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "36e0d3b317190c2cbe0956568abdce5408567f080f9da0798cf8632008d1a2fd"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,6 +6,6 @@\n     for row in csv.DictReader(fh):\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n \n-tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n+tax = (subtotal * Decimal('0.0825.bak')).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n print(\"Total: ${:,.2f}\".format(total))\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal('0.0825.bak')).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7ea35664c7e571a66219369f84e0b82fa29a63d3e1df7f51242ad87efa5b8e88",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Print the total with 8.25% tax: Decimal('0.0825.bak') raises InvalidOperation, so the script crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "The script runs successfully."
+     },
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7ea35664c7e571a66219369f84e0b82fa29a63d3e1df7f51242ad87efa5b8e88"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,11 @@\n+import csv\n+from decimal import ROUND_HALF_UP, Decimal\n+\n+subtotal = Decimal(\"0\")\n+with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+\n+tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n+total = subtotal + tax\n+print(\"Total: ${:,.2f}\".format(total))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return drop_last_line(out) if out.strip() else out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,11 +1,14 @@\n-import csv\n-from decimal import ROUND_HALF_UP, Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-subtotal = Decimal(\"0\")\n-with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n-\n-tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n-total = subtotal + tax\n-print(\"Total: ${:,.2f}\".format(total))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return drop_last_line(out) if out.strip() else out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fa6634d7f020e045a2d078ed904ec1864cad32dc382255f1e7644fc21936e331",
+   "kind": "violating",
+   "operator": "stdout-drop-last-line",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: stdout lacks 'Total: $1,327.90'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Print exactly one line 'Total: $...': A post-step drops the last line of stdout, so the required total line is not printed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fa6634d7f020e045a2d078ed904ec1864cad32dc382255f1e7644fc21936e331"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,11 @@\n+import csv\n+from decimal import ROUND_HALF_UP, Decimal\n+\n+subtotal = Decimal(\"0\")\n+with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+\n+tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n+total = subtotal + tax\n+print(\"Total: ${:,.2f}\".format(total))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return extra_line(out)\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,11 +1,14 @@\n-import csv\n-from decimal import ROUND_HALF_UP, Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-subtotal = Decimal(\"0\")\n-with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n-\n-tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n-total = subtotal + tax\n-print(\"Total: ${:,.2f}\".format(total))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return extra_line(out)\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "32431e7bf2fcc89d0206ac45254b6cd1a540a8d4086dd59601bd13176b84d2e1",
+   "kind": "violating",
+   "operator": "stdout-extra-line",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: stdout differs from reference",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Print exactly one line and nothing else: The transform appends an extra line 'extra' to the output.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /\\A[^\\n]*\\n?\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "Print nothing else to standard output."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "32431e7bf2fcc89d0206ac45254b6cd1a540a8d4086dd59601bd13176b84d2e1"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,11 @@\n+import csv\n+from decimal import ROUND_HALF_UP, Decimal\n+\n+subtotal = Decimal(\"0\")\n+with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+\n+tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n+total = subtotal + tax\n+print(\"Total: ${:,.2f}\".format(total))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return toggle_newline(out) if out else out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,11 +1,14 @@\n-import csv\n-from decimal import ROUND_HALF_UP, Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-subtotal = Decimal(\"0\")\n-with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n-\n-tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n-total = subtotal + tax\n-print(\"Total: ${:,.2f}\".format(total))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return toggle_newline(out) if out else out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f1e5dfd8cfee3d8264f9cd143c530f55d622c64b7f0dafaadc3cad97688745f3",
+   "kind": "preserving",
+   "operator": "stdout-trailing-newline",
+   "task_id": "invoice-total",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R2: stdout differs from reference",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The single Total line is still printed with the right value; only its trailing newline is dropped, which the task text does not explicitly require.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,7 +2,7 @@\n from decimal import ROUND_HALF_UP, Decimal\n \n subtotal = Decimal(\"0\")\n-with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open(\"invoices.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n \n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoices.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a7bfb853ce2fd3ae7293f3dab24e50bc349f754b6cc0b52147ab3276703e7774",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read invoice.csv: It opens invoices.csv, the wrong file name, so it crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "The script runs successfully."
+     },
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a7bfb853ce2fd3ae7293f3dab24e50bc349f754b6cc0b52147ab3276703e7774"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,11 +1,11 @@\n import csv\n-from decimal import ROUND_HALF_UP, Decimal\n+from decimal import ROUND_HALF_EVEN, Decimal\n \n subtotal = Decimal(\"0\")\n with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n \n-tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n+tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_EVEN)\n total = subtotal + tax\n print(\"Total: ${:,.2f}\".format(total))\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_EVEN, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_EVEN)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "38bc1229059306823f3276e97a8ea758dd66ed423cb161ae83f72e9a58c04c5c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "invoice-total",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "tax rounded to nearest cent with exact halves rounding up: ROUND_HALF_EVEN rounds some exact halves down.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,11 +1,11 @@\n import csv\n-from decimal import ROUND_HALF_UP, Decimal\n+from decimal import ROUND_DOWN, Decimal\n \n subtotal = Decimal(\"0\")\n with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n         subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n \n-tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n+tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_DOWN)\n total = subtotal + tax\n print(\"Total: ${:,.2f}\".format(total))\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_DOWN, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_DOWN)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c5763f743562d85bdb63bc54c06be3ae3615721316916fd12e61c399c8aa8e61",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "invoice-total",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Tax rounded to nearest cent with exact halves rounding up: ROUND_DOWN truncates the tax instead of rounding to nearest, giving wrong totals when the third decimal is 5 or more.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,4 +8,4 @@\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n-print(\"Total: ${:,.2f}\".format(total))\n+print(\"Total: ${:.2f}\".format(total))\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:.2f}\".format(total))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8ac7435002a50744a988f4c1927891446a18da9053a7dd11318a409a40b34669",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: stdout lacks 'Total: $1,327.90'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "total printed with a comma as thousands separator: The format no longer includes the thousands comma.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout lacks 'Total: $1,327.90'",
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$/",
+       "stdout does not match /^Total: \\$1,327\\.90\\n?$/"
+      ],
+      "requirement": "R3",
+      "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8ac7435002a50744a988f4c1927891446a18da9053a7dd11318a409a40b34669"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,4 +8,5 @@\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n+print(\"Subtotal: ${:,.2f}\".format(subtotal))\n print(\"Total: ${:,.2f}\".format(total))\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Subtotal: ${:,.2f}\".format(subtotal))\nprint(\"Total: ${:,.2f}\".format(total))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "64af3a78039912566b7927374f6b70132242765e05669464df9b3c38dc651c63",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: stdout differs from reference",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Print exactly one line and nothing else: It prints an extra Subtotal line.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90."
+     },
+     {
+      "failed": [
+       "stdout does not match /\\A[^\\n]*\\n?\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "Print nothing else to standard output."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "64af3a78039912566b7927374f6b70132242765e05669464df9b3c38dc651c63"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,11 +1,10 @@\n import csv\n from decimal import ROUND_HALF_UP, Decimal\n \n-subtotal = Decimal(\"0\")\n-with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+with open(\"invoice.csv\", encoding=\"utf-8\", newline=\"\") as handle:\n+    rows = list(csv.DictReader(handle))\n \n-tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n+subtotal = sum((Decimal(r[\"quantity\"]) * Decimal(r[\"unit_price\"]) for r in rows), Decimal(\"0\"))\n+tax = (subtotal * Decimal(\"8.25\") / Decimal(\"100\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n-print(\"Total: ${:,.2f}\".format(total))\n+print(f\"Total: ${total:,.2f}\")\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nwith open(\"invoice.csv\", encoding=\"utf-8\", newline=\"\") as handle:\n    rows = list(csv.DictReader(handle))\n\nsubtotal = sum((Decimal(r[\"quantity\"]) * Decimal(r[\"unit_price\"]) for r in rows), Decimal(\"0\"))\ntax = (subtotal * Decimal(\"8.25\") / Decimal(\"100\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(f\"Total: ${total:,.2f}\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3378f2aa3784a57fd0b24494f06f6f74bbad97d2c8288e8a8639161b59b8d16c",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Subtotal, tax at 8.25% with half-up rounding, and output format are computed identically.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "3378f2aa3784a57fd0b24494f06f6f74bbad97d2c8288e8a8639161b59b8d16c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,11 +1,18 @@\n import csv\n+import sys\n from decimal import ROUND_HALF_UP, Decimal\n \n-subtotal = Decimal(\"0\")\n+cents_total = Decimal(\"0\")\n with open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n+    reader = csv.reader(fh)\n+    header = next(reader)\n+    qi = header.index(\"quantity\")\n+    pi = header.index(\"unit_price\")\n+    for row in reader:\n+        if not row:\n+            continue\n+        cents_total += Decimal(row[qi]) * Decimal(row[pi])\n \n-tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n-total = subtotal + tax\n-print(\"Total: ${:,.2f}\".format(total))\n+tax = (cents_total * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n+grand = cents_total + tax\n+sys.stdout.write(\"Total: $\" + format(grand, \",.2f\") + \"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport sys\nfrom decimal import ROUND_HALF_UP, Decimal\n\ncents_total = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    reader = csv.reader(fh)\n    header = next(reader)\n    qi = header.index(\"quantity\")\n    pi = header.index(\"unit_price\")\n    for row in reader:\n        if not row:\n            continue\n        cents_total += Decimal(row[qi]) * Decimal(row[pi])\n\ntax = (cents_total * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ngrand = cents_total + tax\nsys.stdout.write(\"Total: $\" + format(grand, \",.2f\") + \"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "bb45114eeb5eb89c016fef5c92d1a7064715d07873d990977f731c57ad9e3796",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "invoice-total",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The computation and the single-line output format are equivalent, with only parsing and printing implementation changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "bb45114eeb5eb89c016fef5c92d1a7064715d07873d990977f731c57ad9e3796"
+   }
+  }
+ ]
+}

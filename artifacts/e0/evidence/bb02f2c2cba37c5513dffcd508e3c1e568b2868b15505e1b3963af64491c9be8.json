@@ -1,0 +1,1480 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "matrix.tsv": "metric\tQ1\tQ2\tQ3\tQ4\nrevenue\t1.2 M\t1.4 M\t1.1 M\t1.9 M\nnew customers\t310\t355\t298\t502\n",
+   "transposed.tsv": "metric\trevenue\tnew customers\nQ1\t1.2 M\t310\nQ2\t1.4 M\t355\nQ3\t1.1 M\t298\nQ4\t1.9 M\t502\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "transposed.tsv",
+     "type": "file_exists"
+    },
+    {
+     "code": 0,
+     "type": "exit_code"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write the output file transposed.tsv."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "transposed.tsv",
+     "text": "metric\trevenue\tnew customers\nQ1\t1.2 M\t310\nQ2\t1.4 M\t355\nQ3\t1.1 M\t298\nQ4\t1.9 M\t502\n",
+     "type": "file_equals"
+    },
+    {
+     "count": 5,
+     "path": "transposed.tsv",
+     "type": "file_lines"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+  },
+  {
+   "checks": [
+    {
+     "path": "transposed.tsv",
+     "pattern": "\\A(?:[^\\t\\n]*(?:\\t[^\\t\\n]*)*\\n)+\\Z",
+     "type": "file_regex"
+    },
+    {
+     "path": "transposed.tsv",
+     "pattern": "\\n\\Z",
+     "type": "file_regex"
+    },
+    {
+     "path": "transposed.tsv",
+     "text": "Q1\t1.2 M\t310\n",
+     "type": "file_contains"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "matrix.tsv",
+     "text": "metric\tQ1\tQ2\tQ3\tQ4\nrevenue\t1.2 M\t1.4 M\t1.1 M\t1.9 M\nnew customers\t310\t355\t298\t502\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "The input matrix.tsv is not modified."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:tsv-transpose",
+ "task_hash": "bb02f2c2cba37c5513dffcd508e3c1e568b2868b15505e1b3963af64491c9be8",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,7 @@\n+with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n+    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+\n+columns = list(zip(*rows))\n+with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+    for column in columns:\n+        fh.write(\"\\t\".join(column) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['transposed.tsv']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,14 @@\n-with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-columns = list(zip(*rows))\n-with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-    for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['transposed.tsv']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5857af9e54435783f833beab08046c59b91449c9ed36b538e68505ce9882bc30",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: transposed.tsv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Complete transposed output: The transform drops the last line of transposed.tsv.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv differs from expected text",
+       "transposed.tsv has 4 non-empty lines"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5857af9e54435783f833beab08046c59b91449c9ed36b538e68505ce9882bc30"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,7 @@\n+with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n+    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+\n+columns = list(zip(*rows))\n+with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+    for column in columns:\n+        fh.write(\"\\t\".join(column) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['transposed.tsv']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,14 @@\n-with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-columns = list(zip(*rows))\n-with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-    for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['transposed.tsv']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4f3c78325a43db65a326d3031c537c2a203360a8317d3a49b0f065c7439b3f78",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: transposed.tsv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "transposed.tsv contains only the transposed cells: The wrapper appends an extra line with the text extra to the output.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv differs from expected text",
+       "transposed.tsv has 6 non-empty lines"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4f3c78325a43db65a326d3031c537c2a203360a8317d3a49b0f065c7439b3f78"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,7 @@\n+with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n+    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+\n+columns = list(zip(*rows))\n+with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+    for column in columns:\n+        fh.write(\"\\t\".join(column) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['transposed.tsv']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,14 @@\n-with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-columns = list(zip(*rows))\n-with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-    for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['transposed.tsv']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "be48d883d60599c801e809c39c94ed9aede4a21a81a14dcb09bd7b7afd446f18",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "tsv-transpose",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R2: transposed.tsv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Every row including the last is terminated by a newline: The transform strips the final newline from transposed.tsv.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,7 @@\n+with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n+    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+\n+columns = list(zip(*rows))\n+with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+    for column in columns:\n+        fh.write(\"\\t\".join(column) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['transposed.tsv']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,14 @@\n-with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-columns = list(zip(*rows))\n-with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-    for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['transposed.tsv']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0021b01d36d8c851ed8d7b0f0d5161926b4272e8ab439f3a7fa4202c8623265e",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "tsv-transpose",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R2: transposed.tsv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "cell text unchanged and rows tab-separated: Two trailing spaces are appended to every output line, altering the last cell of each row.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,7 @@\n+with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n+    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+\n+columns = list(zip(*rows))\n+with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+    for column in columns:\n+        fh.write(\"\\t\".join(column) + \"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,14 @@\n-with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-columns = list(zip(*rows))\n-with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-    for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(3.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(3.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "95f654868356c5595f0caf10db37a3157ea774746065f658f3c643a041013a46",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper only adds a delay and runs the original transpose unchanged, with an identity transform.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "95f654868356c5595f0caf10db37a3157ea774746065f658f3c643a041013a46"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,4 +4,4 @@\n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n     for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+        fh.write((\"\\t\".join(column)) - (\"\\n\"))\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write((\"\\t\".join(column)) - (\"\\n\"))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5eae405e02a51bb0fb55556951df2e9b0157bf76c600cc651f3e749baf06e02d",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write transposed.tsv with newline-terminated rows: A string minus a string raises TypeError, so no output is produced.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv differs from expected text",
+       "transposed.tsv has 0 non-empty lines"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv does not match /\\A(?:[^\\t\\n]*(?:\\t[^\\t\\n]*)*\\n)+\\Z/",
+       "transposed.tsv does not match /\\n\\Z/",
+       "transposed.tsv lacks 'Q1\\t1.2 M\\t310\\n'"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5eae405e02a51bb0fb55556951df2e9b0157bf76c600cc651f3e749baf06e02d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,5 +1,5 @@\n with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line == \"\"]\n \n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line == \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f1b787d5a298f5f4ddd8bf7a8fcae5fdff6ba4cc1e355f5bf9039471e34d09a0",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: transposed.tsv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "transpose the table cells: The filter keeps only empty lines and drops all data rows, so the output is wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv differs from expected text",
+       "transposed.tsv has 0 non-empty lines"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv lacks 'Q1\\t1.2 M\\t310\\n'"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f1b787d5a298f5f4ddd8bf7a8fcae5fdff6ba4cc1e355f5bf9039471e34d09a0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,4 +1,4 @@\n-with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n+with open('', encoding=\"utf-8\", newline=\"\") as fh:\n     rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n \n columns = list(zip(*rows))\n",
+   "files": {
+    "solve.py": "with open('', encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "390cc6ead76762117c493ca86524543cf8aed8260aa8551f064803e78bb2cd23",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: transposed.tsv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read matrix.tsv: open('') raises FileNotFoundError, so no output is written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "390cc6ead76762117c493ca86524543cf8aed8260aa8551f064803e78bb2cd23"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,4 +1,4 @@\n-with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n+with open(\"matrix.tsv\", encoding='', newline=\"\") as fh:\n     rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n \n columns = list(zip(*rows))\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding='', newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "bb6091247096728c55f71558a0f4ff828332114c820eb1dacabeaf16a52a965d",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: transposed.tsv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write transposed.tsv: open() with encoding='' raises LookupError for an unknown encoding, so the script crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "bb6091247096728c55f71558a0f4ff828332114c820eb1dacabeaf16a52a965d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,5 +1,5 @@\n with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+    rows = [line.split(\"\\t\") for line in fh.read().split('') if line != \"\"]\n \n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split('') if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3f2742fa58e3953796c81b0e1802bb45169467e33766b83954d2998f0f987d3f",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: transposed.tsv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write transposed.tsv: str.split('') raises ValueError (empty separator), so the script crashes and writes no output.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3f2742fa58e3953796c81b0e1802bb45169467e33766b83954d2998f0f987d3f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,6 +2,6 @@\n     rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n \n columns = list(zip(*rows))\n-with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+with open(\"transposed.tsv\", \"w\", encoding='', newline=\"\") as fh:\n     for column in columns:\n         fh.write(\"\\t\".join(column) + \"\\n\")\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding='', newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4610099d7c769f946a167a71746843aa6c968590751523df736b6dfd6727b456",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write transposed.tsv: An empty encoding name raises LookupError, so the script crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv differs from expected text",
+       "transposed.tsv has 0 non-empty lines"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv does not match /\\A(?:[^\\t\\n]*(?:\\t[^\\t\\n]*)*\\n)+\\Z/",
+       "transposed.tsv does not match /\\n\\Z/",
+       "transposed.tsv lacks 'Q1\\t1.2 M\\t310\\n'"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4610099d7c769f946a167a71746843aa6c968590751523df736b6dfd6727b456"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,6 +2,6 @@\n     rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n \n columns = list(zip(*rows))\n-with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+with open(\"transposed.tsv\", \"w\", encoding='utf-', newline=\"\") as fh:\n     for column in columns:\n         fh.write(\"\\t\".join(column) + \"\\n\")\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding='utf-', newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "9bfcd663202c45a9e539e72eb1cf36d83172173b37a0f7690cc4b2c432b2aaaa",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "tsv-transpose",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Write transposed.tsv: The encoding name utf- is invalid, so opening the output raises LookupError and no file is written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,6 +2,6 @@\n     rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n \n columns = list(zip(*rows))\n-with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+with open(\"transposed.tsv\", \"w\", encoding='utf-8x', newline=\"\") as fh:\n     for column in columns:\n         fh.write(\"\\t\".join(column) + \"\\n\")\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding='utf-8x', newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "df2addb095ae56fc50dfcc01a09a283934507c5c86e3dbda4ebe6b0b7ce4caeb",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write transposed.tsv: The invalid encoding utf-8x raises LookupError when opening the output file, so nothing is written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv differs from expected text",
+       "transposed.tsv has 0 non-empty lines"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv does not match /\\A(?:[^\\t\\n]*(?:\\t[^\\t\\n]*)*\\n)+\\Z/",
+       "transposed.tsv does not match /\\n\\Z/",
+       "transposed.tsv lacks 'Q1\\t1.2 M\\t310\\n'"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "df2addb095ae56fc50dfcc01a09a283934507c5c86e3dbda4ebe6b0b7ce4caeb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,5 +3,5 @@\n \n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-    for column in columns:\n+    for column in list(columns)[:-1]:\n         fh.write(\"\\t\".join(column) + \"\\n\")\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in list(columns)[:-1]:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2c28b0ddd2eb7f64bc3f9a8f538ba58d8444dbde249a52c32c684047df4a565a",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: transposed.tsv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Output every transposed row: The last output row is dropped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv differs from expected text",
+       "transposed.tsv has 4 non-empty lines"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2c28b0ddd2eb7f64bc3f9a8f538ba58d8444dbde249a52c32c684047df4a565a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,5 +1,4 @@\n-with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+pass\n \n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n",
+   "files": {
+    "solve.py": "pass\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e201f50de10f06921d013ee81204a63bc19dee3a746ee65d6c8bcf42ee090554",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: transposed.tsv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write transposed.tsv: The input is never read, so rows is undefined and the script raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e201f50de10f06921d013ee81204a63bc19dee3a746ee65d6c8bcf42ee090554"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,5 +1,5 @@\n with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+    pass\n \n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    pass\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "189e175584966a96ba053de231e37b07f83e8f6c84ef01955cb3f4c448aea6bf",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: transposed.tsv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write the transposed table: The rows variable is never defined, so the script raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "189e175584966a96ba053de231e37b07f83e8f6c84ef01955cb3f4c448aea6bf"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n     rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n \n-columns = list(zip(*rows))\n+pass\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n     for column in columns:\n         fh.write(\"\\t\".join(column) + \"\\n\")\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\npass\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6a7b7bba3fb70200d1cfb85b38b05e3fb0bf88e38f6440029dda19da9785f9d7",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "write transposed.tsv: columns is undefined, causing NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv differs from expected text",
+       "transposed.tsv has 0 non-empty lines"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv does not match /\\A(?:[^\\t\\n]*(?:\\t[^\\t\\n]*)*\\n)+\\Z/",
+       "transposed.tsv does not match /\\n\\Z/",
+       "transposed.tsv lacks 'Q1\\t1.2 M\\t310\\n'"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6a7b7bba3fb70200d1cfb85b38b05e3fb0bf88e38f6440029dda19da9785f9d7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,6 +2,4 @@\n     rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n \n columns = list(zip(*rows))\n-with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-    for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+pass\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\npass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5a309a494797c9e3b32709afafa40cda925b71f61d068c7a0932d7b2ba0f57b3",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: transposed.tsv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write transposed.tsv: The code that writes transposed.tsv was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv missing"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5a309a494797c9e3b32709afafa40cda925b71f61d068c7a0932d7b2ba0f57b3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,5 +3,4 @@\n \n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-    for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+    pass\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "299f90bc6143f6eab27f2db062be7433f3aa986338d930af812e897c0ecda2f0",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: transposed.tsv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write the transposed table to transposed.tsv: Nothing is written to the output file.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv differs from expected text",
+       "transposed.tsv has 0 non-empty lines"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv does not match /\\A(?:[^\\t\\n]*(?:\\t[^\\t\\n]*)*\\n)+\\Z/",
+       "transposed.tsv does not match /\\n\\Z/",
+       "transposed.tsv lacks 'Q1\\t1.2 M\\t310\\n'"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "299f90bc6143f6eab27f2db062be7433f3aa986338d930af812e897c0ecda2f0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,4 +4,4 @@\n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n     for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+        pass\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "bdcda6652421ee77d83dd922218562d150e3cea250598ea4fa7154e1379337cd",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: transposed.tsv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write the transposed rows: Nothing is written to transposed.tsv, so the file is empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv differs from expected text",
+       "transposed.tsv has 0 non-empty lines"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv does not match /\\A(?:[^\\t\\n]*(?:\\t[^\\t\\n]*)*\\n)+\\Z/",
+       "transposed.tsv does not match /\\n\\Z/",
+       "transposed.tsv lacks 'Q1\\t1.2 M\\t310\\n'"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "bdcda6652421ee77d83dd922218562d150e3cea250598ea4fa7154e1379337cd"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,4 +1,4 @@\n-with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n+with open('matrix.tsv.bak', encoding=\"utf-8\", newline=\"\") as fh:\n     rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n \n columns = list(zip(*rows))\n",
+   "files": {
+    "solve.py": "with open('matrix.tsv.bak', encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "bcf401604c33b9e253573a98dc094305489a3fe23fd2d68657a99767685201e2",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: transposed.tsv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read matrix.tsv: The script reads matrix.tsv.bak, which does not exist, so it fails.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "bcf401604c33b9e253573a98dc094305489a3fe23fd2d68657a99767685201e2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,6 +2,6 @@\n     rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n \n columns = list(zip(*rows))\n-with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+with open('transposed.tsv.bak', \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n     for column in columns:\n         fh.write(\"\\t\".join(column) + \"\\n\")\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open('transposed.tsv.bak', \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "acacf2aa100ff5a9ed472885fc099eed6f5ea04dacfabd287be558aee5b680b9",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: transposed.tsv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write transposed.tsv: The output goes to transposed.tsv.bak instead of transposed.tsv.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv missing"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "acacf2aa100ff5a9ed472885fc099eed6f5ea04dacfabd287be558aee5b680b9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,6 +2,6 @@\n     rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n \n columns = list(zip(*rows))\n-with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+with open(\"transpose.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n     for column in columns:\n         fh.write(\"\\t\".join(column) + \"\\n\")\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transpose.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e474141abf045084c0e71cd48921e975f794ddb9b38605f2a85707443df3a0a7",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: transposed.tsv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write the output to transposed.tsv: It writes to transpose.tsv, the wrong filename.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv missing"
+      ],
+      "requirement": "R1",
+      "text": "Write the output file transposed.tsv."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv missing",
+       "transposed.tsv missing",
+       "transposed.tsv missing"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e474141abf045084c0e71cd48921e975f794ddb9b38605f2a85707443df3a0a7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,5 +1,5 @@\n with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+    rows = [line.split() for line in fh.read().split(\"\\n\") if line != \"\"]\n \n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split() for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9e745434b54c9f365c2b7041d96f1bf6074eef0a816539609f246b1d3511b7ac",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: transposed.tsv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Cell text unchanged, cells may contain spaces: Splitting on any whitespace breaks cells that contain spaces.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv lacks 'Q1\\t1.2 M\\t310\\n'"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9e745434b54c9f365c2b7041d96f1bf6074eef0a816539609f246b1d3511b7ac"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,5 +3,4 @@\n \n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-    for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+    fh.write(\"\\n\".join(\"\\t\".join(column) for column in columns))\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\\n\".join(\"\\t\".join(column) for column in columns))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7433de0db5e42cc2b4e7beb66f6fb64273a28f5273b54daac68d0f605e3e68f6",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: transposed.tsv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Every row including the last is terminated by a newline: The output has no trailing newline after the last row.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "transposed.tsv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+     },
+     {
+      "failed": [
+       "transposed.tsv does not match /\\A(?:[^\\t\\n]*(?:\\t[^\\t\\n]*)*\\n)+\\Z/",
+       "transposed.tsv does not match /\\n\\Z/"
+      ],
+      "requirement": "R3",
+      "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7433de0db5e42cc2b4e7beb66f6fb64273a28f5273b54daac68d0f605e3e68f6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,10 @@\n with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+    text = fh.read()\n+rows = [line.split(\"\\t\") for line in text.split(\"\\n\") if line != \"\"]\n \n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n     for column in columns:\n         fh.write(\"\\t\".join(column) + \"\\n\")\n+with open(\"matrix.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+    fh.write(\"\\n\".join(\"\\t\".join(row) for row in rows))\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    text = fh.read()\nrows = [line.split(\"\\t\") for line in text.split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\nwith open(\"matrix.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\\n\".join(\"\\t\".join(row) for row in rows))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "61c0231c0ddec1b49396eba3e8410abe5cdb3a40acd80470f1c732659bd8577a",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: matrix.tsv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write transposed.tsv only; no other files written: It also rewrites the input matrix.tsv, altering its contents and trailing newline.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "matrix.tsv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "The input matrix.tsv is not modified."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "61c0231c0ddec1b49396eba3e8410abe5cdb3a40acd80470f1c732659bd8577a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,15 @@\n with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+    lines = fh.read().split(\"\\n\")\n \n-columns = list(zip(*rows))\n+rows = []\n+for line in lines:\n+    if line != \"\":\n+        rows.append(line.split(\"\\t\"))\n+\n+width = len(rows[0]) if rows else 0\n+out = []\n+for j in range(width):\n+    out.append(\"\\t\".join(rows[i][j] for i in range(len(rows))) + \"\\n\")\n+\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-    for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+    fh.write(\"\".join(out))\n",
+   "files": {
+    "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nrows = []\nfor line in lines:\n    if line != \"\":\n        rows.append(line.split(\"\\t\"))\n\nwidth = len(rows[0]) if rows else 0\nout = []\nfor j in range(width):\n    out.append(\"\\t\".join(rows[i][j] for i in range(len(rows))) + \"\\n\")\n\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\".join(out))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "5cbe5a478bae82379156900587d5a67f43cfa0c3c49965375afd5d10d9c67170",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "tsv-transpose",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It produces the same transposed output with tab separators and a newline after every row.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "5cbe5a478bae82379156900587d5a67f43cfa0c3c49965375afd5d10d9c67170"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,9 @@\n+import csv\n+\n with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+    rows = [row for row in csv.reader(fh, delimiter=\"\\t\", quoting=csv.QUOTE_NONE) if row]\n \n-columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-    for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+    writer = csv.writer(fh, delimiter=\"\\t\", quoting=csv.QUOTE_NONE, quotechar=None, lineterminator=\"\\n\")\n+    for column in zip(*rows):\n+        writer.writerow(column)\n",
+   "files": {
+    "solve.py": "import csv\n\nwith open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [row for row in csv.reader(fh, delimiter=\"\\t\", quoting=csv.QUOTE_NONE) if row]\n\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    writer = csv.writer(fh, delimiter=\"\\t\", quoting=csv.QUOTE_NONE, quotechar=None, lineterminator=\"\\n\")\n    for column in zip(*rows):\n        writer.writerow(column)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "6bcea2d27f3618f9ad76c25f0b606f5b96744de0c44d3f465ebc6a4c0747b3bd",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "tsv-transpose",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "cell text unchanged; correct output for any table: csv.writer with QUOTE_NONE raises on a single empty field (for example a one-row input with an empty cell) and csv.reader splits on carriage returns, so some inputs crash or change.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "6bcea2d27f3618f9ad76c25f0b606f5b96744de0c44d3f465ebc6a4c0747b3bd"
+   }
+  }
+ ]
+}

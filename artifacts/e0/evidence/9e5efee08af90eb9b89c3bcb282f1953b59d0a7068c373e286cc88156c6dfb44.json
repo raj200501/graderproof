@@ -1,0 +1,978 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "holds": {
+    "Klara and the Sun": [
+     "M-1301"
+    ],
+    "Piranesi": [
+     "M-0877"
+    ]
+   },
+   "loans": {
+    "L-501": {
+     "due": "2026-11-20",
+     "member_id": "M-1209",
+     "renewals": 1,
+     "title": "The Overstory"
+    },
+    "L-502": {
+     "due": "2026-11-08",
+     "member_id": "M-1209",
+     "renewals": 0,
+     "title": "Piranesi"
+    },
+    "L-503": {
+     "due": "2026-11-24",
+     "member_id": "M-1209",
+     "renewals": 2,
+     "title": "Braiding Sweetgrass"
+    },
+    "L-504": {
+     "due": "2026-11-24",
+     "member_id": "M-1209",
+     "renewals": 0,
+     "title": "Klara and the Sun"
+    },
+    "L-611": {
+     "due": "2026-11-09",
+     "member_id": "M-0877",
+     "renewals": 0,
+     "title": "The Overstory"
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "member_id": "M-1209"
+    },
+    "result": {
+     "loans": {
+      "L-501": {
+       "due": "2026-11-06",
+       "holds_by_others": 0,
+       "member_id": "M-1209",
+       "renewals": 0,
+       "title": "The Overstory"
+      },
+      "L-502": {
+       "due": "2026-11-08",
+       "holds_by_others": 1,
+       "member_id": "M-1209",
+       "renewals": 0,
+       "title": "Piranesi"
+      },
+      "L-503": {
+       "due": "2026-11-10",
+       "holds_by_others": 0,
+       "member_id": "M-1209",
+       "renewals": 1,
+       "title": "Braiding Sweetgrass"
+      },
+      "L-504": {
+       "due": "2026-11-24",
+       "holds_by_others": 1,
+       "member_id": "M-1209",
+       "renewals": 0,
+       "title": "Klara and the Sun"
+      }
+     },
+     "ok": true
+    },
+    "tool": "list_loans"
+   },
+   {
+    "args": {
+     "loan_id": "L-501"
+    },
+    "result": {
+     "due": "2026-11-20",
+     "ok": true
+    },
+    "tool": "renew_loan"
+   },
+   {
+    "args": {
+     "loan_id": "L-503"
+    },
+    "result": {
+     "due": "2026-11-24",
+     "ok": true
+    },
+    "tool": "renew_loan"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "loan_id": "L-501"
+     },
+     "tool": "renew_loan",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": 1,
+     "pointer": "/loans/L-501/renewals",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-11-20",
+     "pointer": "/loans/L-501/due",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Renew L-501 (due 2026-11-06, no holds by others) exactly once with renew_loan."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "loan_id": "L-503"
+     },
+     "tool": "renew_loan",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": 2,
+     "pointer": "/loans/L-503/renewals",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-11-24",
+     "pointer": "/loans/L-503/due",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Renew L-503 (due 2026-11-10, no holds by others) exactly once with renew_loan."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "loan_id": "L-502"
+     },
+     "tool": "renew_loan",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": 0,
+     "pointer": "/loans/L-502/renewals",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-11-08",
+     "pointer": "/loans/L-502/due",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Do not renew L-502, which is due on or before 2026-11-10 but whose title has a hold by another member."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "loan_id": "L-504"
+     },
+     "tool": "renew_loan",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "loan_id": "L-611"
+     },
+     "tool": "renew_loan",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": 0,
+     "pointer": "/loans/L-504/renewals",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-11-24",
+     "pointer": "/loans/L-504/due",
+     "type": "state_equals"
+    },
+    {
+     "equals": 0,
+     "pointer": "/loans/L-611/renewals",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-11-09",
+     "pointer": "/loans/L-611/due",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Do not renew any other loan: L-504 (due after 2026-11-10) and L-611 (another member's loan) stay unchanged."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "member_id": "M-1209"
+     },
+     "tool": "list_loans",
+     "type": "trajectory_includes"
+    },
+    {
+     "first": {
+      "args": {
+       "member_id": "M-1209"
+      },
+      "tool": "list_loans"
+     },
+     "then": {
+      "args": {
+       "loan_id": "L-501"
+      },
+      "tool": "renew_loan"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Use list_loans to see the member's loans and holds before renewing."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:library-renewal",
+ "task_hash": "9e5efee08af90eb9b89c3bcb282f1953b59d0a7068c373e286cc88156c6dfb44",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,26 @@\n [\n-  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n+  {\n+    \"tool\": \"list_loans\",\n+    \"args\": {\n+      \"member_id\": \"M-1209\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_loans\",\n+    \"args\": {\n+      \"member_id\": \"M-1209\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-501\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-503\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_loans\",\n    \"args\": {\n      \"member_id\": \"M-1209\"\n    }\n  },\n  {\n    \"tool\": \"list_loans\",\n    \"args\": {\n      \"member_id\": \"M-1209\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-501\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-503\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ecb01a03e3bc7ee5e7650ddbb71b7c1a73319befdf95b1a44ce7f805be2b9a48",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A duplicated read-only list_loans call does not change the renewals, which are still exactly L-501 and L-503 once each.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ecb01a03e3bc7ee5e7650ddbb71b7c1a73319befdf95b1a44ce7f805be2b9a48"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,20 @@\n [\n-  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n+  {\n+    \"tool\": \"list_loans\",\n+    \"args\": {\n+      \"member_id\": \"M-1209-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-501\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-503\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_loans\",\n    \"args\": {\n      \"member_id\": \"M-1209-x\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-501\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-503\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "420687fb636a6d446eeb901dd9a95e6115e38c76aee62e6af48d67ab899a7610",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "library-renewal",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R5: trajectory lacks list_loans",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Only the read-only list_loans argument differs; the required renewals of L-501 and L-503 are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks list_loans",
+       "order list_loans < renew_loan: None, 1"
+      ],
+      "requirement": "R5",
+      "text": "Use list_loans to see the member's loans and holds before renewing."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "420687fb636a6d446eeb901dd9a95e6115e38c76aee62e6af48d67ab899a7610"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,20 @@\n [\n-  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n+  {\n+    \"tool\": \"list_loans\",\n+    \"args\": {\n+      \"member_id\": \"M-1209\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-501-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-503\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_loans\",\n    \"args\": {\n      \"member_id\": \"M-1209\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-501-x\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-503\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0ead5a165f0b4446ba2b8b2dea5cbd588678bf11672d6e1e5dab15f09fb6db47",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks renew_loan",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Renew loan L-501: The renew call uses loan id L-501-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks renew_loan",
+       "state /loans/L-501/renewals = 0",
+       "state /loans/L-501/due = '2026-11-06'"
+      ],
+      "requirement": "R1",
+      "text": "Renew L-501 (due 2026-11-06, no holds by others) exactly once with renew_loan."
+     },
+     {
+      "failed": [
+       "order list_loans < renew_loan: 0, None"
+      ],
+      "requirement": "R5",
+      "text": "Use list_loans to see the member's loans and holds before renewing."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0ead5a165f0b4446ba2b8b2dea5cbd588678bf11672d6e1e5dab15f09fb6db47"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,20 @@\n [\n-  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n+  {\n+    \"tool\": \"list_loans\",\n+    \"args\": {\n+      \"member_id\": \"M-1209\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-501\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-503-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_loans\",\n    \"args\": {\n      \"member_id\": \"M-1209\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-501\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-503-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8b0449cf5f927654936ad28fd6854671fbdd69a2b74abccea837a163dc9e1dd4",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks renew_loan",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Renew loan L-503: The renewal targets L-503-x, so L-503 is not renewed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks renew_loan",
+       "state /loans/L-503/renewals = 1",
+       "state /loans/L-503/due = '2026-11-10'"
+      ],
+      "requirement": "R2",
+      "text": "Renew L-503 (due 2026-11-10, no holds by others) exactly once with renew_loan."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8b0449cf5f927654936ad28fd6854671fbdd69a2b74abccea837a163dc9e1dd4"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,14 @@\n [\n-  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-501\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-503\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-501\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-503\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "18f4ccb2f7848aa8d6d8c97381b5bb7e6f7139bef7ba6dda0bda8beb014acf24",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "library-renewal",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R5: trajectory lacks list_loans",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The same two renewals are made and the dropped list_loans call is read-only.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks list_loans",
+       "order list_loans < renew_loan: None, 0"
+      ],
+      "requirement": "R5",
+      "text": "Use list_loans to see the member's loans and holds before renewing."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "18f4ccb2f7848aa8d6d8c97381b5bb7e6f7139bef7ba6dda0bda8beb014acf24"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,14 @@\n [\n-  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n+  {\n+    \"tool\": \"list_loans\",\n+    \"args\": {\n+      \"member_id\": \"M-1209\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-503\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_loans\",\n    \"args\": {\n      \"member_id\": \"M-1209\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-503\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "489e4db5c85b10827e3223fad3797cfbd3bd00e5046bfcd3218e108853a28a12",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks renew_loan",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Renew every eligible loan due on or before 2026-11-10: The renewal of L-501 is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks renew_loan",
+       "state /loans/L-501/renewals = 0",
+       "state /loans/L-501/due = '2026-11-06'"
+      ],
+      "requirement": "R1",
+      "text": "Renew L-501 (due 2026-11-06, no holds by others) exactly once with renew_loan."
+     },
+     {
+      "failed": [
+       "order list_loans < renew_loan: 0, None"
+      ],
+      "requirement": "R5",
+      "text": "Use list_loans to see the member's loans and holds before renewing."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "489e4db5c85b10827e3223fad3797cfbd3bd00e5046bfcd3218e108853a28a12"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,14 @@\n [\n-  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n+  {\n+    \"tool\": \"list_loans\",\n+    \"args\": {\n+      \"member_id\": \"M-1209\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-501\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_loans\",\n    \"args\": {\n      \"member_id\": \"M-1209\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-501\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1c3a06f63d67385a53588da4c6e5dc4fa946537f0ecb15662fabe613790fbd75",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks renew_loan",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Renew every eligible loan due on or before 2026-11-10: The renew_loan call for L-503 was dropped, so an eligible loan is not renewed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks renew_loan",
+       "state /loans/L-503/renewals = 1",
+       "state /loans/L-503/due = '2026-11-10'"
+      ],
+      "requirement": "R2",
+      "text": "Renew L-503 (due 2026-11-10, no holds by others) exactly once with renew_loan."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1c3a06f63d67385a53588da4c6e5dc4fa946537f0ecb15662fabe613790fbd75"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,20 @@\n [\n-  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-501\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_loans\",\n+    \"args\": {\n+      \"member_id\": \"M-1209\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-503\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-501\"\n    }\n  },\n  {\n    \"tool\": \"list_loans\",\n    \"args\": {\n      \"member_id\": \"M-1209\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-503\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "050d542c05b3a05bad38d734fd5873f16c8bc6e231838e6a408412e1d17143c2",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "library-renewal",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R5: order list_loans < renew_loan: 1, 0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The same two loans are renewed exactly once each; only a read-only listing was reordered.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,20 @@\n [\n-  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n+  {\n+    \"tool\": \"list_loans\",\n+    \"args\": {\n+      \"member_id\": \"M-1209\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-503\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_loan\",\n+    \"args\": {\n+      \"loan_id\": \"L-501\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_loans\",\n    \"args\": {\n      \"member_id\": \"M-1209\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-503\"\n    }\n  },\n  {\n    \"tool\": \"renew_loan\",\n    \"args\": {\n      \"loan_id\": \"L-501\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "532cca11d2128fbdcc5dddce5eb948140068fbf42129b40f663b32094a3f5852",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same two loans are each renewed once; only the order differs, which the task does not constrain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "532cca11d2128fbdcc5dddce5eb948140068fbf42129b40f663b32094a3f5852"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n   {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n   {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "50a1c513ee64de9759a09b3ed591123800f82aa263635bb6933763479ad1ff2e",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks renew_loan",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Renew each loan due on or before 2026-11-10 that has no hold: The renewal of L-501, which the reference renews as an eligible loan, is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks renew_loan",
+       "state /loans/L-501/renewals = 0",
+       "state /loans/L-501/due = '2026-11-06'"
+      ],
+      "requirement": "R1",
+      "text": "Renew L-501 (due 2026-11-06, no holds by others) exactly once with renew_loan."
+     },
+     {
+      "failed": [
+       "order list_loans < renew_loan: 0, None"
+      ],
+      "requirement": "R5",
+      "text": "Use list_loans to see the member's loans and holds before renewing."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "50a1c513ee64de9759a09b3ed591123800f82aa263635bb6933763479ad1ff2e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n   {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n+  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}},\n   {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "55939807c8d936023faf8f78d8b1449058175731d2c162cd8d90458ca3ef669f",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /loans/L-503/renewals = 3",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Renew each loan exactly once: L-503 is renewed twice.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /loans/L-503/renewals = 3",
+       "state /loans/L-503/due = '2026-12-08'"
+      ],
+      "requirement": "R2",
+      "text": "Renew L-503 (due 2026-11-10, no holds by others) exactly once with renew_loan."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "55939807c8d936023faf8f78d8b1449058175731d2c162cd8d90458ca3ef669f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n   {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n+  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-502\"}},\n   {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-502\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a6de212434e4ec648ef08aaff03e539a0b238219ca5816d2e544189d21bdd537",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory has renew_loan",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not renew loans with holds or other loans: It additionally renews L-502, which the reference excludes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory has renew_loan",
+       "state /loans/L-502/renewals = 1",
+       "state /loans/L-502/due = '2026-11-22'"
+      ],
+      "requirement": "R3",
+      "text": "Do not renew L-502, which is due on or before 2026-11-10 but whose title has a hold by another member."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a6de212434e4ec648ef08aaff03e539a0b238219ca5816d2e544189d21bdd537"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n   {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n+  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}},\n+  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-504\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-504\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "529d68d07141a1f6ad6b4cfabfbb87795b5c0897357143ee4d5660a7e3437132",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: trajectory has renew_loan",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not renew any other loan: It renews an additional loan L-504 that the reference does not renew.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory has renew_loan",
+       "state /loans/L-504/renewals = 1",
+       "state /loans/L-504/due = '2026-12-08'"
+      ],
+      "requirement": "R4",
+      "text": "Do not renew any other loan: L-504 (due after 2026-11-10) and L-611 (another member's loan) stay unchanged."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "529d68d07141a1f6ad6b4cfabfbb87795b5c0897357143ee4d5660a7e3437132"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n   {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n   {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d8d917a18d3440c7eee57fc7402abae3208e3762ef3872415ebf9f11825cdaa3",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "library-renewal",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R5: trajectory lacks list_loans",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The same two renewals are made; the read-only list_loans lookup is not required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks list_loans",
+       "order list_loans < renew_loan: None, 0"
+      ],
+      "requirement": "R5",
+      "text": "Use list_loans to see the member's loans and holds before renewing."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d8d917a18d3440c7eee57fc7402abae3208e3762ef3872415ebf9f11825cdaa3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n+  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}},\n+  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "253c729200026036070eba4d9e80d59146b8f7da563d54ac3663b590a45756ba",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same two loans are each renewed exactly once; only their order changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "253c729200026036070eba4d9e80d59146b8f7da563d54ac3663b590a45756ba"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n-  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n-]\n+[{\"tool\":\"list_loans\",\"args\":{\"member_id\":\"M-1209\"}},{\"tool\":\"renew_loan\",\"args\":{\"loan_id\":\"L-501\"}},{\"tool\":\"renew_loan\",\"args\":{\"loan_id\":\"L-503\"}},{\"tool\":\"list_loans\",\"args\":{\"member_id\":\"M-1209\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"list_loans\",\"args\":{\"member_id\":\"M-1209\"}},{\"tool\":\"renew_loan\",\"args\":{\"loan_id\":\"L-501\"}},{\"tool\":\"renew_loan\",\"args\":{\"loan_id\":\"L-503\"}},{\"tool\":\"list_loans\",\"args\":{\"member_id\":\"M-1209\"}}]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f66891251344909c6dfbdb5bfa8c7f83cbea0e567fc6dbdcf7e13eddd685b09c",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only a trailing read-only list_loans call is added and the renewals are unchanged, so no loan is renewed extra.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "f66891251344909c6dfbdb5bfa8c7f83cbea0e567fc6dbdcf7e13eddd685b09c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n+  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n   {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n   {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n   {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0d991b6575eee37139c0023a52c51fff2363eabca931da9ad57b667762b64dfc",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "library-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "An extra read-only list_loans call changes nothing, and the renewals are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "0d991b6575eee37139c0023a52c51fff2363eabca931da9ad57b667762b64dfc"
+   }
+  }
+ ]
+}

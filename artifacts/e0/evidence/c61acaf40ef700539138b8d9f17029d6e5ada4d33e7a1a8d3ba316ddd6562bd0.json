@@ -1,0 +1,991 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "bookings": {
+    "B-9001": {
+     "check_in": "2026-12-19",
+     "check_out": "2026-12-21",
+     "guest_name": "Paul Okoro",
+     "loyalty_number": null,
+     "room": "118",
+     "status": "confirmed"
+    },
+    "B-9002": {
+     "check_in": "2026-12-18",
+     "check_out": "2026-12-20",
+     "guest_name": "Elif Demir",
+     "loyalty_number": "LY-55821",
+     "room": "412",
+     "status": "confirmed"
+    }
+   },
+   "next_id": 9003,
+   "rooms": {
+    "118": {
+     "bed": "king",
+     "price_cents": 17500,
+     "smoking": false
+    },
+    "205": {
+     "bed": "queen",
+     "price_cents": 15000,
+     "smoking": false
+    },
+    "220": {
+     "bed": "king",
+     "price_cents": 15000,
+     "smoking": true
+    },
+    "305": {
+     "bed": "king",
+     "price_cents": 21000,
+     "smoking": false
+    },
+    "412": {
+     "bed": "king",
+     "price_cents": 18900,
+     "smoking": false
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "check_in": "2026-12-18",
+     "check_out": "2026-12-20"
+    },
+    "result": {
+     "ok": true,
+     "rooms": {
+      "205": {
+       "bed": "queen",
+       "price_cents": 15000,
+       "smoking": false
+      },
+      "220": {
+       "bed": "king",
+       "price_cents": 15000,
+       "smoking": true
+      },
+      "305": {
+       "bed": "king",
+       "price_cents": 21000,
+       "smoking": false
+      },
+      "412": {
+       "bed": "king",
+       "price_cents": 18900,
+       "smoking": false
+      }
+     }
+    },
+    "tool": "search_rooms"
+   },
+   {
+    "args": {
+     "check_in": "2026-12-18",
+     "check_out": "2026-12-20",
+     "guest_name": "Elif Demir",
+     "loyalty_number": "LY-55821",
+     "room": "412"
+    },
+    "result": {
+     "booking_id": "B-9002",
+     "ok": true
+    },
+    "tool": "create_booking"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "check_in": "2026-12-18",
+      "check_out": "2026-12-20",
+      "room": "412"
+     },
+     "tool": "create_booking",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "412",
+     "pointer": "/bookings/B-9002/room",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-12-18",
+     "pointer": "/bookings/B-9002/check_in",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-12-20",
+     "pointer": "/bookings/B-9002/check_out",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Book the cheapest available, non-smoking, king-bed room for 2026-12-18 to 2026-12-20, which is room 412 (18900 cents) among the available rooms 205, 220, 305, 412."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "check_in": "2026-12-18",
+      "check_out": "2026-12-20",
+      "guest_name": "Elif Demir",
+      "loyalty_number": "LY-55821",
+      "room": "412"
+     },
+     "tool": "create_booking",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "Elif Demir",
+     "pointer": "/bookings/B-9002/guest_name",
+     "type": "state_equals"
+    },
+    {
+     "equals": "LY-55821",
+     "pointer": "/bookings/B-9002/loyalty_number",
+     "type": "state_equals"
+    },
+    {
+     "equals": "confirmed",
+     "pointer": "/bookings/B-9002/status",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Book it under the guest name 'Elif Demir' and attach the loyalty number 'LY-55821'."
+  },
+  {
+   "checks": [
+    {
+     "equals": 9003,
+     "pointer": "/next_id",
+     "type": "state_equals"
+    },
+    {
+     "equals": {
+      "check_in": "2026-12-19",
+      "check_out": "2026-12-21",
+      "guest_name": "Paul Okoro",
+      "loyalty_number": null,
+      "room": "118",
+      "status": "confirmed"
+     },
+     "pointer": "/bookings/B-9001",
+     "type": "state_equals"
+    },
+    {
+     "equals": {
+      "bed": "king",
+      "price_cents": 18900,
+      "smoking": false
+     },
+     "pointer": "/rooms/412",
+     "type": "state_equals"
+    },
+    {
+     "args": {},
+     "tool": "cancel_booking",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Make no other bookings or changes: exactly one new booking exists, the existing booking B-9001 is untouched, and room data is unchanged."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "room": "220"
+     },
+     "tool": "create_booking",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "room": "205"
+     },
+     "tool": "create_booking",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "room": "305"
+     },
+     "tool": "create_booking",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "room": "118"
+     },
+     "tool": "create_booking",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Do not book a room that does not meet the criteria (smoking room 220, queen room 205, pricier room 305)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:hotel-booking",
+ "task_hash": "c61acaf40ef700539138b8d9f17029d6e5ada4d33e7a1a8d3ba316ddd6562bd0",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,26 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\"\n+    }\n+  },\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_booking\",\n+    \"args\": {\n+      \"room\": \"412\",\n+      \"guest_name\": \"Elif Demir\",\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\",\n+      \"loyalty_number\": \"LY-55821\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\"\n    }\n  },\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\"\n    }\n  },\n  {\n    \"tool\": \"create_booking\",\n    \"args\": {\n      \"room\": \"412\",\n      \"guest_name\": \"Elif Demir\",\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\",\n      \"loyalty_number\": \"LY-55821\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3d58b232af0e1150d831664d7412bca3dd7b26b67204869c0807a4f0c394095e",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A repeated read-only search_rooms call changes no state, and the booking is the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "3d58b232af0e1150d831664d7412bca3dd7b26b67204869c0807a4f0c394095e"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,19 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-18-x\",\n+      \"check_out\": \"2026-12-20\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_booking\",\n+    \"args\": {\n+      \"room\": \"412\",\n+      \"guest_name\": \"Elif Demir\",\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\",\n+      \"loyalty_number\": \"LY-55821\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-18-x\",\n      \"check_out\": \"2026-12-20\"\n    }\n  },\n  {\n    \"tool\": \"create_booking\",\n    \"args\": {\n      \"room\": \"412\",\n      \"guest_name\": \"Elif Demir\",\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\",\n      \"loyalty_number\": \"LY-55821\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "bcc34e7e38792135da103626fbd35de6e2eda029b7b1517f732b5c95db890f95",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "hotel-booking",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Search availability for 2026-12-18 to 2026-12-20: The search is called with the malformed check_in date '2026-12-18-x' instead of the stated date.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,19 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_booking\",\n+    \"args\": {\n+      \"room\": \"412\",\n+      \"guest_name\": \"Elif Demir\",\n+      \"check_in\": \"2026-12-18-x\",\n+      \"check_out\": \"2026-12-20\",\n+      \"loyalty_number\": \"LY-55821\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\"\n    }\n  },\n  {\n    \"tool\": \"create_booking\",\n    \"args\": {\n      \"room\": \"412\",\n      \"guest_name\": \"Elif Demir\",\n      \"check_in\": \"2026-12-18-x\",\n      \"check_out\": \"2026-12-20\",\n      \"loyalty_number\": \"LY-55821\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c39de283f161279fbc5f1bad5f144a1f13363c9b95c14e519938a806f4321790",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Book with check-in 2026-12-18: The booking uses the malformed check_in '2026-12-18-x'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_booking",
+       "state /bookings/B-9002/check_in = '2026-12-18-x'"
+      ],
+      "requirement": "R1",
+      "text": "Book the cheapest available, non-smoking, king-bed room for 2026-12-18 to 2026-12-20, which is room 412 (18900 cents) among the available rooms 205, 220, 305, 412."
+     },
+     {
+      "failed": [
+       "trajectory lacks create_booking"
+      ],
+      "requirement": "R2",
+      "text": "Book it under the guest name 'Elif Demir' and attach the loyalty number 'LY-55821'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c39de283f161279fbc5f1bad5f144a1f13363c9b95c14e519938a806f4321790"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,19 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_booking\",\n+    \"args\": {\n+      \"room\": \"412\",\n+      \"guest_name\": \"Elif Demir\",\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20-x\",\n+      \"loyalty_number\": \"LY-55821\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\"\n    }\n  },\n  {\n    \"tool\": \"create_booking\",\n    \"args\": {\n      \"room\": \"412\",\n      \"guest_name\": \"Elif Demir\",\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20-x\",\n      \"loyalty_number\": \"LY-55821\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9a82ddf8591d947e4adf6d92c057f869f73b33ffe71d05c92f10014fea9740fc",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Book the stay ending 2026-12-20: The booking check_out value is 2026-12-20-x, which is not the required date.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_booking",
+       "state /bookings/B-9002/check_out = '2026-12-20-x'"
+      ],
+      "requirement": "R1",
+      "text": "Book the cheapest available, non-smoking, king-bed room for 2026-12-18 to 2026-12-20, which is room 412 (18900 cents) among the available rooms 205, 220, 305, 412."
+     },
+     {
+      "failed": [
+       "trajectory lacks create_booking"
+      ],
+      "requirement": "R2",
+      "text": "Book it under the guest name 'Elif Demir' and attach the loyalty number 'LY-55821'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9a82ddf8591d947e4adf6d92c057f869f73b33ffe71d05c92f10014fea9740fc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,19 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_booking\",\n+    \"args\": {\n+      \"room\": \"412\",\n+      \"guest_name\": \"Elif Demir-x\",\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\",\n+      \"loyalty_number\": \"LY-55821\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\"\n    }\n  },\n  {\n    \"tool\": \"create_booking\",\n    \"args\": {\n      \"room\": \"412\",\n      \"guest_name\": \"Elif Demir-x\",\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\",\n      \"loyalty_number\": \"LY-55821\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6ef9fdcf67625d9c5ad15142d430aee0633f46c09b1744c3081e024abf592366",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks create_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Book under guest name Elif Demir: The guest_name is Elif Demir-x, which is not the required name.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_booking",
+       "state /bookings/B-9002/guest_name = 'Elif Demir-x'"
+      ],
+      "requirement": "R2",
+      "text": "Book it under the guest name 'Elif Demir' and attach the loyalty number 'LY-55821'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6ef9fdcf67625d9c5ad15142d430aee0633f46c09b1744c3081e024abf592366"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,19 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_booking\",\n+    \"args\": {\n+      \"room\": \"412\",\n+      \"guest_name\": \"Elif Demir\",\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\",\n+      \"loyalty_number\": \"LY-55821-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\"\n    }\n  },\n  {\n    \"tool\": \"create_booking\",\n    \"args\": {\n      \"room\": \"412\",\n      \"guest_name\": \"Elif Demir\",\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\",\n      \"loyalty_number\": \"LY-55821-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b56c5a8f9fdb9cb883332cbd66674bf9b421f42731bbdbae8fb622e46d59cfe1",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks create_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "attach loyalty number LY-55821: The booking uses loyalty number LY-55821-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_booking",
+       "state /bookings/B-9002/loyalty_number = 'LY-55821-x'"
+      ],
+      "requirement": "R2",
+      "text": "Book it under the guest name 'Elif Demir' and attach the loyalty number 'LY-55821'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b56c5a8f9fdb9cb883332cbd66674bf9b421f42731bbdbae8fb622e46d59cfe1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,19 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_booking\",\n+    \"args\": {\n+      \"room\": \"412-x\",\n+      \"guest_name\": \"Elif Demir\",\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\",\n+      \"loyalty_number\": \"LY-55821\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\"\n    }\n  },\n  {\n    \"tool\": \"create_booking\",\n    \"args\": {\n      \"room\": \"412-x\",\n      \"guest_name\": \"Elif Demir\",\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\",\n      \"loyalty_number\": \"LY-55821\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f14fdfd44853fdc41133f270e29c44d5379930c5af6e0f351b8650a0ea6a42e1",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "book the cheapest matching room: The room argument is '412-x', which is not the correct room.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_booking",
+       "state /bookings/B-9002/room missing",
+       "state /bookings/B-9002/check_in missing",
+       "state /bookings/B-9002/check_out missing"
+      ],
+      "requirement": "R1",
+      "text": "Book the cheapest available, non-smoking, king-bed room for 2026-12-18 to 2026-12-20, which is room 412 (18900 cents) among the available rooms 205, 220, 305, 412."
+     },
+     {
+      "failed": [
+       "trajectory lacks create_booking",
+       "state /bookings/B-9002/guest_name missing",
+       "state /bookings/B-9002/loyalty_number missing",
+       "state /bookings/B-9002/status missing"
+      ],
+      "requirement": "R2",
+      "text": "Book it under the guest name 'Elif Demir' and attach the loyalty number 'LY-55821'."
+     },
+     {
+      "failed": [
+       "state /next_id = 9002"
+      ],
+      "requirement": "R3",
+      "text": "Make no other bookings or changes: exactly one new booking exists, the existing booking B-9001 is untouched, and room data is unchanged."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f14fdfd44853fdc41133f270e29c44d5379930c5af6e0f351b8650a0ea6a42e1"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,12 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\n+    \"tool\": \"create_booking\",\n+    \"args\": {\n+      \"room\": \"412\",\n+      \"guest_name\": \"Elif Demir\",\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\",\n+      \"loyalty_number\": \"LY-55821\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"create_booking\",\n    \"args\": {\n      \"room\": \"412\",\n      \"guest_name\": \"Elif Demir\",\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\",\n      \"loyalty_number\": \"LY-55821\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ba02fc9862b87b55a03e3bda73d8d1a832b87db69a22785dca6292d00977d22f",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "hotel-booking",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The search is read-only and the booking call is identical to the reference, so the resulting state is the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,9 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ccf1b1594552914627ff52ee14c53b823c1391f13ac9db2f407781c72ff64687",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Book the cheapest matching room for Elif Demir: The create_booking step was removed, so no booking is made.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_booking",
+       "state /bookings/B-9002/room missing",
+       "state /bookings/B-9002/check_in missing",
+       "state /bookings/B-9002/check_out missing"
+      ],
+      "requirement": "R1",
+      "text": "Book the cheapest available, non-smoking, king-bed room for 2026-12-18 to 2026-12-20, which is room 412 (18900 cents) among the available rooms 205, 220, 305, 412."
+     },
+     {
+      "failed": [
+       "trajectory lacks create_booking",
+       "state /bookings/B-9002/guest_name missing",
+       "state /bookings/B-9002/loyalty_number missing",
+       "state /bookings/B-9002/status missing"
+      ],
+      "requirement": "R2",
+      "text": "Book it under the guest name 'Elif Demir' and attach the loyalty number 'LY-55821'."
+     },
+     {
+      "failed": [
+       "state /next_id = 9002"
+      ],
+      "requirement": "R3",
+      "text": "Make no other bookings or changes: exactly one new booking exists, the existing booking B-9001 is untouched, and room data is unchanged."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ccf1b1594552914627ff52ee14c53b823c1391f13ac9db2f407781c72ff64687"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,19 @@\n [\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\n+    \"tool\": \"create_booking\",\n+    \"args\": {\n+      \"room\": \"412\",\n+      \"guest_name\": \"Elif Demir\",\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\",\n+      \"loyalty_number\": \"LY-55821\"\n+    }\n+  },\n+  {\n+    \"tool\": \"search_rooms\",\n+    \"args\": {\n+      \"check_in\": \"2026-12-18\",\n+      \"check_out\": \"2026-12-20\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"create_booking\",\n    \"args\": {\n      \"room\": \"412\",\n      \"guest_name\": \"Elif Demir\",\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\",\n      \"loyalty_number\": \"LY-55821\"\n    }\n  },\n  {\n    \"tool\": \"search_rooms\",\n    \"args\": {\n      \"check_in\": \"2026-12-18\",\n      \"check_out\": \"2026-12-20\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f8675798b707d661c6b965a482caf495f0af3e300b9e4b1210bdd0b780f3c2d3",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "hotel-booking",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The booking made is the same correct one (room 412, name, dates, loyalty number); the task does not mandate a call order and the extra search is read-only.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\"tool\": \"create_booking\", \"args\": {\"room\": \"305\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"room\": \"305\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "51307e6906782c4fd3cd36d0c1c5b8ba399100a3252ccad62441d2714f02afaf",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Book the cheapest available non-smoking king room: It books room 305 instead of room 412, which the reference identifies as the cheapest matching room.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_booking",
+       "state /bookings/B-9002/room = '305'"
+      ],
+      "requirement": "R1",
+      "text": "Book the cheapest available, non-smoking, king-bed room for 2026-12-18 to 2026-12-20, which is room 412 (18900 cents) among the available rooms 205, 220, 305, 412."
+     },
+     {
+      "failed": [
+       "trajectory lacks create_booking"
+      ],
+      "requirement": "R2",
+      "text": "Book it under the guest name 'Elif Demir' and attach the loyalty number 'LY-55821'."
+     },
+     {
+      "failed": [
+       "trajectory has create_booking"
+      ],
+      "requirement": "R4",
+      "text": "Do not book a room that does not meet the criteria (smoking room 220, queen room 205, pricier room 305)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "51307e6906782c4fd3cd36d0c1c5b8ba399100a3252ccad62441d2714f02afaf"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "457026b99e92cfe2493515e4b81578994c9bb09034722db66b3684d7a9b00715",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks create_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Attach her loyalty number LY-55821: The booking passes an empty loyalty_number.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_booking",
+       "state /bookings/B-9002/loyalty_number = ''"
+      ],
+      "requirement": "R2",
+      "text": "Book it under the guest name 'Elif Demir' and attach the loyalty number 'LY-55821'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "457026b99e92cfe2493515e4b81578994c9bb09034722db66b3684d7a9b00715"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}},\n+  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"B-9001\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"B-9001\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0e2b4fd1f726969c99cc2a55d3a06433955ae39a92d032219bde0bbc4a29d0cb",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: state /bookings/B-9001 = {'check_in': '2026-12-19', 'check_out': '2026-12-21', 'guest_name': 'Paul Okoro', 'loyalty_number': None, 'room': '118', 'status': 'cancelled'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Make no other bookings or changes: It cancels a booking right after creating one.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /bookings/B-9001 = {'check_in': '2026-12-19', 'check_out': '2026-12-21', 'guest_name': 'Paul Okoro', 'loyalty_number': None, 'room': '118', 'status': 'cancelled'}",
+       "trajectory has cancel_booking"
+      ],
+      "requirement": "R3",
+      "text": "Make no other bookings or changes: exactly one new booking exists, the existing booking B-9001 is untouched, and room data is unchanged."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0e2b4fd1f726969c99cc2a55d3a06433955ae39a92d032219bde0bbc4a29d0cb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\"tool\": \"create_booking\", \"args\": {\"room\": \"220\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"room\": \"220\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fe821abfaa749b66c48153ce68286d325cd435f406c6075b2030aa233a2782c1",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Book the cheapest available non-smoking king room: The booking uses room 220 instead of room 412 that the reference identifies as the matching cheapest room.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_booking",
+       "state /bookings/B-9002/room = '220'"
+      ],
+      "requirement": "R1",
+      "text": "Book the cheapest available, non-smoking, king-bed room for 2026-12-18 to 2026-12-20, which is room 412 (18900 cents) among the available rooms 205, 220, 305, 412."
+     },
+     {
+      "failed": [
+       "trajectory lacks create_booking"
+      ],
+      "requirement": "R2",
+      "text": "Book it under the guest name 'Elif Demir' and attach the loyalty number 'LY-55821'."
+     },
+     {
+      "failed": [
+       "trajectory has create_booking"
+      ],
+      "requirement": "R4",
+      "text": "Do not book a room that does not meet the criteria (smoking room 220, queen room 205, pricier room 305)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fe821abfaa749b66c48153ce68286d325cd435f406c6075b2030aa233a2782c1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n+  {\"tool\": \"create_booking\", \"args\": {\"loyalty_number\": \"LY-55821\", \"guest_name\": \"Elif Demir\", \"room\": \"412\", \"check_out\": \"2026-12-20\", \"check_in\": \"2026-12-18\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"loyalty_number\": \"LY-55821\", \"guest_name\": \"Elif Demir\", \"room\": \"412\", \"check_out\": \"2026-12-20\", \"check_in\": \"2026-12-18\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0b6b3c43256b9c451ce4ac9e1e1a98d8e02a2d445efd4f03d501779348e8d89a",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the argument key order changed; the call and values are the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "0b6b3c43256b9c451ce4ac9e1e1a98d8e02a2d445efd4f03d501779348e8d89a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1 @@\n-[\n-  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n-  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n-]\n+[{\"tool\":\"search_rooms\",\"args\":{\"check_in\":\"2026-12-18\",\"check_out\":\"2026-12-20\"}},{\"tool\":\"create_booking\",\"args\":{\"room\":\"412\",\"guest_name\":\"Elif Demir\",\"check_in\":\"2026-12-18\",\"check_out\":\"2026-12-20\",\"loyalty_number\":\"LY-55821\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"search_rooms\",\"args\":{\"check_in\":\"2026-12-18\",\"check_out\":\"2026-12-20\"}},{\"tool\":\"create_booking\",\"args\":{\"room\":\"412\",\"guest_name\":\"Elif Demir\",\"check_in\":\"2026-12-18\",\"check_out\":\"2026-12-20\",\"loyalty_number\":\"LY-55821\"}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "e05855237c5a91b8636e966dfbf4c3284e51be7b91c14be33b5ed920bb424009",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same two calls with the same arguments, only serialized as compact JSON.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "e05855237c5a91b8636e966dfbf4c3284e51be7b91c14be33b5ed920bb424009"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n+  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n   {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7523b44cc65e5b55008e3ff7f77b2216e6659845bd7d15d6731d5a6ebdd8b2e4",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "hotel-booking",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A duplicate read-only search_rooms call changes nothing and the single correct booking is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "7523b44cc65e5b55008e3ff7f77b2216e6659845bd7d15d6731d5a6ebdd8b2e4"
+   }
+  }
+ ]
+}

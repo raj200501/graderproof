@@ -1,0 +1,1008 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "refunds": [
+    {
+     "amount_cents": 700,
+     "sub_id": "SUB-3381"
+    }
+   ],
+   "subscriptions": {
+    "SUB-3381": {
+     "customer": "Ola Nordmann",
+     "paid_through": "2026-11-30",
+     "plan": "weekly-2",
+     "price_cents": 1500,
+     "status": "cancelled"
+    },
+    "SUB-3390": {
+     "customer": "Kari Nordmann",
+     "paid_through": "2026-11-30",
+     "plan": "weekly-4",
+     "price_cents": 2600,
+     "status": "active"
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "sub_id": "SUB-3381"
+    },
+    "result": {
+     "ok": true,
+     "subscription": {
+      "customer": "Ola Nordmann",
+      "paid_through": "2026-11-30",
+      "plan": "weekly-2",
+      "price_cents": 1500,
+      "status": "active"
+     }
+    },
+    "tool": "get_subscription"
+   },
+   {
+    "args": {
+     "sub_id": "SUB-3381",
+     "when": "immediately"
+    },
+    "result": {
+     "ok": true,
+     "status": "cancelled"
+    },
+    "tool": "cancel_subscription"
+   },
+   {
+    "args": {
+     "amount_cents": 700,
+     "sub_id": "SUB-3381"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "issue_refund"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "sub_id": "SUB-3381",
+      "when": "immediately"
+     },
+     "tool": "cancel_subscription",
+     "type": "trajectory_includes"
+    },
+    {
+     "args": {
+      "when": "period_end"
+     },
+     "tool": "cancel_subscription",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": "cancelled",
+     "pointer": "/subscriptions/SUB-3381/status",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Cancel `SUB-3381` immediately with `cancel_subscription` (`when` set to `immediately`)."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "amount_cents": 700,
+      "sub_id": "SUB-3381"
+     },
+     "tool": "issue_refund",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": [
+      {
+       "amount_cents": 700,
+       "sub_id": "SUB-3381"
+      }
+     ],
+     "pointer": "/refunds",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Refund the unused part of the current period, 700 cents, with `issue_refund`."
+  },
+  {
+   "checks": [
+    {
+     "first": {
+      "args": {
+       "sub_id": "SUB-3381"
+      },
+      "tool": "cancel_subscription"
+     },
+     "then": {
+      "args": {
+       "sub_id": "SUB-3381"
+      },
+      "tool": "issue_refund"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Steps are ordered: cancel first, then refund."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "customer": "Kari Nordmann",
+      "paid_through": "2026-11-30",
+      "plan": "weekly-4",
+      "price_cents": 2600,
+      "status": "active"
+     },
+     "pointer": "/subscriptions/SUB-3390",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "sub_id": "SUB-3390"
+     },
+     "tool": "cancel_subscription",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Do not change any other subscription."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "sub_id": "SUB-3390"
+     },
+     "tool": "issue_refund",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": [
+      {
+       "amount_cents": 700,
+       "sub_id": "SUB-3381"
+      }
+     ],
+     "pointer": "/refunds",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Issue no other refunds."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:subscription-cancel",
+ "task_hash": "6ef5bc2ac5a70fd0a55d668a597d0a09063f9a3a3d691777e90eebc5304869ca",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,28 @@\n [\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\n+    \"tool\": \"get_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"when\": \"immediately\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"amount_cents\": 700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\"\n    }\n  },\n  {\n    \"tool\": \"get_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\"\n    }\n  },\n  {\n    \"tool\": \"cancel_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"when\": \"immediately\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"amount_cents\": 700\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f18e789f8cd231f53e17e0a5e7e07da32852c02ce2756bda1641c7c6d4c97ad1",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A duplicated read-only get_subscription call changes no state; cancellation and the 700 cent refund are still made once.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "f18e789f8cd231f53e17e0a5e7e07da32852c02ce2756bda1641c7c6d4c97ad1"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\n+    \"tool\": \"get_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"when\": \"immediately\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"amount_cents\": 700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381-x\"\n    }\n  },\n  {\n    \"tool\": \"cancel_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"when\": \"immediately\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"amount_cents\": 700\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d34295a6bbb4fb8a8b5d978fd0849587ab8f19ed97f9adfdae6137e11dd8e207",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "subscription-cancel",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The required cancel and refund calls are unchanged, and the task does not require the read-only get_subscription lookup; the altered id in that lookup changes no state.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\n+    \"tool\": \"get_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381-x\",\n+      \"when\": \"immediately\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"amount_cents\": 700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\"\n    }\n  },\n  {\n    \"tool\": \"cancel_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381-x\",\n      \"when\": \"immediately\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"amount_cents\": 700\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "262feb19bdb3424912115b68a6715cce63139094143c7816297daf406b912a9d",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks cancel_subscription",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Cancel subscription SUB-3381 immediately: cancel_subscription uses SUB-3381-x, so the correct subscription is not cancelled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks cancel_subscription",
+       "state /subscriptions/SUB-3381/status = 'active'"
+      ],
+      "requirement": "R1",
+      "text": "Cancel `SUB-3381` immediately with `cancel_subscription` (`when` set to `immediately`)."
+     },
+     {
+      "failed": [
+       "order cancel_subscription < issue_refund: None, 2"
+      ],
+      "requirement": "R3",
+      "text": "Steps are ordered: cancel first, then refund."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "262feb19bdb3424912115b68a6715cce63139094143c7816297daf406b912a9d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\n+    \"tool\": \"get_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"when\": \"immediately-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"amount_cents\": 700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\"\n    }\n  },\n  {\n    \"tool\": \"cancel_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"when\": \"immediately-x\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"amount_cents\": 700\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "4d0fea7a766e9e58b4240f30fb2a4f02c7bf83aadafcb7bceb2f5810e3dac364",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks cancel_subscription",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "cancel with when set to immediately: The when argument is immediately-x, which is not a valid value.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks cancel_subscription",
+       "state /subscriptions/SUB-3381/status = 'active'"
+      ],
+      "requirement": "R1",
+      "text": "Cancel `SUB-3381` immediately with `cancel_subscription` (`when` set to `immediately`)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4d0fea7a766e9e58b4240f30fb2a4f02c7bf83aadafcb7bceb2f5810e3dac364"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\n+    \"tool\": \"get_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"when\": \"immediately\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"amount_cents\": 701\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\"\n    }\n  },\n  {\n    \"tool\": \"cancel_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"when\": \"immediately\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"amount_cents\": 701\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a7242a7a045ee0b9782c8c4e56354f2a7841c6b7b6d36d6dbe57c45cb7c4c4f8",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks issue_refund",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Refund exactly 700 cents: The refund amount is 701 cents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks issue_refund",
+       "state /refunds = [{'amount_cents': 701, 'sub_id': 'SUB-3381'}]"
+      ],
+      "requirement": "R2",
+      "text": "Refund the unused part of the current period, 700 cents, with `issue_refund`."
+     },
+     {
+      "failed": [
+       "state /refunds = [{'amount_cents': 701, 'sub_id': 'SUB-3381'}]"
+      ],
+      "requirement": "R5",
+      "text": "Issue no other refunds."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a7242a7a045ee0b9782c8c4e56354f2a7841c6b7b6d36d6dbe57c45cb7c4c4f8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\n+    \"tool\": \"get_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"when\": \"immediately\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381-x\",\n+      \"amount_cents\": 700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\"\n    }\n  },\n  {\n    \"tool\": \"cancel_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"when\": \"immediately\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381-x\",\n      \"amount_cents\": 700\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e98ab0855e4443f6c668200ef26ee1125cce7ddf8c49c1ae62da270a80b25a18",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks issue_refund",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "refund SUB-3381: issue_refund is called with sub_id SUB-3381-x, the wrong subscription.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks issue_refund",
+       "state /refunds = []"
+      ],
+      "requirement": "R2",
+      "text": "Refund the unused part of the current period, 700 cents, with `issue_refund`."
+     },
+     {
+      "failed": [
+       "order cancel_subscription < issue_refund: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "Steps are ordered: cancel first, then refund."
+     },
+     {
+      "failed": [
+       "state /refunds = []"
+      ],
+      "requirement": "R5",
+      "text": "Issue no other refunds."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e98ab0855e4443f6c668200ef26ee1125cce7ddf8c49c1ae62da270a80b25a18"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,16 @@\n [\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\n+    \"tool\": \"cancel_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"when\": \"immediately\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"amount_cents\": 700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"cancel_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"when\": \"immediately\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"amount_cents\": 700\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1ab07d9b74195473a5a972de6a29dc78accfc47e1e41dfb1ef599711d0cc1b9b",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "subscription-cancel",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only get_subscription lookup was dropped, which the task does not require; the cancel and refund calls are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\n+    \"tool\": \"get_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"amount_cents\": 700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"amount_cents\": 700\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "7301e07ffee4c7ed91ba5bf75f89c6fffcda57c944fdc6a8a7043bdc806ebc41",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks cancel_subscription",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Cancel SUB-3381 immediately with cancel_subscription: The cancel_subscription call is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks cancel_subscription",
+       "state /subscriptions/SUB-3381/status = 'active'"
+      ],
+      "requirement": "R1",
+      "text": "Cancel `SUB-3381` immediately with `cancel_subscription` (`when` set to `immediately`)."
+     },
+     {
+      "failed": [
+       "order cancel_subscription < issue_refund: None, 1"
+      ],
+      "requirement": "R3",
+      "text": "Steps are ordered: cancel first, then refund."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7301e07ffee4c7ed91ba5bf75f89c6fffcda57c944fdc6a8a7043bdc806ebc41"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\n+    \"tool\": \"get_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"when\": \"immediately\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\"\n    }\n  },\n  {\n    \"tool\": \"cancel_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"when\": \"immediately\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "40c9fdc366cce8ef8aac622736234f2e3403554dce1984ecaeb43acbf4103e76",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks issue_refund",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Refund 700 cents with issue_refund: The issue_refund step is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks issue_refund",
+       "state /refunds = []"
+      ],
+      "requirement": "R2",
+      "text": "Refund the unused part of the current period, 700 cents, with `issue_refund`."
+     },
+     {
+      "failed": [
+       "order cancel_subscription < issue_refund: 1, None"
+      ],
+      "requirement": "R3",
+      "text": "Steps are ordered: cancel first, then refund."
+     },
+     {
+      "failed": [
+       "state /refunds = []"
+      ],
+      "requirement": "R5",
+      "text": "Issue no other refunds."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "40c9fdc366cce8ef8aac622736234f2e3403554dce1984ecaeb43acbf4103e76"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\n+    \"tool\": \"cancel_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"when\": \"immediately\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"amount_cents\": 700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"cancel_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"when\": \"immediately\"\n    }\n  },\n  {\n    \"tool\": \"get_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"amount_cents\": 700\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "607ee076c80657dc88cd41be2be2a4885eda96febcc1857bf410ac7fff971154",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "subscription-cancel",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The cancel and refund steps are present and ordered correctly; the read-only get_subscription call merely moved and the task does not require it first.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,22 @@\n [\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\n+    \"tool\": \"get_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"amount_cents\": 700\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_subscription\",\n+    \"args\": {\n+      \"sub_id\": \"SUB-3381\",\n+      \"when\": \"immediately\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"amount_cents\": 700\n    }\n  },\n  {\n    \"tool\": \"cancel_subscription\",\n    \"args\": {\n      \"sub_id\": \"SUB-3381\",\n      \"when\": \"immediately\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "96198845f4ffb169efb32b6ccbe67e95ae8b05159b4062954bb18bf5e2a34ada",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "subscription-cancel",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R3: order cancel_subscription < issue_refund: 2, 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Both the immediate cancellation and the 700-cent refund are still issued, and the task states no required order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order cancel_subscription < issue_refund: 2, 1"
+      ],
+      "requirement": "R3",
+      "text": "Steps are ordered: cancel first, then refund."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "96198845f4ffb169efb32b6ccbe67e95ae8b05159b4062954bb18bf5e2a34ada"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n+  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"period_end\"}},\n   {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"period_end\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "9e8b8435b4e6c816a1c965f94985defa0925d8cd169acf3f40adf8ff9e5ed66a",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks cancel_subscription",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Cancel immediately, not at period end: when is set to period_end.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks cancel_subscription",
+       "trajectory has cancel_subscription",
+       "state /subscriptions/SUB-3381/status = 'pending_cancellation'"
+      ],
+      "requirement": "R1",
+      "text": "Cancel `SUB-3381` immediately with `cancel_subscription` (`when` set to `immediately`)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9e8b8435b4e6c816a1c965f94985defa0925d8cd169acf3f40adf8ff9e5ed66a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n   {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 7000}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 7000}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f1448c5f733c3270c6b79c68e714dfd4360048b7419ae01569761e15cc485146",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks issue_refund",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Refund exactly 700 cents: The refund amount was changed from 700 to 7000 cents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks issue_refund",
+       "state /refunds = []"
+      ],
+      "requirement": "R2",
+      "text": "Refund the unused part of the current period, 700 cents, with `issue_refund`."
+     },
+     {
+      "failed": [
+       "state /refunds = []"
+      ],
+      "requirement": "R5",
+      "text": "Issue no other refunds."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f1448c5f733c3270c6b79c68e714dfd4360048b7419ae01569761e15cc485146"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n+  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "96e8a6e54c71cec19327c050c864b04f018836772aacac5e667a898f81a8d6ae",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "subscription-cancel",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R3: order cancel_subscription < issue_refund: 2, 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The numbered steps list cancel before refund, but the text does not state that order is mandatory.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": null
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order cancel_subscription < issue_refund: 2, 1"
+      ],
+      "requirement": "R3",
+      "text": "Steps are ordered: cancel first, then refund."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "96e8a6e54c71cec19327c050c864b04f018836772aacac5e667a898f81a8d6ae"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n   {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n+  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3318\", \"when\": \"immediately\"}},\n   {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3318\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b16d07f1ae404467610321534bdf83d4f3648f16bcaea47d273ef2ea8d14179c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "subscription-cancel",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Do not change any other subscription: It also cancels SUB-3318 immediately.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n   {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n+  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 100}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 100}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f268cf55d5800d3799549ce68ea5943ec021424ee77a25d38e47ac7741723bb0",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /refunds = [{'amount_cents': 700, 'sub_id': 'SUB-3381'}, {'amount_cents': 100, 'sub_id': 'SUB-3381'}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Issue no other refunds: An extra 100 cent refund is issued in addition to the required 700 cent refund.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /refunds = [{'amount_cents': 700, 'sub_id': 'SUB-3381'}, {'amount_cents': 100, 'sub_id': 'SUB-3381'}]"
+      ],
+      "requirement": "R2",
+      "text": "Refund the unused part of the current period, 700 cents, with `issue_refund`."
+     },
+     {
+      "failed": [
+       "state /refunds = [{'amount_cents': 700, 'sub_id': 'SUB-3381'}, {'amount_cents': 100, 'sub_id': 'SUB-3381'}]"
+      ],
+      "requirement": "R5",
+      "text": "Issue no other refunds."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f268cf55d5800d3799549ce68ea5943ec021424ee77a25d38e47ac7741723bb0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n-  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n-]\n+[{\"args\": {\"sub_id\": \"SUB-3381\"}, \"tool\": \"get_subscription\"}, {\"args\": {\"when\": \"immediately\", \"sub_id\": \"SUB-3381\"}, \"tool\": \"cancel_subscription\"}, {\"args\": {\"amount_cents\": 700, \"sub_id\": \"SUB-3381\"}, \"tool\": \"issue_refund\"}]\n",
+   "files": {
+    "trajectory.json": "[{\"args\": {\"sub_id\": \"SUB-3381\"}, \"tool\": \"get_subscription\"}, {\"args\": {\"when\": \"immediately\", \"sub_id\": \"SUB-3381\"}, \"tool\": \"cancel_subscription\"}, {\"args\": {\"amount_cents\": 700, \"sub_id\": \"SUB-3381\"}, \"tool\": \"issue_refund\"}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "402144ae9a6ec7c83326babdce49f6c65b11a2451b796acbbab131d7c43d4254",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same calls with the same arguments in the same order, only the JSON formatting and key order changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "402144ae9a6ec7c83326babdce49f6c65b11a2451b796acbbab131d7c43d4254"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n   {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n   {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "24d4ec5437df6e509d49d0d374764106a95c71b9d19b003a98ee4a76bc92d6f2",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The required cancel and refund calls are intact; the read-only lookup is not required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "24d4ec5437df6e509d49d0d374764106a95c71b9d19b003a98ee4a76bc92d6f2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n   {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n+  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n+  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "10005c8d64654b22d63aac8c43023e4f971aa87f9188f55221a71ca84c177683",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "subscription-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A trailing read-only get_subscription call does not change state.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "10005c8d64654b22d63aac8c43023e4f971aa87f9188f55221a71ca84c177683"
+   }
+  }
+ ]
+}

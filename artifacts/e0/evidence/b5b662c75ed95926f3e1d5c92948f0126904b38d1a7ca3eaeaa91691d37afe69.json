@@ -1,0 +1,1062 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "customers": {
+    "C-8812": {
+     "card_last4": "4821",
+     "name": "Tom\u00e1s Rivera"
+    },
+    "C-8840": {
+     "card_last4": "1177",
+     "name": "Helen Achebe"
+    }
+   },
+   "orders": {
+    "ORD-90388": {
+     "customer_id": "C-8840",
+     "items": [
+      {
+       "name": "Electric kettle",
+       "price_cents": 3450,
+       "sku": "KTL-07"
+      }
+     ],
+     "refunded_cents": 0,
+     "status": "delivered"
+    },
+    "ORD-90417": {
+     "customer_id": "C-8812",
+     "items": [
+      {
+       "name": "Countertop blender",
+       "price_cents": 6499,
+       "sku": "BLD-200"
+      },
+      {
+       "name": "Travel mug",
+       "price_cents": 1299,
+       "sku": "MUG-12"
+      }
+     ],
+     "refunded_cents": 6499,
+     "status": "partially_refunded"
+    }
+   },
+   "refunds": [
+    {
+     "amount_cents": 6499,
+     "order_id": "ORD-90417",
+     "reason": "damaged"
+    }
+   ],
+   "verified": [
+    "C-8812"
+   ]
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "customer_id": "C-8812",
+     "last4": "4821"
+    },
+    "result": {
+     "ok": true,
+     "verified": true
+    },
+    "tool": "verify_identity"
+   },
+   {
+    "args": {
+     "order_id": "ORD-90417"
+    },
+    "result": {
+     "ok": true,
+     "order": {
+      "customer_id": "C-8812",
+      "items": [
+       {
+        "name": "Countertop blender",
+        "price_cents": 6499,
+        "sku": "BLD-200"
+       },
+       {
+        "name": "Travel mug",
+        "price_cents": 1299,
+        "sku": "MUG-12"
+       }
+      ],
+      "refunded_cents": 0,
+      "status": "delivered"
+     }
+    },
+    "tool": "get_order"
+   },
+   {
+    "args": {
+     "amount_cents": 6499,
+     "order_id": "ORD-90417",
+     "reason": "damaged"
+    },
+    "result": {
+     "ok": true,
+     "refund_id": "RF-1"
+    },
+    "tool": "issue_refund"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "customer_id": "C-8812",
+      "last4": "4821"
+     },
+     "tool": "verify_identity",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": [
+      "C-8812"
+     ],
+     "pointer": "/verified",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Verify the customer's identity by calling verify_identity with customer ID C-8812 and the last four digits 4821."
+  },
+  {
+   "checks": [
+    {
+     "first": {
+      "args": {
+       "customer_id": "C-8812",
+       "last4": "4821"
+      },
+      "tool": "verify_identity"
+     },
+     "then": {
+      "args": {},
+      "tool": "issue_refund"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Ordering policy: the identity check must happen before any refund is issued."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "amount_cents": 6499,
+      "order_id": "ORD-90417",
+      "reason": "damaged"
+     },
+     "tool": "issue_refund",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": 6499,
+     "pointer": "/orders/ORD-90417/refunded_cents",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Refund 6499 cents on order ORD-90417 with reason 'damaged'."
+  },
+  {
+   "checks": [
+    {
+     "equals": [
+      {
+       "amount_cents": 6499,
+       "order_id": "ORD-90417",
+       "reason": "damaged"
+      }
+     ],
+     "pointer": "/refunds",
+     "type": "state_equals"
+    },
+    {
+     "equals": 0,
+     "pointer": "/orders/ORD-90388/refunded_cents",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Make no other refunds: exactly one refund record exists, for ORD-90417."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "customer_id": "C-8840",
+      "items": [
+       {
+        "name": "Electric kettle",
+        "price_cents": 3450,
+        "sku": "KTL-07"
+       }
+      ],
+      "refunded_cents": 0,
+      "status": "delivered"
+     },
+     "pointer": "/orders/ORD-90388",
+     "type": "state_equals"
+    },
+    {
+     "equals": [
+      {
+       "name": "Countertop blender",
+       "price_cents": 6499,
+       "sku": "BLD-200"
+      },
+      {
+       "name": "Travel mug",
+       "price_cents": 1299,
+       "sku": "MUG-12"
+      }
+     ],
+     "pointer": "/orders/ORD-90417/items",
+     "type": "state_equals"
+    },
+    {
+     "equals": {
+      "C-8812": {
+       "card_last4": "4821",
+       "name": "Tom\u00e1s Rivera"
+      },
+      "C-8840": {
+       "card_last4": "1177",
+       "name": "Helen Achebe"
+      }
+     },
+     "pointer": "/customers",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Make no other changes: customers, order items, and the other order stay unchanged."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:refund-request",
+ "task_hash": "b5b662c75ed95926f3e1d5c92948f0126904b38d1a7ca3eaeaa91691d37afe69",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,29 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\"\n+    }\n+  },\n+  {\n+    \"tool\": \"verify_identity\",\n+    \"args\": {\n+      \"customer_id\": \"C-8812\",\n+      \"last4\": \"4821\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\",\n+      \"amount_cents\": 6499,\n+      \"reason\": \"damaged\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\"\n    }\n  },\n  {\n    \"tool\": \"verify_identity\",\n    \"args\": {\n      \"customer_id\": \"C-8812\",\n      \"last4\": \"4821\"\n    }\n  },\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\",\n      \"amount_cents\": 6499,\n      \"reason\": \"damaged\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c42bb2f2df76d166400de4b8b7070cc387dd5371cb97c45f17501c07ebf9219a",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "An extra read-only get_order call before verification issues no refund, and verification still precedes the refund.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "c42bb2f2df76d166400de4b8b7070cc387dd5371cb97c45f17501c07ebf9219a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\n+    \"tool\": \"verify_identity\",\n+    \"args\": {\n+      \"customer_id\": \"C-8812-x\",\n+      \"last4\": \"4821\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\",\n+      \"amount_cents\": 6499,\n+      \"reason\": \"damaged\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_identity\",\n    \"args\": {\n      \"customer_id\": \"C-8812-x\",\n      \"last4\": \"4821\"\n    }\n  },\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\",\n      \"amount_cents\": 6499,\n      \"reason\": \"damaged\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "6ad98e3c5b40d45772fadb31d11d67b833b7527397b07ee1336ee4d7dac5eb45",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks verify_identity",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "verify identity with customer C-8812: verify_identity is called with the wrong customer ID C-8812-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks verify_identity",
+       "state /verified = []"
+      ],
+      "requirement": "R1",
+      "text": "Verify the customer's identity by calling verify_identity with customer ID C-8812 and the last four digits 4821."
+     },
+     {
+      "failed": [
+       "order verify_identity < issue_refund: None, 2"
+      ],
+      "requirement": "R2",
+      "text": "Ordering policy: the identity check must happen before any refund is issued."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6ad98e3c5b40d45772fadb31d11d67b833b7527397b07ee1336ee4d7dac5eb45"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\n+    \"tool\": \"verify_identity\",\n+    \"args\": {\n+      \"customer_id\": \"C-8812\",\n+      \"last4\": \"4821-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\",\n+      \"amount_cents\": 6499,\n+      \"reason\": \"damaged\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_identity\",\n    \"args\": {\n      \"customer_id\": \"C-8812\",\n      \"last4\": \"4821-x\"\n    }\n  },\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\",\n      \"amount_cents\": 6499,\n      \"reason\": \"damaged\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "747691c4f944869de99ce28e1159039b21d1a865d5c9a2550bd985ef5380a09f",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks verify_identity",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Verify identity with the last four digits 4821: verify_identity is called with last4 '4821-x', which is not the digits given.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks verify_identity",
+       "state /verified = []"
+      ],
+      "requirement": "R1",
+      "text": "Verify the customer's identity by calling verify_identity with customer ID C-8812 and the last four digits 4821."
+     },
+     {
+      "failed": [
+       "order verify_identity < issue_refund: None, 2"
+      ],
+      "requirement": "R2",
+      "text": "Ordering policy: the identity check must happen before any refund is issued."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "747691c4f944869de99ce28e1159039b21d1a865d5c9a2550bd985ef5380a09f"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\n+    \"tool\": \"verify_identity\",\n+    \"args\": {\n+      \"customer_id\": \"C-8812\",\n+      \"last4\": \"4821\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\",\n+      \"amount_cents\": 6499,\n+      \"reason\": \"damaged\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_identity\",\n    \"args\": {\n      \"customer_id\": \"C-8812\",\n      \"last4\": \"4821\"\n    }\n  },\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-90417-x\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\",\n      \"amount_cents\": 6499,\n      \"reason\": \"damaged\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "88fb2a55e8539e700cfc11397f100747f791ea4e747af0e2e1e86f8cec8f5623",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "refund-request",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Identity verification precedes the correct refund of 6499 cents on ORD-90417 with reason damaged; the only difference is a read-only lookup with a different order id, which the task does not require.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\n+    \"tool\": \"verify_identity\",\n+    \"args\": {\n+      \"customer_id\": \"C-8812\",\n+      \"last4\": \"4821\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\",\n+      \"amount_cents\": 6500,\n+      \"reason\": \"damaged\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_identity\",\n    \"args\": {\n      \"customer_id\": \"C-8812\",\n      \"last4\": \"4821\"\n    }\n  },\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\",\n      \"amount_cents\": 6500,\n      \"reason\": \"damaged\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "be7bd9149816d371fe49482f863a1d8f05a197464114936823602962120f9576",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks issue_refund",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Refund 6499 cents: The refund amount was changed to 6500 cents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks issue_refund",
+       "state /orders/ORD-90417/refunded_cents = 6500"
+      ],
+      "requirement": "R3",
+      "text": "Refund 6499 cents on order ORD-90417 with reason 'damaged'."
+     },
+     {
+      "failed": [
+       "state /refunds = [{'amount_cents': 6500, 'order_id': 'ORD-90417', 'reason': 'damaged'}]"
+      ],
+      "requirement": "R4",
+      "text": "Make no other refunds: exactly one refund record exists, for ORD-90417."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "be7bd9149816d371fe49482f863a1d8f05a197464114936823602962120f9576"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\n+    \"tool\": \"verify_identity\",\n+    \"args\": {\n+      \"customer_id\": \"C-8812\",\n+      \"last4\": \"4821\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417-x\",\n+      \"amount_cents\": 6499,\n+      \"reason\": \"damaged\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_identity\",\n    \"args\": {\n      \"customer_id\": \"C-8812\",\n      \"last4\": \"4821\"\n    }\n  },\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"order_id\": \"ORD-90417-x\",\n      \"amount_cents\": 6499,\n      \"reason\": \"damaged\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1ee954cffd6c7ec7dd3edfb8574856c5bfa48db1fc9df90d3c998fa72ae25942",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks issue_refund",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Refund order ORD-90417: issue_refund targets ORD-90417-x, which is the wrong order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks issue_refund",
+       "state /orders/ORD-90417/refunded_cents = 0"
+      ],
+      "requirement": "R3",
+      "text": "Refund 6499 cents on order ORD-90417 with reason 'damaged'."
+     },
+     {
+      "failed": [
+       "state /refunds = []"
+      ],
+      "requirement": "R4",
+      "text": "Make no other refunds: exactly one refund record exists, for ORD-90417."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1ee954cffd6c7ec7dd3edfb8574856c5bfa48db1fc9df90d3c998fa72ae25942"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\n+    \"tool\": \"verify_identity\",\n+    \"args\": {\n+      \"customer_id\": \"C-8812\",\n+      \"last4\": \"4821\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\",\n+      \"amount_cents\": 6499,\n+      \"reason\": \"damaged-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_identity\",\n    \"args\": {\n      \"customer_id\": \"C-8812\",\n      \"last4\": \"4821\"\n    }\n  },\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\",\n      \"amount_cents\": 6499,\n      \"reason\": \"damaged-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "81db741211e8682d727406fd741d7ffa1bd74f9d22d72f584ff35cf35bdd2f4b",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks issue_refund",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Refund with reason damaged: The refund reason was changed to 'damaged-x'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks issue_refund"
+      ],
+      "requirement": "R3",
+      "text": "Refund 6499 cents on order ORD-90417 with reason 'damaged'."
+     },
+     {
+      "failed": [
+       "state /refunds = [{'amount_cents': 6499, 'order_id': 'ORD-90417', 'reason': 'damaged-x'}]"
+      ],
+      "requirement": "R4",
+      "text": "Make no other refunds: exactly one refund record exists, for ORD-90417."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "81db741211e8682d727406fd741d7ffa1bd74f9d22d72f584ff35cf35bdd2f4b"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,17 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\n+    \"tool\": \"verify_identity\",\n+    \"args\": {\n+      \"customer_id\": \"C-8812\",\n+      \"last4\": \"4821\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\",\n+      \"amount_cents\": 6499,\n+      \"reason\": \"damaged\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_identity\",\n    \"args\": {\n      \"customer_id\": \"C-8812\",\n      \"last4\": \"4821\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\",\n      \"amount_cents\": 6499,\n      \"reason\": \"damaged\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "107ad57d568150d5ee6af0c0b35fb241507d2223b009d7d803b97055da6c980b",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "refund-request",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The identity check still precedes the correct refund, and the dropped read-only get_order call is not required by the task.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\n+    \"tool\": \"verify_identity\",\n+    \"args\": {\n+      \"customer_id\": \"C-8812\",\n+      \"last4\": \"4821\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_identity\",\n    \"args\": {\n      \"customer_id\": \"C-8812\",\n      \"last4\": \"4821\"\n    }\n  },\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f5ea07d031b648c79779ac2b1a83b738ca6dc6058d0084c717ebecf660b12f5d",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: order verify_identity < issue_refund: 0, None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "refund 6499 cents on ORD-90417 with reason damaged: The issue_refund call was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order verify_identity < issue_refund: 0, None"
+      ],
+      "requirement": "R2",
+      "text": "Ordering policy: the identity check must happen before any refund is issued."
+     },
+     {
+      "failed": [
+       "trajectory lacks issue_refund",
+       "state /orders/ORD-90417/refunded_cents = 0"
+      ],
+      "requirement": "R3",
+      "text": "Refund 6499 cents on order ORD-90417 with reason 'damaged'."
+     },
+     {
+      "failed": [
+       "state /refunds = []"
+      ],
+      "requirement": "R4",
+      "text": "Make no other refunds: exactly one refund record exists, for ORD-90417."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f5ea07d031b648c79779ac2b1a83b738ca6dc6058d0084c717ebecf660b12f5d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,16 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\",\n+      \"amount_cents\": 6499,\n+      \"reason\": \"damaged\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\",\n      \"amount_cents\": 6499,\n      \"reason\": \"damaged\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "f59ffe4532dfd391ce98270fdd993e5abb60fa41b189d5ef0992b7a26438fc51",
+   "kind": "violating",
+   "operator": "traj-drop-confirmation",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks verify_identity",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "verify identity with verify_identity before refunding: The verify_identity call was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks verify_identity",
+       "state /verified = []"
+      ],
+      "requirement": "R1",
+      "text": "Verify the customer's identity by calling verify_identity with customer ID C-8812 and the last four digits 4821."
+     },
+     {
+      "failed": [
+       "order verify_identity < issue_refund: None, 1"
+      ],
+      "requirement": "R2",
+      "text": "Ordering policy: the identity check must happen before any refund is issued."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f59ffe4532dfd391ce98270fdd993e5abb60fa41b189d5ef0992b7a26438fc51"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\"\n+    }\n+  },\n+  {\n+    \"tool\": \"verify_identity\",\n+    \"args\": {\n+      \"customer_id\": \"C-8812\",\n+      \"last4\": \"4821\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\",\n+      \"amount_cents\": 6499,\n+      \"reason\": \"damaged\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\"\n    }\n  },\n  {\n    \"tool\": \"verify_identity\",\n    \"args\": {\n      \"customer_id\": \"C-8812\",\n      \"last4\": \"4821\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\",\n      \"amount_cents\": 6499,\n      \"reason\": \"damaged\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d737b6e18b5da0d2414124432e1b8a393dccab5c5eed85df762820b81997556d",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "refund-request",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Identity is still verified before the refund, which is the only ordering the task requires; the read-only get_order moved earlier.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\n+    \"tool\": \"verify_identity\",\n+    \"args\": {\n+      \"customer_id\": \"C-8812\",\n+      \"last4\": \"4821\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_refund\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\",\n+      \"amount_cents\": 6499,\n+      \"reason\": \"damaged\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_order\",\n+    \"args\": {\n+      \"order_id\": \"ORD-90417\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_identity\",\n    \"args\": {\n      \"customer_id\": \"C-8812\",\n      \"last4\": \"4821\"\n    }\n  },\n  {\n    \"tool\": \"issue_refund\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\",\n      \"amount_cents\": 6499,\n      \"reason\": \"damaged\"\n    }\n  },\n  {\n    \"tool\": \"get_order\",\n    \"args\": {\n      \"order_id\": \"ORD-90417\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f5f283b727822f1bc190cc0d21616137637e324b6e3ad784e2c53c7503512f87",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "refund-request",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Identity is verified before the refund and the refund is issued with the right arguments; the extra read-only get_order afterwards violates nothing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n+  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4812\"}},\n   {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n   {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4812\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "8c2381d8fd30c2e9656be155714d3b55bc0cebed7b5c00b13c6c792b868dafe1",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks verify_identity",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "verify identity with the card last four digits 4821: The verification uses the wrong digits 4812.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks verify_identity",
+       "state /verified = []"
+      ],
+      "requirement": "R1",
+      "text": "Verify the customer's identity by calling verify_identity with customer ID C-8812 and the last four digits 4821."
+     },
+     {
+      "failed": [
+       "order verify_identity < issue_refund: None, 2"
+      ],
+      "requirement": "R2",
+      "text": "Ordering policy: the identity check must happen before any refund is issued."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8c2381d8fd30c2e9656be155714d3b55bc0cebed7b5c00b13c6c792b868dafe1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n   {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}},\n+  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}},\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "708be7444a811b55a86c6cf4819ffcc980eac78c41b53feeb9f0bd2900ea60df",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: order verify_identity < issue_refund: 2, 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "verify_identity must happen before issuing any refund: verify_identity is moved after issue_refund.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order verify_identity < issue_refund: 2, 1"
+      ],
+      "requirement": "R2",
+      "text": "Ordering policy: the identity check must happen before any refund is issued."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "708be7444a811b55a86c6cf4819ffcc980eac78c41b53feeb9f0bd2900ea60df"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n   {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6449, \"reason\": \"damaged\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6449, \"reason\": \"damaged\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "393d9a16c0259295131b0846ebcc0fe0ba246db26674d35dd0d98337d5fb1104",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks issue_refund",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "refund 6499 cents: The refund amount was changed to 6449 cents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks issue_refund",
+       "state /orders/ORD-90417/refunded_cents = 6449"
+      ],
+      "requirement": "R3",
+      "text": "Refund 6499 cents on order ORD-90417 with reason 'damaged'."
+     },
+     {
+      "failed": [
+       "state /refunds = [{'amount_cents': 6449, 'order_id': 'ORD-90417', 'reason': 'damaged'}]"
+      ],
+      "requirement": "R4",
+      "text": "Make no other refunds: exactly one refund record exists, for ORD-90417."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "393d9a16c0259295131b0846ebcc0fe0ba246db26674d35dd0d98337d5fb1104"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n   {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n+  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}},\n   {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ecca3b49d151716aadb12fe938cb8cdce0a138fd3a0da0131f14a923fbb5540e",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "refund-request",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Make no other refunds; refund 6499 cents once: It issues the refund twice.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n   {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n   {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "04c9042be3c11348ee548cbc3eaf6ebef31fbc4e72c698208d6a42cede8eb75a",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "get_order is a read-only lookup the task does not require; verification still precedes the refund.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "04c9042be3c11348ee548cbc3eaf6ebef31fbc4e72c698208d6a42cede8eb75a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n   {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\"tool\": \"verify_identity\", \"args\": {\"last4\": \"4821\", \"customer_id\": \"C-8812\"}},\n+  {\"tool\": \"issue_refund\", \"args\": {\"reason\": \"damaged\", \"amount_cents\": 6499, \"order_id\": \"ORD-90417\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"verify_identity\", \"args\": {\"last4\": \"4821\", \"customer_id\": \"C-8812\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"reason\": \"damaged\", \"amount_cents\": 6499, \"order_id\": \"ORD-90417\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "42b3cb89e94ef87d7f24fb30917b3ffec2456c6715a590b44197681e17528c7a",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Verification still happens before the refund; the read-only get_order call before it is not forbidden by the policy.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "42b3cb89e94ef87d7f24fb30917b3ffec2456c6715a590b44197681e17528c7a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n-]\n+[{\"tool\":\"verify_identity\",\"args\":{\"customer_id\":\"C-8812\",\"last4\":\"4821\"}},{\"tool\":\"get_order\",\"args\":{\"order_id\":\"ORD-90417\"}},{\"tool\":\"issue_refund\",\"args\":{\"order_id\":\"ORD-90417\",\"amount_cents\":6499,\"reason\":\"damaged\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"verify_identity\",\"args\":{\"customer_id\":\"C-8812\",\"last4\":\"4821\"}},{\"tool\":\"get_order\",\"args\":{\"order_id\":\"ORD-90417\"}},{\"tool\":\"issue_refund\",\"args\":{\"order_id\":\"ORD-90417\",\"amount_cents\":6499,\"reason\":\"damaged\"}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "4da7c89d81e65ebc0e113d7b025a9fddbd7616c825e5401de9e941a25c7e6272",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "refund-request",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same calls in the same order; only the JSON whitespace changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "4da7c89d81e65ebc0e113d7b025a9fddbd7616c825e5401de9e941a25c7e6272"
+   }
+  }
+ ]
+}

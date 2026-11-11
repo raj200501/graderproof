@@ -1,0 +1,1908 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+  },
+  "probes": {
+   "013082556de9e7ef": {
+    "ok": true,
+    "value": 0
+   },
+   "3655495b81087cdd": {
+    "ok": true,
+    "value": 5
+   },
+   "4f5ab6922b4c0b07": {
+    "ok": true,
+    "value": 7
+   },
+   "4f719dd8e9b73615": {
+    "ok": true,
+    "value": 6
+   },
+   "50ccccff94607005": {
+    "ok": true,
+    "value": 1
+   },
+   "5cfe463e8b84dbf1": {
+    "ok": true,
+    "value": 0
+   },
+   "6cd18e97f72a57ef": {
+    "ok": true,
+    "value": 5
+   },
+   "85972be3f928897d": {
+    "ok": true,
+    "value": 0
+   },
+   "9573252364725fe7": {
+    "ok": true,
+    "value": 4
+   },
+   "9b656decba3d37aa": {
+    "ok": true,
+    "value": 4
+   },
+   "b3396b702e54777a": {
+    "ok": true,
+    "value": 1
+   },
+   "bda53f78dae7cd03": {
+    "ok": true,
+    "value": 4
+   },
+   "dbb151a729c7008d": {
+    "ok": true,
+    "value": 7
+   },
+   "f019e1515c8c762c": {
+    "ok": true,
+    "value": 0
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "workdays.py",
+     "type": "file_exists"
+    },
+    {
+     "equals": 5,
+     "probe": {
+      "args": [
+       "2026-10-05",
+       "2026-10-12"
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+  },
+  {
+   "checks": [
+    {
+     "equals": 1,
+     "probe": {
+      "args": [
+       "2026-10-05",
+       "2026-10-06"
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 1,
+     "probe": {
+      "args": [
+       "2026-10-09",
+       "2026-10-12"
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 0,
+     "probe": {
+      "args": [
+       "2026-10-03",
+       "2026-10-05"
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "2026-10-02",
+       "2026-10-13"
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "2026-12-28",
+       "2027-01-05"
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+  },
+  {
+   "checks": [
+    {
+     "equals": 4,
+     "probe": {
+      "args": [
+       "2026-10-05",
+       "2026-10-12",
+       [
+        "2026-10-07"
+       ]
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 4,
+     "probe": {
+      "args": [
+       "2026-10-05",
+       "2026-10-12"
+      ],
+      "function": "business_days",
+      "kwargs": {
+       "holidays": [
+        "2026-10-05",
+        "2026-10-10"
+       ]
+      }
+     },
+     "type": "call"
+    },
+    {
+     "equals": 5,
+     "probe": {
+      "args": [
+       "2026-10-05",
+       "2026-10-12",
+       [
+        "2026-10-12"
+       ]
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "2026-10-05",
+       "2026-10-19",
+       [
+        "2026-10-06",
+        "2026-10-13",
+        "2026-10-14"
+       ]
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+  },
+  {
+   "checks": [
+    {
+     "equals": 0,
+     "probe": {
+      "args": [
+       "2026-10-05",
+       "2026-10-05"
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 0,
+     "probe": {
+      "args": [
+       "2026-10-12",
+       "2026-10-05"
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 0,
+     "probe": {
+      "args": [
+       "2026-10-12",
+       "2026-10-05",
+       [
+        "2026-10-07"
+       ]
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "If end is not after start, return 0."
+  },
+  {
+   "checks": [
+    {
+     "equals": 4,
+     "probe": {
+      "args": [
+       "2026-10-05",
+       "2026-10-09"
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 0,
+     "probe": {
+      "args": [
+       "2026-10-05",
+       "2026-10-05"
+      ],
+      "function": "business_days",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Return the count as an integer."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:business-days",
+ "task_hash": "318057baa0253123b08fd8ba3bdf4ef271bcc79e014610bc7cff0ff7ecdf51f1",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -7,7 +7,7 @@\n     count = 0\n     day = first\n     while day < last:\n-        if day.weekday() < 5 and day not in skip:\n+        if (day.weekday() < 5) or (day not in skip):\n             count += 1\n         day += timedelta(days=1)\n     return count\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if (day.weekday() < 5) or (day not in skip):\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "49c9d0c9248a0333d4ad6b25b0dcbdbda94279d80b124a8cf2ddc279dbc5b764",
+   "kind": "violating",
+   "operator": "py-boolop",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 7",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "count only weekdays that are not holidays: Using or counts weekends and holidays, so the count is wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 7"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned 3",
+       "business_days returned 2",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 7",
+       "business_days returned 6",
+       "business_days returned 7",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "49c9d0c9248a0333d4ad6b25b0dcbdbda94279d80b124a8cf2ddc279dbc5b764"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -7,7 +7,7 @@\n     count = 0\n     day = first\n     while day < last:\n-        if day.weekday() < 5 and day not in skip:\n+        if day.weekday() <= 5 and day not in skip:\n             count += 1\n         day += timedelta(days=1)\n     return count\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() <= 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5c7cf10cf13bd2e328aff14384ab2abb10831218517169fe23b6a021031c9a61",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 6",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Count only Monday to Friday: weekday() <= 5 also counts Saturdays.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 6"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned 2",
+       "business_days returned 1",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 5",
+       "business_days returned 6",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5c7cf10cf13bd2e328aff14384ab2abb10831218517169fe23b6a021031c9a61"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -6,7 +6,7 @@\n     skip = {date.fromisoformat(h) for h in holidays}\n     count = 0\n     day = first\n-    while day < last:\n+    while day <= last:\n         if day.weekday() < 5 and day not in skip:\n             count += 1\n         day += timedelta(days=1)\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day <= last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6117a08637996487e656654512181015b67e7e298a9af79ee747aea66aca0885",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 6",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The end date is excluded from the count: The loop uses <=, so the end date is counted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 6"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned 2",
+       "business_days returned 2",
+       "business_days returned 1",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 5",
+       "business_days returned 5",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned 1"
+      ],
+      "requirement": "R4",
+      "text": "If end is not after start, return 0."
+     },
+     {
+      "failed": [
+       "business_days returned 5",
+       "business_days returned 1"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6117a08637996487e656654512181015b67e7e298a9af79ee747aea66aca0885"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -7,7 +7,7 @@\n     count = 0\n     day = first\n     while day < last:\n-        if day.weekday() < 5 and day not in skip:\n+        if day.weekday() < 0 and day not in skip:\n             count += 1\n         day += timedelta(days=1)\n     return count\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 0 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b5ba824f5889a2b09cb318a27007c9a48693fc813d73dc510244dbc3248e2ace",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "count Monday to Friday dates: weekday() < 0 is never true, so the count is always 0.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 0"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned 0"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b5ba824f5889a2b09cb318a27007c9a48693fc813d73dc510244dbc3248e2ace"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -7,7 +7,7 @@\n     count = 0\n     day = first\n     while day < last:\n-        if day.weekday() < 5 and day not in skip:\n+        if day.weekday() < 6 and day not in skip:\n             count += 1\n         day += timedelta(days=1)\n     return count\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 6 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7c49efc931ca3044ff68faebf6ccb7e3530bf8d25ed59db813ebd41190ba7a89",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 6",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Count only Monday to Friday: weekday() < 6 also counts Saturdays.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 6"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned 2",
+       "business_days returned 1",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 5",
+       "business_days returned 6",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7c49efc931ca3044ff68faebf6ccb7e3530bf8d25ed59db813ebd41190ba7a89"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -8,6 +8,6 @@\n     day = first\n     while day < last:\n         if day.weekday() < 5 and day not in skip:\n-            count += 1\n+            count += 0\n         day += timedelta(days=1)\n     return count\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 0\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9a53f84c5016785f8931020acc1a66967cb1e4aeed4306ddab4694b389e7dc0c",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the count of business days: The counter adds 0, so the function always returns 0.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 0"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned 0"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9a53f84c5016785f8931020acc1a66967cb1e4aeed4306ddab4694b389e7dc0c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -9,5 +9,5 @@\n     while day < last:\n         if day.weekday() < 5 and day not in skip:\n             count += 1\n-        day += timedelta(days=1)\n+        day += timedelta(days=0)\n     return count\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=0)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c37df1396a88c7024fdc3ffcac60241b2a3c1c9ded2ac629dff9c5a34c43c65f",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Count business days between start and end: The day never advances, so the loop does not terminate whenever start is before end.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned None"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R4",
+      "text": "If end is not after start, return 0."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c37df1396a88c7024fdc3ffcac60241b2a3c1c9ded2ac629dff9c5a34c43c65f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -9,5 +9,5 @@\n     while day < last:\n         if day.weekday() < 5 and day not in skip:\n             count += 1\n-        day += timedelta(days=1)\n+        day += timedelta(days=2)\n     return count\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=2)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "92d4cd4474b98048d9d10436a233e87bd0b98f571a86d808ce8414eea7fdd3a7",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 3",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Count every Monday to Friday date in [start, end): The loop advances two days at a time, skipping dates and giving wrong counts.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 3"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 2",
+       "business_days returned 2",
+       "business_days returned 3",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned 2"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "92d4cd4474b98048d9d10436a233e87bd0b98f571a86d808ce8414eea7fdd3a7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -4,7 +4,7 @@\n def business_days(start, end, holidays=()):\n     first, last = date.fromisoformat(start), date.fromisoformat(end)\n     skip = {date.fromisoformat(h) for h in holidays}\n-    count = 0\n+    count = -1\n     day = first\n     while day < last:\n         if day.weekday() < 5 and day not in skip:\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = -1\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e4f8c14bcbf4ec82f17de9e848d07ee9b4d07dd594b24ebabfce82a92d09119a",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 4",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the count of business days: The counter starts at -1, so every result is off by one, including the required 0 for an empty range.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 4"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days returned -1",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 3",
+       "business_days returned 3",
+       "business_days returned 4",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned -1",
+       "business_days returned -1",
+       "business_days returned -1"
+      ],
+      "requirement": "R4",
+      "text": "If end is not after start, return 0."
+     },
+     {
+      "failed": [
+       "business_days returned 3",
+       "business_days returned -1"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e4f8c14bcbf4ec82f17de9e848d07ee9b4d07dd594b24ebabfce82a92d09119a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -7,7 +7,7 @@\n     count = 0\n     day = first\n     while day < last:\n-        if day.weekday() < 5 and day not in skip:\n+        if not (day.weekday() < 5 and day not in skip):\n             count += 1\n         day += timedelta(days=1)\n     return count\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if not (day.weekday() < 5 and day not in skip):\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "01ffff30d0dc378879bb9fafaf831cf9a0e5eff505e56ca3786b02a5d5a5e9f9",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 2",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Count Monday to Friday non-holiday dates: The condition is inverted, counting weekends and holidays instead.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 2"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 2",
+       "business_days returned 2",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 3",
+       "business_days returned 3",
+       "business_days returned 2"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned 0"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "01ffff30d0dc378879bb9fafaf831cf9a0e5eff505e56ca3786b02a5d5a5e9f9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -6,7 +6,7 @@\n     skip = {date.fromisoformat(h) for h in holidays}\n     count = 0\n     day = first\n-    while day < last:\n+    while not (day < last):\n         if day.weekday() < 5 and day not in skip:\n             count += 1\n         day += timedelta(days=1)\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while not (day < last):\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "26ebc66325cf3ae0c7a174f03b1f2ce13eb62a6e92bc03684ae53391acc75120",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Count weekdays in [start, end): The inverted loop condition skips the range and returns 0, or loops without end when end is not after start.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 0"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R4",
+      "text": "If end is not after start, return 0."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "26ebc66325cf3ae0c7a174f03b1f2ce13eb62a6e92bc03684ae53391acc75120"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -2,12 +2,12 @@\n \n \n def business_days(start, end, holidays=()):\n-    first, last = date.fromisoformat(start), date.fromisoformat(end)\n-    skip = {date.fromisoformat(h) for h in holidays}\n-    count = 0\n-    day = first\n-    while day < last:\n-        if day.weekday() < 5 and day not in skip:\n-            count += 1\n-        day += timedelta(days=1)\n-    return count\n+    first_gp, last_gp = date.fromisoformat(start), date.fromisoformat(end)\n+    skip_gp = {date.fromisoformat(h_gp) for h_gp in holidays}\n+    count_gp = 0\n+    day_gp = first_gp\n+    while day_gp < last_gp:\n+        if day_gp.weekday() < 5 and day_gp not in skip_gp:\n+            count_gp += 1\n+        day_gp += timedelta(days=1)\n+    return count_gp\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first_gp, last_gp = date.fromisoformat(start), date.fromisoformat(end)\n    skip_gp = {date.fromisoformat(h_gp) for h_gp in holidays}\n    count_gp = 0\n    day_gp = first_gp\n    while day_gp < last_gp:\n        if day_gp.weekday() < 5 and day_gp not in skip_gp:\n            count_gp += 1\n        day_gp += timedelta(days=1)\n    return count_gp\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b42013b1d341b5a287fe0ccb03098b1a7129bec8cfa2a3dec550ae4daaf381f8",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variable names changed; behavior is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "b42013b1d341b5a287fe0ccb03098b1a7129bec8cfa2a3dec550ae4daaf381f8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -10,4 +10,4 @@\n         if day.weekday() < 5 and day not in skip:\n             count += 1\n         day += timedelta(days=1)\n-    return count\n+    return None\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "15a8ee637a8484c9c82f3510bf183dc20b2b998240309c4da9799f9dad9d7e0a",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the count as an integer: The function returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned None"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R4",
+      "text": "If end is not after start, return 0."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "15a8ee637a8484c9c82f3510bf183dc20b2b998240309c4da9799f9dad9d7e0a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -7,7 +7,6 @@\n     count = 0\n     day = first\n     while day < last:\n-        if day.weekday() < 5 and day not in skip:\n-            count += 1\n+        pass\n         day += timedelta(days=1)\n     return count\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        pass\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3053ae9b17344fe65a7136f63fbc2ffd89ca2d270490def130d35831c86cba1e",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Count weekdays that are not holidays: The counting branch is replaced with pass, so the function always returns 0.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 0"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned 0"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3053ae9b17344fe65a7136f63fbc2ffd89ca2d270490def130d35831c86cba1e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -10,4 +10,4 @@\n         if day.weekday() < 5 and day not in skip:\n             count += 1\n         day += timedelta(days=1)\n-    return count\n+    pass\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "29961ebbc847d909ceef127b345afdfdb9bffb77c3552678122c16a181585570",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the count as an integer: The function returns None because the return statement was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned None"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R4",
+      "text": "If end is not after start, return 0."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "29961ebbc847d909ceef127b345afdfdb9bffb77c3552678122c16a181585570"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -2,7 +2,7 @@\n \n \n def business_days(start, end, holidays=()):\n-    first, last = date.fromisoformat(start), date.fromisoformat(end)\n+    pass\n     skip = {date.fromisoformat(h) for h in holidays}\n     count = 0\n     day = first\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    pass\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e332029cf61b20f33f1c743931381a3edaaf5ccd4a692f3913883e88c48cc72e",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Count business days between start and end: first and last are never defined, so the function raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned None"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R4",
+      "text": "If end is not after start, return 0."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e332029cf61b20f33f1c743931381a3edaaf5ccd4a692f3913883e88c48cc72e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -4,7 +4,7 @@\n def business_days(start, end, holidays=()):\n     first, last = date.fromisoformat(start), date.fromisoformat(end)\n     skip = {date.fromisoformat(h) for h in holidays}\n-    count = 0\n+    pass\n     day = first\n     while day < last:\n         if day.weekday() < 5 and day not in skip:\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    pass\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b738693f5c13ae211c5bed15446134bddf7646a411666f1569b563a51c072560",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "return the integer count: count is never initialized, so the function raises UnboundLocalError when it increments or returns.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned None"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R4",
+      "text": "If end is not after start, return 0."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b738693f5c13ae211c5bed15446134bddf7646a411666f1569b563a51c072560"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -5,7 +5,7 @@\n     first, last = date.fromisoformat(start), date.fromisoformat(end)\n     skip = {date.fromisoformat(h) for h in holidays}\n     count = 0\n-    day = first\n+    pass\n     while day < last:\n         if day.weekday() < 5 and day not in skip:\n             count += 1\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    pass\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "21c582285fe9ae17c6fd1094eabcf4101c5a3e6d85e7177d918f1ab21eb1075d",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Count business days from start: The variable day is never initialized, so the function raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned None"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R4",
+      "text": "If end is not after start, return 0."
+     },
+     {
+      "failed": [
+       "business_days returned None",
+       "business_days returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "21c582285fe9ae17c6fd1094eabcf4101c5a3e6d85e7177d918f1ab21eb1075d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -6,8 +6,5 @@\n     skip = {date.fromisoformat(h) for h in holidays}\n     count = 0\n     day = first\n-    while day < last:\n-        if day.weekday() < 5 and day not in skip:\n-            count += 1\n-        day += timedelta(days=1)\n+    pass\n     return count\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    pass\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6479efe19e065b4015b99f6c4447dddf3665581c83aa721b3d0850344f535c2c",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "count business days in the range: The counting loop was removed so it always returns 0.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 0"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned 0"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6479efe19e065b4015b99f6c4447dddf3665581c83aa721b3d0850344f535c2c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -5,7 +5,7 @@\n     first, last = date.fromisoformat(start), date.fromisoformat(end)\n     skip = {date.fromisoformat(h) for h in holidays}\n     count = 0\n-    day = first\n+    day = first + timedelta(days=1)\n     while day < last:\n         if day.weekday() < 5 and day not in skip:\n             count += 1\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first + timedelta(days=1)\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b8dd789850149325198b6e81a41bb7ca9a58d3542a485bf00534427be44179ea",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: business_days returned 4",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The start date is included in the count: Iteration starts at start+1 day, excluding the start date.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 4"
+      ],
+      "requirement": "R1",
+      "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=())."
+     },
+     {
+      "failed": [
+       "business_days returned 0",
+       "business_days returned 0",
+       "business_days differs from reference",
+       "business_days differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday."
+     },
+     {
+      "failed": [
+       "business_days returned 3",
+       "business_days returned 4",
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     },
+     {
+      "failed": [
+       "business_days returned 3"
+      ],
+      "requirement": "R5",
+      "text": "Return the count as an integer."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b8dd789850149325198b6e81a41bb7ca9a58d3542a485bf00534427be44179ea"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -3,7 +3,7 @@\n \n def business_days(start, end, holidays=()):\n     first, last = date.fromisoformat(start), date.fromisoformat(end)\n-    skip = {date.fromisoformat(h) for h in holidays}\n+    skip = {date.fromisoformat(h) for h in list(holidays)[:1]}\n     count = 0\n     day = first\n     while day < last:\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in list(holidays)[:1]}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2915673e8cadd019987d7755b8e07a1bcb61c70122f1780ce6d1b9f5ffbd8beb",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: business_days differs from reference",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Exclude all dates in holidays from the count: Only the first holiday is honored; the rest are ignored.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Dates in holidays (iterable of ISO date strings) are not counted."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2915673e8cadd019987d7755b8e07a1bcb61c70122f1780ce6d1b9f5ffbd8beb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -3,6 +3,8 @@\n \n def business_days(start, end, holidays=()):\n     first, last = date.fromisoformat(start), date.fromisoformat(end)\n+    if last < first:\n+        first, last = last, first\n     skip = {date.fromisoformat(h) for h in holidays}\n     count = 0\n     day = first\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    if last < first:\n        first, last = last, first\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return count\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e4de2c6f28c72888e0df7dc41101f76210869148a0be1631dab179628fbe9bf4",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: business_days returned 5",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "If end is not after start, return 0: It swaps reversed dates and counts days instead of returning 0.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "business_days returned 5",
+       "business_days returned 4"
+      ],
+      "requirement": "R4",
+      "text": "If end is not after start, return 0."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e4de2c6f28c72888e0df7dc41101f76210869148a0be1631dab179628fbe9bf4"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -10,4 +10,4 @@\n         if day.weekday() < 5 and day not in skip:\n             count += 1\n         day += timedelta(days=1)\n-    return count\n+    return float(count)\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first, last = date.fromisoformat(start), date.fromisoformat(end)\n    skip = {date.fromisoformat(h) for h in holidays}\n    count = 0\n    day = first\n    while day < last:\n        if day.weekday() < 5 and day not in skip:\n            count += 1\n        day += timedelta(days=1)\n    return float(count)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "9ca554611c572a2f8ddd19497af5f429e05645a25183ce376747ebeb16939c03",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "business-days",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Return the count as an integer: The function returns a float instead of an int.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -1,13 +1,8 @@\n-from datetime import date, timedelta\n+from datetime import date\n \n \n def business_days(start, end, holidays=()):\n-    first, last = date.fromisoformat(start), date.fromisoformat(end)\n-    skip = {date.fromisoformat(h) for h in holidays}\n-    count = 0\n-    day = first\n-    while day < last:\n-        if day.weekday() < 5 and day not in skip:\n-            count += 1\n-        day += timedelta(days=1)\n-    return count\n+    first = date.fromisoformat(start).toordinal()\n+    last = date.fromisoformat(end).toordinal()\n+    skip = {date.fromisoformat(h).toordinal() for h in holidays}\n+    return sum(1 for n in range(first, last) if (n + 6) % 7 < 5 and n not in skip)\n",
+   "files": {
+    "workdays.py": "from datetime import date\n\n\ndef business_days(start, end, holidays=()):\n    first = date.fromisoformat(start).toordinal()\n    last = date.fromisoformat(end).toordinal()\n    skip = {date.fromisoformat(h).toordinal() for h in holidays}\n    return sum(1 for n in range(first, last) if (n + 6) % 7 < 5 and n not in skip)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b560989deb666998e823ce12d27523d9edab806d1f4fdf61b181fc0e587bb262",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The ordinal arithmetic (n+6)%7<5 correctly identifies Monday to Friday over the half-open range and gives 0 for empty ranges.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "b560989deb666998e823ce12d27523d9edab806d1f4fdf61b181fc0e587bb262"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/workdays.py\n+++ b/workdays.py\n@@ -2,12 +2,10 @@\n \n \n def business_days(start, end, holidays=()):\n-    first, last = date.fromisoformat(start), date.fromisoformat(end)\n-    skip = {date.fromisoformat(h) for h in holidays}\n-    count = 0\n-    day = first\n-    while day < last:\n-        if day.weekday() < 5 and day not in skip:\n-            count += 1\n-        day += timedelta(days=1)\n-    return count\n+    first = date.fromisoformat(start)\n+    last = date.fromisoformat(end)\n+    if last <= first:\n+        return 0\n+    holiday_set = {date.fromisoformat(h) for h in holidays}\n+    days = (first + timedelta(days=i) for i in range((last - first).days))\n+    return len([d for d in days if d.isoweekday() <= 5 and d not in holiday_set])\n",
+   "files": {
+    "workdays.py": "from datetime import date, timedelta\n\n\ndef business_days(start, end, holidays=()):\n    first = date.fromisoformat(start)\n    last = date.fromisoformat(end)\n    if last <= first:\n        return 0\n    holiday_set = {date.fromisoformat(h) for h in holidays}\n    days = (first + timedelta(days=i) for i in range((last - first).days))\n    return len([d for d in days if d.isoweekday() <= 5 and d not in holiday_set])\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0739c04f26a254560f51617d676ef1a3393dc52c3aaf27bd65d3135003120408",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "business-days",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Counts the same half-open range of Monday to Friday non-holiday dates and returns 0 when end is not after start.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "0739c04f26a254560f51617d676ef1a3393dc52c3aaf27bd65d3135003120408"
+   }
+  }
+ ]
+}

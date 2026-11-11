@@ -1,0 +1,1397 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "readings.csv": "meter,date,reading_kwh\nMTR-01,2026-10-01,10452\nMTR-02,2026-10-01,8810\nMTR-03,2026-10-01,22015\nMTR-02,2026-10-15,8957\nMTR-01,2026-10-31,10847\nMTR-03,2026-10-31,22790\nMTR-02,2026-10-31,9102\nMTR-04,2026-10-03,512\nMTR-04,2026-10-30,1630\n",
+   "usage.csv": "meter,kwh\nMTR-01,395\nMTR-02,292\nMTR-03,775\nMTR-04,1118\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "usage.csv",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write `usage.csv`."
+  },
+  {
+   "checks": [
+    {
+     "path": "usage.csv",
+     "pattern": "\\Ameter,kwh\\r?\\n",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "The first row of usage.csv is the header `meter,kwh`."
+  },
+  {
+   "checks": [
+    {
+     "count": 5,
+     "path": "usage.csv",
+     "type": "file_lines"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "One row per meter that appears in readings.csv (four meters) after the header."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "strip",
+     "path": "usage.csv",
+     "text": "meter,kwh\nMTR-01,395\nMTR-02,292\nMTR-03,775\nMTR-04,1118\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:meter-readings",
+ "task_hash": "055f4b5d87202dff228c7e13936300837aa2c4b828aa8332482510cb1ac698ff",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,13 @@\n+import csv\n+\n+readings = {}\n+with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n+\n+with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"meter\", \"kwh\"])\n+    for meter in sorted(readings):\n+        series = sorted(readings[meter])\n+        writer.writerow([meter, series[-1][1] - series[0][1]])\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['usage.csv']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,14 @@\n-import csv\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-readings = {}\n-with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n-\n-with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"meter\", \"kwh\"])\n-    for meter in sorted(readings):\n-        series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['usage.csv']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5c1e325223f9ea43f502f0ac1c261cf3e73742239ebce77397070b8006560b9e",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: usage.csv has 4 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "usage.csv has one row per meter: The post-step drops the last line of usage.csv, losing the last meter row.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv has 4 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5c1e325223f9ea43f502f0ac1c261cf3e73742239ebce77397070b8006560b9e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,13 @@\n+import csv\n+\n+readings = {}\n+with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n+\n+with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"meter\", \"kwh\"])\n+    for meter in sorted(readings):\n+        series = sorted(readings[meter])\n+        writer.writerow([meter, series[-1][1] - series[0][1]])\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['usage.csv']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,14 @@\n-import csv\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-readings = {}\n-with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n-\n-with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"meter\", \"kwh\"])\n-    for meter in sorted(readings):\n-        series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['usage.csv']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "61aa40c1fc7c0aa162ea1dcce75ba3d2e6a84604009ade46fca1dd5b79d454fb",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: usage.csv has 6 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "usage.csv contains only the header and one row per meter: The post-step appends an extra line 'extra' to usage.csv.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv has 6 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "61aa40c1fc7c0aa162ea1dcce75ba3d2e6a84604009ade46fca1dd5b79d454fb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,13 @@\n+import csv\n+\n+readings = {}\n+with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n+\n+with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"meter\", \"kwh\"])\n+    for meter in sorted(readings):\n+        series = sorted(readings[meter])\n+        writer.writerow([meter, series[-1][1] - series[0][1]])\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['usage.csv']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,14 @@\n-import csv\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-readings = {}\n-with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n-\n-with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"meter\", \"kwh\"])\n-    for meter in sorted(readings):\n-        series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['usage.csv']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "cc1181eff790c4085c04d2823a68a7d58f44a1b93f77a19ab38ea0429ba40afa",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the final trailing newline of usage.csv is removed; the task does not require it and the rows are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "cc1181eff790c4085c04d2823a68a7d58f44a1b93f77a19ab38ea0429ba40afa"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,13 @@\n+import csv\n+\n+readings = {}\n+with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n+\n+with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"meter\", \"kwh\"])\n+    for meter in sorted(readings):\n+        series = sorted(readings[meter])\n+        writer.writerow([meter, series[-1][1] - series[0][1]])\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['usage.csv']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,14 @@\n-import csv\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-readings = {}\n-with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n-\n-with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"meter\", \"kwh\"])\n-    for meter in sorted(readings):\n-        series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['usage.csv']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "123506f38819d6f1c695bd85b51c64043162c79293153a5acd7e4dea9f462ca8",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "meter-readings",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R2: usage.csv does not match /\\Ameter,kwh\\r?\\n/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "usage.csv contents exactly as specified: A wrapper appends trailing spaces to every line of usage.csv.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,13 @@\n+import csv\n+\n+readings = {}\n+with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n+\n+with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"meter\", \"kwh\"])\n+    for meter in sorted(readings):\n+        series = sorted(readings[meter])\n+        writer.writerow([meter, series[-1][1] - series[0][1]])\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,14 @@\n-import csv\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-readings = {}\n-with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n-\n-with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"meter\", \"kwh\"])\n-    for meter in sorted(readings):\n-        series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(3.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(3.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ba234974a1c5b28cbcb6ebecd6ac622b0fcec195fb2885470b82acc9c56b7165",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper only adds a delay and runs the original script, and the identity transform leaves usage.csv unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ba234974a1c5b28cbcb6ebecd6ac622b0fcec195fb2885470b82acc9c56b7165"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,4 +10,4 @@\n     writer.writerow([\"meter\", \"kwh\"])\n     for meter in sorted(readings):\n         series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+        writer.writerow([meter, (series[-1][1]) + (series[0][1])])\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, (series[-1][1]) + (series[0][1])])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c006c2d5f99a991a2c125f0a9f528058954407e6f48aa1294b7887bf50bfe98a",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: usage.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "kwh is latest reading minus earliest reading: The readings are added instead of subtracted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c006c2d5f99a991a2c125f0a9f528058954407e6f48aa1294b7887bf50bfe98a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n \n with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"meter\", \"kwh\"])\n+    writer.writerow(['mete', \"kwh\"])\n     for meter in sorted(readings):\n         series = sorted(readings[meter])\n         writer.writerow([meter, series[-1][1] - series[0][1]])\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow(['mete', \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d2906a408b3e5b4b5e7ddb69272f0c997b4c18d0e9464df30a2bba0c395fab89",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: usage.csv does not match /\\Ameter,kwh\\r?\\n/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "usage.csv header row must be meter,kwh: The header's first column is 'mete'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv does not match /\\Ameter,kwh\\r?\\n/"
+      ],
+      "requirement": "R2",
+      "text": "The first row of usage.csv is the header `meter,kwh`."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d2906a408b3e5b4b5e7ddb69272f0c997b4c18d0e9464df30a2bba0c395fab89"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,4 +10,4 @@\n     writer.writerow([\"meter\", \"kwh\"])\n     for meter in sorted(readings):\n         series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+        writer.writerow([meter, series[-1][0] - series[0][1]])\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][0] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a259b870fc9988d1d46c5d088aacb9f42fd748feab76cd99c7e70c0fa899aade",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: usage.csv has 1 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "kwh equals the latest reading minus the earliest reading: series[-1][0] is a date string, so subtracting an int raises TypeError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv has 1 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a259b870fc9988d1d46c5d088aacb9f42fd748feab76cd99c7e70c0fa899aade"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,4 +10,4 @@\n     writer.writerow([\"meter\", \"kwh\"])\n     for meter in sorted(readings):\n         series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+        writer.writerow([meter, series[-2][1] - series[0][1]])\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-2][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b1c1b762480a7f519fb2169f8b45ab623f901c4e1be0e6383aeeb98170707f35",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: usage.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "kwh is the reading on the latest date minus the reading on the earliest date: Using series[-2] takes the second-latest reading instead of the latest.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b1c1b762480a7f519fb2169f8b45ab623f901c4e1be0e6383aeeb98170707f35"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,4 +10,4 @@\n     writer.writerow([\"meter\", \"kwh\"])\n     for meter in sorted(readings):\n         series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+        writer.writerow([meter, series[-1][1] - series[0][2]])\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][2]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e273fde3abcf822d26031f38f1eaf01876ece07abb4d86d50588788d20e70f85",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: usage.csv has 1 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "kwh is latest reading minus earliest reading: series[0][2] indexes past the 2-tuple and raises IndexError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv has 1 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e273fde3abcf822d26031f38f1eaf01876ece07abb4d86d50588788d20e70f85"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n import csv\n \n readings = {}\n-with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open(\"readings.csv\", newline=\"\", encoding='') as fh:\n     for row in csv.DictReader(fh):\n         readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n \n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding='') as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5663e75851b70a4e2d8b32de5f6d837e3f7d0690bf0b1e172cdca5987f97bdc9",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: usage.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Produce usage.csv: open with encoding='' raises LookupError so the program crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `usage.csv`."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "The first row of usage.csv is the header `meter,kwh`."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5663e75851b70a4e2d8b32de5f6d837e3f7d0690bf0b1e172cdca5987f97bdc9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,7 +3,7 @@\n readings = {}\n with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n+        readings.setdefault(row[\"meter\"], []).append((row['datex'], int(row[\"reading_kwh\"])))\n \n with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row['datex'], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a0f71246b5fb3e5335ca65a5327b4c91d88a07945cad96db8dfb6b546185f158",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: usage.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Compute usage from the date column: row['datex'] does not exist, so a KeyError crashes the program.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `usage.csv`."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "The first row of usage.csv is the header `meter,kwh`."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a0f71246b5fb3e5335ca65a5327b4c91d88a07945cad96db8dfb6b546185f158"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,6 +8,6 @@\n with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"meter\", \"kwh\"])\n-    for meter in sorted(readings):\n+    for meter in list(sorted(readings))[:-1]:\n         series = sorted(readings[meter])\n         writer.writerow([meter, series[-1][1] - series[0][1]])\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in list(sorted(readings))[:-1]:\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "147a98dfe3b87bbb7d2cbd2fdd3ca7f29077518b3fbd6113a35772bce423e163",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: usage.csv has 4 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One row per meter: The last meter in sorted order is omitted from the output.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv has 4 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "147a98dfe3b87bbb7d2cbd2fdd3ca7f29077518b3fbd6113a35772bce423e163"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,7 +2,7 @@\n \n readings = {}\n with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n+    for row in list(csv.DictReader(fh))[:-1]:\n         readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n \n with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in list(csv.DictReader(fh))[:-1]:\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "edf5effcec5cf51a6415dcbbf4a3d63e23e22f89ccc6bc1d97f9285139d2f390",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: usage.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "use the latest reading per meter: The last CSV row is dropped, which can change a meter's usage or omit a meter.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "edf5effcec5cf51a6415dcbbf4a3d63e23e22f89ccc6bc1d97f9285139d2f390"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n \n with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"meter\", \"kwh\"])\n+    pass\n     for meter in sorted(readings):\n         series = sorted(readings[meter])\n         writer.writerow([meter, series[-1][1] - series[0][1]])\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    pass\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "65bc5b2235163a2ca8f094576176425267ecbb4fe753dd199a1c74b50792a7cc",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: usage.csv does not match /\\Ameter,kwh\\r?\\n/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "header row meter,kwh: The header row is no longer written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv does not match /\\Ameter,kwh\\r?\\n/"
+      ],
+      "requirement": "R2",
+      "text": "The first row of usage.csv is the header `meter,kwh`."
+     },
+     {
+      "failed": [
+       "usage.csv has 4 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "65bc5b2235163a2ca8f094576176425267ecbb4fe753dd199a1c74b50792a7cc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,5 +9,5 @@\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"meter\", \"kwh\"])\n     for meter in sorted(readings):\n-        series = sorted(readings[meter])\n+        pass\n         writer.writerow([meter, series[-1][1] - series[0][1]])\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        pass\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e19759b423fe534f60aceee782fdcf6f3f3df6927d78c947d9a2029cb3a99025",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: usage.csv has 1 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write usage.csv with consumption per meter: series is never defined, so the script raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv has 1 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e19759b423fe534f60aceee782fdcf6f3f3df6927d78c947d9a2029cb3a99025"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,4 +10,4 @@\n     writer.writerow([\"meter\", \"kwh\"])\n     for meter in sorted(readings):\n         series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+        pass\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3078d9a1c95b7017979c855dc54bdd57db9592810a1d170e574af7aa38c08b19",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: usage.csv has 1 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write one row per meter with its consumption: No meter rows are written; only the header is output.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv has 1 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3078d9a1c95b7017979c855dc54bdd57db9592810a1d170e574af7aa38c08b19"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,6 +1,6 @@\n import csv\n \n-readings = {}\n+pass\n with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n         readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n",
+   "files": {
+    "solve.py": "import csv\n\npass\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b890d727ea05f61621a02555b47950b8be3832d481a47f6f4dfedb98ee6f98e7",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: usage.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "write usage.csv: readings is no longer defined, so the script raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `usage.csv`."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "The first row of usage.csv is the header `meter,kwh`."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b890d727ea05f61621a02555b47950b8be3832d481a47f6f4dfedb98ee6f98e7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,8 +2,7 @@\n \n readings = {}\n with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n+    pass\n \n with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    pass\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e0fe5956997f9c097ebdaae8433a4d8c249ed6293e4dcfd10b92de02cf76ea84",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: usage.csv has 1 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One row per meter in readings.csv: The CSV is never read, so no meter rows are written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv has 1 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e0fe5956997f9c097ebdaae8433a4d8c249ed6293e4dcfd10b92de02cf76ea84"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,7 +3,7 @@\n readings = {}\n with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n+        pass\n \n with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        pass\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8cd824f8b41a35cd17e45263f2a0b21aa7fff6eb95831b55f25741aaa579eb14",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: usage.csv has 1 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One row per meter with its consumption: Readings are never collected, so usage.csv has only the header.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv has 1 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8cd824f8b41a35cd17e45263f2a0b21aa7fff6eb95831b55f25741aaa579eb14"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n import csv\n \n readings = {}\n-with open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open('readings.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n         readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n \n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open('readings.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "acc8adcde3f8384778697e52de5424bea8d04801770610eb3941d85adca0e8f6",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: usage.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read readings.csv: The script reads readings.csv.bak, which does not exist, so it crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `usage.csv`."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "The first row of usage.csv is the header `meter,kwh`."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "acc8adcde3f8384778697e52de5424bea8d04801770610eb3941d85adca0e8f6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n     for row in csv.DictReader(fh):\n         readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n \n-with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open('usage.csv.bak', \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"meter\", \"kwh\"])\n     for meter in sorted(readings):\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open('usage.csv.bak', \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ba9057eb7bd7e33906dea6675281b301d23fbdf6517bf82156a70a45ed8968a7",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: usage.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write usage.csv: Output goes to usage.csv.bak and usage.csv is never written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R1",
+      "text": "Write `usage.csv`."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "The first row of usage.csv is the header `meter,kwh`."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv missing"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ba9057eb7bd7e33906dea6675281b301d23fbdf6517bf82156a70a45ed8968a7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n \n with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"meter\", \"kwh\"])\n+    writer.writerow([\"meter\", \"kwh_total\"])\n     for meter in sorted(readings):\n         series = sorted(readings[meter])\n         writer.writerow([meter, series[-1][1] - series[0][1]])\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh_total\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e3ad9a30095019f9b87b801f0f28187de8ca3075759532222354b351e6ecd412",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: usage.csv does not match /\\Ameter,kwh\\r?\\n/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Header row must be meter,kwh: The header's second column is renamed to kwh_total.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv does not match /\\Ameter,kwh\\r?\\n/"
+      ],
+      "requirement": "R2",
+      "text": "The first row of usage.csv is the header `meter,kwh`."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e3ad9a30095019f9b87b801f0f28187de8ca3075759532222354b351e6ecd412"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,6 +8,6 @@\n with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"meter\", \"kwh\"])\n-    for meter in sorted(readings):\n+    for meter in sorted(readings)[:-1]:\n         series = sorted(readings[meter])\n         writer.writerow([meter, series[-1][1] - series[0][1]])\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings)[:-1]:\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e0fd636ad22db2b7a9b7562c35a2c64ed06c0dad139d19fcc3b49a1cfdc7e95b",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: usage.csv has 4 non-empty lines",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One row per meter that appears in readings.csv: It drops the last meter.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv has 4 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "One row per meter that appears in readings.csv (four meters) after the header."
+     },
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e0fd636ad22db2b7a9b7562c35a2c64ed06c0dad139d19fcc3b49a1cfdc7e95b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,4 +10,4 @@\n     writer.writerow([\"meter\", \"kwh\"])\n     for meter in sorted(readings):\n         series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+        writer.writerow([meter, series[-1][1] - series[1][1]])\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[1][1]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4b6412dae963dc0cb3a456f99a6873a6e29f5311fe7e7a0eaae21dc5554c2d83",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: usage.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "kwh is the latest reading minus the earliest reading: It subtracts the second-earliest reading instead of the earliest.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "usage.csv differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4b6412dae963dc0cb3a456f99a6873a6e29f5311fe7e7a0eaae21dc5554c2d83"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,7 +6,7 @@\n         readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n \n with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer = csv.writer(fh)\n     writer.writerow([\"meter\", \"kwh\"])\n     for meter in sorted(readings):\n         series = sorted(readings[meter])\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh)\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "4bae3b9e7583706db5bb4b287e29c8b2b3333777d3a076dfda46eb4758bceb62",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "meter-readings",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R4: usage.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Content is identical and the task does not specify the line terminator; CRLF is the standard CSV terminator.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,9 +5,10 @@\n     for row in csv.DictReader(fh):\n         readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n \n-with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"meter\", \"kwh\"])\n-    for meter in sorted(readings):\n-        series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+lines = [\"meter,kwh\"]\n+for meter in sorted(readings):\n+    first = min(readings[meter], key=lambda item: item[0])\n+    last = max(readings[meter], key=lambda item: item[0])\n+    lines.append(meter + \",\" + str(last[1] - first[1]))\n+with open(\"usage.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+    fh.write(\"\\n\".join(lines) + \"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nlines = [\"meter,kwh\"]\nfor meter in sorted(readings):\n    first = min(readings[meter], key=lambda item: item[0])\n    last = max(readings[meter], key=lambda item: item[0])\n    lines.append(meter + \",\" + str(last[1] - first[1]))\nwith open(\"usage.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\\n\".join(lines) + \"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3f1b8bc8afe0483f3e87b2c902e5e97001ff196bf4a188cda8a27084986a0979",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It still computes the latest-date reading minus the earliest-date reading per meter, sorted by meter, with the same header and LF line endings.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "3f1b8bc8afe0483f3e87b2c902e5e97001ff196bf4a188cda8a27084986a0979"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,9 +5,9 @@\n     for row in csv.DictReader(fh):\n         readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n \n-with open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"meter\", \"kwh\"])\n-    for meter in sorted(readings):\n-        series = sorted(readings[meter])\n-        writer.writerow([meter, series[-1][1] - series[0][1]])\n+lines = [\"meter,kwh\"]\n+for meter in sorted(readings):\n+    series = sorted(readings[meter])\n+    lines.append(f\"{meter},{series[-1][1] - series[0][1]}\")\n+with open(\"usage.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+    fh.write(\"\\n\".join(lines))\n",
+   "files": {
+    "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nlines = [\"meter,kwh\"]\nfor meter in sorted(readings):\n    series = sorted(readings[meter])\n    lines.append(f\"{meter},{series[-1][1] - series[0][1]}\")\nwith open(\"usage.csv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\\n\".join(lines))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "5c740f1abf79860f68a464bf701574cb5e88bc6aff93d1c3344f49206719e9cb",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "meter-readings",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Header and rows are correct; the task does not require a trailing newline after the last row.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "5c740f1abf79860f68a464bf701574cb5e88bc6aff93d1c3344f49206719e9cb"
+   }
+  }
+ ]
+}
