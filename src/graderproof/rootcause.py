@@ -27,6 +27,7 @@ from typing import Any
 from graderproof.core import Task
 from graderproof.lint import lint_task
 from graderproof.models import ModelClient
+from graderproof.validate import MAX_REQUEST_FILE, _clip
 
 ROOTCAUSE_PROMPT_VERSION = "rootcause/v1"
 ACCEPT_CODES = (
@@ -176,20 +177,23 @@ class ModelCoder:
     batch_size: int = 25
 
     def item(self, ci: CodingItem) -> dict[str, Any]:
-        """The request item for one misjudgment (never the rule-based code)."""
+        """The request item for one misjudgment (never the rule-based code).
+
+        The task text is sent whole; a grader file or the diff is cut, with a marker,
+        only past :data:`~graderproof.validate.MAX_REQUEST_FILE` characters.
+        """
         witness: Any = None
         if ci.witness:
             witness = ci.witness.get("broken") or {"held": ci.witness.get("held")}
+        grader = ci.task.environment.get("grader_files", {})
         return {
             "id": ci.id,
-            "task_text": ci.task.instructions[:6000],
-            "grader_files": {
-                p: t[:6000] for p, t in ci.task.environment.get("grader_files", {}).items()
-            },
+            "task_text": ci.task.instructions,
+            "grader_files": {p: _clip(t, MAX_REQUEST_FILE) for p, t in grader.items()},
             "error": "accepts a violating solution"
             if ci.direction == "accept"
             else "rejects a valid solution",
-            "diff_from_reference": ci.diff[:6000],
+            "diff_from_reference": _clip(ci.diff, MAX_REQUEST_FILE),
             "requirement": witness,
         }
 

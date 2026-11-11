@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,7 @@ from graderproof.rootcause import (
     items_from_evidence,
     rule_code,
 )
+from graderproof.validate import MAX_REQUEST_FILE
 
 DEMO = Path(__file__).resolve().parent.parent / "examples" / "demo"
 TASKS = {t.id: t for t in ToybenchAdapter().load(DEMO)}
@@ -148,3 +150,20 @@ def test_model_coder_round_trip(tmp_path: Path) -> None:
     client.ingest(h)
     assert coder.code([it]) == {"v": CODES[0]}
     assert isinstance(TASKS["greeting"], Task)
+
+
+def test_model_coder_sends_long_text_whole_and_marks_cuts(tmp_path: Path) -> None:
+    base = TASKS["word-stats"]
+    text = "policy clause\n" * 3000
+    grader = "def check(out):\n    return out\n" * 800
+    huge = "x" * (MAX_REQUEST_FILE + 4)
+    files = {"grade.py": grader, "task.json": huge}
+    task = replace(base, instructions=text, environment={**base.environment, "grader_files": files})
+    client = ModelClient(tmp_path / "s", tmp_path / "l.jsonl", tmp_path / "b.toml", disabled=True)
+    payload = ModelCoder(client).item(CodingItem("v", task, "accept", "op", huge, None))
+    assert len(text) > 30_000 and payload["task_text"] == text
+    assert payload["grader_files"]["grade.py"] == grader
+    # a file or diff over the limit is cut with a marker, never silently
+    marked = huge[:MAX_REQUEST_FILE] + "\n[... 4 more chars]"
+    assert payload["grader_files"]["task.json"] == marked
+    assert payload["diff_from_reference"] == marked

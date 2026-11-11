@@ -11,6 +11,8 @@ from graderproof.core import Task, Variant, VariantKind
 from graderproof.models import ModelClient, PendingWorkError
 from graderproof.spec import Outcome, Requirement
 from graderproof.validate import (
+    MAX_OUTCOME_FILE,
+    MAX_REQUEST_FILE,
     WITNESS_VALIDATOR,
     ModelReviewer,
     RequirementExtractor,
@@ -154,3 +156,47 @@ def test_model_items_carry_hashes_not_names(tmp_path: Path) -> None:
     )
     text = json.dumps(ModelReviewer(client).item(TASK, wrapped))
     assert "out-json-key-order" not in text and "key-order" not in text
+
+
+def long_text(n: int) -> str:
+    """Deterministic text of exactly ``n`` characters."""
+    line = "the customer asks to cancel order 1234 and to change the address\n"
+    return (line * (n // len(line) + 1))[:n]
+
+
+def test_extraction_sends_long_task_text_and_outcome_files_whole(tmp_path: Path) -> None:
+    ex = RequirementExtractor(store(tmp_path))
+    task = Task("t", "b", long_text(30_500), {"kind": "script"}, {"s.sh": "x\n"}, ["bash", "g"])
+    simulation = long_text(24_999)
+    item = ex.item(task, Outcome(files={"simulation.json": simulation}))
+    assert item["task_text"] == task.instructions
+    assert item["reference_outcome"]["files"] == {"simulation.json": simulation}
+    # outcome files stay bounded well above 25000 characters, and a cut is marked
+    assert MAX_OUTCOME_FILE >= 25_000
+    huge = long_text(MAX_OUTCOME_FILE + 7)
+    item = ex.item(task, Outcome(files={"huge.json": huge}))
+    marked = huge[:MAX_OUTCOME_FILE] + "\n[... 7 more chars]"
+    assert item["reference_outcome"]["files"] == {"huge.json": marked}
+
+
+def test_review_sends_long_task_text_and_files_whole(tmp_path: Path) -> None:
+    reviewer = ModelReviewer(store(tmp_path))
+    reference = long_text(20_000)
+    task = Task(
+        "t", "b", long_text(30_500), {"kind": "script"}, {"trajectory.json": reference}, ["g"]
+    )
+    changed = reference + long_text(5_000)
+    v = Variant("t", VariantKind.VIOLATING, "op", long_text(25_000), {"trajectory.json": changed})
+    item = reviewer.item(task, v)
+    assert item["task_text"] == task.instructions
+    assert item["reference_solution"] == {"trajectory.json": reference}
+    assert item["modified_files"] == {"trajectory.json": changed}
+    assert item["modified_diff"] == v.diff
+    # files and the diff stay bounded, and a cut is marked
+    huge = long_text(MAX_REQUEST_FILE + 3)
+    item = reviewer.item(
+        task, Variant("t", VariantKind.VIOLATING, "op", huge, {"trajectory.json": huge})
+    )
+    marked = huge[:MAX_REQUEST_FILE] + "\n[... 3 more chars]"
+    assert item["modified_diff"] == marked
+    assert item["modified_files"] == {"trajectory.json": marked}

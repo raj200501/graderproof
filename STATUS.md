@@ -11,7 +11,7 @@ Fast check on 4f53770 (2026-11-11, clean tree): **9/14**. G5, G7, G8, G9, and G1
 
 | Gate | State | Evidence or blocker |
 |---|---|---|
-| G1 Build and tests | PASS | 593 tests pass (8 skipped); core line coverage above the 85% floor |
+| G1 Build and tests | PASS | 606 tests pass (8 skipped); core line coverage above the 85% floor |
 | G2 Static quality | PASS | ruff, ruff format, mypy --strict clean; every ignore has a reason |
 | G3 CI parity | PASS | ci.yml runs `make ci` on 3.11 and 3.12; parts pass |
 | G4 Offline demo | PASS | under `unshare -rn`, no ledger change, matches the golden output |
@@ -32,23 +32,22 @@ Release sprint (Raj, 2026-11-11): the branch was checked for publication (secret
 
 ## Next three actions
 
-1. Resume the amendment: implement the unclipped task text with a byte-identity test for existing requests, write and freeze prereg 0003, create the new frozen worktree, rebuild the round-1 requests, and ingest the 5 HumanEval answers if their hashes are unchanged.
-2. Run the next independent review on the current HEAD (2026-11-12 or later, one a day) and log its non-blocking issues in docs/REVIEW_LOG.md (D7).
-3. Continue E1/E2 under the daily cap, then E3, E4 on the audited benchmarks, E5 (runner still to build), E6, and the grader cards.
+1. Finish prereg 0003 (D38 to D40): commit the unclipped-request code, freeze the amendment, create the worktree `/home/user/graderproof-e1-0003` with stores `<benchmark>-0003`, rebuild the round-1 requests there, and run E1/E2 rounds under the daily cap. All 17 round-1 answers made before the amendment stay superseded (D39).
+2. G12: the independent review of the current HEAD on 2026-11-12 (one review run a day), logging its non-blocking issues in docs/REVIEW_LOG.md (D7).
+3. Then E3, E4 on the audited benchmarks, the E5 runner, E6, and the grader cards (Raj's order of 2026-11-11).
 
 ## Usage to date
 
 - cash_usd = 0. Single calls through the client wrapper (ledger): 9 on 2026-10-23 (demo); 60 on 2026-11-04 (demo re-recording and E0); 36 on 2026-11-11 (E0 completion, adjudication, E4 on toybench), all within the daily cap at CAP_SHARE 0.2.
-- Not in the ledger: 17 E1 round-1 extraction answers on 2026-11-11 (12 superseded by D38, 5 HumanEval held), all from audited model workers (D24). Counting them, 2026-11-11 used 53 of the 60 allowed calls.
+- Not in the ledger: 17 E1 round-1 extraction answers on 2026-11-11, all from audited model workers (D24) and all superseded by the amendment (D38, D39). Counting them, 2026-11-11 used 53 of the 60 allowed calls.
 - Review runs: one on 2026-11-04 (df55c18) and one on 2026-11-11 (5677b9f), each within the one-a-day cap.
 
 ## Needs Raj
 
-1. **Before making the repository public, bring the work onto main.** `origin/main` still holds only the build brief (d32995c); all work is on `claude/affectionate-volta-z2bm3c`, which main can fast-forward to. Claude does not open pull requests or change repository settings (non-negotiable 8), so the merge, the default branch, and the visibility switch are yours. CI runs only on main, so its first run happens then.
-2. **Claude backend.** The cloud environment sets `ANTHROPIC_BASE_URL` and `CLAUDE_CODE_USE_CCR_V2`, which trip the billing guard, so no headless Claude subject or review runs can happen here (D2). Model work uses subagents instead (D17).
-3. **Docker.** No Docker daemon here, so Terminal-Bench 2.0 is replaced by HumanEval (D18).
-4. **References to check by hand** (scripted access blocked): the OpenAI SWE-bench Verified post (Cloudflare challenge). It is dropped from the docs unless you confirm it opens.
-5. **Daily cap.** At CAP_SHARE 0.2 the wrapper allows 60 single calls a day, and E1/E2 with the amendment needs more than before (smaller batches for tau2-bench and BFCL), so the remaining experiments take several days of calls. The heartbeat is off, so each day's work starts when you send a message (or restart `/loop`).
+1. **Claude backend.** The cloud environment sets `ANTHROPIC_BASE_URL` and `CLAUDE_CODE_USE_CCR_V2`, which trip the billing guard, so no headless Claude subject or review runs can happen here (D2). Model work uses subagents instead (D17).
+2. **Docker.** No Docker daemon here, so Terminal-Bench 2.0 is replaced by HumanEval (D18).
+3. **References to check by hand** (scripted access blocked): the OpenAI SWE-bench Verified post (Cloudflare challenge). It is dropped from the docs unless you confirm it opens.
+4. **Daily cap.** At CAP_SHARE 0.2 the wrapper allows 60 single calls a day, and E1/E2 with the amendment needs more than before (smaller batches for tau2-bench and BFCL), so the remaining experiments take several days of calls. Since Raj's message of 2026-11-11, a session heartbeat runs every 30 minutes, within the cap, and pushes verified steps; main is updated at each RELEASE-READY point (fast-forward or plain merge, never force).
 
 ## Changed this turn
 

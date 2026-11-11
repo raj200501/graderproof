@@ -58,6 +58,7 @@ def test_e3_round_trip(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> No
         str(tmp_path / "budget.toml"),
     ]
     args += ["--out", str(tmp_path / "out"), "--private", str(tmp_path / "private")]
+    args += ["--batch", "3", "--prereg", "prereg/0002-e1e2-audit.md"]
     assert e3.main(args) == e3.PENDING
     pending = [line.split()[1] for line in capsys.readouterr().out.splitlines()]
     assert len(pending) == 1
@@ -78,3 +79,12 @@ def test_e3_round_trip(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> No
     assert summary["by_direction"] == {"accept": 1, "reject": 2}
     assert summary["agreement"]["n"] == 3 and summary["models"] == ["test:m"]
     assert "vid1" not in (tmp_path / "out" / "summary.json").read_text()
+
+
+def test_e3_takes_no_default_batch_size(capsys: pytest.CaptureFixture[str]) -> None:
+    """The batch size is the preregistered one for the benchmark, never a default."""
+    args = ["--name", "x", "--tasks", "t", "--evidence", "e", "--store", "s", "--out", "o"]
+    args += ["--private", "p", "--prereg", "prereg/0002-e1e2-audit.md"]
+    with pytest.raises(SystemExit) as exc:
+        e3.main(args)
+    assert exc.value.code == 2 and "--batch" in capsys.readouterr().err

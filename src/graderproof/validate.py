@@ -31,6 +31,14 @@ WITNESS_VALIDATOR = "witness:requirements/v1"
 REVIEW_PROMPT_VERSION = "review/v1"
 EXTRACT_PROMPT_VERSION = "requirements/v1"
 MAX_TEXT = 4000
+MAX_REQUEST_FILE = 32_000
+"""Longest file or diff that review and root-cause requests carry whole: the reference
+and changed solution files and the diff of a review item, and the grader files and the
+diff of a root-cause item. :func:`_clip` cuts a longer one and marks the cut. Task text
+is never cut (DECISIONS.md D38)."""
+MAX_OUTCOME_FILE = 32_000
+"""Longest reference outcome file that a requirement-extraction request carries whole;
+:func:`_clip` cuts a longer one and marks the cut."""
 
 REVIEW_INSTRUCTIONS = """\
 You review modified solutions to software tasks. For each item you get the task text,
@@ -146,15 +154,23 @@ class ModelReviewer:
         return f"model:{self.model_label}/{REVIEW_PROMPT_VERSION}"
 
     def item(self, task: Task, variant: Variant) -> dict[str, Any]:
-        """The request item for one variant (no operator, label, witness, or grader)."""
+        """The request item for one variant (no operator, label, witness, or grader).
+
+        The task text is sent whole; a file or the diff is cut, with a marker, only past
+        :data:`MAX_REQUEST_FILE` characters.
+        """
         changed = {
-            p: _clip(t) for p, t in variant.files.items() if task.reference_solution.get(p) != t
+            p: _clip(t, MAX_REQUEST_FILE)
+            for p, t in variant.files.items()
+            if task.reference_solution.get(p) != t
         }
         return {
             "id": variant.id,
-            "task_text": _clip(task.instructions),
-            "reference_solution": {p: _clip(t) for p, t in task.reference_solution.items()},
-            "modified_diff": _clip(variant.diff),
+            "task_text": task.instructions,
+            "reference_solution": {
+                p: _clip(t, MAX_REQUEST_FILE) for p, t in task.reference_solution.items()
+            },
+            "modified_diff": _clip(variant.diff, MAX_REQUEST_FILE),
             "modified_files": changed,
         }
 
@@ -187,18 +203,22 @@ class RequirementExtractor:
     batch_size: int = 8
 
     def item(self, task: Task, reference: Outcome) -> dict[str, Any]:
-        """The request item for one task."""
+        """The request item for one task.
+
+        The task text is sent whole; a reference outcome file is cut, with a marker,
+        only past :data:`MAX_OUTCOME_FILE` characters.
+        """
         env = task.environment
         return {
             "id": task.key_hash,
             "kind": str(env.get("kind", "")),
-            "task_text": _clip(task.instructions, 8000),
+            "task_text": task.instructions,
             "reference_solution": {p: _clip(t) for p, t in task.reference_solution.items()},
             "initial_workspace": {
                 p: _clip(t, 1000) for p, t in env.get("workspace_files", {}).items()
             },
             "reference_outcome": {
-                "files": {p: _clip(t, 2000) for p, t in reference.files.items()},
+                "files": {p: _clip(t, MAX_OUTCOME_FILE) for p, t in reference.files.items()},
                 "stdout": _clip(reference.stdout, 2000),
                 "exit_status": reference.exit_status,
                 "trajectory": [dict(c) for c in reference.trajectory][:50],

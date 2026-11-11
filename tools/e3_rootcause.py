@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""E3 root-cause coding (prereg/0002): two independent coders for every misjudgment.
+"""E3 root-cause coding: two independent coders for every misjudgment.
 
 For one audited benchmark, every counted surviving violating variant, every counted
 wrongly rejected preserving variant, and every task whose grader rejects or is flaky on
@@ -10,14 +10,17 @@ the client wrapper). The build session does not resolve disagreements.
 Writes ``<out>/summary.json`` (code distributions, raw agreement, Cohen's kappa, and the
 confusion counts) and ``<private>/codes.jsonl`` (one row per item). Per-item rows name
 variants of unpatched third-party tasks, so they stay under ``private/`` (D35); for
-toybench they may be public. Run it in the environment of the frozen E1 worktree.
+toybench they may be public. Run it from the frozen worktree of the preregistration it
+cites (``--prereg``), with that preregistration's batch size for the benchmark
+(``--batch``). There is no default batch size: a root-cause item carries the whole
+task text and grader files, so one batch size does not suit every benchmark.
 
 Usage::
 
     python3 tools/e3_rootcause.py --name tau2 --tasks runs/e1/tau2 \
         --evidence <main>/private/evidence/tau2 --store artifacts/model_calls/e3-tau2 \
         --ledger <main>/artifacts/usage/ledger.jsonl --out artifacts/e3/tau2 \
-        --private <main>/private/e3/tau2
+        --private <main>/private/e3/tau2 --batch <n> --prereg prereg/<file>.md
 
 Exit status 0 when written, 3 when model requests are pending.
 """
@@ -57,8 +60,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--budget", type=Path, default=Path("budget.toml"))
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--private", type=Path, required=True, help="directory for per-item codes")
-    ap.add_argument("--batch", type=int, default=25)
-    ap.add_argument("--prereg", default="prereg/0002-e1e2-audit.md")
+    ap.add_argument("--batch", type=int, required=True, help="items per request, as preregistered")
+    ap.add_argument("--prereg", required=True, help="the preregistration this run follows")
     args = ap.parse_args(argv)
 
     items = []

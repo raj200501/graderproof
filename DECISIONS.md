@@ -194,3 +194,9 @@ D38 decided to amend prereg 0002 before any E1/E2 data. Before writing the amend
 - **Citations.** E1/E2 summaries and the E3, E4, and E6 artifacts built on them pass `--prereg prereg/0003-...`, so each artifact names the procedure it ran under; prereg 0003 cites prereg 0002 with `Amends: 0002`.
 - **Batch sizes** are set from a dry run on the excluded fixture tasks before the freeze, as prereg 0002 did, so that the largest request stays near the size the model workers have handled.
 - E4 on toybench, run from the prereg 0002 worktree, is unaffected (no clipped field in its store).
+
+## D40 (2026-11-11) Request limits and E3 batch sizes under prereg 0003
+
+The full-task-text change (D38, D39) also sets limits for the other long fields of model requests, so that nothing an E1 item needs is cut and every remaining cut is marked: `MAX_REQUEST_FILE` = 32000 characters for reference solution files, changed files, and the diff in review requests (was 4000) and for grader files and the diff in root-cause requests (was a silent 6000-character slice, now a marked cut), and `MAX_OUTCOME_FILE` = 32000 characters for reference outcome files in extraction requests (was 2000). The largest E1 grader file, task file, and outcome file all fit with room to spare (outcome files: `artifacts/e1/clip_audit_round1.json`), while a request stays bounded. Limits that no E1 item reaches stay as they were: reference solution files in extraction requests (4000), workspace files (1000), reference stdout (2000), and the first 50 trajectory calls. A request whose fields fit the old limits is byte-identical to the frozen code's (`tests/test_request_identity.py`).
+
+Whole task texts and grader files make the old E3 default of 25 items per request far too large for a model worker, so `tools/e3_rootcause.py` now requires `--batch` and `--prereg`, and prereg 0003 sets the E3 batch size per benchmark from the measured item sizes.
