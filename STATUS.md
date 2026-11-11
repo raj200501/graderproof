@@ -11,7 +11,7 @@ Fast check on da44920 (2026-11-11, before docs/REPORT.md was committed): **6/14*
 
 | Gate | State | Evidence or blocker |
 |---|---|---|
-| G1 Build and tests | PASS | 593 tests pass (8 skipped); core line coverage above the 85% floor |
+| G1 Build and tests | PASS | 585 tests pass (8 skipped); core line coverage above the 85% floor |
 | G2 Static quality | PASS | ruff, ruff format, mypy --strict clean; every ignore has a reason |
 | G3 CI parity | PASS | ci.yml runs `make ci` on 3.11 and 3.12; parts pass |
 | G4 Offline demo | PASS | under `unshare -rn`, no ledger change, matches the golden output |

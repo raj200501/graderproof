@@ -713,9 +713,10 @@ def g1_build_and_tests(ctx: Ctx) -> Result:
         return Result(False, cov)
     pct, n_files, excluded = cov
     ok = pct >= COVERAGE_MIN
+    passed = junit["tests"] - junit["skipped"]
     return Result(
         ok,
-        f"setup ok; {junit['tests']} tests pass ({junit['skipped']} skipped); core line coverage "
+        f"setup ok; {passed} tests pass ({junit['skipped']} skipped); core line coverage "
         f"{pct:.1f}% over {n_files} files (min {COVERAGE_MIN:.0f}%); "
         f"{len(excluded)} fixture-covered adapters excluded",
     )
