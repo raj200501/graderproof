@@ -1,0 +1,25 @@
+# Grader card: toybench (synthetic)
+
+toybench is this project's own planted-ground-truth benchmark for E0 (prereg/0001): small tasks in three formats (shell or Python scripts, Python modules, tool-call trajectories), written by an independent planting agent. Some graders carry one planted weakness of a known type, some were written to be clean, and an extra slice carries weakness types outside the written list. Every number on this card is from synthetic, project-written tasks and says nothing about any public benchmark. Task-level details are public because toybench is ours.
+
+| Measure | Value | Source |
+|---|---|---|
+| Tasks audited | {{claim:e0.n_tasks}} | `artifacts/e0/results.json` |
+| Graders that accept at least one broken solution (task-level false accept) | {{claim:e0.fa_rate}} (95% CI {{claim:e0.fa_lo}} to {{claim:e0.fa_hi}}) | `artifacts/e0/summary.json` |
+| Graders that reject at least one correct solution (task-level false reject) | {{claim:e0.fr_rate}} (95% CI {{claim:e0.fr_lo}} to {{claim:e0.fr_hi}}) | `artifacts/e0/summary.json` |
+| Mean per-task mutation score | {{claim:e0.mutation_mean}} | `artifacts/e0/summary.json` |
+| Variants counted (two agreeing validations and a witness) | {{claim:e0.n_headline}} | `artifacts/e0/summary.json` |
+| Validator agreement | {{claim:e0.agreement}} | `artifacts/e0/summary.json` |
+| Variants excluded for disagreeing validators | {{claim:e0.n_excluded}} | `artifacts/e0/summary.json` |
+
+These rates are high by construction: about half of the graders were written with a planted weakness. What toybench measures is graderproof itself:
+
+| Tool validity (E0) | Estimate | 95% CI |
+|---|---|---|
+| Recall on planted weaknesses (H1 target at least 0.90, not met) | {{claim:e0.recall}} | {{claim:e0.recall_lo}} to {{claim:e0.recall_hi}} |
+| Precision, adjudicated (H2 target at least 0.90, met) | {{claim:e0.precision}} | {{claim:e0.precision_lo}} to {{claim:e0.precision_hi}} |
+| Precision before adjudication | {{claim:e0.precision_raw}} | {{claim:e0.precision_raw_lo}} to {{claim:e0.precision_raw_hi}} |
+
+**Root causes of the planted weaknesses graderproof missed** are in [docs/E0_MISSES.md](../E0_MISSES.md): mostly timing and brittle-parsing weaknesses that no operator yet exercises. **Clean graders with real weaknesses:** the independent adjudicator confirmed a witness-backed weakness in {{claim:e0.n_clean_real}} graders the planter intended to be clean (`artifacts/e0/adjudication.json`).
+
+**Repairs.** Repairs for toybench graders with surviving variants, validated by execution, are under `outbound/patches/toybench/` with the E4 summary in `artifacts/e4/toybench/summary.json`.
