@@ -28,11 +28,11 @@ Fast check on 4f53770 (2026-11-11, clean tree): **9/14**. G5, G7, G8, G9, and G1
 
 ## Now
 
-Release sprint (Raj, 2026-11-11): the branch was checked for publication (secrets scan clean, nothing under private/ tracked, no third-party variants or witnesses tracked, no personal data beyond Raj's name and GitHub noreply address), lint, typecheck, tests, and the demo pass, and README.md now has a pitch and a Status section. E1/E2 is paused before its amendment: the 17 round-1 extraction answers exist but none is ingested, and the full-task-text change (prereg 0003, D38) is scoped but not yet written.
+prereg 0003 (D38 to D40) is frozen (22b8832): model requests carry the full task text, with smaller batches for tau2-bench and BFCL. E1/E2 runs from `/home/user/graderproof-e1-0003` with new stores `<benchmark>-0003`. Round 1 is built (24 extraction requests, none with a cut field: `artifacts/e1/clip_audit_0003_round1.json`); HumanEval's 5 are answered tonight within the cap, and BFCL's and tau2-bench's wait for the 2026-11-12 cap. The release sprint is done (RELEASE-READY e4daee8, merged to main by Raj). Raj's standing order: E1/E2 under the cap, then the G12 review on 2026-11-12, then E3, E4 on the audited benchmarks, the E5 runner, and the grader cards.
 
 ## Next three actions
 
-1. Finish prereg 0003 (D38 to D40): commit the unclipped-request code, freeze the amendment, create the worktree `/home/user/graderproof-e1-0003` with stores `<benchmark>-0003`, rebuild the round-1 requests there, and run E1/E2 rounds under the daily cap. All 17 round-1 answers made before the amendment stay superseded (D39).
+1. E1/E2 under prereg 0003 with `runs/e1_0003_round.sh <benchmark> <label>`: answer pending requests with model workers within the daily cap, audit their transcripts (`runs/e1_worker_audit.sh`), ingest from the 0003 worktree, refresh the store manifests, and run the next round.
 2. G12: the independent review of the current HEAD on 2026-11-12 (one review run a day), logging its non-blocking issues in docs/REVIEW_LOG.md (D7).
 3. Then E3, E4 on the audited benchmarks, the E5 runner, E6, and the grader cards (Raj's order of 2026-11-11).
 

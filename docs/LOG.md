@@ -7,6 +7,9 @@ History moved out of STATUS.md, newest first.
 - Final fast check of goal_turn 5 on 4f53770: 9/14 (G5, G7, G8, G9, G12 fail).
 - E1/E2 round 1: model-worker subagents answered the 17 requirement-extraction requests; all 17 transcripts passed the D24 audit. Workers reported cut task texts: the frozen code clips text bound for model requests, which hid every tau2-bench customer request. `tools/clip_audit.py` measured the cuts per store (none in HumanEval, E0, E4, or the demo). Nothing was ingested; D38 records the decision to amend prereg 0002 before any E1/E2 data. The amendment workflow was stopped in its read-only scope phase when the release sprint arrived.
 - Release sprint: publication checks passed; README.md gained a pitch paragraph and a Status section; STATUS.md updated.
+- Release sprint finished: RELEASE-READY e4daee8; Raj merged it into main and made the repository public.
+- prereg 0003: the code change was scoped, implemented, and checked by an adversarial workflow (27d9349), then the amendment was frozen (22b8832). The E1/E2 worktree `/home/user/graderproof-e1-0003` holds new stores; round 1 rebuilt 24 extraction requests with no cut field.
+- A session heartbeat (every 30 minutes) carries Raj's standing order.
 
 ## 2026-11-11, goal_turn 5: E0 complete, E4 on toybench, README and report
 
