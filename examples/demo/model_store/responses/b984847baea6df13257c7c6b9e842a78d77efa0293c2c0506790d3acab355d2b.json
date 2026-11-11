@@ -1,0 +1,222 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "b984847baea6df13257c7c6b9e842a78d77efa0293c2c0506790d3acab355d2b",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "demo:classify": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The combined divisible-by-15 branch is dropped, so multiples of both 3 and 5 return \"fizz\" instead of \"fizzbuzz\".",
+          "files": {
+            "classify.py": "def classify(n):\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The multiple-of-3 branch returns the capitalised string \"Fizz\" instead of \"fizz\".",
+          "files": {
+            "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"Fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The multiple-of-5 test uses n % 10, so odd multiples of 5 such as 5 and 25 fall through and return their number.",
+          "files": {
+            "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 10 == 0:\n        return \"buzz\"\n    return str(n)\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "The fallthrough returns the integer n instead of its decimal string, so classify(7) returns 7 rather than \"7\".",
+          "files": {
+            "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return n\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Builds the result by concatenating \"fizz\" and \"buzz\" and falling back to str(n) when the string is empty, instead of checking 15 first.",
+          "files": {
+            "classify.py": "def classify(n):\n    out = \"\"\n    if n % 3 == 0:\n        out += \"fizz\"\n    if n % 5 == 0:\n        out += \"buzz\"\n    return out or str(n)\n"
+          }
+        },
+        {
+          "description": "Computes the two divisibility flags once, checks both-first with them, and formats the number with %d instead of str().",
+          "files": {
+            "classify.py": "def classify(n):\n    by3 = n % 3 == 0\n    by5 = n % 5 == 0\n    if by3 and by5:\n        return \"fizzbuzz\"\n    if by3:\n        return \"fizz\"\n    if by5:\n        return \"buzz\"\n    return \"%d\" % n\n"
+          }
+        },
+        {
+          "description": "Uses two-space indentation, blank lines between branches, an f-string for the number, and no trailing newline at end of file.",
+          "files": {
+            "classify.py": "def classify(n):\n  if n % 3 == 0 and n % 5 == 0:\n    return \"fizzbuzz\"\n\n  if n % 3 == 0:\n    return \"fizz\"\n\n  if n % 5 == 0:\n    return \"buzz\"\n\n  return f\"{n}\""
+          }
+        },
+        {
+          "description": "Uses a lookup table keyed on the two divisibility booleans with str(n) as the default, a different algorithm with the same results.",
+          "files": {
+            "classify.py": "_LABELS = {(True, True): \"fizzbuzz\", (True, False): \"fizz\", (False, True): \"buzz\"}\n\n\ndef classify(n):\n    return _LABELS.get((n % 3 == 0, n % 5 == 0), str(n))\n"
+          }
+        }
+      ]
+    },
+    "demo:greeting": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "hello.txt is written with the exclamation mark missing (\"Hello, graderproof\") while count.txt is still computed from the full greeting.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting=\"Hello, graderproof!\"\necho \"Hello, graderproof\" > hello.txt\necho \"${#greeting}\" > count.txt\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "count.txt gets an off-by-one count (20) because the newline is added to the greeting length.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting=\"Hello, graderproof!\"\necho \"$greeting\" > hello.txt\necho \"$(( ${#greeting} + 1 ))\" > count.txt\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses single-quoted assignment and printf with an explicit newline for both files instead of echo.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting='Hello, graderproof!'\nprintf '%s\\n' \"$greeting\" > hello.txt\nprintf '%s\\n' \"${#greeting}\" > count.txt\n"
+          }
+        },
+        {
+          "description": "Writes hello.txt from a quoted heredoc and derives the count from the file itself with awk length().",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > hello.txt <<'EOF'\nHello, graderproof!\nEOF\nawk '{ print length($0) }' hello.txt > count.txt\n"
+          }
+        },
+        {
+          "description": "Writes count.txt before hello.txt, using wc -c on the unterminated greeting and an arithmetic expansion to normalise the number.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmsg=\"Hello, graderproof!\"\nlen=$(printf '%s' \"$msg\" | wc -c)\necho $((len)) > count.txt\necho \"$msg\" > hello.txt\n"
+          }
+        }
+      ]
+    },
+    "demo:refund": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The order lookup uses a transposed order id (A71) instead of A17.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A71\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The confirmation message asks to proceed with the refund but never states the refund amount.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Proceed with the refund for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The refund is issued for only 20, a partial amount, instead of the full order total of 40.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 20}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "The customer confirmation is requested only after the refund has already been issued.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "The confirmation is asked before the order lookup, so get_order runs after confirm_with_user but still before the refund.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R7",
+          "description": "The receipt is sent before the refund is issued instead of after it.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Pretty-prints the same four calls with every object expanded, keys in alphabetical order, and no trailing newline.",
+          "files": {
+            "trajectory.json": "[\n  {\n    \"args\": {\n      \"order_id\": \"A17\"\n    },\n    \"tool\": \"get_order\"\n  },\n  {\n    \"args\": {\n      \"message\": \"Refund 40 for order A17?\"\n    },\n    \"tool\": \"confirm_with_user\"\n  },\n  {\n    \"args\": {\n      \"amount\": 40,\n      \"order_id\": \"A17\"\n    },\n    \"tool\": \"refund\"\n  },\n  {\n    \"args\": {\n      \"order_id\": \"A17\"\n    },\n    \"tool\": \"send_receipt\"\n  }\n]"
+          }
+        },
+        {
+          "description": "Rewords the confirmation message while still stating the full refund amount and order id.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Can I go ahead and refund the full 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Emits the same calls as compact single-line JSON with no spaces and the refund arguments in swapped key order.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"get_order\",\"args\":{\"order_id\":\"A17\"}},{\"tool\":\"confirm_with_user\",\"args\":{\"message\":\"Refund 40 for order A17?\"}},{\"tool\":\"refund\",\"args\":{\"amount\":40,\"order_id\":\"A17\"}},{\"tool\":\"send_receipt\",\"args\":{\"order_id\":\"A17\"}}]\n"
+          }
+        }
+      ]
+    },
+    "demo:status-json": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The JSON is printed with a leading \"result: \" label, so standard output is no longer a bare JSON object.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"result: {\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The status field is set to \"success\" instead of \"ok\".",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"success\\\", \\\"items\\\": $n}\"\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The line count is off by one because 1 is added to the wc -l result, giving 5 instead of 4.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(( $(wc -l < data.txt) + 1 ))\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Prints compact JSON with the keys in swapped order using printf and strips any padding from the wc output.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt | tr -d ' ')\nprintf '{\"items\":%s,\"status\":\"ok\"}\\n' \"$n\"\n"
+          }
+        },
+        {
+          "description": "Prints the same object pretty-printed over several lines via a heredoc.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(( $(wc -l < data.txt) ))\ncat <<EOF\n{\n  \"status\": \"ok\",\n  \"items\": $n\n}\nEOF\n"
+          }
+        },
+        {
+          "description": "Counts the lines with awk's NR and prints the JSON from within awk instead of using wc and echo.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nawk 'END { printf \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": %d}\\n\", NR }' data.txt\n"
+          }
+        },
+        {
+          "description": "Counts lines with grep -c '' and prints the object with the items key first.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(grep -c '' data.txt)\necho \"{\\\"items\\\": $n, \\\"status\\\": \\\"ok\\\"}\"\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

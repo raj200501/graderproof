@@ -1,0 +1,1148 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "accounts": {
+    "AC-4410": {
+     "next_billing": "2026-11-21",
+     "notes": [
+      "Customer requested downgrade from Pro to Basic at period end (2026-11-21)."
+     ],
+     "owner": "Kofi Mensah",
+     "pending_change": {
+      "effective": "2026-11-21",
+      "plan": "basic"
+     },
+     "plan": "pro",
+     "zip": "60614"
+    },
+    "AC-4471": {
+     "next_billing": "2026-11-28",
+     "notes": [],
+     "owner": "Lea Novak",
+     "pending_change": null,
+     "plan": "team",
+     "zip": "60657"
+    }
+   },
+   "audit": [
+    {
+     "account_id": "AC-4410",
+     "action": "verify_account",
+     "ok": true,
+     "seq": 1
+    },
+    {
+     "account_id": "AC-4410",
+     "action": "schedule_plan_change",
+     "ok": true,
+     "seq": 2
+    },
+    {
+     "account_id": "AC-4410",
+     "action": "add_note",
+     "ok": true,
+     "seq": 3
+    }
+   ]
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "account_id": "AC-4410",
+     "zip_code": "60614"
+    },
+    "result": {
+     "ok": true,
+     "verified": true
+    },
+    "tool": "verify_account"
+   },
+   {
+    "args": {
+     "account_id": "AC-4410"
+    },
+    "result": {
+     "account": {
+      "next_billing": "2026-11-21",
+      "notes": [],
+      "owner": "Kofi Mensah",
+      "pending_change": null,
+      "plan": "pro"
+     },
+     "ok": true
+    },
+    "tool": "get_account"
+   },
+   {
+    "args": {
+     "account_id": "AC-4410",
+     "effective": "period_end",
+     "plan": "basic"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "schedule_plan_change"
+   },
+   {
+    "args": {
+     "account_id": "AC-4410",
+     "text": "Customer requested downgrade from Pro to Basic at period end (2026-11-21)."
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "add_note"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "account_id": "AC-4410",
+      "zip_code": "60614"
+     },
+     "tool": "verify_account",
+     "type": "trajectory_includes"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Verify the account holder with verify_account (account AC-4410, ZIP 60614)"
+  },
+  {
+   "checks": [
+    {
+     "first": {
+      "args": {
+       "account_id": "AC-4410",
+       "zip_code": "60614"
+      },
+      "tool": "verify_account"
+     },
+     "then": {
+      "args": {},
+      "tool": "schedule_plan_change"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Policy ordering: verify before scheduling any plan change"
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "account_id": "AC-4410",
+      "effective": "period_end",
+      "plan": "basic"
+     },
+     "tool": "schedule_plan_change",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "basic",
+     "pointer": "/accounts/AC-4410/pending_change/plan",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-11-21",
+     "pointer": "/accounts/AC-4410/pending_change/effective",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Schedule the change to plan basic with effective period_end using schedule_plan_change"
+  },
+  {
+   "checks": [
+    {
+     "equals": "pro",
+     "pointer": "/accounts/AC-4410/plan",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "effective": "now"
+     },
+     "tool": "schedule_plan_change",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Not immediately: the current plan stays pro and no plan change with effective now is made"
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "account_id": "AC-4410"
+     },
+     "tool": "add_note",
+     "type": "trajectory_includes"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Add an account note about the downgrade to AC-4410 with add_note (text must contain the word downgrade, any capitalization)"
+  },
+  {
+   "checks": [
+    {
+     "equals": "team",
+     "pointer": "/accounts/AC-4471/plan",
+     "type": "state_equals"
+    },
+    {
+     "equals": null,
+     "pointer": "/accounts/AC-4471/pending_change",
+     "type": "state_equals"
+    },
+    {
+     "equals": [],
+     "pointer": "/accounts/AC-4471/notes",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "account_id": "AC-4471"
+     },
+     "tool": "schedule_plan_change",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "account_id": "AC-4471"
+     },
+     "tool": "add_note",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "Do not change any other account"
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:plan-downgrade",
+ "task_hash": "dd0615213b45a8ce3196f23e25493cd507ddf3fde1088f61744d32a50a7d7fe8",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,36 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"plan\": \"basic\",\n+      \"effective\": \"period_end\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614\"\n    }\n  },\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"plan\": \"basic\",\n      \"effective\": \"period_end\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "cb73795c3025405e386b5793823b1f9f0802fa8ca51182a1ec1106c6a491643b",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "An extra read-only get_account call precedes verification, and verification still happens before the plan change.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "cb73795c3025405e386b5793823b1f9f0802fa8ca51182a1ec1106c6a491643b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,30 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"plan\": \"basic\",\n+      \"effective\": \"period_end\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614-x\"\n    }\n  },\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"plan\": \"basic\",\n      \"effective\": \"period_end\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dd92e23f3200b6d6fe5698b185dcfa0dc5a37b0c33df3ba36f7a83ac0f10c257",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks verify_account",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Verify the account holder with ZIP 60614: verify_account is called with ZIP 60614-x, so the given ZIP is not used for verification before the plan change.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks verify_account"
+      ],
+      "requirement": "R1",
+      "text": "Verify the account holder with verify_account (account AC-4410, ZIP 60614)"
+     },
+     {
+      "failed": [
+       "order verify_account < schedule_plan_change: None, 2"
+      ],
+      "requirement": "R2",
+      "text": "Policy ordering: verify before scheduling any plan change"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "dd92e23f3200b6d6fe5698b185dcfa0dc5a37b0c33df3ba36f7a83ac0f10c257"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,30 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410-x\",\n+      \"plan\": \"basic\",\n+      \"effective\": \"period_end\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614\"\n    }\n  },\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410-x\",\n      \"plan\": \"basic\",\n      \"effective\": \"period_end\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4b4f9fdcd0ad47e2ff03806487b17607afcdb3b61be2487bc4d9d22d5b751616",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks schedule_plan_change",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "schedule the plan change on account AC-4410: schedule_plan_change is called with account_id AC-4410-x instead of AC-4410.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks schedule_plan_change",
+       "state /accounts/AC-4410/pending_change/plan missing",
+       "state /accounts/AC-4410/pending_change/effective missing"
+      ],
+      "requirement": "R3",
+      "text": "Schedule the change to plan basic with effective period_end using schedule_plan_change"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4b4f9fdcd0ad47e2ff03806487b17607afcdb3b61be2487bc4d9d22d5b751616"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,30 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"plan\": \"basic\",\n+      \"effective\": \"period_end-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614\"\n    }\n  },\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"plan\": \"basic\",\n      \"effective\": \"period_end-x\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b68439731b44afa9a80cd4de9ba3618a32d3e97edc64b38be67b52b628379f26",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks schedule_plan_change",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "set effective to period_end: effective is period_end-x, which is not a valid value.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks schedule_plan_change",
+       "state /accounts/AC-4410/pending_change/plan missing",
+       "state /accounts/AC-4410/pending_change/effective missing"
+      ],
+      "requirement": "R3",
+      "text": "Schedule the change to plan basic with effective period_end using schedule_plan_change"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b68439731b44afa9a80cd4de9ba3618a32d3e97edc64b38be67b52b628379f26"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,30 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"plan\": \"basic-x\",\n+      \"effective\": \"period_end\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614\"\n    }\n  },\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"plan\": \"basic-x\",\n      \"effective\": \"period_end\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b36d3fdaf3b3ba9cac1f3007fb25c57e6be119f1b46d6b5efac3d842f4fa1d8f",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks schedule_plan_change",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "schedule the change to plan basic: The plan argument is basic-x instead of basic.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks schedule_plan_change",
+       "state /accounts/AC-4410/pending_change/plan missing",
+       "state /accounts/AC-4410/pending_change/effective missing"
+      ],
+      "requirement": "R3",
+      "text": "Schedule the change to plan basic with effective period_end using schedule_plan_change"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b36d3fdaf3b3ba9cac1f3007fb25c57e6be119f1b46d6b5efac3d842f4fa1d8f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,30 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"plan\": \"basic\",\n+      \"effective\": \"period_end\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410-x\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614\"\n    }\n  },\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"plan\": \"basic\",\n      \"effective\": \"period_end\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410-x\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "cbbee6abc2881322781f42ab395d88f32b663d7b86f17476c22dbefd0655fc3d",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: trajectory lacks add_note",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Add the note to account AC-4410: The note targets AC-4410-x, so the note is not added to the right account.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks add_note"
+      ],
+      "requirement": "R5",
+      "text": "Add an account note about the downgrade to AC-4410 with add_note (text must contain the word downgrade, any capitalization)"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "cbbee6abc2881322781f42ab395d88f32b663d7b86f17476c22dbefd0655fc3d"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,30 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"plan\": \"basic\",\n+      \"effective\": \"period_end\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614\"\n    }\n  },\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"plan\": \"basic\",\n      \"effective\": \"period_end\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a8c3239944a22cf6d8cf30d7d46bab6d01c999ac898f9db51b257c88aaebbd04",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "plan-downgrade",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The note still contains the word downgrade, which is all the task requires of its text.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,24 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"plan\": \"basic\",\n+      \"effective\": \"period_end\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"plan\": \"basic\",\n      \"effective\": \"period_end\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d96a9dc0fdb2855b46d84de160561fd39306b4d618717e3b76efc83cdc740e36",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "plan-downgrade",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the optional read-only get_account call is removed; verification precedes the plan change, and the plan change and note remain as required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,22 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614\"\n    }\n  },\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7c4446b66398a7c96cc06590fedd5b1bebd1512da557ad3aaa63f16e76f751c9",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: order verify_account < schedule_plan_change: 0, None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Schedule the change to basic at period_end with schedule_plan_change: The schedule_plan_change call was removed from the trajectory.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order verify_account < schedule_plan_change: 0, None"
+      ],
+      "requirement": "R2",
+      "text": "Policy ordering: verify before scheduling any plan change"
+     },
+     {
+      "failed": [
+       "trajectory lacks schedule_plan_change",
+       "state /accounts/AC-4410/pending_change/plan missing",
+       "state /accounts/AC-4410/pending_change/effective missing"
+      ],
+      "requirement": "R3",
+      "text": "Schedule the change to plan basic with effective period_end using schedule_plan_change"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7c4446b66398a7c96cc06590fedd5b1bebd1512da557ad3aaa63f16e76f751c9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,23 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"plan\": \"basic\",\n+      \"effective\": \"period_end\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614\"\n    }\n  },\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"plan\": \"basic\",\n      \"effective\": \"period_end\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "220d96003105fd67a712c1c920cb61855ed9893fe795a6abd39e2de0957bd9a7",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: trajectory lacks add_note",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Add an account note about the downgrade with add_note: The add_note call was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks add_note"
+      ],
+      "requirement": "R5",
+      "text": "Add an account note about the downgrade to AC-4410 with add_note (text must contain the word downgrade, any capitalization)"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "220d96003105fd67a712c1c920cb61855ed9893fe795a6abd39e2de0957bd9a7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,23 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"plan\": \"basic\",\n+      \"effective\": \"period_end\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"plan\": \"basic\",\n      \"effective\": \"period_end\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b75e836683a051ec15f58952d251e1678fa54ea1a1c47dab8af69bf13cfd8b49",
+   "kind": "violating",
+   "operator": "traj-drop-confirmation",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks verify_account",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "verify the account holder with verify_account before scheduling a plan change: The verify_account call is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks verify_account"
+      ],
+      "requirement": "R1",
+      "text": "Verify the account holder with verify_account (account AC-4410, ZIP 60614)"
+     },
+     {
+      "failed": [
+       "order verify_account < schedule_plan_change: None, 1"
+      ],
+      "requirement": "R2",
+      "text": "Policy ordering: verify before scheduling any plan change"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b75e836683a051ec15f58952d251e1678fa54ea1a1c47dab8af69bf13cfd8b49"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,30 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"plan\": \"basic\",\n+      \"effective\": \"period_end\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"plan\": \"basic\",\n      \"effective\": \"period_end\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "5a9201bf123194b1f7a4abe19b6133555b434b9a8474d4f48da191e8972ca1c2",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "plan-downgrade",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "get_account is a read-only call moved before verify_account; verification still precedes the plan change as the policy requires.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,30 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"plan\": \"basic\",\n+      \"effective\": \"period_end\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"plan\": \"basic\",\n      \"effective\": \"period_end\"\n    }\n  },\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "5ae4d247b524db59051169f40b516a6b220a872735e8242d69b13db768cf40db",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "plan-downgrade",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Verification still precedes scheduling, and the read-only get_account call merely moved; the task does not require an order for it.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,30 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\n+    \"tool\": \"verify_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"zip_code\": \"60614\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_account\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_note\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n+    }\n+  },\n+  {\n+    \"tool\": \"schedule_plan_change\",\n+    \"args\": {\n+      \"account_id\": \"AC-4410\",\n+      \"plan\": \"basic\",\n+      \"effective\": \"period_end\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"verify_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"zip_code\": \"60614\"\n    }\n  },\n  {\n    \"tool\": \"get_account\",\n    \"args\": {\n      \"account_id\": \"AC-4410\"\n    }\n  },\n  {\n    \"tool\": \"add_note\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"\n    }\n  },\n  {\n    \"tool\": \"schedule_plan_change\",\n    \"args\": {\n      \"account_id\": \"AC-4410\",\n      \"plan\": \"basic\",\n      \"effective\": \"period_end\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "8e3309f6da71f8bb6f106651092faea787744d6768a00eee5a45adf59e04cc2b",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "plan-downgrade",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Verification still comes first and the task does not order the note and the plan change.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n+  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60641\"}},\n   {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n   {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n   {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60641\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2f37a6619a013a0de636c822f9dce37ecb5b5d714e63b20cf91c2519ef832210",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks verify_account",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "verify with ZIP code 60614: The ZIP code was changed to 60641.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks verify_account"
+      ],
+      "requirement": "R1",
+      "text": "Verify the account holder with verify_account (account AC-4410, ZIP 60614)"
+     },
+     {
+      "failed": [
+       "order verify_account < schedule_plan_change: None, 2"
+      ],
+      "requirement": "R2",
+      "text": "Policy ordering: verify before scheduling any plan change"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2f37a6619a013a0de636c822f9dce37ecb5b5d714e63b20cf91c2519ef832210"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,6 @@\n [\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n   {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n   {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n+  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n   {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "29a8d3bf2f9de4f810f80ca1fcc58d62bd4302e00d8285ac33e5b1b3a0bf0c11",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: order verify_account < schedule_plan_change: 2, 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "verify the account holder before scheduling any plan change: verify_account is called after schedule_plan_change.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order verify_account < schedule_plan_change: 2, 1"
+      ],
+      "requirement": "R2",
+      "text": "Policy ordering: verify before scheduling any plan change"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "29a8d3bf2f9de4f810f80ca1fcc58d62bd4302e00d8285ac33e5b1b3a0bf0c11"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,6 @@\n [\n   {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n   {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n+  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"standard\", \"effective\": \"period_end\"}},\n   {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"standard\", \"effective\": \"period_end\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b327f0ef536bee039f1d1db0bd0bb42f5719e4667068158a92682d242ac73d46",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks schedule_plan_change",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Schedule the change to plan basic: The plan was changed to standard instead of basic.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks schedule_plan_change",
+       "state /accounts/AC-4410/pending_change/plan missing",
+       "state /accounts/AC-4410/pending_change/effective missing"
+      ],
+      "requirement": "R3",
+      "text": "Schedule the change to plan basic with effective period_end using schedule_plan_change"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b327f0ef536bee039f1d1db0bd0bb42f5719e4667068158a92682d242ac73d46"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,6 @@\n [\n   {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n   {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n+  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"now\"}},\n   {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"now\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b65ec7d3ad80554db57a8f1e5bcd65c06841767cfc6c799abd88556ecb2bf4b0",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks schedule_plan_change",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "effective set to period_end, not immediately: The plan change is scheduled with effective now.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks schedule_plan_change",
+       "state /accounts/AC-4410/pending_change/plan missing",
+       "state /accounts/AC-4410/pending_change/effective missing"
+      ],
+      "requirement": "R3",
+      "text": "Schedule the change to plan basic with effective period_end using schedule_plan_change"
+     },
+     {
+      "failed": [
+       "state /accounts/AC-4410/plan = 'basic'",
+       "trajectory has schedule_plan_change"
+      ],
+      "requirement": "R4",
+      "text": "Not immediately: the current plan stays pro and no plan change with effective now is made"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b65ec7d3ad80554db57a8f1e5bcd65c06841767cfc6c799abd88556ecb2bf4b0"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -2,5 +2,5 @@\n   {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n   {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n   {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested a move from Pro to Basic at period end (2026-11-21).\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested a move from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5575b29457069d63d8b0e18eca9b3c4875448ef5ee9cd4952bd62a6a2b1d8892",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "plan-downgrade",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Note text must contain the word downgrade: The note was reworded to 'a move' and no longer contains 'downgrade'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -2,5 +2,6 @@\n   {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n   {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n   {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}},\n+  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4411\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4411\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f382f1a83277db4d9359cab1c4a2466e0d39bc883baf8e7468a5670a54c305e5",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "plan-downgrade",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Do not change any other account: A note is added to account AC-4411, a different account.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,6 @@\n [\n   {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n   {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"DOWNGRADE from Pro to Basic requested by customer, effective at period end.\"}},\n+  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"DOWNGRADE from Pro to Basic requested by customer, effective at period end.\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "22d905f2b44f0234b047610ab2e42a3b834d08e2fe4326d62aa2755543f1d5c7",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Verification still precedes the plan change, and the note contains 'DOWNGRADE', which is accepted in any capitalization; note and schedule order is not mandated.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "22d905f2b44f0234b047610ab2e42a3b834d08e2fe4326d62aa2755543f1d5c7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1 @@\n-[\n-  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n-  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n-]\n+[{\"tool\":\"verify_account\",\"args\":{\"zip_code\":\"60614\",\"account_id\":\"AC-4410\"}},{\"tool\":\"schedule_plan_change\",\"args\":{\"effective\":\"period_end\",\"plan\":\"basic\",\"account_id\":\"AC-4410\"}},{\"tool\":\"add_note\",\"args\":{\"text\":\"Plan downgrade to Basic scheduled for the end of the billing period.\",\"account_id\":\"AC-4410\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"verify_account\",\"args\":{\"zip_code\":\"60614\",\"account_id\":\"AC-4410\"}},{\"tool\":\"schedule_plan_change\",\"args\":{\"effective\":\"period_end\",\"plan\":\"basic\",\"account_id\":\"AC-4410\"}},{\"tool\":\"add_note\",\"args\":{\"text\":\"Plan downgrade to Basic scheduled for the end of the billing period.\",\"account_id\":\"AC-4410\"}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f7f2030cd354bd6b55a46dd596b3d84670d2ab8ece8f7eb0ae143932454beca5",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It verifies first, schedules the correct change, and adds a note containing downgrade; get_account is not required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "f7f2030cd354bd6b55a46dd596b3d84670d2ab8ece8f7eb0ae143932454beca5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,6 @@\n [\n   {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n+  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n   {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n-  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n-  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n+  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Downgrade to Basic scheduled at period end after ZIP verification.\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Downgrade to Basic scheduled at period end after ZIP verification.\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "14ab8e01d8d6241da88122887a7d1a09720f4d46071c059bf8239ed48566497f",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "plan-downgrade",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Verification still precedes the plan change, and the note contains 'downgrade'; only the optional get_account position and note wording changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "14ab8e01d8d6241da88122887a7d1a09720f4d46071c059bf8239ed48566497f"
+   }
+  }
+ ]
+}

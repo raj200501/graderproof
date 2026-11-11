@@ -1,0 +1,2285 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [
+  {
+   "checks": [
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "a3"
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "3"
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "0a"
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "03a"
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "3a2"
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "a"
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "decode raises ValueError when code is not of the required form, for example \"a3\", \"3\", \"0a\", or \"03a\"."
+  }
+ ],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+  },
+  "probes": {
+   "009fdfda68c001ec": {
+    "error": "ValueError: malformed run-length code at position 0",
+    "ok": false
+   },
+   "02e80d84f5bcced9": {
+    "error": "ValueError: malformed run-length code at position 0",
+    "ok": false
+   },
+   "17226b9e149f6f96": {
+    "ok": true,
+    "value": "2 3\t2!"
+   },
+   "229fdacb01e4c704": {
+    "ok": true,
+    "value": "xxxxxxxxxx"
+   },
+   "6258e2925baad549": {
+    "ok": true,
+    "value": "a \n\n"
+   },
+   "6a85c33f5c226b65": {
+    "ok": true,
+    "value": "1h1e2l1o1 1w1o1r1l1d"
+   },
+   "7a59846b0ec920f9": {
+    "ok": true,
+    "value": ""
+   },
+   "7ae1fb433076bd4e": {
+    "error": "ValueError: malformed run-length code at position 0",
+    "ok": false
+   },
+   "7d267f1fd78daf5c": {
+    "ok": true,
+    "value": "aaaaaaaaaaaa"
+   },
+   "8903ec8dbb0e4e30": {
+    "ok": true,
+    "value": "aaab"
+   },
+   "89506f3e4315f5a5": {
+    "error": "ValueError: malformed run-length code at position 0",
+    "ok": false
+   },
+   "89a1e7359c846dad": {
+    "ok": true,
+    "value": ""
+   },
+   "a9b16834bc19b8d6": {
+    "ok": true,
+    "value": "1x"
+   },
+   "ad2d3339326c7d17": {
+    "ok": true,
+    "value": "1a1 1b"
+   },
+   "c282bd0b14b19810": {
+    "error": "ValueError: malformed run-length code at position 2",
+    "ok": false
+   },
+   "ccc097d975cf2e72": {
+    "ok": true,
+    "value": "aabccc"
+   },
+   "ced2b20eaa587a8a": {
+    "ok": true,
+    "value": "1a1b1a1b"
+   },
+   "d1fbe2d52a288de1": {
+    "ok": true,
+    "value": "3a1b"
+   },
+   "e6c99bb5c4d91229": {
+    "ok": true,
+    "value": "2a1b3c"
+   },
+   "eee36ba8d574b4e1": {
+    "ok": true,
+    "value": "2\n"
+   },
+   "f1c663696a4dfc3e": {
+    "ok": true,
+    "value": "12a"
+   },
+   "f8bdeff50d14eeb1": {
+    "error": "ValueError: malformed run-length code at position 0",
+    "ok": false
+   },
+   "fd6ce5d4f54dd822": {
+    "ok": true,
+    "value": "hello world"
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "rle.py",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Provide a Python module `rle.py`."
+  },
+  {
+   "checks": [
+    {
+     "equals": "3a1b",
+     "probe": {
+      "args": [
+       "aaab"
+      ],
+      "function": "encode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "12a",
+     "probe": {
+      "args": [
+       "aaaaaaaaaaaa"
+      ],
+      "function": "encode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "",
+     "probe": {
+      "args": [
+       ""
+      ],
+      "function": "encode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2a1b3c",
+     "probe": {
+      "args": [
+       "aabccc"
+      ],
+      "function": "encode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1a1b1a1b",
+     "probe": {
+      "args": [
+       "abab"
+      ],
+      "function": "encode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1x",
+     "probe": {
+      "args": [
+       "x"
+      ],
+      "function": "encode",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+  },
+  {
+   "checks": [
+    {
+     "equals": "1a1 1b",
+     "probe": {
+      "args": [
+       "a b"
+      ],
+      "function": "encode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2\n",
+     "probe": {
+      "args": [
+       "\n\n"
+      ],
+      "function": "encode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "  \t\t\t!!"
+      ],
+      "function": "encode",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Spaces, newlines, and other characters are encoded like any other character."
+  },
+  {
+   "checks": [
+    {
+     "equals": "aaab",
+     "probe": {
+      "args": [
+       "3a1b"
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "",
+     "probe": {
+      "args": [
+       ""
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "aaaaaaaaaaaa",
+     "probe": {
+      "args": [
+       "12a"
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "aabccc",
+     "probe": {
+      "args": [
+       "2a1b3c"
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "a \n\n",
+     "probe": {
+      "args": [
+       "1a1 2\n"
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "xxxxxxxxxx",
+     "probe": {
+      "args": [
+       "10x"
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\"."
+  },
+  {
+   "checks": [
+    {
+     "equals": "hello world",
+     "probe": {
+      "args": [
+       "1h1e2l1o1 1w1o1r1l1d"
+      ],
+      "function": "decode",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1h1e2l1o1 1w1o1r1l1d",
+     "probe": {
+      "args": [
+       "hello world"
+      ],
+      "function": "encode",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "decode inverts encode for strings without digits."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:rle-codec",
+ "task_hash": "e03dd6153ff2f5f4b69b0cc733e0e0e7600c173ad692aca056e8e86bf07243a4",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -10,7 +10,7 @@\n         j = i\n         while j < len(s) and s[j] == s[i]:\n             j += 1\n-        out.append(\"%d%s\" % (j - i, s[i]))\n+        out.append(\"%d%s\" % ((j) + (i), s[i]))\n         i = j\n     return \"\".join(out)\n \n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % ((j) + (i), s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "cc727e8649c7b3213fe989b8d1290434191cf08401a2fe2050be2f6481a27402",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned '3a7b'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Encode run length: The run length is computed as j + i instead of j - i, giving wrong counts.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned '3a7b'",
+       "encode returned '2a5b9c'",
+       "encode returned '1a3b5a7b'"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned '1a3 5b'",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned '1h3e6l9o11 13w15o17r19l21d'"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "cc727e8649c7b3213fe989b8d1290434191cf08401a2fe2050be2f6481a27402"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -10,7 +10,7 @@\n         j = i\n         while j < len(s) and s[j] == s[i]:\n             j += 1\n-        out.append(\"%d%s\" % (j - i, s[i]))\n+        out.append((\"%d%s\") // ((j - i, s[i])))\n         i = j\n     return \"\".join(out)\n \n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append((\"%d%s\") // ((j - i, s[i])))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2b70e96bc09a42a02afeecf64d4a1b5986fbe6af048365f321224fe70912f210",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode returns run-length string: The str // tuple expression raises TypeError for any non-empty input.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2b70e96bc09a42a02afeecf64d4a1b5986fbe6af048365f321224fe70912f210"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -21,7 +21,7 @@\n     while pos < len(code):\n         match = _PAIR.match(code, pos)\n         if match is None:\n-            raise ValueError(\"malformed run-length code at position %d\" % pos)\n+            raise ValueError((\"malformed run-length code at position %d\") // (pos))\n         out.append(match.group(2) * int(match.group(1)))\n         pos = match.end()\n     return \"\".join(out)\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError((\"malformed run-length code at position %d\") // (pos))\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6316f0d41da2516042fc472bef0f25834aaaf1d0f111f0316d0731c2490ea41c",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "rle-codec",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "raise ValueError for malformed code: str // int raises TypeError instead of ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -22,6 +22,6 @@\n         match = _PAIR.match(code, pos)\n         if match is None:\n             raise ValueError(\"malformed run-length code at position %d\" % pos)\n-        out.append(match.group(2) * int(match.group(1)))\n+        out.append((match.group(2)) // (int(match.group(1))))\n         pos = match.end()\n     return \"\".join(out)\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append((match.group(2)) // (int(match.group(1))))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8adc5679acee17eb1a198e52168d6e07e833fee771c44c1f48752b8b923e09cc",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: decode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "decode repeats each character count times: A str // int operation raises TypeError instead of repeating the character.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None"
+      ],
+      "requirement": "R4",
+      "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "decode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8adc5679acee17eb1a198e52168d6e07e833fee771c44c1f48752b8b923e09cc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -8,7 +8,7 @@\n     i = 0\n     while i < len(s):\n         j = i\n-        while j < len(s) and s[j] == s[i]:\n+        while (j < len(s)) or (s[j] == s[i]):\n             j += 1\n         out.append(\"%d%s\" % (j - i, s[i]))\n         i = j\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while (j < len(s)) or (s[j] == s[i]):\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d8129e3685cf59f3d8d3066581dce853bf0c3f7839272dcdf7736df6e354f8d7",
+   "kind": "violating",
+   "operator": "py-boolop",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode must return run-length encoding: The inner loop condition uses or, so it indexes s[j] past the end and raises IndexError (or never stops comparing correctly).",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d8129e3685cf59f3d8d3066581dce853bf0c3f7839272dcdf7736df6e354f8d7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -8,7 +8,7 @@\n     i = 0\n     while i < len(s):\n         j = i\n-        while j < len(s) and s[j] == s[i]:\n+        while j <= len(s) and s[j] == s[i]:\n             j += 1\n         out.append(\"%d%s\" % (j - i, s[i]))\n         i = j\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j <= len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0b6b0d6dfb8b9b8505dec97df9eea7b1aedb809593da5f8fbe73a6c224e59828",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode returns run-length encoding: The loop bound j <= len(s) causes an IndexError at the end of the string.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0b6b0d6dfb8b9b8505dec97df9eea7b1aedb809593da5f8fbe73a6c224e59828"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -8,7 +8,7 @@\n     i = 0\n     while i < len(s):\n         j = i\n-        while j < len(s) and s[j] == s[i]:\n+        while j < len(s) and s[j] != s[i]:\n             j += 1\n         out.append(\"%d%s\" % (j - i, s[i]))\n         i = j\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] != s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d6cc6ab19725d3c5565eea01b6fc7f59ea5d10c2ce62c047a621d2f2f12a6ea9",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode must replace each maximal run with its length and character: The inverted comparison gives wrong run lengths (for example 'aaab' gives 1a... incorrectly).",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None"
+      ],
+      "requirement": "R4",
+      "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "decode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d6cc6ab19725d3c5565eea01b6fc7f59ea5d10c2ce62c047a621d2f2f12a6ea9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -18,7 +18,7 @@\n def decode(code):\n     out = []\n     pos = 0\n-    while pos < len(code):\n+    while pos <= len(code):\n         match = _PAIR.match(code, pos)\n         if match is None:\n             raise ValueError(\"malformed run-length code at position %d\" % pos)\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos <= len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "aa6823c3688d4f160bdac1575b62441223cac8241d83fd6b09c93d73de476b0f",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: decode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "decode returns the decoded string for valid codes: The loop condition pos <= len(code) makes the final iteration fail to match and raise ValueError on every valid non-empty code and on the empty string.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None"
+      ],
+      "requirement": "R4",
+      "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "decode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "aa6823c3688d4f160bdac1575b62441223cac8241d83fd6b09c93d73de476b0f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -6,7 +6,7 @@\n def encode(s):\n     out = []\n     i = 0\n-    while i < len(s):\n+    while i <= len(s):\n         j = i\n         while j < len(s) and s[j] == s[i]:\n             j += 1\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i <= len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8eea6078b26a92db4799fcd6e2550a18c3f90c4512337f11196e9af571cad40f",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode returns the run-length string: The loop condition i <= len(s) indexes s[i] past the end and raises IndexError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8eea6078b26a92db4799fcd6e2550a18c3f90c4512337f11196e9af571cad40f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -9,7 +9,7 @@\n     while i < len(s):\n         j = i\n         while j < len(s) and s[j] == s[i]:\n-            j += 1\n+            j += 2\n         out.append(\"%d%s\" % (j - i, s[i]))\n         i = j\n     return \"\".join(out)\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 2\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "bdfe9adc47d7920cae2920b4e468048555c50ea728423d3cdb29aeedb418fe6f",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned '4a'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Run length equals the exact run length: The scan advances by 2, so run lengths are overcounted (for example 'a' encodes as '2a').",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned '4a'",
+       "encode returned '2a2b2c'",
+       "encode returned '4a'",
+       "encode returned '2x'"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned '2a2b'",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned '2h2l2o2w2r2d'"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "bdfe9adc47d7920cae2920b4e468048555c50ea728423d3cdb29aeedb418fe6f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -10,7 +10,7 @@\n         j = i\n         while j < len(s) and s[j] == s[i]:\n             j += 1\n-        out.append(\"%d%s\" % (j - i, s[i]))\n+        out.append('%d%' % (j - i, s[i]))\n         i = j\n     return \"\".join(out)\n \n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append('%d%' % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "517d7e5038852b7f1c8fa781b7d686cc123f91751e4aca5043549aab892d2187",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode returns run-length encoding: The format string '%d%' is incomplete and raises ValueError for any non-empty input.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "517d7e5038852b7f1c8fa781b7d686cc123f91751e4aca5043549aab892d2187"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -10,7 +10,7 @@\n         j = i\n         while j < len(s) and s[j] == s[i]:\n             j += 1\n-        out.append(\"%d%s\" % (j - i, s[i]))\n+        out.append('%d%sx' % (j - i, s[i]))\n         i = j\n     return \"\".join(out)\n \n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append('%d%sx' % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5674f1630cdc3abbe33de0730c06d09ada0bda966131957d51ad92288de68da9",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned '3ax1bx'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Run-length encoding output form: An extra x is appended to each run, so encode('aaab') is wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned '3ax1bx'",
+       "encode returned '12ax'",
+       "encode returned '2ax1bx3cx'",
+       "encode returned '1ax1bx1ax1bx'",
+       "encode returned '1xx'"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned '1ax1 x1bx'",
+       "encode returned '2\\nx'",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned '1hx1ex2lx1ox1 x1wx1ox1rx1lx1dx'"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5674f1630cdc3abbe33de0730c06d09ada0bda966131957d51ad92288de68da9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -10,7 +10,7 @@\n         j = i\n         while j < len(s) and s[j] == s[i]:\n             j += 1\n-        out.append(\"%d%s\" % (j - i, s[i]))\n+        out.append('' % (j - i, s[i]))\n         i = j\n     return \"\".join(out)\n \n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append('' % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8d123fe69dfd4352ffb2b5a64c7268aeb8d5b8e673dde89d9b1f60324f233333",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode produces run-length pairs: The expression '' % (...) raises TypeError for non-empty input.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8d123fe69dfd4352ffb2b5a64c7268aeb8d5b8e673dde89d9b1f60324f233333"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -22,6 +22,6 @@\n         match = _PAIR.match(code, pos)\n         if match is None:\n             raise ValueError(\"malformed run-length code at position %d\" % pos)\n-        out.append(match.group(2) * int(match.group(1)))\n+        out.append(match.group(0) * int(match.group(1)))\n         pos = match.end()\n     return \"\".join(out)\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(0) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "27d8df59ddc99156a26a6bed2259fa960102533bed9085cdcc2c6c2adb575689",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: decode returned '3a3a3a1b'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "decode repeats the character count times: It repeats the whole match including the digits, so decode('3a') gives '3a3a3a'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "decode returned '3a3a3a1b'",
+       "decode returned '12a12a12a12a12a12a12a12a12a12a12a12a'",
+       "decode returned '2a2a1b3c3c3c'",
+       "decode returned '1a1 2\\n2\\n'",
+       "decode returned '10x10x10x10x10x10x10x10x10x10x'"
+      ],
+      "requirement": "R4",
+      "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "decode returned '1h1e2l2l1o1 1w1o1r1l1d'"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "27d8df59ddc99156a26a6bed2259fa960102533bed9085cdcc2c6c2adb575689"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -5,7 +5,7 @@\n \n def encode(s):\n     out = []\n-    i = 0\n+    i = 1\n     while i < len(s):\n         j = i\n         while j < len(s) and s[j] == s[i]:\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 1\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6c8c9e16557d6b76311fb1204197ec79cc2277aa3cee5af54cbcd53599085a95",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned '2a1b'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode must encode every run including the first character: Starting at index 1 skips the first character, so encode(\"aaab\") gives wrong output.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned '2a1b'",
+       "encode returned '11a'",
+       "encode returned '1a1b3c'",
+       "encode returned '1b1a1b'",
+       "encode returned ''"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned '1 1b'",
+       "encode returned '1\\n'",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned '1e2l1o1 1w1o1r1l1d'"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6c8c9e16557d6b76311fb1204197ec79cc2277aa3cee5af54cbcd53599085a95"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -8,7 +8,7 @@\n     i = 0\n     while i < len(s):\n         j = i\n-        while j < len(s) and s[j] == s[i]:\n+        while not (j < len(s) and s[j] == s[i]):\n             j += 1\n         out.append(\"%d%s\" % (j - i, s[i]))\n         i = j\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while not (j < len(s) and s[j] == s[i]):\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a44d237a1dfab6e2d5b1f7cd05f024c8abc484b4871b9816b70605960298d304",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Encode runs correctly: The inverted inner loop condition never ends, so encode loops forever on non-empty input.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None"
+      ],
+      "requirement": "R4",
+      "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "decode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a44d237a1dfab6e2d5b1f7cd05f024c8abc484b4871b9816b70605960298d304"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -18,7 +18,7 @@\n def decode(code):\n     out = []\n     pos = 0\n-    while pos < len(code):\n+    while not (pos < len(code)):\n         match = _PAIR.match(code, pos)\n         if match is None:\n             raise ValueError(\"malformed run-length code at position %d\" % pos)\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while not (pos < len(code)):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ba03ec597d6553a400619bc636f1c9f374a04e8d79cdf3ddc15292fefa161d69",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: decode returned ''",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "decode returns the inverse of encode and raises ValueError for malformed codes: The loop condition is negated, so decode returns an empty string for any input without validating it.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "decode returned ''",
+       "decode returned None",
+       "decode returned ''",
+       "decode returned ''",
+       "decode returned ''",
+       "decode returned ''"
+      ],
+      "requirement": "R4",
+      "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "decode returned ''"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ba03ec597d6553a400619bc636f1c9f374a04e8d79cdf3ddc15292fefa161d69"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -20,7 +20,7 @@\n     pos = 0\n     while pos < len(code):\n         match = _PAIR.match(code, pos)\n-        if match is None:\n+        if not (match is None):\n             raise ValueError(\"malformed run-length code at position %d\" % pos)\n         out.append(match.group(2) * int(match.group(1)))\n         pos = match.end()\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if not (match is None):\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9bd7ed60fa1bacc09e69b1600dd2bf9dd5c1df98395bef247cb3fc91521a2e66",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: decode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Decode valid codes and raise ValueError only for malformed ones: The None check is inverted, so valid codes raise ValueError and malformed ones hit an AttributeError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None"
+      ],
+      "requirement": "R4",
+      "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "decode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9bd7ed60fa1bacc09e69b1600dd2bf9dd5c1df98395bef247cb3fc91521a2e66"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -6,7 +6,7 @@\n def encode(s):\n     out = []\n     i = 0\n-    while i < len(s):\n+    while not (i < len(s)):\n         j = i\n         while j < len(s) and s[j] == s[i]:\n             j += 1\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while not (i < len(s)):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d17fab08a6884d67b7807b7d5450be090d648616ff32bce5b707201881a58e6e",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned ''",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode must run-length encode the string: The inverted loop condition makes encode return an empty string for every input.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned ''",
+       "encode returned ''",
+       "encode returned None",
+       "encode returned ''",
+       "encode returned ''",
+       "encode returned ''"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned ''",
+       "encode returned ''",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned ''"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d17fab08a6884d67b7807b7d5450be090d648616ff32bce5b707201881a58e6e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -16,12 +16,12 @@\n \n \n def decode(code):\n-    out = []\n-    pos = 0\n-    while pos < len(code):\n-        match = _PAIR.match(code, pos)\n-        if match is None:\n-            raise ValueError(\"malformed run-length code at position %d\" % pos)\n-        out.append(match.group(2) * int(match.group(1)))\n-        pos = match.end()\n-    return \"\".join(out)\n+    out_gp = []\n+    pos_gp = 0\n+    while pos_gp < len(code):\n+        match_gp = _PAIR.match(code, pos_gp)\n+        if match_gp is None:\n+            raise ValueError(\"malformed run-length code at position %d\" % pos_gp)\n+        out_gp.append(match_gp.group(2) * int(match_gp.group(1)))\n+        pos_gp = match_gp.end()\n+    return \"\".join(out_gp)\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out_gp = []\n    pos_gp = 0\n    while pos_gp < len(code):\n        match_gp = _PAIR.match(code, pos_gp)\n        if match_gp is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos_gp)\n        out_gp.append(match_gp.group(2) * int(match_gp.group(1)))\n        pos_gp = match_gp.end()\n    return \"\".join(out_gp)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c8f2792f6f786c233dab81c803e6ef77932821f36b79dc62a550ce2373e62bb6",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variables in decode were renamed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "c8f2792f6f786c233dab81c803e6ef77932821f36b79dc62a550ce2373e62bb6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -4,15 +4,15 @@\n \n \n def encode(s):\n-    out = []\n-    i = 0\n-    while i < len(s):\n-        j = i\n-        while j < len(s) and s[j] == s[i]:\n-            j += 1\n-        out.append(\"%d%s\" % (j - i, s[i]))\n-        i = j\n-    return \"\".join(out)\n+    out_gp = []\n+    i_gp = 0\n+    while i_gp < len(s):\n+        j_gp = i_gp\n+        while j_gp < len(s) and s[j_gp] == s[i_gp]:\n+            j_gp += 1\n+        out_gp.append(\"%d%s\" % (j_gp - i_gp, s[i_gp]))\n+        i_gp = j_gp\n+    return \"\".join(out_gp)\n \n \n def decode(code):\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out_gp = []\n    i_gp = 0\n    while i_gp < len(s):\n        j_gp = i_gp\n        while j_gp < len(s) and s[j_gp] == s[i_gp]:\n            j_gp += 1\n        out_gp.append(\"%d%s\" % (j_gp - i_gp, s[i_gp]))\n        i_gp = j_gp\n    return \"\".join(out_gp)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "e8838d911a5f3735d115911b1a3a99ee612bfd6866342220d5c2ca9b5aac363e",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variable names in encode changed; behavior is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "e8838d911a5f3735d115911b1a3a99ee612bfd6866342220d5c2ca9b5aac363e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -12,7 +12,7 @@\n             j += 1\n         out.append(\"%d%s\" % (j - i, s[i]))\n         i = j\n-    return \"\".join(out)\n+    return None\n \n \n def decode(code):\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return None\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "00b06576c327dbb28d5b955889c207136780b94f3c88559b0dd953e6837cd9ed",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode returns the run-length string: encode returns None instead of the encoded string.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "00b06576c327dbb28d5b955889c207136780b94f3c88559b0dd953e6837cd9ed"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -24,4 +24,4 @@\n             raise ValueError(\"malformed run-length code at position %d\" % pos)\n         out.append(match.group(2) * int(match.group(1)))\n         pos = match.end()\n-    return \"\".join(out)\n+    return None\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "02bd4231ea2e78da5b77cfa4888099a31ce1c19910928efb9a32c161b8ddb908",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: decode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "decode returns the decoded string: decode returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None"
+      ],
+      "requirement": "R4",
+      "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "decode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "02bd4231ea2e78da5b77cfa4888099a31ce1c19910928efb9a32c161b8ddb908"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -10,7 +10,7 @@\n         j = i\n         while j < len(s) and s[j] == s[i]:\n             j += 1\n-        out.append(\"%d%s\" % (j - i, s[i]))\n+        pass\n         i = j\n     return \"\".join(out)\n \n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        pass\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d8616802fb9ed665e2b97e7dc8f861e6eaeecc3c664619f4b462a382ba471a62",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned ''",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode returns run-length code: encode no longer appends anything and always returns an empty string.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned ''",
+       "encode returned ''",
+       "encode returned ''",
+       "encode returned ''",
+       "encode returned ''"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned ''",
+       "encode returned ''",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned ''"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d8616802fb9ed665e2b97e7dc8f861e6eaeecc3c664619f4b462a382ba471a62"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -11,7 +11,7 @@\n         while j < len(s) and s[j] == s[i]:\n             j += 1\n         out.append(\"%d%s\" % (j - i, s[i]))\n-        i = j\n+        pass\n     return \"\".join(out)\n \n \n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        pass\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "82478bae5601bb3b7900c4ea490c21bce3f62b67e7d5e4c7be34e648606b76f5",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode must return the run-length encoding: The index i is never advanced, causing an infinite loop.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None",
+       "decode returned None"
+      ],
+      "requirement": "R4",
+      "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "decode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "82478bae5601bb3b7900c4ea490c21bce3f62b67e7d5e4c7be34e648606b76f5"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -21,7 +21,7 @@\n     while pos < len(code):\n         match = _PAIR.match(code, pos)\n         if match is None:\n-            raise ValueError(\"malformed run-length code at position %d\" % pos)\n+            pass\n         out.append(match.group(2) * int(match.group(1)))\n         pos = match.end()\n     return \"\".join(out)\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            pass\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3ce45cd16804c601a3330bcf68fb7a14010b39a991db4cea426911b0c80eef21",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "rle-codec",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Raise ValueError on malformed code: A malformed code now raises AttributeError on a None match instead of ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -22,6 +22,6 @@\n         match = _PAIR.match(code, pos)\n         if match is None:\n             raise ValueError(\"malformed run-length code at position %d\" % pos)\n-        out.append(match.group(2) * int(match.group(1)))\n+        pass\n         pos = match.end()\n     return \"\".join(out)\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        pass\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "eb4d1aae6b292fe0fbf9019b3a95672866f8526c684459519a863bae16a275b0",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: decode returned ''",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "decode repeats each character count times: Nothing is appended to out, so decode always returns an empty string.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "decode returned ''",
+       "decode returned ''",
+       "decode returned ''",
+       "decode returned ''",
+       "decode returned ''"
+      ],
+      "requirement": "R4",
+      "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "decode returned ''"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "eb4d1aae6b292fe0fbf9019b3a95672866f8526c684459519a863bae16a275b0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -4,7 +4,7 @@\n \n \n def encode(s):\n-    out = []\n+    pass\n     i = 0\n     while i < len(s):\n         j = i\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    pass\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fda62c5db0b63c24596339cb6433454f52f5560a4b406b2cd926477cc1d4d188",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode returns the run-length encoding: out is never defined, so encode raises NameError on non-empty input.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None",
+       "encode returned None"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned None",
+       "encode returned None",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned None"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fda62c5db0b63c24596339cb6433454f52f5560a4b406b2cd926477cc1d4d188"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -6,12 +6,7 @@\n def encode(s):\n     out = []\n     i = 0\n-    while i < len(s):\n-        j = i\n-        while j < len(s) and s[j] == s[i]:\n-            j += 1\n-        out.append(\"%d%s\" % (j - i, s[i]))\n-        i = j\n+    pass\n     return \"\".join(out)\n \n \n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    pass\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "95070d70d26c356e19e057c7f0a9094e70ff32fab95ac27c800fa55743f5524f",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned ''",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "encode must run-length encode the string: The encoding loop is removed so encode always returns an empty string.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned ''",
+       "encode returned ''",
+       "encode returned ''",
+       "encode returned ''",
+       "encode returned ''"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     },
+     {
+      "failed": [
+       "encode returned ''",
+       "encode returned ''",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned ''"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "95070d70d26c356e19e057c7f0a9094e70ff32fab95ac27c800fa55743f5524f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -8,7 +8,7 @@\n     i = 0\n     while i < len(s):\n         j = i\n-        while j < len(s) and s[j] == s[i]:\n+        while j < len(s) and j - i < 9 and s[j] == s[i]:\n             j += 1\n         out.append(\"%d%s\" % (j - i, s[i]))\n         i = j\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and j - i < 9 and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fe56b24f6159c5136e6b4a2db1856c97bcc08d5de3e8a8902016f65c60e6f530",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: encode returned '9a3a'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Replace each maximal run by its full run length: Runs are capped at 9, so encode('a' * 12) gives '9a3a' instead of '12a'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned '9a3a'"
+      ],
+      "requirement": "R2",
+      "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\"."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fe56b24f6159c5136e6b4a2db1856c97bcc08d5de3e8a8902016f65c60e6f530"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -4,6 +4,7 @@\n \n \n def encode(s):\n+    s = \"\".join(ch for ch in s if not ch.isspace())\n     out = []\n     i = 0\n     while i < len(s):\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    s = \"\".join(ch for ch in s if not ch.isspace())\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4fca72b47c225b03ccc0d2a917bd2279555e80c318892197011db8d88292083e",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: encode returned '1a1b'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Spaces, newlines, and other characters are encoded like any other character: encode now removes all whitespace before encoding.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "encode returned '1a1b'",
+       "encode returned ''",
+       "encode differs from reference"
+      ],
+      "requirement": "R3",
+      "text": "Spaces, newlines, and other characters are encoded like any other character."
+     },
+     {
+      "failed": [
+       "encode returned '1h1e2l1o1w1o1r1l1d'"
+      ],
+      "requirement": "R6",
+      "text": "decode inverts encode for strings without digits."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4fca72b47c225b03ccc0d2a917bd2279555e80c318892197011db8d88292083e"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -1,6 +1,6 @@\n import re\n \n-_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n+_PAIR = re.compile(r\"([0-9]+)([^0-9])\", re.DOTALL)\n \n \n def encode(s):\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([0-9]+)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "818fe9c9c20649380db739898360b856c1961482efddeac1db9cec83cb7cba7f",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "rle-codec",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "decode must raise ValueError for counts like 0a or 03a: The regex now accepts zero and leading-zero counts, so those inputs no longer raise.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -1,6 +1,6 @@\n import re\n \n-_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n+_PAIR = re.compile(r\"([1-9][0-9]?)([^0-9])\", re.DOTALL)\n \n \n def encode(s):\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]?)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "48139cb9055d84be03be3f03e78fdf46ca7b62e4883cae82bd82b1774acf608a",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "rle-codec",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "decode accepts any positive decimal count: The count is limited to two digits, so valid codes such as 100a are rejected with ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -1,18 +1,11 @@\n import re\n+from itertools import groupby\n \n _PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n \n \n def encode(s):\n-    out = []\n-    i = 0\n-    while i < len(s):\n-        j = i\n-        while j < len(s) and s[j] == s[i]:\n-            j += 1\n-        out.append(\"%d%s\" % (j - i, s[i]))\n-        i = j\n-    return \"\".join(out)\n+    return \"\".join(\"%d%s\" % (len(list(group)), char) for char, group in groupby(s))\n \n \n def decode(code):\n",
+   "files": {
+    "rle.py": "import re\nfrom itertools import groupby\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    return \"\".join(\"%d%s\" % (len(list(group)), char) for char, group in groupby(s))\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "6d5dc1abbccae8013a25961e68809889862aa77b959f21ea2c5762c082a1d965",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "groupby-based encode produces the same maximal-run encoding, and decode is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "6d5dc1abbccae8013a25961e68809889862aa77b959f21ea2c5762c082a1d965"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/rle.py\n+++ b/rle.py\n@@ -1,27 +1,24 @@\n import re\n \n _PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n+_WHOLE = re.compile(r\"(?:[1-9][0-9]*[^0-9])*\", re.DOTALL)\n \n \n def encode(s):\n     out = []\n     i = 0\n-    while i < len(s):\n-        j = i\n-        while j < len(s) and s[j] == s[i]:\n+    n = len(s)\n+    while i < n:\n+        ch = s[i]\n+        j = i + 1\n+        while j < n and s[j] == ch:\n             j += 1\n-        out.append(\"%d%s\" % (j - i, s[i]))\n+        out.append(str(j - i) + ch)\n         i = j\n     return \"\".join(out)\n \n \n def decode(code):\n-    out = []\n-    pos = 0\n-    while pos < len(code):\n-        match = _PAIR.match(code, pos)\n-        if match is None:\n-            raise ValueError(\"malformed run-length code at position %d\" % pos)\n-        out.append(match.group(2) * int(match.group(1)))\n-        pos = match.end()\n-    return \"\".join(out)\n+    if _WHOLE.fullmatch(code) is None:\n+        raise ValueError(\"malformed run-length code\")\n+    return \"\".join(ch * int(num) for num, ch in _PAIR.findall(code))\n",
+   "files": {
+    "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n_WHOLE = re.compile(r\"(?:[1-9][0-9]*[^0-9])*\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    n = len(s)\n    while i < n:\n        ch = s[i]\n        j = i + 1\n        while j < n and s[j] == ch:\n            j += 1\n        out.append(str(j - i) + ch)\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    if _WHOLE.fullmatch(code) is None:\n        raise ValueError(\"malformed run-length code\")\n    return \"\".join(ch * int(num) for num, ch in _PAIR.findall(code))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c72eae2ad0dfdd674b50c8e331186e9e90036dfb1d1c3f9ae9571d8974e2481f",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "rle-codec",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "encode is unchanged in behavior and decode accepts exactly the same pair grammar via a full-match check, raising ValueError for malformed input such as a3, 3, 0a, and 03a.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "c72eae2ad0dfdd674b50c8e331186e9e90036dfb1d1c3f9ae9571d8974e2481f"
+   }
+  }
+ ]
+}

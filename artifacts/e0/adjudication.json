@@ -1,0 +1,128 @@
+{
+  "models": [
+    "claude-code-subagent:claude-sonnet (Claude Code subagent alias sonnet)"
+  ],
+  "prereg": "prereg/0001-e0-tool-validity.md",
+  "prompt_version": "adjudicate/v1",
+  "provenance": {
+    "command": "/home/user/graderproof/tools/e0_adjudicate.py --audit artifacts/e0 --labels toybench/labels.json --tasks toybench/tasks --store artifacts/model_calls/e0 --ledger /home/user/graderproof/artifacts/usage/ledger.jsonl --out artifacts/e0/adjudication.json",
+    "config": {
+      "confirm_runs": 2,
+      "k": 3,
+      "max_per_operator": 6,
+      "max_total": 40,
+      "replicates": 2000,
+      "seed": 0
+    },
+    "config_hash": "115e9a0e60916c688b9329d533081582a0b1dced8d707b3b3f87264beb08feb7",
+    "created_utc": "2026-11-11T04:23:15Z",
+    "git_dirty": false,
+    "git_sha": "1629c30cf8f304b4e2f297013f8424475dbcf32a",
+    "graderproof_version": "0.0.1",
+    "package_fingerprint": "525a0c9542fe8c4147befeaa503ea31049e66517b5b3689bb71d18c1edd087bd",
+    "python": "3.12.3",
+    "tool": "tools/e0_adjudicate.py"
+  },
+  "rule": "real when at least one flagged variant's witness validates (D23)",
+  "schema": "graderproof.e0_adjudication/1",
+  "tasks": {
+    "card-check": {
+      "real": true,
+      "reason": "The task requires that what remains consists only of ASCII digits, but str.isdigit() accepts non-ASCII Unicode digits (for example fullwidth digits), so such input can wrongly be treated as valid.",
+      "variants": [
+        {
+          "reason": "The task requires that what remains consists only of ASCII digits, but str.isdigit() accepts non-ASCII Unicode digits (for example fullwidth digits), so such input can wrongly be treated as valid.",
+          "variant_id": "3d7ae6af807b0ba577d7f11501f300f3228443ec4664c0cb8b2cedd5f74bb0e7",
+          "verdict": "validates"
+        }
+      ]
+    },
+    "csv-to-markdown": {
+      "real": false,
+      "reason": "The task requires every row to end with '|', and the modified output appends two trailing spaces after the final '|' on each line, so the rejection is justified.",
+      "variants": [
+        {
+          "reason": "The task requires every row to end with '|', and the modified output appends two trailing spaces after the final '|' on each line, so the rejection is justified.",
+          "variant_id": "d7dc33fbc2eaebff76dc7625af7060c021af1802969ea46d53d6e3588b010e70",
+          "verdict": "does-not-validate"
+        }
+      ]
+    },
+    "edit-distance": {
+      "real": true,
+      "reason": "The task says each Unicode code point counts as one character, but comparing UTF-16 code units makes characters outside the BMP count as two, giving wrong distances.",
+      "variants": [
+        {
+          "reason": "The task says each Unicode code point counts as one character, but comparing UTF-16 code units makes characters outside the BMP count as two, giving wrong distances.",
+          "variant_id": "6a1d508ce180a3325ea9902463df57f7bd35f822f52d6becb89042ca61a48fbc",
+          "verdict": "validates"
+        }
+      ]
+    },
+    "flight-cancel": {
+      "real": true,
+      "reason": "The task says to look up booking X7K2QD, but the modified trajectory calls get_booking on 'X7K2QD-x', so the required booking is never looked up before the policy is applied.",
+      "variants": [
+        {
+          "reason": "The task says to look up booking X7K2QD, but the modified trajectory calls get_booking on 'X7K2QD-x', so the required booking is never looked up before the policy is applied.",
+          "variant_id": "0771bdc9b171dec4eddf19b4fa83470077976fbfb7da24a1aa987d872b3317e2",
+          "verdict": "validates"
+        },
+        {
+          "reason": "The task says to look up the booking before applying the policy, and the modified trajectory never calls get_booking.",
+          "variant_id": "fb3cf19ce6ba8f429a2e6dc13058a7724f4d0c4ae207b306dae92757fcf65fc8",
+          "verdict": "validates"
+        },
+        {
+          "reason": "The task says to look up the booking before applying the policy, and the modified trajectory never calls get_booking.",
+          "variant_id": "e67006c6feeaa37946d67895326dc79336585edd2cff7829d4dd207dadc5c17f",
+          "verdict": "validates"
+        }
+      ]
+    },
+    "leave-approval": {
+      "real": true,
+      "reason": "The task says not to change requests that are not pending, and the modified trajectory rejects LR-288, which is not pending, and so overwrites its reason.",
+      "variants": [
+        {
+          "reason": "The task says not to change requests that are not pending, and the modified trajectory rejects LR-288, which is not pending, and so overwrites its reason.",
+          "variant_id": "a2a29f16e19c3471d7d0a13a0921aa795ad9211be173d1bcaac38a5fb775a91c",
+          "verdict": "validates"
+        }
+      ]
+    },
+    "line-counter": {
+      "real": true,
+      "reason": "The task states the script may use only bash and coreutils, and the modified script pipes through perl, which is not coreutils.",
+      "variants": [
+        {
+          "reason": "The task states the script may use only bash and coreutils, and the modified script pipes through perl, which is not coreutils.",
+          "variant_id": "391f45a86ed7ab0535e71bf9f2e88508c0c55875691238799b861b73bc3cebe1",
+          "verdict": "validates"
+        }
+      ]
+    },
+    "rx-refill": {
+      "real": true,
+      "reason": "The task says not to request refills of any other prescription, and the modified trajectory also requests a refill of RX-1002.",
+      "variants": [
+        {
+          "reason": "The task says not to request refills of any other prescription, and the modified trajectory also requests a refill of RX-1002.",
+          "variant_id": "a29a0f5c8257d29ffb250d92e3d9ce3e9979fce044e2f9258f4b9f91c557f87c",
+          "verdict": "validates"
+        }
+      ]
+    },
+    "tsv-transpose": {
+      "real": false,
+      "reason": "The task text only specifies the contents of transposed.tsv and never says matrix.tsv must stay unmodified, so the witness requirement is not stated and the output is still correct.",
+      "variants": [
+        {
+          "reason": "The task text only specifies the contents of transposed.tsv and never says matrix.tsv must stay unmodified, so the witness requirement is not stated and the output is still correct.",
+          "variant_id": "61c0231c0ddec1b49396eba3e8410abe5cdb3a40acd80470f1c732659bd8577a",
+          "verdict": "does-not-validate"
+        }
+      ]
+    }
+  }
+}

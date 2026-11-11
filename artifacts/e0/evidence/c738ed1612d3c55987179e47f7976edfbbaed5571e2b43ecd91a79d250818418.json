@@ -1,0 +1,1376 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+  },
+  "probes": {
+   "2f1a51b3da1a4411": {
+    "ok": true,
+    "value": []
+   },
+   "3f99554cbf73918e": {
+    "ok": true,
+    "value": [
+     "go"
+    ]
+   },
+   "69f344a731cf6e11": {
+    "ok": true,
+    "value": [
+     "web dev"
+    ]
+   },
+   "6ba69052028082bb": {
+    "ok": true,
+    "value": []
+   },
+   "97a46f82419beb07": {
+    "ok": true,
+    "value": [
+     "go"
+    ]
+   },
+   "c7d85c43ad93b900": {
+    "ok": true,
+    "value": [
+     "a"
+    ]
+   },
+   "db0dfb5ff453aad1": {
+    "ok": true,
+    "value": [
+     "python"
+    ]
+   },
+   "ec1a73594caea11b": {
+    "ok": true,
+    "value": []
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "tagging.py",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write a Python module tagging.py"
+  },
+  {
+   "checks": [
+    {
+     "equals": [
+      "python"
+     ],
+     "probe": {
+      "args": [
+       [
+        {
+         "tags": [
+          "  Python "
+         ]
+        }
+       ]
+      ],
+      "function": "all_tags",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [
+      "web dev"
+     ],
+     "probe": {
+      "args": [
+       [
+        {
+         "tags": [
+          "\tWeb Dev\n"
+         ]
+        }
+       ]
+      ],
+      "function": "all_tags",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+  },
+  {
+   "checks": [
+    {
+     "equals": [],
+     "probe": {
+      "args": [
+       [
+        {
+         "tags": [
+          "",
+          "   ",
+          "\t"
+         ]
+        }
+       ]
+      ],
+      "function": "all_tags",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [
+      "go"
+     ],
+     "probe": {
+      "args": [
+       [
+        {
+         "tags": [
+          " ",
+          "Go"
+         ]
+        }
+       ]
+      ],
+      "function": "all_tags",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Ignore tags that are empty after normalization"
+  },
+  {
+   "checks": [
+    {
+     "equals": [
+      "go"
+     ],
+     "probe": {
+      "args": [
+       [
+        {
+         "tags": [
+          "Go",
+          "go"
+         ]
+        },
+        {
+         "tags": [
+          " GO ",
+          "gO"
+         ]
+        }
+       ]
+      ],
+      "function": "all_tags",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [
+      "a"
+     ],
+     "probe": {
+      "args": [
+       [
+        {
+         "tags": [
+          "A"
+         ]
+        },
+        {
+         "tags": [
+          "a "
+         ]
+        },
+        {
+         "tags": []
+        }
+       ]
+      ],
+      "function": "all_tags",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+  },
+  {
+   "checks": [
+    {
+     "equals": [],
+     "probe": {
+      "args": [
+       []
+      ],
+      "function": "all_tags",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": [],
+     "probe": {
+      "args": [
+       [
+        {
+         "tags": []
+        }
+       ]
+      ],
+      "function": "all_tags",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Return a list; empty input gives an empty list"
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:tag-union",
+ "task_hash": "c738ed1612d3c55987179e47f7976edfbbaed5571e2b43ecd91a79d250818418",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,7 +1,7 @@\n def all_tags(posts):\n     seen = {}\n     for post in posts:\n-        for tag in post[\"tags\"]:\n+        for tag in post['']:\n             norm = tag.strip().lower()\n             if norm:\n                 seen.setdefault(norm, None)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post['']:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c6a18450fa1178967f3e28d7c3cb36760129f96f8e1cb6ff612b4278e118a4dc",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Collect tags from the tags key: It reads post[''], which raises KeyError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     },
+     {
+      "failed": [
+       "all_tags returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return a list; empty input gives an empty list"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c6a18450fa1178967f3e28d7c3cb36760129f96f8e1cb6ff612b4278e118a4dc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,7 +1,7 @@\n def all_tags(posts):\n     seen = {}\n     for post in posts:\n-        for tag in post[\"tags\"]:\n+        for tag in post['tag']:\n             norm = tag.strip().lower()\n             if norm:\n                 seen.setdefault(norm, None)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post['tag']:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "545f7e2681776e9d03a29f94df6d5f1660408bf9d65bee591d96fe0e04e6a371",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read each post's tags key: Accessing post['tag'] raises KeyError because the key is tags.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     },
+     {
+      "failed": [
+       "all_tags returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return a list; empty input gives an empty list"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "545f7e2681776e9d03a29f94df6d5f1660408bf9d65bee591d96fe0e04e6a371"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,7 +1,7 @@\n def all_tags(posts):\n     seen = {}\n     for post in posts:\n-        for tag in post[\"tags\"]:\n+        for tag in post['tagsx']:\n             norm = tag.strip().lower()\n             if norm:\n                 seen.setdefault(norm, None)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post['tagsx']:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "cff52a0b1530f7db2009b2598dea82e9d4c963696c6d900070b9bd8f05159611",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read tags from the 'tags' key: It reads the key 'tagsx', which raises KeyError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     },
+     {
+      "failed": [
+       "all_tags returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return a list; empty input gives an empty list"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "cff52a0b1530f7db2009b2598dea82e9d4c963696c6d900070b9bd8f05159611"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -3,6 +3,6 @@\n     for post in posts:\n         for tag in post[\"tags\"]:\n             norm = tag.strip().lower()\n-            if norm:\n+            if not (norm):\n                 seen.setdefault(norm, None)\n     return list(seen)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if not (norm):\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "972166600eb7bfad650c4da1557c1f359d538ae40c46fef1dec1e9366a20ee2a",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return each distinct non-empty normalized tag: The condition is inverted so only empty tags are kept and real tags are dropped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned []",
+       "all_tags returned []"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned ['']",
+       "all_tags returned ['']"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned []",
+       "all_tags returned []"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "972166600eb7bfad650c4da1557c1f359d538ae40c46fef1dec1e9366a20ee2a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,6 +1,6 @@\n def all_tags(posts):\n     seen = {}\n-    for post in posts:\n+    for post in list(posts)[:-1]:\n         for tag in post[\"tags\"]:\n             norm = tag.strip().lower()\n             if norm:\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in list(posts)[:-1]:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d16dda4bb97493c68ecdb0bfb258bd5930bde73c57f952bd87d7f8fdcdbfe9d9",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return every distinct normalized tag across all posts: The last post is skipped, so its tags are lost.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned []",
+       "all_tags returned []"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned []"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d16dda4bb97493c68ecdb0bfb258bd5930bde73c57f952bd87d7f8fdcdbfe9d9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,7 +1,7 @@\n def all_tags(posts):\n     seen = {}\n     for post in posts:\n-        for tag in post[\"tags\"]:\n+        for tag in list(post[\"tags\"])[:-1]:\n             norm = tag.strip().lower()\n             if norm:\n                 seen.setdefault(norm, None)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in list(post[\"tags\"])[:-1]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "21d1634f736a6b4a2b0fef93a066772f65e278c53a38506d9a146aea53dcb3cc",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return every distinct normalized tag: The last tag of each post is skipped, so tags used only there are missing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned []",
+       "all_tags returned []"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned []"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned []"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "21d1634f736a6b4a2b0fef93a066772f65e278c53a38506d9a146aea53dcb3cc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,8 +1,8 @@\n def all_tags(posts):\n-    seen = {}\n-    for post in posts:\n-        for tag in post[\"tags\"]:\n-            norm = tag.strip().lower()\n-            if norm:\n-                seen.setdefault(norm, None)\n-    return list(seen)\n+    seen_gp = {}\n+    for post_gp in posts:\n+        for tag_gp in post_gp[\"tags\"]:\n+            norm_gp = tag_gp.strip().lower()\n+            if norm_gp:\n+                seen_gp.setdefault(norm_gp, None)\n+    return list(seen_gp)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen_gp = {}\n    for post_gp in posts:\n        for tag_gp in post_gp[\"tags\"]:\n            norm_gp = tag_gp.strip().lower()\n            if norm_gp:\n                seen_gp.setdefault(norm_gp, None)\n    return list(seen_gp)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "143608ffdd4e5e8fea9b4ccb1963fd6c61a73fa5e603589f36ad232087e102aa",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variables were renamed; behavior is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "143608ffdd4e5e8fea9b4ccb1963fd6c61a73fa5e603589f36ad232087e102aa"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -5,4 +5,4 @@\n             norm = tag.strip().lower()\n             if norm:\n                 seen.setdefault(norm, None)\n-    return list(seen)\n+    return None\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6b5ca92270aa02522c3b55b59be4e60d932221471f1ee2909655015a6cad6261",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return a list of distinct normalized tags: The function returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return a list; empty input gives an empty list"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6b5ca92270aa02522c3b55b59be4e60d932221471f1ee2909655015a6cad6261"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,5 +1,5 @@\n def all_tags(posts):\n-    seen = {}\n+    pass\n     for post in posts:\n         for tag in post[\"tags\"]:\n             norm = tag.strip().lower()\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    pass\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "067d2e20f707c11e25a17e174921b0052a721771e429355b303989162a0c0534",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "all_tags returns distinct normalized tags: The variable seen is no longer defined, so the function raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return a list; empty input gives an empty list"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "067d2e20f707c11e25a17e174921b0052a721771e429355b303989162a0c0534"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,8 +1,4 @@\n def all_tags(posts):\n     seen = {}\n-    for post in posts:\n-        for tag in post[\"tags\"]:\n-            norm = tag.strip().lower()\n-            if norm:\n-                seen.setdefault(norm, None)\n+    pass\n     return list(seen)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    pass\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "261c997037b7e7d89bbcbec742e9f39398be640e3746844c3646ba9d0366a4b3",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return every distinct normalized tag: The tag collection loop was removed, so an empty list is always returned.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned []",
+       "all_tags returned []"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned []"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned []",
+       "all_tags returned []"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "261c997037b7e7d89bbcbec742e9f39398be640e3746844c3646ba9d0366a4b3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,8 +1,5 @@\n def all_tags(posts):\n     seen = {}\n     for post in posts:\n-        for tag in post[\"tags\"]:\n-            norm = tag.strip().lower()\n-            if norm:\n-                seen.setdefault(norm, None)\n+        pass\n     return list(seen)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        pass\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "82fa924bef4c9488f53e629dca0042a59e8ec85b1ca3690cecc8d20d9632f3bb",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return every distinct normalized tag: The loop body was removed, so it always returns an empty list.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned []",
+       "all_tags returned []"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned []"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned []",
+       "all_tags returned []"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "82fa924bef4c9488f53e629dca0042a59e8ec85b1ca3690cecc8d20d9632f3bb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -3,6 +3,5 @@\n     for post in posts:\n         for tag in post[\"tags\"]:\n             norm = tag.strip().lower()\n-            if norm:\n-                seen.setdefault(norm, None)\n+            pass\n     return list(seen)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            pass\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "eb4339f68c247118f794328e55b0127a96dc945d1ce365838d5c06bf197a969b",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "return every distinct normalized tag: Tags are never added to seen, so the function always returns an empty list.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned []",
+       "all_tags returned []"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned []"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned []",
+       "all_tags returned []"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "eb4339f68c247118f794328e55b0127a96dc945d1ce365838d5c06bf197a969b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -4,5 +4,5 @@\n         for tag in post[\"tags\"]:\n             norm = tag.strip().lower()\n             if norm:\n-                seen.setdefault(norm, None)\n+                pass\n     return list(seen)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                pass\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "701abe484751ec26f70d498aaa2f3ed3c87f7f7c3014df288be8c46766064df9",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return each distinct normalized tag: Tags are never recorded, so the function always returns an empty list.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned []",
+       "all_tags returned []"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned []"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned []",
+       "all_tags returned []"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "701abe484751ec26f70d498aaa2f3ed3c87f7f7c3014df288be8c46766064df9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -5,4 +5,4 @@\n             norm = tag.strip().lower()\n             if norm:\n                 seen.setdefault(norm, None)\n-    return list(seen)\n+    pass\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7cd82e9f57c462828552980739dfa82a4c4f0fd4d06e29c5f4781822b48c4637",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return a list of distinct normalized tags: The function returns None instead of the list.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     },
+     {
+      "failed": [
+       "all_tags returned None",
+       "all_tags returned None"
+      ],
+      "requirement": "R5",
+      "text": "Return a list; empty input gives an empty list"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7cd82e9f57c462828552980739dfa82a4c4f0fd4d06e29c5f4781822b48c4637"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -2,7 +2,7 @@\n     seen = {}\n     for post in posts:\n         for tag in post[\"tags\"]:\n-            norm = tag.strip().lower()\n+            norm = tag.strip()\n             if norm:\n                 seen.setdefault(norm, None)\n     return list(seen)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f63519a7e793bd4dc1ffb9bd756f17256e882f9e473e1170e14adfedc3fa3eca",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: all_tags returned ['Python']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Convert each tag to lowercase: Tags are no longer lowercased so case variants appear as distinct tags.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned ['Python']",
+       "all_tags returned ['Web Dev']"
+      ],
+      "requirement": "R2",
+      "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+     },
+     {
+      "failed": [
+       "all_tags returned ['Go']"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     },
+     {
+      "failed": [
+       "all_tags returned ['Go', 'go', 'GO', 'gO']",
+       "all_tags returned ['A', 'a']"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f63519a7e793bd4dc1ffb9bd756f17256e882f9e473e1170e14adfedc3fa3eca"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -3,6 +3,5 @@\n     for post in posts:\n         for tag in post[\"tags\"]:\n             norm = tag.strip().lower()\n-            if norm:\n-                seen.setdefault(norm, None)\n+            seen.setdefault(norm, None)\n     return list(seen)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            seen.setdefault(norm, None)\n    return list(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "997fd56e976f7225c195c48b1c1cbdd9ed517f90b64d699a6d605141c7d34f93",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: all_tags returned ['']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Ignore tags that are empty after normalization: Empty normalized tags are now included in the result.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned ['']",
+       "all_tags returned ['', 'go']"
+      ],
+      "requirement": "R3",
+      "text": "Ignore tags that are empty after normalization"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "997fd56e976f7225c195c48b1c1cbdd9ed517f90b64d699a6d605141c7d34f93"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,8 +1,12 @@\n def all_tags(posts):\n-    seen = {}\n+    out = []\n     for post in posts:\n+        post_tags = []\n         for tag in post[\"tags\"]:\n             norm = tag.strip().lower()\n             if norm:\n-                seen.setdefault(norm, None)\n-    return list(seen)\n+                post_tags.append(norm)\n+        for norm in post_tags:\n+            if norm not in out or post_tags.count(norm) > 1:\n+                out.append(norm)\n+    return out\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    out = []\n    for post in posts:\n        post_tags = []\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                post_tags.append(norm)\n        for norm in post_tags:\n            if norm not in out or post_tags.count(norm) > 1:\n                out.append(norm)\n    return out\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "98198dc13386773b65f5e6a32eb0a4f4395263232260278c4b0f69d0a56a6029",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: all_tags returned ['go', 'go', 'go', 'go']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Each distinct normalized tag exactly once: A tag repeated within a single post is appended multiple times.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "all_tags returned ['go', 'go', 'go', 'go']"
+      ],
+      "requirement": "R4",
+      "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "98198dc13386773b65f5e6a32eb0a4f4395263232260278c4b0f69d0a56a6029"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,8 +1,8 @@\n def all_tags(posts):\n-    seen = {}\n+    seen = set()\n     for post in posts:\n         for tag in post[\"tags\"]:\n             norm = tag.strip().lower()\n             if norm:\n-                seen.setdefault(norm, None)\n-    return list(seen)\n+                seen.add(norm)\n+    return seen\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = set()\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.add(norm)\n    return seen\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1c421585f6950965b197e95c558108f39aa0aa44878986a417244a480fa54bf5",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "tag-union",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Return a list of distinct normalized tags: It returns a set instead of a list.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,8 +1,8 @@\n def all_tags(posts):\n-    seen = {}\n+    seen = set()\n     for post in posts:\n         for tag in post[\"tags\"]:\n             norm = tag.strip().lower()\n             if norm:\n-                seen.setdefault(norm, None)\n-    return list(seen)\n+                seen.add(norm)\n+    return sorted(seen)\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    seen = set()\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.add(norm)\n    return sorted(seen)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false,
+    false,
+    false
+   ],
+   "id": "5c83c327ed44269e2f279e248472dee0df06efab596aebc8eb903560ccd26824",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It returns each distinct normalized tag once, and the task says the order does not matter.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "5c83c327ed44269e2f279e248472dee0df06efab596aebc8eb903560ccd26824"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,8 +1,3 @@\n def all_tags(posts):\n-    seen = {}\n-    for post in posts:\n-        for tag in post[\"tags\"]:\n-            norm = tag.strip().lower()\n-            if norm:\n-                seen.setdefault(norm, None)\n-    return list(seen)\n+    normalized = [t.strip().lower() for p in posts for t in p[\"tags\"]]\n+    return list(dict.fromkeys(t for t in normalized if t != \"\"))\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    normalized = [t.strip().lower() for p in posts for t in p[\"tags\"]]\n    return list(dict.fromkeys(t for t in normalized if t != \"\"))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "408e63636ab8e98623504b1092ab8e7275b1cea6d6a3107054baea1bdfb9f59e",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It normalizes tags, drops empty ones and returns each distinct tag once, as before.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "408e63636ab8e98623504b1092ab8e7275b1cea6d6a3107054baea1bdfb9f59e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,8 +1,8 @@\n def all_tags(posts):\n-    seen = {}\n-    for post in posts:\n-        for tag in post[\"tags\"]:\n-            norm = tag.strip().lower()\n-            if norm:\n-                seen.setdefault(norm, None)\n-    return list(seen)\n+    result = []\n+    for post in reversed(posts):\n+        for tag in reversed(post[\"tags\"]):\n+            name = tag.lower().strip()\n+            if len(name) > 0 and name not in result:\n+                result.append(name)\n+    return result\n",
+   "files": {
+    "tagging.py": "def all_tags(posts):\n    result = []\n    for post in reversed(posts):\n        for tag in reversed(post[\"tags\"]):\n            name = tag.lower().strip()\n            if len(name) > 0 and name not in result:\n                result.append(name)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false,
+    false,
+    false
+   ],
+   "id": "7c03a186c4b39d465975bfd82e08babe11819800e15c7a4796954b20047b5736",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "tag-union",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It still returns each distinct normalized tag once, and ordering is explicitly irrelevant.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "7c03a186c4b39d465975bfd82e08babe11819800e15c7a4796954b20047b5736"
+   }
+  }
+ ]
+}

@@ -1,0 +1,1567 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "employees": {
+    "E-77": {
+     "balance_days": 2,
+     "name": "Sara Lindholm"
+    },
+    "E-81": {
+     "balance_days": 2,
+     "name": "Diego Alvarez"
+    },
+    "E-90": {
+     "balance_days": 0,
+     "name": "Mina Haddad"
+    }
+   },
+   "requests": {
+    "LR-288": {
+     "days": 5,
+     "employee_id": "E-81",
+     "reason": "blackout period",
+     "status": "rejected"
+    },
+    "LR-298": {
+     "days": 1,
+     "employee_id": "E-77",
+     "reason": null,
+     "status": "approved"
+    },
+    "LR-301": {
+     "days": 4,
+     "employee_id": "E-77",
+     "reason": null,
+     "status": "approved"
+    },
+    "LR-302": {
+     "days": 3,
+     "employee_id": "E-81",
+     "reason": "insufficient balance",
+     "status": "rejected"
+    },
+    "LR-303": {
+     "days": 10,
+     "employee_id": "E-90",
+     "reason": null,
+     "status": "approved"
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "status": "pending"
+    },
+    "result": {
+     "ok": true,
+     "requests": {
+      "LR-301": {
+       "days": 4,
+       "employee_id": "E-77",
+       "reason": null,
+       "status": "pending"
+      },
+      "LR-302": {
+       "days": 3,
+       "employee_id": "E-81",
+       "reason": null,
+       "status": "pending"
+      },
+      "LR-303": {
+       "days": 10,
+       "employee_id": "E-90",
+       "reason": null,
+       "status": "pending"
+      }
+     }
+    },
+    "tool": "list_requests"
+   },
+   {
+    "args": {
+     "employee_id": "E-77"
+    },
+    "result": {
+     "balance_days": 6,
+     "ok": true
+    },
+    "tool": "get_balance"
+   },
+   {
+    "args": {
+     "request_id": "LR-301"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "approve_request"
+   },
+   {
+    "args": {
+     "employee_id": "E-81"
+    },
+    "result": {
+     "balance_days": 2,
+     "ok": true
+    },
+    "tool": "get_balance"
+   },
+   {
+    "args": {
+     "reason": "insufficient balance",
+     "request_id": "LR-302"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "reject_request"
+   },
+   {
+    "args": {
+     "employee_id": "E-90"
+    },
+    "result": {
+     "balance_days": 10,
+     "ok": true
+    },
+    "tool": "get_balance"
+   },
+   {
+    "args": {
+     "request_id": "LR-303"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "approve_request"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "request_id": "LR-301"
+     },
+     "tool": "approve_request",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "approved",
+     "pointer": "/requests/LR-301/status",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Approve LR-301 with approve_request because E-77 has balance 6, at least the 4 days requested."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "reason": "insufficient balance",
+      "request_id": "LR-302"
+     },
+     "tool": "reject_request",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "rejected",
+     "pointer": "/requests/LR-302/status",
+     "type": "state_equals"
+    },
+    {
+     "equals": "insufficient balance",
+     "pointer": "/requests/LR-302/reason",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "request_id": "LR-302"
+     },
+     "tool": "approve_request",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Reject LR-302 with reject_request and the reason `insufficient balance`, because E-81 has balance 2, less than the 3 days requested."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "request_id": "LR-303"
+     },
+     "tool": "approve_request",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "approved",
+     "pointer": "/requests/LR-303/status",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "request_id": "LR-303"
+     },
+     "tool": "reject_request",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Approve LR-303 because E-90 has balance 10, exactly the 10 days requested (balance at least the days requested)."
+  },
+  {
+   "checks": [
+    {
+     "equals": 2,
+     "pointer": "/employees/E-77/balance_days",
+     "type": "state_equals"
+    },
+    {
+     "equals": 2,
+     "pointer": "/employees/E-81/balance_days",
+     "type": "state_equals"
+    },
+    {
+     "equals": 0,
+     "pointer": "/employees/E-90/balance_days",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Approving deducts the days from the balance; balances end at E-77 2, E-81 2, E-90 0, so each request is approved only once and rejected requests deduct nothing."
+  },
+  {
+   "checks": [
+    {
+     "equals": "rejected",
+     "pointer": "/requests/LR-288/status",
+     "type": "state_equals"
+    },
+    {
+     "equals": "blackout period",
+     "pointer": "/requests/LR-288/reason",
+     "type": "state_equals"
+    },
+    {
+     "equals": "approved",
+     "pointer": "/requests/LR-298/status",
+     "type": "state_equals"
+    },
+    {
+     "equals": null,
+     "pointer": "/requests/LR-298/reason",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "request_id": "LR-288"
+     },
+     "tool": "approve_request",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "request_id": "LR-288"
+     },
+     "tool": "reject_request",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "request_id": "LR-298"
+     },
+     "tool": "approve_request",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "request_id": "LR-298"
+     },
+     "tool": "reject_request",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Do not change requests that are not pending (LR-288 and LR-298 keep their status and reason)."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "target": "state",
+     "type": "same_as_reference"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "Process every pending request: the final state matches the reference state."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:leave-approval",
+ "task_hash": "80a983f5c4a87e51d0d042dd79d60e3ff45ea72d24564a3fbf8904af746bbd56",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,51 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c6d10996d83dc9254aea301397bdb46c649261cd0eeaf8d1d8d71ec6575bc525",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only a duplicate read-only list_requests call was added; the approve and reject actions are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "c6d10996d83dc9254aea301397bdb46c649261cd0eeaf8d1d8d71ec6575bc525"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,51 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "8ea576dfd7757d0ec206a8d66599cd5a382a1f58569129e12a18e023df5f1d65",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "An extra read-only get_balance call is added up front, and all approvals and rejections are the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "8ea576dfd7757d0ec206a8d66599cd5a382a1f58569129e12a18e023df5f1d65"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,51 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "90a345948f7d7a38a32063e69949ce015fac9e6bebd8a9123caa21b7245ddc35",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "An extra read-only get_balance call is added up front, and all approvals and rejections are the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "90a345948f7d7a38a32063e69949ce015fac9e6bebd8a9123caa21b7245ddc35"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,51 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a878f5b511ea3ff1605879b81a5d9ae97dc7ac653490866921179973eeb21a5d",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only an extra read-only get_balance call was added; all approvals and rejections are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "a878f5b511ea3ff1605879b81a5d9ae97dc7ac653490866921179973eeb21a5d"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending-x\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c730863538bef99fb5fa5b470a91ebda30a86aa59142e3c6bca1d307a4d5efd6",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "leave-approval",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list call uses status 'pending-x' instead of 'pending'; the actions are identical, but the call may error or return nothing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": null
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301-x\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7a45ec1f1ff50c0b83dd29c95035b1c5310585a35669d61d09a12972537ee954",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks approve_request",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Approve request LR-301: approve_request is called with the nonexistent id LR-301-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks approve_request",
+       "state /requests/LR-301/status = 'pending'"
+      ],
+      "requirement": "R1",
+      "text": "Approve LR-301 with approve_request because E-77 has balance 6, at least the 4 days requested."
+     },
+     {
+      "failed": [
+       "state /employees/E-77/balance_days = 6"
+      ],
+      "requirement": "R4",
+      "text": "Approving deducts the days from the balance; balances end at E-77 2, E-81 2, E-90 0, so each request is approved only once and rejected requests deduct nothing."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Process every pending request: the final state matches the reference state."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7a45ec1f1ff50c0b83dd29c95035b1c5310585a35669d61d09a12972537ee954"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81-x\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b0b5f23c2874263def9a3a4cba18972bdad168f5599745255d34a2c39de76359",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "leave-approval",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "check the balance of each pending request's employee: The balance lookup for LR-302 uses the nonexistent employee id E-81-x, so the decision is not based on E-81's balance.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance-x\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ebd5dace19f5caf653ac90302eee0f2b5fdc9f823785843b58be08ea2b42fe9c",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks reject_request",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "reject with reason insufficient balance: The rejection reason is changed to 'insufficient balance-x'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks reject_request",
+       "state /requests/LR-302/reason = 'insufficient balance-x'"
+      ],
+      "requirement": "R2",
+      "text": "Reject LR-302 with reject_request and the reason `insufficient balance`, because E-81 has balance 2, less than the 3 days requested."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Process every pending request: the final state matches the reference state."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ebd5dace19f5caf653ac90302eee0f2b5fdc9f823785843b58be08ea2b42fe9c"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90-x\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "722a7909159c2cc6c0c284f9fbe6bba249853546cbd5fd0ec4c27ce04113f241",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "leave-approval",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Check the balance of employee E-90 before deciding: get_balance is called with the non-existent employee id E-90-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "451b3ac15ba24093336ca25bd8edc6ddce38e34388dca17ee652ab0bc9bee46d",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks approve_request",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Approve LR-303: approve_request is called with a nonexistent id LR-303-x, so LR-303 is not approved.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks approve_request",
+       "state /requests/LR-303/status = 'pending'"
+      ],
+      "requirement": "R3",
+      "text": "Approve LR-303 because E-90 has balance 10, exactly the 10 days requested (balance at least the days requested)."
+     },
+     {
+      "failed": [
+       "state /employees/E-90/balance_days = 10"
+      ],
+      "requirement": "R4",
+      "text": "Approving deducts the days from the balance; balances end at E-77 2, E-81 2, E-90 0, so each request is approved only once and rejected requests deduct nothing."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Process every pending request: the final state matches the reference state."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "451b3ac15ba24093336ca25bd8edc6ddce38e34388dca17ee652ab0bc9bee46d"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,39 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "954a31825930577a830e4ce3d48bc5b908a6f39687ea3d4ab4b4d38ab6826930",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "leave-approval",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list_requests call is dropped; the same approvals and rejections are performed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,39 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "9a81bc1cb86d2f4d32a168f809164e39f87ef57664804a0ead0ff72ff5db67a3",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "leave-approval",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Approve only if the remaining balance is at least the days requested: The balance check for E-77 was dropped, so LR-301 is approved without verifying the balance.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,39 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "2a794d4f1f36795daf04ea1b1b860421fef724e5e6bcffdff16440e314c14ce1",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "leave-approval",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Reject only when balance is insufficient: The balance check for E-81 is skipped before rejecting LR-302; the final actions match but the rejection is made without checking the balance.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": null
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,38 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "77949a11d2d0452f8ed310febcaa68498513bfb85ce4f8299eaab8616fdab0f0",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks reject_request",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Reject requests with insufficient balance: The rejection of LR-302 is removed, leaving it pending.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks reject_request",
+       "state /requests/LR-302/status = 'pending'",
+       "state /requests/LR-302/reason = None"
+      ],
+      "requirement": "R2",
+      "text": "Reject LR-302 with reject_request and the reason `insufficient balance`, because E-81 has balance 2, less than the 3 days requested."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Process every pending request: the final state matches the reference state."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "77949a11d2d0452f8ed310febcaa68498513bfb85ce4f8299eaab8616fdab0f0"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,39 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "e9b04090f5311f94d59ba7e9d161c156c3494d7a6faf325997787f3802bc6dd9",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "leave-approval",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only get_balance call for E-90 is dropped; all state-changing calls and their arguments are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,39 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1801084e45145586c0ad8843854ba59b10a588e8a5fd0282028a17af5a743105",
+   "kind": "violating",
+   "operator": "traj-drop-confirmation",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks approve_request",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Approve requests with sufficient balance: The approval of LR-301 is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks approve_request",
+       "state /requests/LR-301/status = 'pending'"
+      ],
+      "requirement": "R1",
+      "text": "Approve LR-301 with approve_request because E-77 has balance 6, at least the 4 days requested."
+     },
+     {
+      "failed": [
+       "state /employees/E-77/balance_days = 6"
+      ],
+      "requirement": "R4",
+      "text": "Approving deducts the days from the balance; balances end at E-77 2, E-81 2, E-90 0, so each request is approved only once and rejected requests deduct nothing."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Process every pending request: the final state matches the reference state."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1801084e45145586c0ad8843854ba59b10a588e8a5fd0282028a17af5a743105"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,39 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1939ea62d284f95b88ae8c7d0ba118884668b3c84cb95be71a17af82e2adbdca",
+   "kind": "violating",
+   "operator": "traj-drop-confirmation",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks approve_request",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Process every pending request, approving when balance suffices: The approve_request call for LR-303 was dropped, so a pending request is left unprocessed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks approve_request",
+       "state /requests/LR-303/status = 'pending'"
+      ],
+      "requirement": "R3",
+      "text": "Approve LR-303 because E-90 has balance 10, exactly the 10 days requested (balance at least the days requested)."
+     },
+     {
+      "failed": [
+       "state /employees/E-90/balance_days = 10"
+      ],
+      "requirement": "R4",
+      "text": "Approving deducts the days from the balance; balances end at E-77 2, E-81 2, E-90 0, so each request is approved only once and rejected requests deduct nothing."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Process every pending request: the final state matches the reference state."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1939ea62d284f95b88ae8c7d0ba118884668b3c84cb95be71a17af82e2adbdca"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "928893f72a60de8bcaca2abb17c4421965a4a40135a860b51bb7f793d363eb35",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "leave-approval",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Balance checks for different employees are reordered relative to an approval, with the same approvals and rejections performed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "673ae27673d01e1afb5c28785fb942908775bcf4a270c80e468dcf35559b17a4",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the order of an initial read-only get_balance and list_requests changed; the approvals and rejections are the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "673ae27673d01e1afb5c28785fb942908775bcf4a270c80e468dcf35559b17a4"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1a10c8be1fcc6135f9db630cb4ede4a138bd879e13f0b340aaf7e4f0ee6e39ff",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "leave-approval",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Reject only when the employee's balance is insufficient, which requires checking the balance first: LR-302 is rejected before its balance is checked, so the decision is not based on the balance.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "1a10c8be1fcc6135f9db630cb4ede4a138bd879e13f0b340aaf7e4f0ee6e39ff"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\n+    \"tool\": \"list_requests\",\n+    \"args\": {\n+      \"status\": \"pending\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-77\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-301\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-81\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_balance\",\n+    \"args\": {\n+      \"employee_id\": \"E-90\"\n+    }\n+  },\n+  {\n+    \"tool\": \"reject_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-302\",\n+      \"reason\": \"insufficient balance\"\n+    }\n+  },\n+  {\n+    \"tool\": \"approve_request\",\n+    \"args\": {\n+      \"request_id\": \"LR-303\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_requests\",\n    \"args\": {\n      \"status\": \"pending\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-77\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-301\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-81\"\n    }\n  },\n  {\n    \"tool\": \"get_balance\",\n    \"args\": {\n      \"employee_id\": \"E-90\"\n    }\n  },\n  {\n    \"tool\": \"reject_request\",\n    \"args\": {\n      \"request_id\": \"LR-302\",\n      \"reason\": \"insufficient balance\"\n    }\n  },\n  {\n    \"tool\": \"approve_request\",\n    \"args\": {\n      \"request_id\": \"LR-303\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "aab5dbcbf60ba6493ad90216a7f0591349b4d71eaad533a02531ad46aa1ffffe",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the order of a read-only get_balance and a reject call changed; the same approvals and rejections occur.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "aab5dbcbf60ba6493ad90216a7f0591349b4d71eaad533a02531ad46aa1ffffe"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,7 @@\n [\n   {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n+  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-301\", \"reason\": \"insufficient balance\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n   {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-301\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5bbd0a77d92880cc6881acf27191745b80b6baf5423010570e9b7db5ef974e24",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks approve_request",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Approve if balance is at least days requested: LR-301 is rejected where the reference approves it.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks approve_request",
+       "state /requests/LR-301/status = 'rejected'"
+      ],
+      "requirement": "R1",
+      "text": "Approve LR-301 with approve_request because E-77 has balance 6, at least the 4 days requested."
+     },
+     {
+      "failed": [
+       "state /employees/E-77/balance_days = 6"
+      ],
+      "requirement": "R4",
+      "text": "Approving deducts the days from the balance; balances end at E-77 2, E-81 2, E-90 0, so each request is approved only once and rejected requests deduct nothing."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Process every pending request: the final state matches the reference state."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5bbd0a77d92880cc6881acf27191745b80b6baf5423010570e9b7db5ef974e24"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -3,7 +3,7 @@\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n   {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n+  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"not enough leave\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n   {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"not enough leave\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2ed6aaefb4b9516aa46f8d05e2e2d7d9f12f0aab61e83131016c0d2092e3df0c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks reject_request",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "reject with the reason `insufficient balance`: The rejection reason was changed to 'not enough leave'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks reject_request",
+       "state /requests/LR-302/reason = 'not enough leave'"
+      ],
+      "requirement": "R2",
+      "text": "Reject LR-302 with reject_request and the reason `insufficient balance`, because E-81 has balance 2, less than the 3 days requested."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Process every pending request: the final state matches the reference state."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2ed6aaefb4b9516aa46f8d05e2e2d7d9f12f0aab61e83131016c0d2092e3df0c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -5,5 +5,5 @@\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n   {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-303\", \"reason\": \"insufficient balance\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-303\", \"reason\": \"insufficient balance\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "93b2ba7f1623e2d76f049629c9278f36be15bf349c9244e779741de2a01d9a92",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks approve_request",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "approve LR-303 if the balance covers the days requested: It rejects LR-303, which the reference approves as the balance suffices.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks approve_request",
+       "state /requests/LR-303/status = 'rejected'",
+       "trajectory has reject_request"
+      ],
+      "requirement": "R3",
+      "text": "Approve LR-303 because E-90 has balance 10, exactly the 10 days requested (balance at least the days requested)."
+     },
+     {
+      "failed": [
+       "state /employees/E-90/balance_days = 10"
+      ],
+      "requirement": "R4",
+      "text": "Approving deducts the days from the balance; balances end at E-77 2, E-81 2, E-90 0, so each request is approved only once and rejected requests deduct nothing."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Process every pending request: the final state matches the reference state."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "93b2ba7f1623e2d76f049629c9278f36be15bf349c9244e779741de2a01d9a92"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,7 @@\n [\n   {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n+  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n   {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n   {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "e9b125bff71ebe13550e332f09159d936ef22c58fb4aefbe79409c9572339c38",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "leave-approval",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Approve each eligible request once, deducting days once: It calls approve_request on LR-301 twice, which would deduct the days twice.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -5,5 +5,6 @@\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n   {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}},\n+  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-288\", \"reason\": \"insufficient balance\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-288\", \"reason\": \"insufficient balance\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "a2a29f16e19c3471d7d0a13a0921aa795ad9211be173d1bcaac38a5fb775a91c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: trajectory has reject_request",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not change requests that are not pending: It rejects LR-288, which was not among the pending requests processed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory has reject_request"
+      ],
+      "requirement": "R5",
+      "text": "Do not change requests that are not pending (LR-288 and LR-298 keep their status and reason)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a2a29f16e19c3471d7d0a13a0921aa795ad9211be173d1bcaac38a5fb775a91c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -3,7 +3,5 @@\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n   {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "02b5aec1b73b9bdf060c63a4cc4b25e14634cd3705b878fc16a87d0b5384673c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks approve_request",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Process every pending leave request: LR-303 is no longer processed, so a pending request is left unhandled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks approve_request",
+       "state /requests/LR-303/status = 'pending'"
+      ],
+      "requirement": "R3",
+      "text": "Approve LR-303 because E-90 has balance 10, exactly the 10 days requested (balance at least the days requested)."
+     },
+     {
+      "failed": [
+       "state /employees/E-90/balance_days = 10"
+      ],
+      "requirement": "R4",
+      "text": "Approving deducts the days from the balance; balances end at E-77 2, E-81 2, E-90 0, so each request is approved only once and rejected requests deduct nothing."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Process every pending request: the final state matches the reference state."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "02b5aec1b73b9bdf060c63a4cc4b25e14634cd3705b878fc16a87d0b5384673c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,9 @@\n [\n   {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n+  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n+  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n   {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n   {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n   {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "efbdffdb7a1bf1388e123b42f19d8785f2ab12210756b72b784696145572255c",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Balance checks for different employees are only reordered before the decisions and each request is processed once with the same outcome.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "efbdffdb7a1bf1388e123b42f19d8785f2ab12210756b72b784696145572255c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,9 @@\n [\n   {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n+  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n+  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n   {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n+  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b0346f5e0a51573647256c7fe63e199df64d91b12f46247d834d0a322fe61fd3",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same requests get the same decisions; only the processing order changed and the requests belong to different employees.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "b0346f5e0a51573647256c7fe63e199df64d91b12f46247d834d0a322fe61fd3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1 @@\n-[\n-  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n-  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n-  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n-]\n+[{\"args\":{\"status\":\"pending\"},\"tool\":\"list_requests\"},{\"args\":{\"employee_id\":\"E-77\"},\"tool\":\"get_balance\"},{\"args\":{\"request_id\":\"LR-301\"},\"tool\":\"approve_request\"},{\"args\":{\"employee_id\":\"E-81\"},\"tool\":\"get_balance\"},{\"args\":{\"reason\":\"insufficient balance\",\"request_id\":\"LR-302\"},\"tool\":\"reject_request\"},{\"args\":{\"employee_id\":\"E-90\"},\"tool\":\"get_balance\"},{\"args\":{\"request_id\":\"LR-303\"},\"tool\":\"approve_request\"}]\n",
+   "files": {
+    "trajectory.json": "[{\"args\":{\"status\":\"pending\"},\"tool\":\"list_requests\"},{\"args\":{\"employee_id\":\"E-77\"},\"tool\":\"get_balance\"},{\"args\":{\"request_id\":\"LR-301\"},\"tool\":\"approve_request\"},{\"args\":{\"employee_id\":\"E-81\"},\"tool\":\"get_balance\"},{\"args\":{\"reason\":\"insufficient balance\",\"request_id\":\"LR-302\"},\"tool\":\"reject_request\"},{\"args\":{\"employee_id\":\"E-90\"},\"tool\":\"get_balance\"},{\"args\":{\"request_id\":\"LR-303\"},\"tool\":\"approve_request\"}]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "2d79735a9c99574a7ce092a4033ff592e6c09ea371f2c92d0fe3c72e9b4db904",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "leave-approval",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "6 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Same calls in the same order with the same arguments, only JSON formatting and key order differ.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "2d79735a9c99574a7ce092a4033ff592e6c09ea371f2c92d0fe3c72e9b4db904"
+   }
+  }
+ ]
+}

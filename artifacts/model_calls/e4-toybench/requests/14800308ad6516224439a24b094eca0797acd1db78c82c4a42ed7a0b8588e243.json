@@ -1,0 +1,318 @@
+{
+  "created_utc": "2026-11-04T02:29:00Z",
+  "hash": "14800308ad6516224439a24b094eca0797acd1db78c82c4a42ed7a0b8588e243",
+  "instructions": "You turn a task's text into atomic, machine-checkable requirements. For each item you\nget the task text, the task kind, the reference solution (it satisfies the task), the\ninitial workspace, and what the reference produced (files, stdout, exit status, tool\ncalls, final state). You are not shown how the task is graded and must not guess.\n\nWrite one requirement per distinct obligation in the task text (outputs, their\ncontent, required steps, ordering constraints, prohibited actions, policies). Each\nrequirement has an \"id\" (R1, R2, ...), \"text\" (the obligation in plain words, quoting\nthe task where possible), and \"checks\": a list of typed checks that pass on the\nreference outcome and fail when the obligation is broken. Allowed check types and\nfields: file_exists {path}; file_absent {path}; file_equals {path, text, normalize:\nnone|strip|trailing_ws}; file_contains {path, text}; file_regex {path, pattern};\nfile_json {path, pointer, equals, lenient}; file_lines {path, count};\nstdout_contains {text}; stdout_regex {pattern}; stdout_json {pointer, equals,\nlenient}; exit_code {code}; call {probe: {function, args, kwargs}, equals} or\n{probe, matches_reference: true}; same_as_reference {target: stdout|state|file:<path>,\nnormalize}; trajectory_includes {tool, args}; trajectory_excludes {tool, args};\ntrajectory_before {first: {tool, args}, then: {tool, args}}; state_equals {pointer,\nequals}.\n\nBe exactly as strict as the task text. If the text demands an exact format, check it\nexactly; if it only asks for content, check content (use \"normalize\" or \"lenient\" so\nthat harmless formatting does not fail the check). For function tasks, add call\nprobes on the examples in the text and on a few further valid inputs, using\nmatches_reference for inputs whose expected output the text does not state. Return\nfor each item: {\"requirements\": [ ... ]}.\n",
+  "items": [
+    {
+      "id": "c738ed1612d3c55987179e47f7976edfbbaed5571e2b43ecd91a79d250818418",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+      },
+      "task_text": "# Collect blog tags\n\nThe blog's sidebar shows every tag used on the site. Write a Python module `tagging.py` with a function `all_tags(posts)`.\n\n- `posts` is a list of dicts; each has a key `tags` whose value is a list of strings.\n- Normalize each tag by removing surrounding whitespace and converting it to lowercase. Ignore tags that are empty after this.\n- Return a list containing each distinct normalized tag exactly once. The order of the returned list does not matter.\n"
+    },
+    {
+      "id": "ce8651d35a45f7dae395b6c60ba4235ef7a68d29e71fa49af53afd644fd6d24c",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "bookings": {
+            "R-2040": {
+              "check_in": "2026-12-04",
+              "check_out": "2026-12-05",
+              "guest_name": "Arjun Mehta",
+              "room_type": "double",
+              "status": "confirmed"
+            },
+            "R-2041": {
+              "check_in": "2026-12-03",
+              "check_out": "2026-12-06",
+              "guest_name": "Hannah Becker",
+              "room_type": "double",
+              "status": "confirmed"
+            }
+          },
+          "inventory": {
+            "double": 2,
+            "family": 1,
+            "single": 3
+          },
+          "next_ref": 2042,
+          "outbox": [
+            {
+              "body": "Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.",
+              "subject": "Booking confirmed",
+              "to": "hannah.becker@example.com"
+            }
+          ]
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "check_in": "2026-12-03",
+              "check_out": "2026-12-06",
+              "guests": 2
+            },
+            "result": {
+              "available": {
+                "double": 1,
+                "family": 1
+              },
+              "ok": true
+            },
+            "tool": "search_rooms"
+          },
+          {
+            "args": {
+              "check_in": "2026-12-03",
+              "check_out": "2026-12-06",
+              "guest_name": "Hannah Becker",
+              "room_type": "double"
+            },
+            "result": {
+              "booking_ref": "R-2041",
+              "ok": true
+            },
+            "tool": "book_room"
+          },
+          {
+            "args": {
+              "body": "Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.",
+              "subject": "Booking confirmed",
+              "to": "hannah.becker@example.com"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "send_email"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+      },
+      "task_text": "# Book a room and confirm by email\n\nHannah Becker asks the hotel for a double room from 2026-12-03 to 2026-12-06.\n\n1. Book a `double` room for guest `Hannah Becker` with check-in `2026-12-03` and check-out `2026-12-06` using `book_room`. Booking references are issued in sequence; this booking will get `R-2041`.\n2. Then email her at `hannah.becker@example.com` with `send_email`, using the subject `Booking confirmed`. The body must mention her booking reference `R-2041`, the check-in date `2026-12-03`, and the check-out date `2026-12-06`; the wording is up to you.\n\nMake no other bookings and send no other emails.\n\nTools (see `support/env.py`):\n\n- `search_rooms(check_in, check_out, guests)`\n- `book_room(guest_name, room_type, check_in, check_out)`\n- `send_email(to, subject, body)`\n"
+    },
+    {
+      "id": "d1b4ab441deff99aabce7d0ffd8f2ed0f89e7fc37c4509da789152e0766636ac",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+      },
+      "task_text": "# Bump a version number\n\nThe release script needs to compute the next version. Write a Python module `semver.py` with a function `bump(version, part)`.\n\n- `version` is a string `MAJOR.MINOR.PATCH` of three non-negative decimal integers without leading zeros (`0` itself is allowed). Anything else, such as `\"1.2\"`, `\"1.2.3.4\"`, `\"01.2.3\"`, `\"1.2.3-beta\"`, or `\"v1.2.3\"`, is invalid.\n- `part` is `\"major\"`, `\"minor\"`, or `\"patch\"`. Bumping `major` increments MAJOR and resets MINOR and PATCH to 0; bumping `minor` increments MINOR and resets PATCH to 0; bumping `patch` increments PATCH.\n- Return the new version string, for example `bump(\"1.9.9\", \"major\")` returns `\"2.0.0\"`.\n- Raise `ValueError` for an invalid version or an unknown part.\n"
+    },
+    {
+      "id": "d3ce41aabc8cd3862a73d50e25d96d4655b2c582c30a16a9c99787068ff4d73f",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+      },
+      "task_text": "# Flatten nested settings\n\nThe settings service stores nested configuration, but the environment loader needs flat keys. Write a Python module `flatten.py` with a function `flatten(d, sep=\".\")`.\n\n- `d` is a dict with string keys. Values may be dicts (nested to any depth) or anything else.\n- Return a new dict with one entry per non-dict value, whose key is the path of keys from the top joined with `sep`. For example, `flatten({\"db\": {\"host\": \"x\", \"port\": 5432}})` returns `{\"db.host\": \"x\", \"db.port\": 5432}`.\n- Values that are not dicts, including lists, are kept as they are and are not flattened. An empty nested dict contributes no entries. `flatten({})` returns `{}`.\n- Do not modify `d` or anything inside it.\n"
+    },
+    {
+      "id": "d59141d2658d0fe50958352a5b940a45f17ffaf9b377da1f4e97b3beb1305d4c",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+      },
+      "task_text": "# Normalize US phone numbers\n\nThe CRM stores phone numbers exactly as customers typed them. Write a Python module `phones.py` with a function `normalize_phone(raw)` that converts a US phone number to E.164 form.\n\n- Remove spaces, dots, dashes, and parentheses. After that, a single leading `+` is also removed.\n- What remains must consist of ASCII digits only and be either 10 digits, or 11 digits starting with `1` (the country code).\n- Return `\"+1\"` followed by the 10-digit national number. For example, `normalize_phone(\"(415) 555-0132\")` and `normalize_phone(\"+1 415.555.0132\")` both return `\"+14155550132\"`.\n- For any other input (wrong number of digits, letters, other symbols, an empty string), raise `ValueError`.\n"
+    },
+    {
+      "id": "d854c1d6dd1040c9c6e131a664c2b5ce49d3971799f2d05259b4e74c813754a6",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "roman.py": "_VALUES = [\n    (1000, \"M\"), (900, \"CM\"), (500, \"D\"), (400, \"CD\"), (100, \"C\"), (90, \"XC\"),\n    (50, \"L\"), (40, \"XL\"), (10, \"X\"), (9, \"IX\"), (5, \"V\"), (4, \"IV\"), (1, \"I\"),\n]\n\n\ndef to_roman(n):\n    if not 1 <= n <= 3999:\n        raise ValueError(\"n must be between 1 and 3999\")\n    out = []\n    for value, letters in _VALUES:\n        count, n = divmod(n, value)\n        out.append(letters * count)\n    return \"\".join(out)\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "roman.py": "_VALUES = [\n    (1000, \"M\"), (900, \"CM\"), (500, \"D\"), (400, \"CD\"), (100, \"C\"), (90, \"XC\"),\n    (50, \"L\"), (40, \"XL\"), (10, \"X\"), (9, \"IX\"), (5, \"V\"), (4, \"IV\"), (1, \"I\"),\n]\n\n\ndef to_roman(n):\n    if not 1 <= n <= 3999:\n        raise ValueError(\"n must be between 1 and 3999\")\n    out = []\n    for value, letters in _VALUES:\n        count, n = divmod(n, value)\n        out.append(letters * count)\n    return \"\".join(out)\n"
+      },
+      "task_text": "# Roman numerals\n\nWrite a Python module `roman.py` with a function `to_roman(n)` that returns the Roman numeral for an integer `n` from 1 to 3999, using the standard subtractive notation (`IV`, `IX`, `XL`, `XC`, `CD`, `CM`) and uppercase letters. For example, `to_roman(1994)` returns `\"MCMXCIV\"`.\n\nIf `n` is outside 1 to 3999, raise `ValueError`.\n"
+    },
+    {
+      "id": "dc815a91feef86df1cd6f77ded47cf5831c6b2d551792f56f8e503eaa185fc3f",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "wrap.py": "def wrap(text, width):\n    lines = []\n    current = \"\"\n    for word in text.split():\n        if not current:\n            current = word\n        elif len(current) + 1 + len(word) <= width:\n            current += \" \" + word\n        else:\n            lines.append(current)\n            current = word\n    if current:\n        lines.append(current)\n    return lines\n"
+      },
+      "task_text": "# Word wrapping\n\nWrite a Python module `wrap.py` with a function `wrap(text, width)` that wraps text for a fixed-width terminal. `width` is a positive integer.\n\n- Words are the maximal runs of non-whitespace characters in `text`.\n- Fill lines greedily: put words on the current line, separated by single spaces, as long as the line stays at most `width` characters long; when the next word does not fit, start a new line with it.\n- A word longer than `width` is put on a line of its own, unbroken.\n- Return the list of lines. No line has leading or trailing spaces. If `text` contains no words, return `[]`.\n"
+    },
+    {
+      "id": "dd0615213b45a8ce3196f23e25493cd507ddf3fde1088f61744d32a50a7d7fe8",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "accounts": {
+            "AC-4410": {
+              "next_billing": "2026-11-21",
+              "notes": [
+                "Customer requested downgrade from Pro to Basic at period end (2026-11-21)."
+              ],
+              "owner": "Kofi Mensah",
+              "pending_change": {
+                "effective": "2026-11-21",
+                "plan": "basic"
+              },
+              "plan": "pro",
+              "zip": "60614"
+            },
+            "AC-4471": {
+              "next_billing": "2026-11-28",
+              "notes": [],
+              "owner": "Lea Novak",
+              "pending_change": null,
+              "plan": "team",
+              "zip": "60657"
+            }
+          },
+          "audit": [
+            {
+              "account_id": "AC-4410",
+              "action": "verify_account",
+              "ok": true,
+              "seq": 1
+            },
+            {
+              "account_id": "AC-4410",
+              "action": "schedule_plan_change",
+              "ok": true,
+              "seq": 2
+            },
+            {
+              "account_id": "AC-4410",
+              "action": "add_note",
+              "ok": true,
+              "seq": 3
+            }
+          ]
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "account_id": "AC-4410",
+              "zip_code": "60614"
+            },
+            "result": {
+              "ok": true,
+              "verified": true
+            },
+            "tool": "verify_account"
+          },
+          {
+            "args": {
+              "account_id": "AC-4410"
+            },
+            "result": {
+              "account": {
+                "next_billing": "2026-11-21",
+                "notes": [],
+                "owner": "Kofi Mensah",
+                "pending_change": null,
+                "plan": "pro"
+              },
+              "ok": true
+            },
+            "tool": "get_account"
+          },
+          {
+            "args": {
+              "account_id": "AC-4410",
+              "effective": "period_end",
+              "plan": "basic"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "schedule_plan_change"
+          },
+          {
+            "args": {
+              "account_id": "AC-4410",
+              "text": "Customer requested downgrade from Pro to Basic at period end (2026-11-21)."
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "add_note"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"verify_account\", \"args\": {\"account_id\": \"AC-4410\", \"zip_code\": \"60614\"}},\n  {\"tool\": \"get_account\", \"args\": {\"account_id\": \"AC-4410\"}},\n  {\"tool\": \"schedule_plan_change\", \"args\": {\"account_id\": \"AC-4410\", \"plan\": \"basic\", \"effective\": \"period_end\"}},\n  {\"tool\": \"add_note\", \"args\": {\"account_id\": \"AC-4410\", \"text\": \"Customer requested downgrade from Pro to Basic at period end (2026-11-21).\"}}\n]\n"
+      },
+      "task_text": "# Downgrade a subscription plan\n\nKofi Mensah wants to move account `AC-4410` from the Pro plan to the Basic plan at the end of the current billing period, not immediately.\n\n- Policy: before scheduling any plan change, verify the account holder with `verify_account`. He gave the ZIP code `60614`.\n- Schedule the change to plan `basic` with `effective` set to `period_end` using `schedule_plan_change`.\n- Add an account note about the downgrade with `add_note`; the note text must contain the word `downgrade` (any capitalization).\n\nDo not change any other account.\n\nTools (see `support/env.py`):\n\n- `verify_account(account_id, zip_code)`\n- `get_account(account_id)`\n- `schedule_plan_change(account_id, plan, effective)`, where `effective` is `now` or `period_end`\n- `add_note(account_id, text)`\n"
+    }
+  ],
+  "prompt_version": "requirements/v1",
+  "purpose": "requirements",
+  "response_schema": {
+    "required": [
+      "requirements"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

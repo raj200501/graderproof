@@ -1,0 +1,1762 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [
+  {
+   "checks": [
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "415555013"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "41555501322"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "24155550132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "141555501320"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "1"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Raise ValueError for the wrong number of digits (including 11 digits not starting with 1)"
+  },
+  {
+   "checks": [
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "415-555-CALL"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "415/555/0132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "415_555_0132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "#4155550132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       ""
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "   "
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "+"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Raise ValueError for letters, other symbols, and an empty string"
+  },
+  {
+   "checks": [
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "++14155550132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "415+5550132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "\u0664\u0661\u0665\u0665\u0665\u0665\u0660\u0661\u0663\u0662"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "+ 1 415 555 0132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "Only a single leading + is removed; digits must be ASCII"
+  }
+ ],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+  },
+  "probes": {
+   "0a86cfe7df13400a": {
+    "ok": true,
+    "value": "+14155550132"
+   },
+   "1d6470cda446a380": {
+    "error": "ValueError: not a US phone number: '415+5550132'",
+    "ok": false
+   },
+   "1e3c2bcc49896b33": {
+    "error": "ValueError: not a US phone number: '141555501320'",
+    "ok": false
+   },
+   "26c05653caa2f79b": {
+    "error": "ValueError: not a US phone number: '++14155550132'",
+    "ok": false
+   },
+   "2b90880e572df2f5": {
+    "ok": true,
+    "value": "+14155550132"
+   },
+   "2d56dcdc39135369": {
+    "ok": true,
+    "value": "+14155550132"
+   },
+   "2e8acea076840c0c": {
+    "error": "ValueError: not a US phone number: '415-555-CALL'",
+    "ok": false
+   },
+   "356d12dda9dd5558": {
+    "error": "ValueError: not a US phone number: '41555501322'",
+    "ok": false
+   },
+   "6c957d0dd6eb6f23": {
+    "ok": true,
+    "value": "+14155550132"
+   },
+   "81bce5c64d263ead": {
+    "error": "ValueError: not a US phone number: '   '",
+    "ok": false
+   },
+   "835375c7298be3b5": {
+    "error": "ValueError: not a US phone number: '415_555_0132'",
+    "ok": false
+   },
+   "9c4ba9a9a5d9b070": {
+    "error": "ValueError: not a US phone number: '1'",
+    "ok": false
+   },
+   "ad56cfb5a8950ab9": {
+    "error": "ValueError: not a US phone number: '415/555/0132'",
+    "ok": false
+   },
+   "b44debc93c529276": {
+    "error": "ValueError: not a US phone number: '24155550132'",
+    "ok": false
+   },
+   "ba076590b46e8f66": {
+    "error": "ValueError: not a US phone number: '#4155550132'",
+    "ok": false
+   },
+   "bb5cf07e042450cb": {
+    "ok": true,
+    "value": "+14155550132"
+   },
+   "c74a751f918a00c5": {
+    "error": "ValueError: not a US phone number: '415555013'",
+    "ok": false
+   },
+   "cff83f420f2682af": {
+    "error": "ValueError: not a US phone number: '\u0664\u0661\u0665\u0665\u0665\u0665\u0660\u0661\u0663\u0662'",
+    "ok": false
+   },
+   "d574df768a57b268": {
+    "ok": true,
+    "value": "+14155550132"
+   },
+   "e6b817ff914daf05": {
+    "error": "ValueError: not a US phone number: '+'",
+    "ok": false
+   },
+   "f57a529eb56417fd": {
+    "error": "ValueError: not a US phone number: ''",
+    "ok": false
+   },
+   "f7bd2b9b353c65ff": {
+    "ok": true,
+    "value": "+14155550132"
+   },
+   "f830c2c4d4b795d8": {
+    "ok": true,
+    "value": "+14155550132"
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "phones.py",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write a Python module phones.py"
+  },
+  {
+   "checks": [
+    {
+     "equals": "+14155550132",
+     "probe": {
+      "args": [
+       "(415) 555-0132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "+14155550132",
+     "probe": {
+      "args": [
+       "+1 415.555.0132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "+14155550132",
+     "probe": {
+      "args": [
+       "415-555-0132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "+14155550132",
+     "probe": {
+      "args": [
+       "4155550132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+  },
+  {
+   "checks": [
+    {
+     "equals": "+14155550132",
+     "probe": {
+      "args": [
+       "14155550132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "+14155550132",
+     "probe": {
+      "args": [
+       "1 (415) 555-0132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "+14155550132",
+     "probe": {
+      "args": [
+       "+14155550132"
+      ],
+      "function": "normalize_phone",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:phone-normalize",
+ "task_hash": "d59141d2658d0fe50958352a5b940a45f17ffaf9b377da1f4e97b3beb1305d4c",
+ "variants": [
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -7,7 +7,7 @@\n     if text.startswith(\"+\"):\n         text = text[1:]\n     if not text or not set(text) <= _DIGITS:\n-        raise ValueError(\"not a US phone number: %r\" % raw)\n+        raise ValueError((\"not a US phone number: %r\") // (raw))\n     if len(text) == 11 and text[0] == \"1\":\n         text = text[1:]\n     if len(text) != 10:\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError((\"not a US phone number: %r\") // (raw))\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "74c45ff0b316f504fd53d553db1dfddcd3ea9e227686a884fe79f4cc7d86452a",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "phone-normalize",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Raise ValueError for invalid input: str // tuple raises TypeError instead of ValueError for non-digit input.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -11,5 +11,5 @@\n     if len(text) == 11 and text[0] == \"1\":\n         text = text[1:]\n     if len(text) != 10:\n-        raise ValueError(\"not a US phone number: %r\" % raw)\n+        raise ValueError((\"not a US phone number: %r\") // (raw))\n     return \"+1\" + text\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError((\"not a US phone number: %r\") // (raw))\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a64c60b3b80eb7e1f9053cae7b524b060db25185178ea037358eb28370b4fe4f",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "phone-normalize",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Raise ValueError for wrong digit counts: The str // tuple expression raises TypeError instead of ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -12,4 +12,4 @@\n         text = text[1:]\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    return \"+1\" + text\n+    return (\"+1\") - (text)\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return (\"+1\") - (text)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7058601d2ff9ec86707479b9c025e9f8fd7b47d1d2605630cb21e920cc33cbd6",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return +1 followed by the 10-digit number: String subtraction raises TypeError on every valid input.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7058601d2ff9ec86707479b9c025e9f8fd7b47d1d2605630cb21e920cc33cbd6"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -8,7 +8,7 @@\n         text = text[1:]\n     if not text or not set(text) <= _DIGITS:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    if len(text) == 11 and text[0] == \"1\":\n+    if (len(text) == 11) or (text[0] == \"1\"):\n         text = text[1:]\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if (len(text) == 11) or (text[0] == \"1\"):\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d511b86b278eae205a25e2d38c1cf9f38a095377f2ed71bd560287d849644a60",
+   "kind": "violating",
+   "operator": "py-boolop",
+   "task_id": "phone-normalize",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Accept 10-digit numbers and strip only the leading 1 from 11-digit numbers: The 'or' condition strips the first digit of 10-digit numbers starting with 1 and of 11-digit numbers not starting with 1, so valid or invalid inputs are handled wrongly.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -6,7 +6,7 @@\n     text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n     if text.startswith(\"+\"):\n         text = text[1:]\n-    if not text or not set(text) <= _DIGITS:\n+    if (not text) and (not set(text) <= _DIGITS):\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     if len(text) == 11 and text[0] == \"1\":\n         text = text[1:]\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if (not text) and (not set(text) <= _DIGITS):\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fbe0e11f1e2542dbdd4820dd3e1577063ad313f13e47b7c64c1b52cd61da1d5e",
+   "kind": "violating",
+   "operator": "py-boolop",
+   "task_id": "phone-normalize",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Reject input containing non-digit characters: The validation condition uses 'and', so a 10-character string with letters or symbols is accepted and returned as a phone number.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -8,7 +8,7 @@\n         text = text[1:]\n     if not text or not set(text) <= _DIGITS:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    if len(text) == 11 and text[0] == \"1\":\n+    if len(text) != 11 and text[0] == \"1\":\n         text = text[1:]\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) != 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "cd8f4c3976be91b066c2a2d5901659cff1df4b8c90f3b55fc4edc477916731aa",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "10-digit numbers must be accepted; only 11-digit numbers starting with 1 lose the country code: The changed condition strips the first digit of 10-digit numbers starting with 1 and then raises ValueError, and leaves valid 11-digit numbers unstripped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "cd8f4c3976be91b066c2a2d5901659cff1df4b8c90f3b55fc4edc477916731aa"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -8,7 +8,7 @@\n         text = text[1:]\n     if not text or not set(text) <= _DIGITS:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    if len(text) == 11 and text[0] == \"1\":\n+    if len(text) == 11 and text[0] != \"1\":\n         text = text[1:]\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] != \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d4ccf4bda4cbe675426cfb48a96f45f55b03e1eb5b234b9e7aba5a847bf86638",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Strip the country code only from 11-digit numbers starting with 1: The inverted test means valid 11-digit numbers are not stripped and fail with ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d4ccf4bda4cbe675426cfb48a96f45f55b03e1eb5b234b9e7aba5a847bf86638"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -10,6 +10,6 @@\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     if len(text) == 11 and text[0] == \"1\":\n         text = text[1:]\n-    if len(text) != 10:\n+    if len(text) == 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     return \"+1\" + text\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) == 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6b5b3c3b995ef669fdb33de7af217742052d92ce395866bb1017112f57e5a245",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Raise ValueError for wrong digit count and return +1 plus 10 digits otherwise: The length check is inverted, so valid 10-digit numbers raise and invalid lengths are accepted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6b5b3c3b995ef669fdb33de7af217742052d92ce395866bb1017112f57e5a245"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -6,7 +6,7 @@\n     text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n     if text.startswith(\"+\"):\n         text = text[1:]\n-    if not text or not set(text) <= _DIGITS:\n+    if not text or not set(text) < _DIGITS:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     if len(text) == 11 and text[0] == \"1\":\n         text = text[1:]\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) < _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b874c00485904d931bd17e3bb528f0fcd5b06e5f478b5828ef2cf9eb5af75ae5",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "phone-normalize",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "accept ASCII-digit-only inputs with 10 or 11 digits: A strict subset test rejects numbers that contain all ten distinct digits, such as 0123456789.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -1,4 +1,4 @@\n-_REMOVED = set(\" .-()\")\n+_REMOVED = set('')\n _DIGITS = set(\"0123456789\")\n \n \n",
+   "files": {
+    "phones.py": "_REMOVED = set('')\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "78e03cbb8f470d916ed067f1434060cb37d3a713b340ca40cdf1afc7cb0601cb",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove spaces, dots, dashes, and parentheses: No separator characters are removed, so formatted numbers raise ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "78e03cbb8f470d916ed067f1434060cb37d3a713b340ca40cdf1afc7cb0601cb"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -7,7 +7,7 @@\n     if text.startswith(\"+\"):\n         text = text[1:]\n     if not text or not set(text) <= _DIGITS:\n-        raise ValueError(\"not a US phone number: %r\" % raw)\n+        raise ValueError('' % raw)\n     if len(text) == 11 and text[0] == \"1\":\n         text = text[1:]\n     if len(text) != 10:\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError('' % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ebba4ac2542aafc7343478b8b461bb8bb5cdab0e88b4bb4d9da5fdf2d4e16f85",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "phone-normalize",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "raise ValueError for non-digit input: '' % raw raises TypeError (not all arguments converted) instead of ValueError for inputs with letters or symbols.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -9,7 +9,7 @@\n     if not text or not set(text) <= _DIGITS:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     if len(text) == 11 and text[0] == \"1\":\n-        text = text[1:]\n+        text = text[2:]\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     return \"+1\" + text\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[2:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b7fea40568f0a77e5c5f8a02354075dc06b2030a76ac03e6429d8f6a21795228",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "11-digit numbers starting with 1 yield the 10-digit national number: text[2:] drops two digits, leaving 9 digits and raising ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b7fea40568f0a77e5c5f8a02354075dc06b2030a76ac03e6429d8f6a21795228"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -12,4 +12,4 @@\n         text = text[1:]\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    return \"+1\" + text\n+    return '' + text\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return '' + text\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "b2ebe68b65a6e838678ff2b98047f05ada6c353bf5208d708864c6d87d5f0f17",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned '4155550132'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "return \"+1\" followed by the 10-digit national number: The function returns the bare digits without the +1 prefix.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned '4155550132'",
+       "normalize_phone returned '4155550132'",
+       "normalize_phone returned '4155550132'",
+       "normalize_phone returned '4155550132'"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned '4155550132'",
+       "normalize_phone returned '4155550132'",
+       "normalize_phone returned '4155550132'"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b2ebe68b65a6e838678ff2b98047f05ada6c353bf5208d708864c6d87d5f0f17"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -12,4 +12,4 @@\n         text = text[1:]\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    return \"+1\" + text\n+    return '+' + text\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return '+' + text\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "e0fc0c29f9f541e1ab1d0c497f105a9612c0b145a7d14a1b39df150e88edfc74",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned '+4155550132'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return \"+1\" followed by the 10-digit number: The result is '+' plus the digits, missing the country code 1.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned '+4155550132'",
+       "normalize_phone returned '+4155550132'",
+       "normalize_phone returned '+4155550132'",
+       "normalize_phone returned '+4155550132'"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned '+4155550132'",
+       "normalize_phone returned '+4155550132'",
+       "normalize_phone returned '+4155550132'"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e0fc0c29f9f541e1ab1d0c497f105a9612c0b145a7d14a1b39df150e88edfc74"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -1,5 +1,5 @@\n _REMOVED = set(\" .-()\")\n-_DIGITS = set(\"0123456789\")\n+_DIGITS = set('0123456789x')\n \n \n def normalize_phone(raw):\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set('0123456789x')\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "be9c35552cf0071307a0d3aad958ea3e6bc8e73d61003898c57f105f5274d7fa",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "phone-normalize",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only ASCII digits are accepted; letters raise ValueError: The letter 'x' is now accepted as a digit, so inputs containing x do not raise.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -8,7 +8,7 @@\n         text = text[1:]\n     if not text or not set(text) <= _DIGITS:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    if len(text) == 11 and text[0] == \"1\":\n+    if not (len(text) == 11 and text[0] == \"1\"):\n         text = text[1:]\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if not (len(text) == 11 and text[0] == \"1\"):\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5bdff639d2d71d15588d255a3106c0802484c5e9094c7b69c13753c6cfdfbc87",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept 10 digits, or 11 digits starting with 1: The inverted condition strips the first digit of valid 10-digit numbers so they raise ValueError, and 11-digit numbers are not stripped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5bdff639d2d71d15588d255a3106c0802484c5e9094c7b69c13753c6cfdfbc87"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -10,6 +10,6 @@\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     if len(text) == 11 and text[0] == \"1\":\n         text = text[1:]\n-    if len(text) != 10:\n+    if not (len(text) != 10):\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     return \"+1\" + text\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if not (len(text) != 10):\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "19a8a98d95f38e7a5f0cc6af33f8f30fb6902875837d0c0bca7a69e0f6fa2c56",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept exactly 10 digits (after country code removal) and raise ValueError otherwise: The length check is inverted, so valid numbers raise ValueError and wrong-length numbers are accepted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "19a8a98d95f38e7a5f0cc6af33f8f30fb6902875837d0c0bca7a69e0f6fa2c56"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -4,7 +4,7 @@\n \n def normalize_phone(raw):\n     text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n-    if text.startswith(\"+\"):\n+    if not (text.startswith(\"+\")):\n         text = text[1:]\n     if not text or not set(text) <= _DIGITS:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if not (text.startswith(\"+\")):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dd7079c1e87c84261bdda5abecdb3d73a6d33a49a49729da7c8f6d2bfc87ce89",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Strip a single leading + and normalize numbers: The condition is inverted, so the first digit is stripped from numbers without a leading + and + numbers are left to fail the digits check.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "dd7079c1e87c84261bdda5abecdb3d73a6d33a49a49729da7c8f6d2bfc87ce89"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -6,7 +6,7 @@\n     text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n     if text.startswith(\"+\"):\n         text = text[1:]\n-    if not text or not set(text) <= _DIGITS:\n+    if not (not text or not set(text) <= _DIGITS):\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     if len(text) == 11 and text[0] == \"1\":\n         text = text[1:]\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not (not text or not set(text) <= _DIGITS):\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "04e5ba950ca899ec6fdc1e23136adda9ebdc6f9ffab9f788d820f6cdfe555840",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Raise ValueError for non-digit or empty input: The validity check is inverted, so valid numbers raise and invalid ones pass through.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "04e5ba950ca899ec6fdc1e23136adda9ebdc6f9ffab9f788d820f6cdfe555840"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -3,13 +3,13 @@\n \n \n def normalize_phone(raw):\n-    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n-    if text.startswith(\"+\"):\n-        text = text[1:]\n-    if not text or not set(text) <= _DIGITS:\n+    text_gp = \"\".join(ch_gp for ch_gp in raw if ch_gp not in _REMOVED)\n+    if text_gp.startswith(\"+\"):\n+        text_gp = text_gp[1:]\n+    if not text_gp or not set(text_gp) <= _DIGITS:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    if len(text) == 11 and text[0] == \"1\":\n-        text = text[1:]\n-    if len(text) != 10:\n+    if len(text_gp) == 11 and text_gp[0] == \"1\":\n+        text_gp = text_gp[1:]\n+    if len(text_gp) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    return \"+1\" + text\n+    return \"+1\" + text_gp\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text_gp = \"\".join(ch_gp for ch_gp in raw if ch_gp not in _REMOVED)\n    if text_gp.startswith(\"+\"):\n        text_gp = text_gp[1:]\n    if not text_gp or not set(text_gp) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text_gp) == 11 and text_gp[0] == \"1\":\n        text_gp = text_gp[1:]\n    if len(text_gp) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text_gp\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "273799cd09162c4c09ad2b2fd9264947daf991f9d7e60a9b640bc6813f18d963",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variable names changed; behavior is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "273799cd09162c4c09ad2b2fd9264947daf991f9d7e60a9b640bc6813f18d963"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -12,4 +12,4 @@\n         text = text[1:]\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    return \"+1\" + text\n+    return None\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "abf00901c83b7de0d74d0469b70052a9f3e862e7e490a6864fe175c10c6cb0a3",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return +1 followed by the 10-digit number: The function returns None for valid numbers.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "abf00901c83b7de0d74d0469b70052a9f3e862e7e490a6864fe175c10c6cb0a3"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -7,7 +7,7 @@\n     if text.startswith(\"+\"):\n         text = text[1:]\n     if not text or not set(text) <= _DIGITS:\n-        raise ValueError(\"not a US phone number: %r\" % raw)\n+        pass\n     if len(text) == 11 and text[0] == \"1\":\n         text = text[1:]\n     if len(text) != 10:\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        pass\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "76bc49a3ca554984c2ee5338ba161ebfda97a8dbc2ac44f4d0bd2bc9abb54dd6",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "phone-normalize",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Raise ValueError for letters or other symbols: The non-digit check no longer raises, so a 10-character non-digit string is returned as a number.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -9,7 +9,7 @@\n     if not text or not set(text) <= _DIGITS:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     if len(text) == 11 and text[0] == \"1\":\n-        text = text[1:]\n+        pass\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     return \"+1\" + text\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        pass\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "78caadc4d3e08a9242af9c345523547034ff762e2a9ec7e401beab13429c1055",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept 11 digits starting with 1 and drop the country code: The leading 1 is no longer removed, so 11-digit numbers raise ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "78caadc4d3e08a9242af9c345523547034ff762e2a9ec7e401beab13429c1055"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -12,4 +12,4 @@\n         text = text[1:]\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    return \"+1\" + text\n+    pass\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e971de9e414b6968c363aad8331fb1c67c06270760f841209917932fffff121b",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "return +1 followed by the 10-digit number: Valid inputs now return None instead of the E.164 string.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e971de9e414b6968c363aad8331fb1c67c06270760f841209917932fffff121b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -3,7 +3,7 @@\n \n \n def normalize_phone(raw):\n-    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n+    pass\n     if text.startswith(\"+\"):\n         text = text[1:]\n     if not text or not set(text) <= _DIGITS:\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    pass\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9b45e19e6ca5067822aaaf0771167137e3bf5f7765c6bbb8f8c27a3687e7e7e4",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the normalized E.164 number: The text variable is never assigned, so the function raises NameError on every call.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9b45e19e6ca5067822aaaf0771167137e3bf5f7765c6bbb8f8c27a3687e7e7e4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -4,8 +4,7 @@\n \n def normalize_phone(raw):\n     text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n-    if text.startswith(\"+\"):\n-        text = text[1:]\n+    pass\n     if not text or not set(text) <= _DIGITS:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     if len(text) == 11 and text[0] == \"1\":\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    pass\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "51e1f6fc7d25bff8cb9f50edf3931b3acc3a649ba2861c2e20dd18fda8d2faa8",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "A single leading + is removed: The leading + is no longer stripped, so inputs like +1 415.555.0132 raise ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "51e1f6fc7d25bff8cb9f50edf3931b3acc3a649ba2861c2e20dd18fda8d2faa8"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -6,8 +6,7 @@\n     text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n     if text.startswith(\"+\"):\n         text = text[1:]\n-    if not text or not set(text) <= _DIGITS:\n-        raise ValueError(\"not a US phone number: %r\" % raw)\n+    pass\n     if len(text) == 11 and text[0] == \"1\":\n         text = text[1:]\n     if len(text) != 10:\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    pass\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f315f56a39d27613454ec765431baf69faa71ff3a108f9943f05fc5dcc360c5d",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "phone-normalize",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "raise ValueError for letters or other symbols: The digits-only validation was removed, so inputs with letters of valid length are accepted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -1,4 +1,4 @@\n-_REMOVED = set(\" .-()\")\n+_REMOVED = set(\" -()\")\n _DIGITS = set(\"0123456789\")\n \n \n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" -()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a5a3c63af789e74e604437f28fa290eb2d111c6c2e344ee01747d4ed438e8196",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove dots from the number: Dots are no longer removed so dotted numbers raise ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a5a3c63af789e74e604437f28fa290eb2d111c6c2e344ee01747d4ed438e8196"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -8,8 +8,6 @@\n         text = text[1:]\n     if not text or not set(text) <= _DIGITS:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    if len(text) == 11 and text[0] == \"1\":\n-        text = text[1:]\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n     return \"+1\" + text\n",
+   "files": {
+    "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9a56a75060968dd32831675f103ea74e2ce6a7f2cf9fd57edf3f202e23367094",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: normalize_phone returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept 11 digits starting with 1: Numbers with the country code 1 now raise ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "normalize_phone returned None"
+      ],
+      "requirement": "R2",
+      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
+     },
+     {
+      "failed": [
+       "normalize_phone returned None",
+       "normalize_phone returned None",
+       "normalize_phone returned None"
+      ],
+      "requirement": "R3",
+      "text": "11 digits starting with 1 are accepted, the country code dropped and re-added as +1"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9a56a75060968dd32831675f103ea74e2ce6a7f2cf9fd57edf3f202e23367094"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -1,15 +1,9 @@\n-_REMOVED = set(\" .-()\")\n-_DIGITS = set(\"0123456789\")\n+import re\n \n \n def normalize_phone(raw):\n-    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n-    if text.startswith(\"+\"):\n-        text = text[1:]\n-    if not text or not set(text) <= _DIGITS:\n+    text = re.sub(r\"[ .\\-()]\", \"\", raw)\n+    match = re.fullmatch(r\"\\+?1?([0-9]{10})\", text)\n+    if match is None:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    if len(text) == 11 and text[0] == \"1\":\n-        text = text[1:]\n-    if len(text) != 10:\n-        raise ValueError(\"not a US phone number: %r\" % raw)\n-    return \"+1\" + text\n+    return \"+1\" + match.group(1)\n",
+   "files": {
+    "phones.py": "import re\n\n\ndef normalize_phone(raw):\n    text = re.sub(r\"[ .\\-()]\", \"\", raw)\n    match = re.fullmatch(r\"\\+?1?([0-9]{10})\", text)\n    if match is None:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + match.group(1)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "681138877689ece1ce67dce08ee0702a87d9266428e62addeae3d74d3f5da7a0",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The regex accepts exactly 10 digits or 11 digits starting with 1 after the same cleanup, and raises ValueError otherwise.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "681138877689ece1ce67dce08ee0702a87d9266428e62addeae3d74d3f5da7a0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/phones.py\n+++ b/phones.py\n@@ -1,15 +1,14 @@\n-_REMOVED = set(\" .-()\")\n-_DIGITS = set(\"0123456789\")\n+_TABLE = str.maketrans(\"\", \"\", \" .-()\")\n \n \n def normalize_phone(raw):\n-    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n-    if text.startswith(\"+\"):\n+    text = raw.translate(_TABLE)\n+    if text[:1] == \"+\":\n         text = text[1:]\n-    if not text or not set(text) <= _DIGITS:\n+    if not (text.isascii() and text.isdigit()):\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    if len(text) == 11 and text[0] == \"1\":\n+    if len(text) == 11 and text.startswith(\"1\"):\n         text = text[1:]\n     if len(text) != 10:\n         raise ValueError(\"not a US phone number: %r\" % raw)\n-    return \"+1\" + text\n+    return \"+1{}\".format(text)\n",
+   "files": {
+    "phones.py": "_TABLE = str.maketrans(\"\", \"\", \" .-()\")\n\n\ndef normalize_phone(raw):\n    text = raw.translate(_TABLE)\n    if text[:1] == \"+\":\n        text = text[1:]\n    if not (text.isascii() and text.isdigit()):\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text.startswith(\"1\"):\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1{}\".format(text)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "98ea28d5435633a9c96f1b9276283d6f4139396ef791cabd19f93b145a332b16",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "phone-normalize",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The refactor removes the same characters, validates ASCII digits, handles the 11-digit case and returns the same output.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "98ea28d5435633a9c96f1b9276283d6f4139396ef791cabd19f93b145a332b16"
+   }
+  }
+ ]
+}

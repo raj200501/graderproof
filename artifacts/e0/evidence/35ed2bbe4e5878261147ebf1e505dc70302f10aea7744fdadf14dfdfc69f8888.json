@@ -1,0 +1,1590 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "by_category.csv": "category,total\nmeals,120.50\noffice,23.40\nsoftware,169.00\ntravel,602.79\n",
+   "expenses.csv": "date,category,amount\n2026-10-02,travel,412.80\n2026-10-03,meals,38.50\n2026-10-07,software,120.00\n2026-10-09,meals,64.25\n2026-10-14,travel,189.99\n2026-10-18,office,23.40\n2026-10-22,software,49.00\n2026-10-29,meals,17.75\n",
+   "summary.json": "{\"categories\": 4, \"grand_total\": 915.69}\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "by_category.csv",
+     "type": "file_exists"
+    },
+    {
+     "path": "summary.json",
+     "type": "file_exists"
+    },
+    {
+     "code": 0,
+     "type": "exit_code"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Produce by_category.csv and summary.json."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "strip",
+     "path": "by_category.csv",
+     "text": "category,total\nmeals,120.50\noffice,23.40\nsoftware,169.00\ntravel,602.79\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "categories": 4,
+      "grand_total": 915.69
+     },
+     "lenient": true,
+     "path": "summary.json",
+     "pointer": "",
+     "type": "file_json"
+    },
+    {
+     "equals": 4,
+     "lenient": false,
+     "path": "summary.json",
+     "pointer": "/categories",
+     "type": "file_json"
+    },
+    {
+     "equals": 915.69,
+     "lenient": true,
+     "path": "summary.json",
+     "pointer": "/grand_total",
+     "type": "file_json"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:expense-rollup",
+ "task_hash": "35ed2bbe4e5878261147ebf1e505dc70302f10aea7744fdadf14dfdfc69f8888",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,19 @@\n+import csv\n+import json\n+from decimal import Decimal\n+\n+totals = {}\n+with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+\n+with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"category\", \"total\"])\n+    for category in sorted(totals):\n+        writer.writerow([category, \"%.2f\" % totals[category]])\n+\n+summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(summary, fh)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['by_category.csv', 'summary.json']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,19 +1,14 @@\n-import csv\n-import json\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = {}\n-with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n-\n-with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"category\", \"total\"])\n-    for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n-\n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(summary, fh)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['by_category.csv', 'summary.json']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d8178b5e938ab0798eb903f2e7d2b77abcc4e8fca0a76a74360d94dc908ebe2d",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: by_category.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "by_category.csv must have one row per category and summary.json must have both keys: The post-step drops the last line of both output files, removing a category row and breaking summary.json.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON",
+       "summary.json is not valid JSON",
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d8178b5e938ab0798eb903f2e7d2b77abcc4e8fca0a76a74360d94dc908ebe2d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,19 @@\n+import csv\n+import json\n+from decimal import Decimal\n+\n+totals = {}\n+with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+\n+with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"category\", \"total\"])\n+    for category in sorted(totals):\n+        writer.writerow([category, \"%.2f\" % totals[category]])\n+\n+summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(summary, fh)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['by_category.csv', 'summary.json']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,19 +1,14 @@\n-import csv\n-import json\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = {}\n-with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n-\n-with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"category\", \"total\"])\n-    for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n-\n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(summary, fh)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['by_category.csv', 'summary.json']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8d37cc3b42e936104271ce7ecf8cf000a8de5d78a68f5222b6ba9742227f9937",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: by_category.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "by_category.csv and summary.json contain exactly the specified content: An extra line reading extra is appended to both outputs, which also makes summary.json invalid JSON.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON",
+       "summary.json is not valid JSON",
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8d37cc3b42e936104271ce7ecf8cf000a8de5d78a68f5222b6ba9742227f9937"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,19 @@\n+import csv\n+import json\n+from decimal import Decimal\n+\n+totals = {}\n+with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+\n+with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"category\", \"total\"])\n+    for category in sorted(totals):\n+        writer.writerow([category, \"%.2f\" % totals[category]])\n+\n+summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(summary, fh)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,44 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['summary.json']\n+\n+\n+def floatify(obj):\n+    if isinstance(obj, bool):\n+        return obj\n+    if isinstance(obj, int):\n+        return float(obj)\n+    if isinstance(obj, dict):\n+        return {k: floatify(v) for k, v in obj.items()}\n+    if isinstance(obj, list):\n+        return [floatify(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    return rewrite_json(text, floatify, 2)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,19 +1,14 @@\n-import csv\n-import json\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = {}\n-with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n-\n-with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"category\", \"total\"])\n-    for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n-\n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(summary, fh)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['summary.json']\n\n\ndef floatify(obj):\n    if isinstance(obj, bool):\n        return obj\n    if isinstance(obj, int):\n        return float(obj)\n    if isinstance(obj, dict):\n        return {k: floatify(v) for k, v in obj.items()}\n    if isinstance(obj, list):\n        return [floatify(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    return rewrite_json(text, floatify, 2)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ef0931a1ace9b625161b71a5d5ea794a6b516e7f57975e08ca0c20995d86ee60",
+   "kind": "preserving",
+   "operator": "out-json-float",
+   "task_id": "expense-rollup",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "categories is an integer in summary.json: A post-step converts integers to floats, so categories is written as a float such as 3.0.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ef0931a1ace9b625161b71a5d5ea794a6b516e7f57975e08ca0c20995d86ee60"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,19 @@\n+import csv\n+import json\n+from decimal import Decimal\n+\n+totals = {}\n+with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+\n+with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"category\", \"total\"])\n+    for category in sorted(totals):\n+        writer.writerow([category, \"%.2f\" % totals[category]])\n+\n+summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(summary, fh)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,32 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['summary.json']\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    return rewrite_json(text, lambda o: o, 4)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,19 +1,14 @@\n-import csv\n-import json\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = {}\n-with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n-\n-with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"category\", \"total\"])\n-    for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n-\n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(summary, fh)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['summary.json']\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    return rewrite_json(text, lambda o: o, 4)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "2b8135f9f1ddb9cfe9a484f769e1ecf5e42482b85ff36dae388c1b85bfd4fa37",
+   "kind": "preserving",
+   "operator": "out-json-indent",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The original logic still runs and summary.json is only reindented, with the same keys and values.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "2b8135f9f1ddb9cfe9a484f769e1ecf5e42482b85ff36dae388c1b85bfd4fa37"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,19 @@\n+import csv\n+import json\n+from decimal import Decimal\n+\n+totals = {}\n+with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+\n+with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"category\", \"total\"])\n+    for category in sorted(totals):\n+        writer.writerow([category, \"%.2f\" % totals[category]])\n+\n+summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(summary, fh)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,40 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['summary.json']\n+\n+\n+def reorder(obj):\n+    if isinstance(obj, dict):\n+        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n+    if isinstance(obj, list):\n+        return [reorder(x) for x in obj]\n+    return obj\n+\n+\n+def rewrite_json(text, fn, indent):\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return json.dumps(fn(json.loads(text)), indent=indent) + end\n+\n+\n+def transform_file(text):\n+    return rewrite_json(text, reorder, 2)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,19 +1,14 @@\n-import csv\n-import json\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = {}\n-with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n-\n-with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"category\", \"total\"])\n-    for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n-\n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(summary, fh)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['summary.json']\n\n\ndef reorder(obj):\n    if isinstance(obj, dict):\n        return {k: reorder(obj[k]) for k in reversed(list(obj))}\n    if isinstance(obj, list):\n        return [reorder(x) for x in obj]\n    return obj\n\n\ndef rewrite_json(text, fn, indent):\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return json.dumps(fn(json.loads(text)), indent=indent) + end\n\n\ndef transform_file(text):\n    return rewrite_json(text, reorder, 2)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "8c68537a9cd764a4c49791d6d6330655fe1c691a9b2a825cc9d16dd9f609217a",
+   "kind": "preserving",
+   "operator": "out-json-key-order",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper produces the same files with the same content, and only the key order and indentation of summary.json change, which the task does not constrain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "8c68537a9cd764a4c49791d6d6330655fe1c691a9b2a825cc9d16dd9f609217a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,19 @@\n+import csv\n+import json\n+from decimal import Decimal\n+\n+totals = {}\n+with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+\n+with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"category\", \"total\"])\n+    for category in sorted(totals):\n+        writer.writerow([category, \"%.2f\" % totals[category]])\n+\n+summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(summary, fh)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['by_category.csv', 'summary.json']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,19 +1,14 @@\n-import csv\n-import json\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = {}\n-with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n-\n-with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"category\", \"total\"])\n-    for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n-\n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(summary, fh)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['by_category.csv', 'summary.json']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "9838b20bc6648e5c67e60c38ea3f570137a93a84ee718cd1890c9fce41f94849",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the trailing newline of the output files is toggled; the CSV rows and JSON content still match what the task text specifies.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "9838b20bc6648e5c67e60c38ea3f570137a93a84ee718cd1890c9fce41f94849"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,19 @@\n+import csv\n+import json\n+from decimal import Decimal\n+\n+totals = {}\n+with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+\n+with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"category\", \"total\"])\n+    for category in sorted(totals):\n+        writer.writerow([category, \"%.2f\" % totals[category]])\n+\n+summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(summary, fh)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['by_category.csv']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,19 +1,14 @@\n-import csv\n-import json\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = {}\n-with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n-\n-with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"category\", \"total\"])\n-    for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n-\n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(summary, fh)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['by_category.csv']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "60d1eb60ac85551dfd71ca797fdc3ae5ba29d51d8a89b142195da696d0c92d57",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "expense-rollup",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R2: by_category.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "by_category.csv has exact header and two-decimal totals: The post-step appends two spaces to every non-empty line, corrupting the header and the totals.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,19 @@\n+import csv\n+import json\n+from decimal import Decimal\n+\n+totals = {}\n+with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+\n+with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"category\", \"total\"])\n+    for category in sorted(totals):\n+        writer.writerow([category, \"%.2f\" % totals[category]])\n+\n+summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+    json.dump(summary, fh)\n+    fh.write(\"\\n\")\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,19 +1,14 @@\n-import csv\n-import json\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = {}\n-with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n-\n-with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"category\", \"total\"])\n-    for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n-\n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(summary, fh)\n-    fh.write(\"\\n\")\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(3.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(3.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b2bbaa67670935727f664d0cb1c3651cbf9d24d9c7c740a86d644a35f749b55b",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper adds a delay and an identity transform around the unchanged logic, producing the same two output files.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "b2bbaa67670935727f664d0cb1c3651cbf9d24d9c7c740a86d644a35f749b55b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,7 +11,7 @@\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"category\", \"total\"])\n     for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n+        writer.writerow([category, (\"%.2f\") // (totals[category])])\n \n summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, (\"%.2f\") // (totals[category])])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b3439202bb91f1099d85e6ef204ec309c266b33a812a318b5475dc4c3d4effd3",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "write totals with exactly two decimal places in by_category.csv: The string \"%.2f\" // Decimal raises TypeError, so the script crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "by_category.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b3439202bb91f1099d85e6ef204ec309c266b33a812a318b5475dc4c3d4effd3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n totals = {}\n with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+        totals[row[\"category\"]] = (totals.get(row[\"category\"], Decimal(\"0\"))) - (Decimal(row[\"amount\"]))\n \n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = (totals.get(row[\"category\"], Decimal(\"0\"))) - (Decimal(row[\"amount\"]))\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "edc7dd96865eed7e6ba9d381ba77a589b3a65fa2754752ba67301e1f2e1e3bef",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: by_category.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "total is the sum of the category's amounts: Amounts are subtracted instead of added, giving negated totals.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json  = {'categories': 4, 'grand_total': -915.69}",
+       "summary.json /grand_total = -915.69"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "edc7dd96865eed7e6ba9d381ba77a589b3a65fa2754752ba67301e1f2e1e3bef"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n     for row in csv.DictReader(fh):\n         totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n-with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open(\"by_category.csv\", '', newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"category\", \"total\"])\n     for category in sorted(totals):\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", '', newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "054762c3dc6aca6c8987dd7e3804ce079dba0b5105980b744fa13aede7805274",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: by_category.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Produce by_category.csv and summary.json: open() is called with an empty mode string, which raises ValueError before any output is written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv missing",
+       "summary.json missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "by_category.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "054762c3dc6aca6c8987dd7e3804ce079dba0b5105980b744fa13aede7805274"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,7 +11,7 @@\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"category\", \"total\"])\n     for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n+        writer.writerow([category, '' % totals[category]])\n \n summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, '' % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8cc57aab409fd7d829b261183509ccfd907e19fcfa576b1b09a14f15ff3ffbc4",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write totals with two decimal places: The expression '' % value raises TypeError, so by_category.csv is not produced correctly.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "by_category.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8cc57aab409fd7d829b261183509ccfd907e19fcfa576b1b09a14f15ff3ffbc4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -14,6 +14,6 @@\n         writer.writerow([category, \"%.2f\" % totals[category]])\n \n summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+with open(\"summary.json\", \"w\", encoding='') as fh:\n     json.dump(summary, fh)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding='') as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f6d614419cf94e67b6d186ba1d30e506a5774bc384d833c8f281909428208701",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Produce summary.json: open() with encoding='' raises LookupError (unknown encoding), so summary.json is never written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON",
+       "summary.json is not valid JSON",
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f6d614419cf94e67b6d186ba1d30e506a5774bc384d833c8f281909428208701"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,7 +3,7 @@\n from decimal import Decimal\n \n totals = {}\n-with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open('', newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n         totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open('', newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5bf69e97b400326173af647bb3dc8804ee8499f4770ab2d244e24c12650c8d57",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: by_category.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read expenses.csv and produce both output files: open('') raises an error, so the script crashes and writes no outputs.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv missing",
+       "summary.json missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "by_category.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5bf69e97b400326173af647bb3dc8804ee8499f4770ab2d244e24c12650c8d57"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n totals = {}\n with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+        totals[row['categor']] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row['categor']] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "78c85ada019516d12f57e8921335ae4a96fa7134bbede55a29442e306b5ccbbf",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: by_category.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Sum amounts per category: row['categor'] raises KeyError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv missing",
+       "summary.json missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "by_category.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "78c85ada019516d12f57e8921335ae4a96fa7134bbede55a29442e306b5ccbbf"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n totals = {}\n with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+        totals[row[\"category\"]] = totals.get(row['categoryx'], Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row['categoryx'], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "cc2f4dbf430e890095c2ed0a5023c5a49e9fcd9009eba7de9c244d768a5fef35",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: by_category.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Sum amounts per category: It reads row['categoryx'], which raises KeyError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv missing",
+       "summary.json missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "by_category.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "cc2f4dbf430e890095c2ed0a5023c5a49e9fcd9009eba7de9c244d768a5fef35"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"category\", \"total\"])\n-    for category in sorted(totals):\n+    for category in list(sorted(totals))[:-1]:\n         writer.writerow([category, \"%.2f\" % totals[category]])\n \n summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in list(sorted(totals))[:-1]:\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9fb40e2b7418795e0f7fb4c2859dd3d9b5bac21dc0dc701b88564cc99e8fccf4",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: by_category.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One row per category in by_category.csv: The last category is dropped from the output.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9fb40e2b7418795e0f7fb4c2859dd3d9b5bac21dc0dc701b88564cc99e8fccf4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,7 +4,7 @@\n \n totals = {}\n with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n+    for row in list(csv.DictReader(fh))[:-1]:\n         totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in list(csv.DictReader(fh))[:-1]:\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "f99785ecad78a0c1a0367b49914bd00c80906c2297070b1c099ae301961860a7",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: by_category.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Include every expense row in totals: The last row of expenses.csv is skipped, so totals and counts are wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json  = {'categories': 4, 'grand_total': 897.94}",
+       "summary.json /grand_total = 897.94"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f99785ecad78a0c1a0367b49914bd00c80906c2297070b1c099ae301961860a7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,7 +8,7 @@\n         totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    pass\n     writer.writerow([\"category\", \"total\"])\n     for category in sorted(totals):\n         writer.writerow([category, \"%.2f\" % totals[category]])\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    pass\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "921a62c11fd65588bf4a066fb2930b894da420074b483071ab69cb87050e9f72",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write by_category.csv: The csv writer is no longer created, so writer.writerow raises NameError and the output is not produced.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "by_category.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "921a62c11fd65588bf4a066fb2930b894da420074b483071ab69cb87050e9f72"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,7 +9,7 @@\n \n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"category\", \"total\"])\n+    pass\n     for category in sorted(totals):\n         writer.writerow([category, \"%.2f\" % totals[category]])\n \n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    pass\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4acf48b7b23bf399a799aa2668795665b5365a37540520998e30a7e0b6be68f5",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: by_category.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "by_category.csv starts with the header row category,total: The header row is no longer written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4acf48b7b23bf399a799aa2668795665b5365a37540520998e30a7e0b6be68f5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,8 +10,7 @@\n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"category\", \"total\"])\n-    for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n+    pass\n \n summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    pass\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "de36d3dfa893a7b36ecfa8a65f89e48508f473ea359bc0dd32697d095357fa3c",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: by_category.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "by_category.csv has one row per category: The category rows are no longer written, leaving only the header.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "de36d3dfa893a7b36ecfa8a65f89e48508f473ea359bc0dd32697d095357fa3c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -13,7 +13,7 @@\n     for category in sorted(totals):\n         writer.writerow([category, \"%.2f\" % totals[category]])\n \n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+pass\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n     json.dump(summary, fh)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\npass\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "58ba14ec7440b8d20fa95639345c4f31ce36b01331a408d6f417f2916f3fefa4",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write summary.json: summary is never defined, so a NameError prevents summary.json from being written correctly.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "summary.json is not valid JSON",
+       "summary.json is not valid JSON",
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "58ba14ec7440b8d20fa95639345c4f31ce36b01331a408d6f417f2916f3fefa4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -15,5 +15,5 @@\n \n summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(summary, fh)\n+    pass\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    pass\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "20b76a0b1976f65e5a26a17dd9b249a421d1bb1d3757faddc9ef80c795f1829b",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: summary.json is not valid JSON",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "summary.json must be a JSON object with categories and grand_total: json.dump was removed, so summary.json contains only a newline.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json is not valid JSON",
+       "summary.json is not valid JSON",
+       "summary.json is not valid JSON"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "20b76a0b1976f65e5a26a17dd9b249a421d1bb1d3757faddc9ef80c795f1829b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,8 +4,7 @@\n \n totals = {}\n with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+    pass\n \n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    pass\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "766d97440145662a78713151098a61e8aa96d755359c22cb5da50895a83f16ba",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: by_category.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Report totals per category from expenses.csv: The CSV is never read, so the outputs are empty.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json  = {'categories': 0, 'grand_total': 0.0}",
+       "summary.json /categories = 0",
+       "summary.json /grand_total = 0.0"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "766d97440145662a78713151098a61e8aa96d755359c22cb5da50895a83f16ba"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n     for row in csv.DictReader(fh):\n         totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n-with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open('by_category.csv.bak', \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"category\", \"total\"])\n     for category in sorted(totals):\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open('by_category.csv.bak', \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "68c19956455c4cae543d180bf553230d6e2166d71f6e534b399460562a466b15",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: by_category.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "write by_category.csv: The output goes to by_category.csv.bak instead.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv missing"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "by_category.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "68c19956455c4cae543d180bf553230d6e2166d71f6e534b399460562a466b15"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -14,6 +14,6 @@\n         writer.writerow([category, \"%.2f\" % totals[category]])\n \n summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n+with open('summary.json.bak', \"w\", encoding=\"utf-8\") as fh:\n     json.dump(summary, fh)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open('summary.json.bak', \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3d4c1b8b498554883852886b38797c936b70db856a0d1a52985d3d10e07e25dc",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write summary.json: It writes summary.json.bak instead.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3d4c1b8b498554883852886b38797c936b70db856a0d1a52985d3d10e07e25dc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,7 +3,7 @@\n from decimal import Decimal\n \n totals = {}\n-with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open('expenses.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n         totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open('expenses.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "12ba602ab717ffebca1ed94897be178efd342c47f25f04f2fce8adf5b3fd7894",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: by_category.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read expenses.csv: The script reads expenses.csv.bak instead of expenses.csv.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "by_category.csv missing",
+       "summary.json missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "by_category.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "12ba602ab717ffebca1ed94897be178efd342c47f25f04f2fce8adf5b3fd7894"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -12,8 +12,3 @@\n     writer.writerow([\"category\", \"total\"])\n     for category in sorted(totals):\n         writer.writerow([category, \"%.2f\" % totals[category]])\n-\n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n-with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(summary, fh)\n-    fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f954b7674e2f438b0a5a03437ec216c38251f8f84654eded0ea874235c542f4d",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: summary.json missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Produce summary.json: The summary.json output is no longer written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json missing"
+      ],
+      "requirement": "R1",
+      "text": "Produce by_category.csv and summary.json."
+     },
+     {
+      "failed": [
+       "summary.json missing",
+       "summary.json missing",
+       "summary.json missing"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f954b7674e2f438b0a5a03437ec216c38251f8f84654eded0ea874235c542f4d"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"category\", \"total\"])\n-    for category in sorted(totals):\n+    for category in sorted(totals, key=str.lower):\n         writer.writerow([category, \"%.2f\" % totals[category]])\n \n summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals, key=str.lower):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "33a32261f16671555c1f7b21b9f3a466d19eb60cca4b21904408a943901b3ccf",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "expense-rollup",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Case-insensitive sorting differs from the default sort for mixed-case categories, and the task does not say which ordering 'sorted by category name' means.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": null
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,8 +3,10 @@\n from decimal import Decimal\n \n totals = {}\n+rows = 0\n with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n+        rows += 1\n         totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n@@ -13,7 +15,7 @@\n     for category in sorted(totals):\n         writer.writerow([category, \"%.2f\" % totals[category]])\n \n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+summary = {\"categories\": rows, \"grand_total\": float(round(sum(totals.values()), 2))}\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n     json.dump(summary, fh)\n     fh.write(\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nrows = 0\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        rows += 1\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": rows, \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "533edb5b2f0338e6d61e1d0ebd7fef1d782c6de2eb705aac75012b934cef60e6",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: summary.json  = {'categories': 8, 'grand_total': 915.69}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "categories is the number of categories: It reports the number of CSV rows instead of the number of distinct categories.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "summary.json  = {'categories': 8, 'grand_total': 915.69}",
+       "summary.json /categories = 8"
+      ],
+      "requirement": "R3",
+      "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "533edb5b2f0338e6d61e1d0ebd7fef1d782c6de2eb705aac75012b934cef60e6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -13,7 +13,6 @@\n     for category in sorted(totals):\n         writer.writerow([category, \"%.2f\" % totals[category]])\n \n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+summary = {\"grand_total\": float(round(sum(totals.values()), 2)), \"categories\": len(totals)}\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(summary, fh)\n-    fh.write(\"\\n\")\n+    json.dump(summary, fh, indent=2)\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"grand_total\": float(round(sum(totals.values()), 2)), \"categories\": len(totals)}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh, indent=2)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1c7d261dcc3cb20f38c890e033826895baa96d68ed9a9511260cad8e662228e0",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "expense-rollup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "summary.json still has exactly the two required keys with the same values; key order and indentation are unconstrained.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "1c7d261dcc3cb20f38c890e033826895baa96d68ed9a9511260cad8e662228e0"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,15 +5,15 @@\n totals = {}\n with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n+        name = row[\"category\"]\n+        totals[name] = totals.get(name, Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer = csv.writer(fh)\n     writer.writerow([\"category\", \"total\"])\n-    for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n+    for name, value in sorted(totals.items()):\n+        writer.writerow([name, \"%.2f\" % value])\n \n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+grand = sum(totals.values(), Decimal(\"0\")).quantize(Decimal(\"0.01\"))\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n-    json.dump(summary, fh)\n-    fh.write(\"\\n\")\n+    json.dump({\"categories\": len(totals), \"grand_total\": float(grand)}, fh)\n",
+   "files": {
+    "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        name = row[\"category\"]\n        totals[name] = totals.get(name, Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh)\n    writer.writerow([\"category\", \"total\"])\n    for name, value in sorted(totals.items()):\n        writer.writerow([name, \"%.2f\" % value])\n\ngrand = sum(totals.values(), Decimal(\"0\")).quantize(Decimal(\"0.01\"))\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump({\"categories\": len(totals), \"grand_total\": float(grand)}, fh)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a2cd6d706c022533445bb55e170bf1f63219486a2538dcb147c2514fb9f40a93",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "expense-rollup",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R2: by_category.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Outputs have the required content; only the CSV line terminator and a trailing newline differ, which the task does not specify.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  }
+ ]
+}

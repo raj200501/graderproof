@@ -1,0 +1,110 @@
+{
+  "schema": "graderproof.review/1",
+  "reviewed_commit": "5677b9f639c9cbf5625445274525b1b530083cff",
+  "reviewed_at_utc": "2026-11-11T05:29:55Z",
+  "mode": "subagent",
+  "previous_reviewed_commit": "df55c18ed1129465e1f6f3440e1df57f564c06f3",
+  "verdict": "BLOCK",
+  "blocking": [
+    {
+      "id": "B1",
+      "title": "'289 variants with disagreeing validators' is wrong: 109 of the 289 had two agreeing validators; 180 disagreed",
+      "location": "README.md:54; docs/REPORT.md:201; docs/cards/toybench.md:13; docs/claims/spec.json:280-285 (note 'variants excluded for disagreeing validators'); docs/templates/README.md.in:54, REPORT.md.in:201",
+      "category": "wrong-number",
+      "evidence": "I counted artifacts/e0/variants.jsonl (1651 rows) by validation_status: validated 1362, disagreed 180, rejected 109. The 109 rejected rows all have two agreeing verdicts that contradict the variant's kind: 81 violating variants that both validators labeled preserving, and 28 preserving variants that both labeled violating. So 289 = aggregate.n_excluded_variants counts every excluded variant, but only 180 (169 conflicting labels plus 11 unsure) had disagreeing validators. The docs' own definition (REPORT.md:102: 'rejected when both agree on the other one ... Disagreed variants are excluded and queued in private/review_queue/') contradicts the sentence at REPORT.md:201 that '289 variants with disagreeing validators were excluded and queued'. It also contradicts the agreement rate printed next to it: 1471/1640 = 0.897, which implies 169 conflicts, not 289. The number comes from the artifact, so claimcheck and freshness pass, but the quantity it is said to measure is wrong. Fix: report 180 disagreed (11 of them unsure) and 109 rejected (both validators agree the variant does not have its intended label) as separate claims, and fix the spec note and the card row."
+    },
+    {
+      "id": "B2",
+      "title": "REPORT says the upper end of the exact recall interval is below 0.90; the artifact gives 0.928",
+      "location": "docs/REPORT.md:177 (template docs/templates/REPORT.md.in:177); artifacts/e0/results.json exact_intervals.recall",
+      "category": "wrong-number",
+      "evidence": "REPORT.md:177 says '**H1 is not met**: the point estimate of recall is below the preregistered 0.90, and so is the upper end of the exact interval.' But artifacts/e0/results.json gives exact_intervals.recall = [0.63560769013591, 0.9279238345415024]. I recomputed it with an independent Clopper-Pearson bisection for 26/32 and got (0.6356, 0.9279). The REPORT's own table two lines up (line 171) prints it as '0.64 to 0.93'. The upper end is above 0.90, so the exact interval contains the threshold, and this result statement about the confirmatory H1 outcome is false. claimcheck cannot see it: the 0.90 token on that line is allowlisted by docs/claims/allowlist.tsv:9, whose context regex matches 'preregistered 0.90' in 'below the preregistered 0.90'. Fix: correct the sentence (the exact interval, 0.64 to 0.93, includes 0.90; H1 fails on the point estimate, which is the preregistered criterion), add a CORRECTIONS.md entry if the text was ever published, and generate comparisons of results with thresholds from the artifact rather than typing them."
+    },
+    {
+      "id": "B3",
+      "title": "'Repairs fixed 36 of the 36 toybench graders that accepted a broken solution' counts tsv-transpose, which the preregistered adjudicator ruled did not accept a broken solution; its repair grafts the unstated requirement",
+      "location": "README.md:5 (headline paragraph); docs/REPORT.md:48 ('E4's repairs fixed every toybench grader with a surviving variant'); outbound/patches/toybench/tsv-transpose.patch:618-625; outbound/patches/toybench/tsv-transpose.validation.json; artifacts/e0/adjudication.json tasks.tsv-transpose; toybench/tasks/tsv-transpose/instruction.md",
+      "category": "wrong-number",
+      "evidence": "artifacts/e0/adjudication.json rules tsv-transpose real=false, citing variant 61c0231c0dde: 'The task text only specifies the contents of transposed.tsv and never says matrix.tsv must stay unmodified, so the witness requirement is not stated and the output is still correct.' That is the only witness behind the task's false-accept flag (requirement R4, 'The input matrix.tsv is not modified.'). E4 still counts the task among the 36 'with a surviving variant' and repairs it with exactly that requirement: tsv-transpose.validation.json has requirements ['R4'] and targets ['61c0231c0dde...'], and the patch adds a check at lines 618-625 that path matrix.tsv is unchanged, with the text 'The input matrix.tsv is not modified.' So by the project's own preregistered adjudication, at most 35 of the 36 graders 'accepted a broken solution'. The tsv-transpose 'repair' makes that grader stricter than its task text: it now rejects valid solutions that modify matrix.tsv, which the E4 acceptance check cannot detect because no counted preserving variant edits matrix.tsv. The 36 in the REPORT 5.5 table ('Graders with a surviving violating variant') follows the prereg 0002 definition and is not the problem. The README headline and REPORT 1.4 describe it as 36 graders that accepted a broken solution, all fixed, and the artifacts contradict that. Fix: qualify the claim (for example, 36 with a surviving variant, one of them an adjudicated false positive whose patch encodes a requirement the task text does not state), say so in REPORT 5.5 and in the tsv-transpose patch notes, and add a CORRECTIONS.md entry. I also read toybench/tasks/tsv-transpose/instruction.md: it specifies only transposed.tsv and its format, and says nothing about leaving matrix.tsv unchanged. The label is clean."
+    },
+    {
+      "id": "B4",
+      "title": "G5 takes the adjudication's 'real' booleans on trust: it never ties them to the rulings' own verdicts or to the banked adjudicator response",
+      "location": "tools/ship_check.py:1235-1246 (e0_adjudication), :1252-1266 (e0_scores), :1323",
+      "category": "gate-false-pass",
+      "evidence": "e0_adjudication reads only tasks[<id>].real and checks that it is a JSON boolean. It never checks real against the entry's per-variant verdicts (the D34 rule: real only when at least one variant verdict is 'validates') or against the adjudicator's banked answer in artifacts/model_calls/e0/responses/b77ab00d72a698a9637ce9e06300aa23457291eaead31cf22b3ec9ddacf4f610.json. Scratch g5_adj_tamper.py builds a counterfactual adjudication.json in which the adjudicator ruled card-check and edit-distance 'does-not-validate' (verdicts edited) but real stays true. The gate's own e0_adjudication, e0_scores and e0_statistics still give precision 0.929 with 6 adjudicated real. The D34 rule applied to the same file gives 26/30 = 0.867, below the 0.90 threshold. Because e0-score regenerates results.json from that file, e0_rows_match and check_estimate agree with it as well. So G5's precision half passes on rulings that the adjudicator did not make, which prereg/0001:47 forbids ('the build session does not overrule them'). This is a remaining path of the previous B1 (scenario C), with new evidence. At HEAD the file is faithful: all 10 per-variant verdicts and reasons match the banked response exactly, and every real flag follows the D34 rule, so the reported precision of 0.93 is correct, and G5 fails anyway on recall. Fix: in G5, recompute real for each task from the per-variant verdicts, require that each verdict and reason equal the banked adjudicate/v1 response (matched by variant id, with the request hash checked), and require that the adjudicated variant set equal the counted flagged variants behind each non-detection flag."
+    },
+    {
+      "id": "B5",
+      "title": "The adjudication prompt broadens the preregistered rule ('or another requirement the task text states explicitly'); the deviation is not reported",
+      "location": "tools/e0_adjudicate.py:50 (prompt adjudicate/v1; banked request artifacts/model_calls/e0/requests/b77ab00d72a698a9637ce9e06300aa23457291eaead31cf22b3ec9ddacf4f610.json, instructions); prereg/0001-e0-tool-validity.md:47; docs/REPORT.md:48, :142, :167, :197",
+      "category": "prereg-violation",
+      "evidence": "prereg/0001:47 says the adjudicator 'rules only whether the witness validates: whether the flagged variant really breaks (for a false accept) or really keeps (for a false reject) the requirement the witness names, as the task text states it.' The banked adjudicate/v1 instructions tell it instead to answer 'validates' for a false accept if the modified solution fails 'the witness's requirement, or another requirement the task text states explicitly'. That is a broader criterion, written after the freeze (tools/e0_adjudicate.py was added in 21109c0). It appears in no amendment file, D34 does not mention it, and the report repeats the preregistered wording instead ('ruling only on whether each witness validates', REPORT.md:48 and :197; 'rules only whether the witness validates', :142; 'E0 ran exactly as preregistered', :167). Impact: I read all 10 rulings. Each 'validates' reason names the witness's own requirement (card-check R6, edit-distance R4, flight-cancel R1 three times, leave-approval R5, line-counter R5, rx-refill R4), so no reported number changes. The deviation is still unreported. Fix: record it as a deviation in docs/REPORT.md and CORRECTIONS.md (or a dated note citing prereg 0001), state that no ruling relied on the broader clause, and stop describing the run as exactly as preregistered."
+    },
+    {
+      "id": "B6",
+      "title": "Three preregistered E0 secondary outcomes are not reported: recall per task kind, the operators behind detecting variants, and recall with reference-level timing flags counted",
+      "location": "prereg/0001-e0-tool-validity.md:60; docs/REPORT.md section 5 (5.1 to 5.4); artifacts/e0/results.json; artifacts/e0/tables.json",
+      "category": "prereg-violation",
+      "evidence": "prereg/0001:60 preregisters these exploratory secondary outcomes: 'Recall per weakness type and per task kind; detections in the extra slice; recall when reference-level flags on timing tasks are counted as detections; per-task mutation scores; validator agreement and the count of variants with an unsure verdict; which operators produced the detecting variants.' README.md, docs/REPORT.md, docs/E0_MISSES.md and docs/cards/toybench.md report per-type recall, the extra slice, agreement, the unsure count and the mean mutation score. A grep for per-kind or per-format recall and for detecting operators finds nothing. artifacts/e0/tables.json has only by_type, counted, extra and model_calls, and results.json has no kind or operator breakdown. results.json does carry exploratory_timing_with_reference_flags (2 of 5), but no document reports it. All three can be computed from banked data (variants.jsonl has operator, and toybench task.toml gives the kind), so this is an omission in reporting, not missing data. Brief section 9 rule 2 and the review checklist require every preregistered outcome to be reported, labeled exploratory. Fix: add them to e0_tables.py and to REPORT 5.2, labeled exploratory."
+    }
+  ],
+  "non_blocking": [
+    {
+      "id": "N1",
+      "title": "The E4 generalization test is not independent of the repair: both use the same requirement checks",
+      "location": "src/graderproof/repair.py:1-21 (checker embeds graderproof.spec verbatim), :428-446 (evaluate_fresh counts only witness-validated fresh variants); README.md:5, :56; docs/REPORT.md:205-219",
+      "note": "Every counted fresh variant is labeled by the same witness:requirements/v1 checks that the repair grafts onto the grader. A counted fresh violating variant that breaks a grafted requirement is therefore rejected by construction, and a counted fresh preserving variant meets every requirement, so the checker accepts it and repair-induced false rejects are 0 by construction. The 21 of 23 measures whether fresh survivors break the same requirements as the original survivors, not whether the repairs are correct by an independent standard. REPORT 5.5 does say the repairs 'inherit the requirements' blind spots', but it still calls the batch 'the test that matters'. State the circularity plainly next to the 21/23 and 0 claims."
+    },
+    {
+      "id": "N2",
+      "title": "The adjudication's provenance names the frozen E0 commit, but the adjudication tool did not exist at that commit",
+      "location": "artifacts/e0/adjudication.json provenance (git_sha 1629c30..., git_dirty false, command /home/user/graderproof/tools/e0_adjudicate.py)",
+      "note": "tools/e0_adjudicate.py was added in 21109c0, after 1629c30, and was run from the main checkout while cwd was the frozen worktree. So the recorded git_sha and git_dirty describe the worktree, not the code that built the adjudication request and applied the D34 rule. Record the tool's own commit and file SHA-256."
+    },
+    {
+      "id": "N3",
+      "title": "D36 was committed in the same commit as the E4 data",
+      "location": "DECISIONS.md D36; commit da44920",
+      "note": "Non-negotiable 10 says decisions are recorded before acting. Nothing in git shows D36 predating the E4 run. Reusing banked extraction answers is consistent with brief section 8, and the 9 copied requests are byte-identical to E0's by hash, so no result changes."
+    },
+    {
+      "id": "N4",
+      "title": "The claimcheck allowlist for 0.90 accepts comparison words, which let B2 through",
+      "location": "docs/claims/allowlist.tsv:9",
+      "note": "Contexts such as 'preregistered 0.90', 'below 0.90', 'above 0.90' and 'of 0.90' make the threshold token pass on lines that state a result comparison (B2's line passes via 'preregistered 0.90'). That is a result claim the artifact should decide. Narrow the contexts and generate met or not-met comparisons from the artifact."
+    },
+    {
+      "id": "N5",
+      "title": "G5 e0_scores does not drop flags on tasks whose reference is rejected or flaky",
+      "location": "tools/ship_check.py:1252-1266; prereg/0001-e0-tool-validity.md:42",
+      "note": "prereg/0001:42 says such tasks are never flags or detections. e0_scores uses false_accept and false_reject without checking reference_rejected or flaky. E0 has zero reference-level tasks (results.json reference_level is empty, and the summary has n_flaky 0 and n_reference_rejected 0), so this changes nothing now."
+    },
+    {
+      "id": "N6",
+      "title": "Previous N18 is still open: no gate checks artifacts/ for task-level evidence from third-party benchmarks",
+      "location": "docs/REVIEW_LOG.md (N18 row); tools/ship_check.py G14",
+      "note": "Fix this before E1 runs, so that a mistaken --evidence or --out cannot put surviving variants of unpatched tasks under a tracked path without any gate failing."
+    },
+    {
+      "id": "N7",
+      "title": "The materials check ran the toybench adapter and graders before the labels hash was committed",
+      "location": "prereg/0001-e0-tool-validity.md:16; toybench/labels.json created_utc 2026-11-04T02:10:10Z; commit 7fab903 at 02:21:45Z",
+      "note": "Each reference was run once through its grader with the toybench adapter before 7fab903. No variants were generated and no model was called, the labels already existed and match the committed hash, and the prereg discloses this. Recorded for completeness only."
+    },
+    {
+      "id": "N8",
+      "title": "Checks not completed within the time box",
+      "location": "review scope",
+      "note": "Not checked or only spot-checked: the claimed fixes for previous N2, N4 and N9. At HEAD I verified N1, N3, N8, N13, N17 and N20 (wrap.py names no operator; validate.py:269 catches re.error; E0 request ids are key hashes and contain no label words; the ledger records and checks response_sha256; audit.py:349 queues disagreed variants; trusted_local is computed after the task metadata), plus the previous B2, B4 and B5 gate fixes in outline. Also not checked: the content of cited works beyond the banked titles in artifacts/citecheck.json (titles match the descriptions, papers not reread); the per-miss explanations in docs/E0_MISSES.md; the E3 and E6 runners, the adapters, and D35 MANIFEST hashes against the private stores; the internals of G1 to G4, G13 and G14; and a full non-fast ship-check. Verified: E0 recall 26/32 = 0.8125 and precision 26/28 = 0.9286 (unadjudicated 26/34 = 0.7647), recomputed independently from tasks.jsonl, variants.jsonl, labels.json and adjudication.json; bootstrap intervals reproduce with seeds 2026 and 2027; Clopper-Pearson intervals reproduce; labels hash, labels.sha256 committed once in 7fab903, before the prereg freeze 1629c30 and the first E0 data 5044a0f; toybench/tasks unchanged since 7fab903; run and scoring commands match prereg/0001; all 64 E0 and 27 new E4 worker transcripts audited clean; the adjudication request carries no label words or task names; E4 counts (36, 23, 21, 65, 0) recompute from the banked rows; make report regenerates README, REPORT and the card byte-identically in a scratch clone; claimcheck, freshness, citecheck and prereg-verify pass; no em dashes; private/ untracked; the E1/E2 sample is disjoint from prereg/0002-exclude.txt and the sample hash matches. Note: docs/LOG.md was modified in the working tree at 05:18:37Z, during this review, by another session (it records this review). This reviewer did not edit it. tools/review.py allows that path. E0 model calls: tables.json gives 64 (adjudicate 1, propose 12, requirements 9, review 42), matching 64 ledger rows for the 64 E0 request hashes, with ledger cash_usd summing to 0."
+    }
+  ],
+  "resolved_since_previous": [
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5"
+  ],
+  "final_line": "REVIEW: BLOCK"
+}

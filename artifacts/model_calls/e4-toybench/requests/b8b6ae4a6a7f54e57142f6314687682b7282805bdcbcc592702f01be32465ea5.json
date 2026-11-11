@@ -1,0 +1,377 @@
+{
+  "created_utc": "2026-11-04T02:29:00Z",
+  "hash": "b8b6ae4a6a7f54e57142f6314687682b7282805bdcbcc592702f01be32465ea5",
+  "instructions": "You turn a task's text into atomic, machine-checkable requirements. For each item you\nget the task text, the task kind, the reference solution (it satisfies the task), the\ninitial workspace, and what the reference produced (files, stdout, exit status, tool\ncalls, final state). You are not shown how the task is graded and must not guess.\n\nWrite one requirement per distinct obligation in the task text (outputs, their\ncontent, required steps, ordering constraints, prohibited actions, policies). Each\nrequirement has an \"id\" (R1, R2, ...), \"text\" (the obligation in plain words, quoting\nthe task where possible), and \"checks\": a list of typed checks that pass on the\nreference outcome and fail when the obligation is broken. Allowed check types and\nfields: file_exists {path}; file_absent {path}; file_equals {path, text, normalize:\nnone|strip|trailing_ws}; file_contains {path, text}; file_regex {path, pattern};\nfile_json {path, pointer, equals, lenient}; file_lines {path, count};\nstdout_contains {text}; stdout_regex {pattern}; stdout_json {pointer, equals,\nlenient}; exit_code {code}; call {probe: {function, args, kwargs}, equals} or\n{probe, matches_reference: true}; same_as_reference {target: stdout|state|file:<path>,\nnormalize}; trajectory_includes {tool, args}; trajectory_excludes {tool, args};\ntrajectory_before {first: {tool, args}, then: {tool, args}}; state_equals {pointer,\nequals}.\n\nBe exactly as strict as the task text. If the text demands an exact format, check it\nexactly; if it only asks for content, check content (use \"normalize\" or \"lenient\" so\nthat harmless formatting does not fail the check). For function tasks, add call\nprobes on the examples in the text and on a few further valid inputs, using\nmatches_reference for inputs whose expected output the text does not state. Return\nfor each item: {\"requirements\": [ ... ]}.\n",
+  "items": [
+    {
+      "id": "6ad0242b535ed85d3e607d05a88e3ae6edd7b8cd143a602c45a6ec8fcdfcfb95",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "directory": {
+            "Finance team": "finance-team@example.com",
+            "Lena Ortiz": "lena.ortiz@example.com",
+            "Priya Nair": "priya.nair@example.com",
+            "Sam Cho": "sam.cho@example.com",
+            "Tom Becker": "tom.becker@example.com"
+          },
+          "events": {
+            "EV-301": {
+              "attendees": [
+                "lena.ortiz@example.com",
+                "tom.becker@example.com"
+              ],
+              "date": "2026-11-12",
+              "end": "10:30",
+              "start": "10:00",
+              "title": "Weekly sync"
+            },
+            "EV-302": {
+              "attendees": [
+                "lena.ortiz@example.com",
+                "sam.cho@example.com",
+                "priya.nair@example.com"
+              ],
+              "date": "2026-11-12",
+              "end": "14:30",
+              "start": "14:00",
+              "title": "Q4 budget review"
+            }
+          },
+          "next_event": 303
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "date": "2026-11-12"
+            },
+            "result": {
+              "events": {
+                "EV-301": {
+                  "attendees": [
+                    "lena.ortiz@example.com",
+                    "tom.becker@example.com"
+                  ],
+                  "date": "2026-11-12",
+                  "end": "10:30",
+                  "start": "10:00",
+                  "title": "Weekly sync"
+                }
+              },
+              "ok": true
+            },
+            "tool": "list_events"
+          },
+          {
+            "args": {
+              "attendees": [
+                "lena.ortiz@example.com",
+                "sam.cho@example.com",
+                "priya.nair@example.com"
+              ],
+              "date": "2026-11-12",
+              "end": "14:30",
+              "start": "14:00",
+              "title": "Q4 budget review"
+            },
+            "result": {
+              "event_id": "EV-302",
+              "ok": true
+            },
+            "tool": "create_event"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n]\n"
+      },
+      "task_text": "# Schedule a budget review\n\nCreate a calendar event titled `Q4 budget review` on `2026-11-12` from `14:00` to `14:30`.\n\nInvite exactly these three people and nobody else:\n\n- Lena Ortiz (`lena.ortiz@example.com`)\n- Sam Cho (`sam.cho@example.com`)\n- Priya Nair (`priya.nair@example.com`)\n\nDo not change any existing event.\n\nTools (see `support/env.py`):\n\n- `find_person(name)`\n- `list_events(date)`\n- `create_event(title, date, start, end, attendees)`, where `attendees` is a list of email addresses\n- `add_attendees(event_id, emails)`\n"
+    },
+    {
+      "id": "6d616480807a0e4a20b813e7a936f76c4b4f54241a4044cc229a3a5971a46c3d",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "slug.py": "import re\n\n_OTHER = re.compile(r\"[^a-z0-9]+\")\n\n\ndef slugify(title):\n    lowered = \"\".join(ch.lower() if \"A\" <= ch <= \"Z\" else ch for ch in title)\n    return _OTHER.sub(\"-\", lowered).strip(\"-\")\n"
+      },
+      "task_text": "# URL slugs for article titles\n\nWrite a Python module `slug.py` with a function `slugify(title)` that turns an article title into a URL slug.\n\n- Convert ASCII uppercase letters to lowercase.\n- Keep ASCII letters and digits. Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as `\u00e9`, and so on) becomes a single `-`.\n- Remove any `-` at the start or end of the result.\n- Return the slug as a string; it is `\"\"` when the title has no ASCII letters or digits.\n\nExamples: `slugify(\"Hello, World!\")` returns `\"hello-world\"`, and `slugify(\"Caf\u00e9 au lait\")` returns `\"caf-au-lait\"`.\n"
+    },
+    {
+      "id": "6ef5bc2ac5a70fd0a55d668a597d0a09063f9a3a3d691777e90eebc5304869ca",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "refunds": [
+            {
+              "amount_cents": 700,
+              "sub_id": "SUB-3381"
+            }
+          ],
+          "subscriptions": {
+            "SUB-3381": {
+              "customer": "Ola Nordmann",
+              "paid_through": "2026-11-30",
+              "plan": "weekly-2",
+              "price_cents": 1500,
+              "status": "cancelled"
+            },
+            "SUB-3390": {
+              "customer": "Kari Nordmann",
+              "paid_through": "2026-11-30",
+              "plan": "weekly-4",
+              "price_cents": 2600,
+              "status": "active"
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "sub_id": "SUB-3381"
+            },
+            "result": {
+              "ok": true,
+              "subscription": {
+                "customer": "Ola Nordmann",
+                "paid_through": "2026-11-30",
+                "plan": "weekly-2",
+                "price_cents": 1500,
+                "status": "active"
+              }
+            },
+            "tool": "get_subscription"
+          },
+          {
+            "args": {
+              "sub_id": "SUB-3381",
+              "when": "immediately"
+            },
+            "result": {
+              "ok": true,
+              "status": "cancelled"
+            },
+            "tool": "cancel_subscription"
+          },
+          {
+            "args": {
+              "amount_cents": 700,
+              "sub_id": "SUB-3381"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "issue_refund"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n]\n"
+      },
+      "task_text": "# Cancel a subscription with a partial refund\n\nOla Nordmann asks to cancel his meal-kit subscription `SUB-3381` right away.\n\n1. Cancel `SUB-3381` immediately with `cancel_subscription` (`when` set to `immediately`, not at the end of the period).\n2. Refund the unused part of the current period, 700 cents, with `issue_refund`.\n\nDo not change any other subscription and issue no other refunds.\n\nTools (see `support/env.py`):\n\n- `get_subscription(sub_id)`\n- `cancel_subscription(sub_id, when)`, where `when` is `immediately` or `period_end`\n- `issue_refund(sub_id, amount_cents)`\n"
+    },
+    {
+      "id": "7100e86dcce06899e9d740a17d965e4768f5b3a2fd2c5ba1fdf90b62555ac4ac",
+      "initial_workspace": {},
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "bin/countlines": "#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\nchmod +x bin/countlines\n"
+      },
+      "task_text": "# Log line counter\n\nThe operations team wants a quick way to see how much a service has logged.\n\nCreate an executable bash script at `bin/countlines` (create the `bin/` directory). When run as `bin/countlines DIR`, it must print the total number of lines in all regular files directly inside DIR whose names end in `.log` (files in subdirectories do not count), as a plain decimal integer on one line, and exit with status 0.\n\n- Count lines the way `wc -l` does, that is, the number of newline characters.\n- If DIR contains no such files, print `0`.\n- The script must start with `#!/usr/bin/env bash` or `#!/bin/bash` and may use only bash and coreutils.\n"
+    },
+    {
+      "id": "71bb88ee2efa4bdd81c7b62d12ade4f205a54a416df76a5ebb88857cb70cb42b",
+      "initial_workspace": {
+        "orders.jsonl": "{\"order_id\": \"A1001\", \"product\": \"espresso beans 1kg\", \"quantity\": 2, \"unit_price\": 18.5}\n{\"order_id\": \"A1002\", \"product\": \"pour-over kettle\", \"quantity\": 1, \"unit_price\": 42.0}\n{\"order_id\": \"A1003\", \"product\": \"espresso beans 1kg\", \"quantity\": 3, \"unit_price\": 18.5}\n{\"order_id\": \"A1004\", \"product\": \"paper filters x100\", \"quantity\": 4, \"unit_price\": 4.25}\n{\"order_id\": \"A1005\", \"product\": \"ceramic dripper\", \"quantity\": 1, \"unit_price\": 23.9}\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "orders.jsonl": "{\"order_id\": \"A1001\", \"product\": \"espresso beans 1kg\", \"quantity\": 2, \"unit_price\": 18.5}\n{\"order_id\": \"A1002\", \"product\": \"pour-over kettle\", \"quantity\": 1, \"unit_price\": 42.0}\n{\"order_id\": \"A1003\", \"product\": \"espresso beans 1kg\", \"quantity\": 3, \"unit_price\": 18.5}\n{\"order_id\": \"A1004\", \"product\": \"paper filters x100\", \"quantity\": 4, \"unit_price\": 4.25}\n{\"order_id\": \"A1005\", \"product\": \"ceramic dripper\", \"quantity\": 1, \"unit_price\": 23.9}\n",
+          "summary.json": "{\"orders\": 5, \"units\": 11, \"revenue\": 175.4, \"top_product\": \"espresso beans 1kg\"}\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "import json\nfrom collections import Counter\n\norders = []\nwith open(\"orders.jsonl\", encoding=\"utf-8\") as fh:\n    for line in fh:\n        if line.strip():\n            orders.append(json.loads(line))\n\nunits = Counter()\nrevenue = 0.0\nfor order in orders:\n    units[order[\"product\"]] += order[\"quantity\"]\n    revenue += order[\"quantity\"] * order[\"unit_price\"]\n\nsummary = {\n    \"orders\": len(orders),\n    \"units\": sum(units.values()),\n    \"revenue\": round(revenue, 2),\n    \"top_product\": units.most_common(1)[0][0],\n}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(summary) + \"\\n\")\n"
+      },
+      "task_text": "# Daily order summary\n\n`orders.jsonl` contains one JSON object per line, one per order, with the fields `order_id`, `product`, `quantity`, and `unit_price`.\n\nWrite `summary.json` containing a single JSON object with exactly these keys:\n\n- `orders`: the number of orders (an integer);\n- `units`: the total quantity over all orders (an integer);\n- `revenue`: the sum of quantity \u00d7 unit_price over all orders, rounded to 2 decimal places (a number);\n- `top_product`: the product with the largest total quantity (a string; there is no tie in this data).\n"
+    },
+    {
+      "id": "7619281e02fe68cd880e47569e9f4b0ce7488283ae063171bb2b034951aa1007",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "accounts": {
+            "ACC-3301": {
+              "balance_cents": 159250,
+              "owner": "C-118",
+              "type": "checking"
+            },
+            "ACC-3302": {
+              "balance_cents": 75000,
+              "owner": "C-118",
+              "type": "savings"
+            },
+            "ACC-3303": {
+              "balance_cents": 9900,
+              "owner": "C-240",
+              "type": "checking"
+            }
+          },
+          "customers": {
+            "C-118": {
+              "name": "Jonah Weiss"
+            },
+            "C-240": {
+              "name": "Mei Tanaka"
+            }
+          },
+          "errors": [],
+          "transfers": [
+            {
+              "amount_cents": 25000,
+              "from": "ACC-3301",
+              "id": "TR-1",
+              "memo": "holiday fund",
+              "to": "ACC-3302"
+            }
+          ]
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "customer_id": "C-118"
+            },
+            "result": {
+              "accounts": [
+                {
+                  "account_id": "ACC-3301",
+                  "type": "checking"
+                },
+                {
+                  "account_id": "ACC-3302",
+                  "type": "savings"
+                }
+              ],
+              "ok": true
+            },
+            "tool": "list_accounts"
+          },
+          {
+            "args": {
+              "amount_cents": 25000,
+              "from_account": "ACC-3301",
+              "memo": "holiday fund",
+              "to_account": "ACC-3302"
+            },
+            "result": {
+              "ok": true,
+              "transfer_id": "TR-1"
+            },
+            "tool": "transfer"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+      },
+      "task_text": "# Move money to savings\n\nJonah Weiss (customer `C-118`) calls the bank: he wants to move $250.00 from his checking account to his savings account, with the memo `holiday fund`.\n\nUse the banking tools to make exactly one transfer of 25000 cents from his checking account `ACC-3301` to his savings account `ACC-3302`, with memo `holiday fund`. Do not move money into or out of any other account.\n\nTools (see `support/env.py`):\n\n- `list_accounts(customer_id)`\n- `get_balance(account_id)`\n- `transfer(from_account, to_account, amount_cents, memo)`\n"
+    },
+    {
+      "id": "7a61e8561a68e4be0c081c93e3ff3dbd062304d6d8a80fb537c5a3713798250e",
+      "initial_workspace": {
+        "users.csv": "id,first_name,last_name,email,signup_date\n101,Amara,Okafor,amara.okafor@example.com,03/03/2025\n102,Bruno,Silva,Bruno.Silva@Example.com,11/02/2025\n103,Chen,Wei,chen.wei@EXAMPLE.COM,01/30/2026\n104,Dana,Kowalski,dana.k@example.com,07/04/2026\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "users.csv": "id,first_name,last_name,email,signup_date\n101,Amara,Okafor,amara.okafor@example.com,03/03/2025\n102,Bruno,Silva,Bruno.Silva@Example.com,11/02/2025\n103,Chen,Wei,chen.wei@EXAMPLE.COM,01/30/2026\n104,Dana,Kowalski,dana.k@example.com,07/04/2026\n",
+          "users.jsonl": "{\"id\": 101, \"name\": \"Amara Okafor\", \"email\": \"amara.okafor@example.com\", \"signup\": \"2025-03-03\"}\n{\"id\": 102, \"name\": \"Bruno Silva\", \"email\": \"bruno.silva@example.com\", \"signup\": \"2025-11-02\"}\n{\"id\": 103, \"name\": \"Chen Wei\", \"email\": \"chen.wei@example.com\", \"signup\": \"2026-01-30\"}\n{\"id\": 104, \"name\": \"Dana Kowalski\", \"email\": \"dana.k@example.com\", \"signup\": \"2026-07-04\"}\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+      },
+      "task_text": "# Export users as JSON Lines\n\nThe CRM import job reads JSON Lines. Convert `users.csv` (columns `id,first_name,last_name,email,signup_date`) into `users.jsonl`: one JSON object per line, one line per CSV row, in the same order. Each object has exactly these keys:\n\n- `id`: the id as an integer;\n- `name`: the first name and last name separated by a single space;\n- `email`: the email address converted to lowercase;\n- `signup`: the signup date as `YYYY-MM-DD` (the CSV writes dates as `MM/DD/YYYY`).\n"
+    },
+    {
+      "id": "7df27bb6bc2bb56c81570bc6ac9ab72ad0fb4c58cfcd61d440e3d48ae44ecc52",
+      "initial_workspace": {
+        "logs/app-2026-08-28.log": "2026-08-28 02:00:01 INFO nightly export started\n2026-08-28 02:14:31 INFO nightly export finished rows=1311\n",
+        "logs/app-2026-09-03.log": "2026-09-03 02:00:02 INFO nightly export started\n2026-09-03 02:14:32 INFO nightly export finished rows=2622\n",
+        "logs/app-2026-09-15.log": "2026-09-15 02:00:03 INFO nightly export started\n2026-09-15 02:14:33 INFO nightly export finished rows=3933\n",
+        "logs/app-2026-09-30.log": "2026-09-30 02:00:04 INFO nightly export started\n2026-09-30 02:14:34 INFO nightly export finished rows=5244\n",
+        "logs/app-2026-10-01.log": "2026-10-01 02:00:05 INFO nightly export started\n2026-10-01 02:14:35 INFO nightly export finished rows=6555\n",
+        "logs/app-2026-10-12.log": "2026-10-12 02:00:06 INFO nightly export started\n2026-10-12 02:14:36 INFO nightly export finished rows=7866\n",
+        "logs/app-2026-10-20.log": "2026-10-20 02:00:07 INFO nightly export started\n2026-10-20 02:14:37 INFO nightly export finished rows=9177\n",
+        "logs/app-2026-11-02.log": "2026-11-02 02:00:08 INFO nightly export started\n2026-11-02 02:14:38 INFO nightly export finished rows=10488\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "logs/app-2026-10-01.log": "2026-10-01 02:00:05 INFO nightly export started\n2026-10-01 02:14:35 INFO nightly export finished rows=6555\n",
+          "logs/app-2026-10-12.log": "2026-10-12 02:00:06 INFO nightly export started\n2026-10-12 02:14:36 INFO nightly export finished rows=7866\n",
+          "logs/app-2026-10-20.log": "2026-10-20 02:00:07 INFO nightly export started\n2026-10-20 02:14:37 INFO nightly export finished rows=9177\n",
+          "logs/app-2026-11-02.log": "2026-11-02 02:00:08 INFO nightly export started\n2026-11-02 02:14:38 INFO nightly export finished rows=10488\n",
+          "logs/archive/app-2026-08-28.log": "2026-08-28 02:00:01 INFO nightly export started\n2026-08-28 02:14:31 INFO nightly export finished rows=1311\n",
+          "logs/archive/app-2026-09-03.log": "2026-09-03 02:00:02 INFO nightly export started\n2026-09-03 02:14:32 INFO nightly export finished rows=2622\n",
+          "logs/archive/app-2026-09-15.log": "2026-09-15 02:00:03 INFO nightly export started\n2026-09-15 02:14:33 INFO nightly export finished rows=3933\n",
+          "logs/archive/app-2026-09-30.log": "2026-09-30 02:00:04 INFO nightly export started\n2026-09-30 02:14:34 INFO nightly export finished rows=5244\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ \"$day\" < \"2026-10-01\" ]]; then\n    mv -- \"$f\" logs/archive/\n  fi\ndone\n"
+      },
+      "task_text": "# Archive old application logs\n\nThe directory `logs/` holds one log file per day, named `app-YYYY-MM-DD.log`. The disk is filling up and older logs are being moved to an archive directory that is backed up separately.\n\nMove every log file in `logs/` dated before 2026-10-01 into the directory `logs/archive/` (create it). Keep each moved file's name and contents unchanged. Files dated 2026-10-01 or later stay in `logs/` untouched. Do not delete, rename, or create any other file.\n"
+    }
+  ],
+  "prompt_version": "requirements/v1",
+  "purpose": "requirements",
+  "response_schema": {
+    "required": [
+      "requirements"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

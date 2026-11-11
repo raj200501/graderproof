@@ -1,0 +1,41 @@
+name: ci
+
+# Runs only for main: pushes to main, pull requests into main, and manual runs.
+# Never on pushes to claude/ working branches and never on a schedule
+# (DECISIONS.md D21: private-repo Actions minutes are limited). `make ci` is run
+# locally and must pass before every push.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Setup
+        run: make setup
+      - name: Lint, typecheck, test, offline demo
+        run: make ci
+      - name: Secrets scan
+        run: make secrets-scan

@@ -1,0 +1,718 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "speech.txt": "We came here to build a library, and the library we build must serve the town.\nThe town asked for a place to read, a place to meet, and a place to learn.\nSo we will build it, and we will keep it open: open doors, open shelves, open hours.\nThat is the promise we make to the town -- and to every reader in it.\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "to 6\nthe 5\nwe 5\na 4\nand 4\n",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "pattern": "\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z",
+     "type": "stdout_regex"
+    },
+    {
+     "normalize": "strip",
+     "target": "stdout",
+     "type": "same_as_reference"
+    },
+    {
+     "code": 0,
+     "type": "exit_code"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Print exactly five lines of the form '<word> <count>' and nothing else, most frequent first, with ties broken alphabetically: words are maximal runs of ASCII letters, compared case-insensitively, printed lowercase."
+  },
+  {
+   "checks": [
+    {
+     "text": "to 6",
+     "type": "stdout_contains"
+    },
+    {
+     "text": "the 5",
+     "type": "stdout_contains"
+    },
+    {
+     "text": "we 5",
+     "type": "stdout_contains"
+    },
+    {
+     "text": "a 4",
+     "type": "stdout_contains"
+    },
+    {
+     "text": "and 4",
+     "type": "stdout_contains"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Counts are correct for the top words: to 6, the 5, we 5, a 4, and 4."
+  },
+  {
+   "checks": [
+    {
+     "pattern": "the 5\\nwe 5\\n",
+     "type": "stdout_regex"
+    },
+    {
+     "pattern": "a 4\\nand 4",
+     "type": "stdout_regex"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Tie-breaking by alphabetical order: 'the 5' appears before 'we 5', and 'a 4' before 'and 4'."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:word-freq",
+ "task_hash": "b20808fda577e1dc8435672390b70a83bc57e00f138a807b0d6b7ab68512d19b",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -eu\n+export LC_ALL=C\n+tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n+  while read -r count word; do\n+    if [ -n \"${word:-}\" ]; then\n+      printf '%s %s\\n' \"$word\" \"$count\"\n+    fi\n+  done | head -n 5\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -eu\n-export LC_ALL=C\n-tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n-  while read -r count word; do\n-    if [ -n \"${word:-}\" ]; then\n-      printf '%s %s\\n' \"$word\" \"$count\"\n-    fi\n-  done | head -n 5\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 3.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 3.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "2efddf71cf79dfc8f8c2764323bcce5d21514ba0578d624df794a02541fe8a9a",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "word-freq",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper delays by a sleep and runs the original script, and the identity transform passes its output through unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "2efddf71cf79dfc8f8c2764323bcce5d21514ba0578d624df794a02541fe8a9a"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -eu\n export LC_ALL=C\n-tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n+tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,3 |\n   while read -r count word; do\n     if [ -n \"${word:-}\" ]; then\n       printf '%s %s\\n' \"$word\" \"$count\"\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,3 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "4be7db72a6ec467d0375eef0e0a43a1da63e190de8a81f0233dec40f4a8e2fe9",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "word-freq",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The line has only two fields, so sort keys 2,3 and 2,2 compare the same text and give the same order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,6 +1,6 @@\n #!/usr/bin/env bash\n set -eu\n-export LC_ALL=C\n+:\n tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n   while read -r count word; do\n     if [ -n \"${word:-}\" ]; then\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -eu\n:\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1b19e866ac2f56ebfc78a946791ec97afc178cc24cf3262e19d12fa499fb1661",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "word-freq",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Removing LC_ALL=C should not change the output for lowercase ASCII words, which sort alphabetically in any common locale.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -eu\n export LC_ALL=C\n-tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n+:\n   while read -r count word; do\n     if [ -n \"${word:-}\" ]; then\n       printf '%s %s\\n' \"$word\" \"$count\"\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\n:\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f27a22ae9c9b823e3322ad848fadea9171c496b81b1ac80f1dd56a7d65b521a9",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "word-freq",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "print the five most frequent words with counts: The word-counting pipeline was replaced by a no-op, so no word frequencies are produced.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+       "stdout differs from reference"
+      ],
+      "requirement": "R1",
+      "text": "Print exactly five lines of the form '<word> <count>' and nothing else, most frequent first, with ties broken alphabetically: words are maximal runs of ASCII letters, compared case-insensitively, printed lowercase."
+     },
+     {
+      "failed": [
+       "stdout lacks 'to 6'",
+       "stdout lacks 'the 5'",
+       "stdout lacks 'we 5'",
+       "stdout lacks 'a 4'",
+       "stdout lacks 'and 4'"
+      ],
+      "requirement": "R2",
+      "text": "Counts are correct for the top words: to 6, the 5, we 5, a 4, and 4."
+     },
+     {
+      "failed": [
+       "stdout does not match /the 5\\nwe 5\\n/",
+       "stdout does not match /a 4\\nand 4/"
+      ],
+      "requirement": "R3",
+      "text": "Tie-breaking by alphabetical order: 'the 5' appears before 'we 5', and 'a 4' before 'and 4'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f27a22ae9c9b823e3322ad848fadea9171c496b81b1ac80f1dd56a7d65b521a9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n   while read -r count word; do\n     if [ -n \"${word:-}\" ]; then\n-      printf '%s %s\\n' \"$word\" \"$count\"\n+      :\n     fi\n   done | head -n 5\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      :\n    fi\n  done | head -n 5\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "02f6e6153d7cd86bede674ef47adef51ee718343f8eba22e2618405cb428b5d4",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "word-freq",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Print the five most frequent words with counts: The printf is replaced by a no-op, so nothing is printed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+       "stdout differs from reference"
+      ],
+      "requirement": "R1",
+      "text": "Print exactly five lines of the form '<word> <count>' and nothing else, most frequent first, with ties broken alphabetically: words are maximal runs of ASCII letters, compared case-insensitively, printed lowercase."
+     },
+     {
+      "failed": [
+       "stdout lacks 'to 6'",
+       "stdout lacks 'the 5'",
+       "stdout lacks 'we 5'",
+       "stdout lacks 'a 4'",
+       "stdout lacks 'and 4'"
+      ],
+      "requirement": "R2",
+      "text": "Counts are correct for the top words: to 6, the 5, we 5, a 4, and 4."
+     },
+     {
+      "failed": [
+       "stdout does not match /the 5\\nwe 5\\n/",
+       "stdout does not match /a 4\\nand 4/"
+      ],
+      "requirement": "R3",
+      "text": "Tie-breaking by alphabetical order: 'the 5' appears before 'we 5', and 'a 4' before 'and 4'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "02f6e6153d7cd86bede674ef47adef51ee718343f8eba22e2618405cb428b5d4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -eu\n+export LC_ALL=C\n+tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n+  while read -r count word; do\n+    if [ -n \"${word:-}\" ]; then\n+      printf '%s %s\\n' \"$word\" \"$count\"\n+    fi\n+  done | head -n 5\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return drop_last_line(out) if out.strip() else out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -eu\n-export LC_ALL=C\n-tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n-  while read -r count word; do\n-    if [ -n \"${word:-}\" ]; then\n-      printf '%s %s\\n' \"$word\" \"$count\"\n-    fi\n-  done | head -n 5\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return drop_last_line(out) if out.strip() else out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "381ffad8c911c040a94e718355f89678d0c9db86f0a0828eb68a8441211b4a29",
+   "kind": "violating",
+   "operator": "stdout-drop-last-line",
+   "task_id": "word-freq",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Print exactly five lines: The wrapper drops the last line of stdout, leaving four lines.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+       "stdout differs from reference"
+      ],
+      "requirement": "R1",
+      "text": "Print exactly five lines of the form '<word> <count>' and nothing else, most frequent first, with ties broken alphabetically: words are maximal runs of ASCII letters, compared case-insensitively, printed lowercase."
+     },
+     {
+      "failed": [
+       "stdout lacks 'and 4'"
+      ],
+      "requirement": "R2",
+      "text": "Counts are correct for the top words: to 6, the 5, we 5, a 4, and 4."
+     },
+     {
+      "failed": [
+       "stdout does not match /a 4\\nand 4/"
+      ],
+      "requirement": "R3",
+      "text": "Tie-breaking by alphabetical order: 'the 5' appears before 'we 5', and 'a 4' before 'and 4'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "381ffad8c911c040a94e718355f89678d0c9db86f0a0828eb68a8441211b4a29"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -eu\n+export LC_ALL=C\n+tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n+  while read -r count word; do\n+    if [ -n \"${word:-}\" ]; then\n+      printf '%s %s\\n' \"$word\" \"$count\"\n+    fi\n+  done | head -n 5\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return extra_line(out)\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -eu\n-export LC_ALL=C\n-tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n-  while read -r count word; do\n-    if [ -n \"${word:-}\" ]; then\n-      printf '%s %s\\n' \"$word\" \"$count\"\n-    fi\n-  done | head -n 5\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return extra_line(out)\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fc9015104b59866cab5f5f5ac3d6f011b2d6b96a1b242ecbd231fdb74db0c4a2",
+   "kind": "violating",
+   "operator": "stdout-extra-line",
+   "task_id": "word-freq",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Print exactly these five lines and nothing else: The transform appends an extra line 'extra' to stdout.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+       "stdout differs from reference"
+      ],
+      "requirement": "R1",
+      "text": "Print exactly five lines of the form '<word> <count>' and nothing else, most frequent first, with ties broken alphabetically: words are maximal runs of ASCII letters, compared case-insensitively, printed lowercase."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fc9015104b59866cab5f5f5ac3d6f011b2d6b96a1b242ecbd231fdb74db0c4a2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -eu\n+export LC_ALL=C\n+tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n+  while read -r count word; do\n+    if [ -n \"${word:-}\" ]; then\n+      printf '%s %s\\n' \"$word\" \"$count\"\n+    fi\n+  done | head -n 5\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return toggle_newline(out) if out else out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -eu\n-export LC_ALL=C\n-tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n-  while read -r count word; do\n-    if [ -n \"${word:-}\" ]; then\n-      printf '%s %s\\n' \"$word\" \"$count\"\n-    fi\n-  done | head -n 5\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return toggle_newline(out) if out else out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "50b53bae951d686a31e1547445007fd780620870506c840c8a93cb9366e8e71f",
+   "kind": "preserving",
+   "operator": "stdout-trailing-newline",
+   "task_id": "word-freq",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same five word-count lines are printed; only the trailing newline after the last line is removed, which the task text does not require.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "50b53bae951d686a31e1547445007fd780620870506c840c8a93cb9366e8e71f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -6,4 +6,4 @@\n     if [ -n \"${word:-}\" ]; then\n       printf '%s %s\\n' \"$word\" \"$count\"\n     fi\n-  done | head -n 5\n+  done | head -n 4\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 4\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "93f335241058b4e5b93ede85b132319d56498b11edc0b09cfe4a14118b6c2d46",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "word-freq",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "print exactly the five most frequent words: It prints only four lines.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+       "stdout differs from reference"
+      ],
+      "requirement": "R1",
+      "text": "Print exactly five lines of the form '<word> <count>' and nothing else, most frequent first, with ties broken alphabetically: words are maximal runs of ASCII letters, compared case-insensitively, printed lowercase."
+     },
+     {
+      "failed": [
+       "stdout lacks 'and 4'"
+      ],
+      "requirement": "R2",
+      "text": "Counts are correct for the top words: to 6, the 5, we 5, a 4, and 4."
+     },
+     {
+      "failed": [
+       "stdout does not match /a 4\\nand 4/"
+      ],
+      "requirement": "R3",
+      "text": "Tie-breaking by alphabetical order: 'the 5' appears before 'we 5', and 'a 4' before 'and 4'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "93f335241058b4e5b93ede85b132319d56498b11edc0b09cfe4a14118b6c2d46"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -eu\n export LC_ALL=C\n-tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n+tr -cs 'A-Za-z' '\\n' < speech.txt | sort | uniq -c | sort -k1,1nr -k2,2 |\n   while read -r count word; do\n     if [ -n \"${word:-}\" ]; then\n       printf '%s %s\\n' \"$word\" \"$count\"\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fe39183a6a77adca0a1f31aff93f4d1a3076d4e358d51a561d3752c45efe6283",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "word-freq",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Words are compared case-insensitively and printed in lowercase: The lowercasing step was removed so case variants are counted separately and printed with uppercase.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+       "stdout differs from reference"
+      ],
+      "requirement": "R1",
+      "text": "Print exactly five lines of the form '<word> <count>' and nothing else, most frequent first, with ties broken alphabetically: words are maximal runs of ASCII letters, compared case-insensitively, printed lowercase."
+     },
+     {
+      "failed": [
+       "stdout lacks 'the 5'",
+       "stdout lacks 'we 5'"
+      ],
+      "requirement": "R2",
+      "text": "Counts are correct for the top words: to 6, the 5, we 5, a 4, and 4."
+     },
+     {
+      "failed": [
+       "stdout does not match /the 5\\nwe 5\\n/"
+      ],
+      "requirement": "R3",
+      "text": "Tie-breaking by alphabetical order: 'the 5' appears before 'we 5', and 'a 4' before 'and 4'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fe39183a6a77adca0a1f31aff93f4d1a3076d4e358d51a561d3752c45efe6283"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -eu\n export LC_ALL=C\n-tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n+tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2r |\n   while read -r count word; do\n     if [ -n \"${word:-}\" ]; then\n       printf '%s %s\\n' \"$word\" \"$count\"\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2r |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "cd07a3883f419158129459bca4ab0d64207e4d9aaa2c241437ed73c180aed0c3",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "word-freq",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Break ties in count by alphabetical order of the word: The secondary sort is reversed (-k2,2r), so tied words come out in reverse alphabetical order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+       "stdout differs from reference"
+      ],
+      "requirement": "R1",
+      "text": "Print exactly five lines of the form '<word> <count>' and nothing else, most frequent first, with ties broken alphabetically: words are maximal runs of ASCII letters, compared case-insensitively, printed lowercase."
+     },
+     {
+      "failed": [
+       "stdout lacks 'a 4'"
+      ],
+      "requirement": "R2",
+      "text": "Counts are correct for the top words: to 6, the 5, we 5, a 4, and 4."
+     },
+     {
+      "failed": [
+       "stdout does not match /the 5\\nwe 5\\n/",
+       "stdout does not match /a 4\\nand 4/"
+      ],
+      "requirement": "R3",
+      "text": "Tie-breaking by alphabetical order: 'the 5' appears before 'we 5', and 'a 4' before 'and 4'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "cd07a3883f419158129459bca4ab0d64207e4d9aaa2c241437ed73c180aed0c3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,4 @@\n #!/usr/bin/env bash\n set -eu\n export LC_ALL=C\n-tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n-  while read -r count word; do\n-    if [ -n \"${word:-}\" ]; then\n-      printf '%s %s\\n' \"$word\" \"$count\"\n-    fi\n-  done | head -n 5\n+tr -cs 'A-Za-z' '\\n' < speech.txt | tr '[:upper:]' '[:lower:]' | awk 'NF { c[$1]++ } END { for (w in c) print w, c[w] }' | sort -k2,2nr -k1,1 | head -n 5\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr '[:upper:]' '[:lower:]' | awk 'NF { c[$1]++ } END { for (w in c) print w, c[w] }' | sort -k2,2nr -k1,1 | head -n 5\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "67c4e655c6a7959d6a92432882902db2759e6d4b282f40c745f063806c758db8",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "word-freq",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The awk pipeline counts the same words and sorts by count descending then word, printing the top five in the same format.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "67c4e655c6a7959d6a92432882902db2759e6d4b282f40c745f063806c758db8"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,4 @@\n #!/usr/bin/env bash\n set -eu\n export LC_ALL=C\n-tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n-  while read -r count word; do\n-    if [ -n \"${word:-}\" ]; then\n-      printf '%s %s\\n' \"$word\" \"$count\"\n-    fi\n-  done | head -n 5\n+grep -o '[A-Za-z]\\+' speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1 -nr -k2,2 | awk '{ print $2 \" \" $1 }' | head -n 5\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ngrep -o '[A-Za-z]\\+' speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1 -nr -k2,2 | awk '{ print $2 \" \" $1 }' | head -n 5\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "31f149662aa659e825f089dc625879cfa8ef8b1d9aa74721ab2a86e1b69f7cce",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "word-freq",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R1: stdout does not match /\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "break ties in count by alphabetical order of the word: The trailing global -nr option applies to the -k2,2 key and the last-resort comparison, so ties come out in reverse alphabetical order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,6 @@\n #!/usr/bin/env bash\n set -eu\n export LC_ALL=C\n-tr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n-  while read -r count word; do\n-    if [ -n \"${word:-}\" ]; then\n-      printf '%s %s\\n' \"$word\" \"$count\"\n-    fi\n-  done | head -n 5\n+sed 's/[^A-Za-z]/\\n/g' speech.txt | tr '[:upper:]' '[:lower:]' | grep -v '^$' | sort | uniq -c | sort -k1,1nr -k2,2 | head -n 5 | while read -r count word; do\n+  echo \"$word $count\"\n+done\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\nsed 's/[^A-Za-z]/\\n/g' speech.txt | tr '[:upper:]' '[:lower:]' | grep -v '^$' | sort | uniq -c | sort -k1,1nr -k2,2 | head -n 5 | while read -r count word; do\n  echo \"$word $count\"\ndone\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0a3c08ecd344a51c23ac8192def99fd1f35072946e4267997418c6f5928a7bb3",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "word-freq",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It splits on non-letters, lowercases, counts, sorts by count then word, and prints the top five in the same format.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "0a3c08ecd344a51c23ac8192def99fd1f35072946e4267997418c6f5928a7bb3"
+   }
+  }
+ ]
+}

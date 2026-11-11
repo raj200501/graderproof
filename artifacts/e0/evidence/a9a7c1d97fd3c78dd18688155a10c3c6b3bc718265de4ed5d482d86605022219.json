@@ -1,0 +1,744 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [
+  {
+   "checks": [
+    {
+     "path": "bin/wordcount",
+     "pattern": "\\A(?:(?!\\b(?:python3?|perl|awk|gawk|ruby|node|php)\\b).)*\\Z",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "The script may use only bash and coreutils."
+  }
+ ],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "bin/wordcount": "#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "bin/wordcount",
+     "type": "file_exists"
+    },
+    {
+     "code": 0,
+     "type": "exit_code"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Create a script at bin/wordcount."
+  },
+  {
+   "checks": [
+    {
+     "path": "bin/wordcount",
+     "pattern": "\\A#!(/usr/bin/env bash|/bin/bash)[ \\t]*\\n",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "The script must start with #!/usr/bin/env bash or #!/bin/bash."
+  },
+  {
+   "checks": [
+    {
+     "path": "bin/wordcount",
+     "pattern": "(?s)wc\\s+-w|\\$\\{?1\\}?|\\$@",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Run as bin/wordcount FILE, print the number of words in FILE (as counted by wc -w) as a plain decimal integer on a single line, exit status 0. An empty file has 0 words."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:word-counter",
+ "task_hash": "a9a7c1d97fd3c78dd18688155a10c3c6b3bc718265de4ed5d482d86605022219",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+mkdir -p bin\n+cat > bin/wordcount <<'EOF'\n+#!/usr/bin/env bash\n+set -euo pipefail\n+wc -w < \"$1\"\n+EOF\n+chmod +x bin/wordcount\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['bin/wordcount']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-mkdir -p bin\n-cat > bin/wordcount <<'EOF'\n-#!/usr/bin/env bash\n-set -euo pipefail\n-wc -w < \"$1\"\n-EOF\n-chmod +x bin/wordcount\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['bin/wordcount']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "caa3bf952cba397cedda234b37737eb288e7e3b07a62d842f3e1ab1ad14b1522",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "word-counter",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: bin/wordcount does not match /(?s)wc\\s+-w|\\$\\{?1\\}?|\\$@/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "bin/wordcount prints the word count: A wrapper drops the last line of the generated script, removing the wc -w command.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bin/wordcount does not match /(?s)wc\\s+-w|\\$\\{?1\\}?|\\$@/"
+      ],
+      "requirement": "R3",
+      "text": "Run as bin/wordcount FILE, print the number of words in FILE (as counted by wc -w) as a plain decimal integer on a single line, exit status 0. An empty file has 0 words."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "caa3bf952cba397cedda234b37737eb288e7e3b07a62d842f3e1ab1ad14b1522"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+mkdir -p bin\n+cat > bin/wordcount <<'EOF'\n+#!/usr/bin/env bash\n+set -euo pipefail\n+wc -w < \"$1\"\n+EOF\n+chmod +x bin/wordcount\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['bin/wordcount']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-mkdir -p bin\n-cat > bin/wordcount <<'EOF'\n-#!/usr/bin/env bash\n-set -euo pipefail\n-wc -w < \"$1\"\n-EOF\n-chmod +x bin/wordcount\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['bin/wordcount']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "01b7f05cb5eadb04f81dcfb7f33119837ae4a23e01df05f3779c214915bcfa25",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "word-counter",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "wordcount prints only the word count and exits 0: An extra line 'extra' is appended to the script, which runs a nonexistent command and fails with nonzero status.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+mkdir -p bin\n+cat > bin/wordcount <<'EOF'\n+#!/usr/bin/env bash\n+set -euo pipefail\n+wc -w < \"$1\"\n+EOF\n+chmod +x bin/wordcount\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['bin/wordcount']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-mkdir -p bin\n-cat > bin/wordcount <<'EOF'\n-#!/usr/bin/env bash\n-set -euo pipefail\n-wc -w < \"$1\"\n-EOF\n-chmod +x bin/wordcount\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['bin/wordcount']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ee219f1473825236c60071fe7a443b2bd53208f3ec4d4dedc4bc6cbc3c0f22f1",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "word-counter",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper creates the same executable script with only its final newline removed, which still prints the correct word count.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ee219f1473825236c60071fe7a443b2bd53208f3ec4d4dedc4bc6cbc3c0f22f1"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+mkdir -p bin\n+cat > bin/wordcount <<'EOF'\n+#!/usr/bin/env bash\n+set -euo pipefail\n+wc -w < \"$1\"\n+EOF\n+chmod +x bin/wordcount\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['bin/wordcount']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-mkdir -p bin\n-cat > bin/wordcount <<'EOF'\n-#!/usr/bin/env bash\n-set -euo pipefail\n-wc -w < \"$1\"\n-EOF\n-chmod +x bin/wordcount\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['bin/wordcount']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c02c33e80c3f36e69d8b7eb686737cdbb9d007eacb674b73af8453c76e6ea545",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "word-counter",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "bin/wordcount must be an executable script that prints the word count: Trailing spaces are appended to every non-empty line, including the shebang, which breaks the interpreter lookup so the script does not run.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "c02c33e80c3f36e69d8b7eb686737cdbb9d007eacb674b73af8453c76e6ea545"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,9 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+mkdir -p bin\n+cat > bin/wordcount <<'EOF'\n+#!/usr/bin/env bash\n+set -euo pipefail\n+wc -w < \"$1\"\n+EOF\n+chmod +x bin/wordcount\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-mkdir -p bin\n-cat > bin/wordcount <<'EOF'\n-#!/usr/bin/env bash\n-set -euo pipefail\n-wc -w < \"$1\"\n-EOF\n-chmod +x bin/wordcount\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 3.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 3.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7e3ed1630ace58f856049d9184fd4e59894db8cf224a845205c303871b7553f0",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "word-counter",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper still creates the same bin/wordcount script; the transform is an identity and only adds a delay.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "7e3ed1630ace58f856049d9184fd4e59894db8cf224a845205c303871b7553f0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,6 +1,6 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-mkdir -p bin\n+:\n cat > bin/wordcount <<'EOF'\n #!/usr/bin/env bash\n set -euo pipefail\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n:\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a31ec750ae06b7856299cddad6286abcf5707b1a82372be05eb729c3c1121887",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "word-counter",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: bin/wordcount missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Create the bin/ directory: mkdir -p bin was removed, so writing bin/wordcount fails when bin/ does not exist.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bin/wordcount missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Create a script at bin/wordcount."
+     },
+     {
+      "failed": [
+       "bin/wordcount missing"
+      ],
+      "requirement": "R2",
+      "text": "The script must start with #!/usr/bin/env bash or #!/bin/bash."
+     },
+     {
+      "failed": [
+       "bin/wordcount missing"
+      ],
+      "requirement": "R3",
+      "text": "Run as bin/wordcount FILE, print the number of words in FILE (as counted by wc -w) as a plain decimal integer on a single line, exit status 0. An empty file has 0 words."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a31ec750ae06b7856299cddad6286abcf5707b1a82372be05eb729c3c1121887"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -euo pipefail\n mkdir -p bin\n-cat > bin/wordcount <<'EOF'\n+:\n #!/usr/bin/env bash\n set -euo pipefail\n wc -w < \"$1\"\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\n:\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "330f8bc185a941fe9f08bc4c984b0a7fc746c1196b5037f69a28eef657492c87",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "word-counter",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: bin/wordcount missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Create an executable script at bin/wordcount: The heredoc is removed, so bin/wordcount is never created and the remaining script lines run directly and fail.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bin/wordcount missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Create a script at bin/wordcount."
+     },
+     {
+      "failed": [
+       "bin/wordcount missing"
+      ],
+      "requirement": "R2",
+      "text": "The script must start with #!/usr/bin/env bash or #!/bin/bash."
+     },
+     {
+      "failed": [
+       "bin/wordcount missing"
+      ],
+      "requirement": "R3",
+      "text": "Run as bin/wordcount FILE, print the number of words in FILE (as counted by wc -w) as a plain decimal integer on a single line, exit status 0. An empty file has 0 words."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "330f8bc185a941fe9f08bc4c984b0a7fc746c1196b5037f69a28eef657492c87"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -6,4 +6,4 @@\n set -euo pipefail\n wc -w < \"$1\"\n EOF\n-chmod +x bin/wordcount\n+:\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\n:\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "afbd3f58baf6c0c0bf27988b69552ea07a9837a0e7ceb768706b479208c13926",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "word-counter",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "bin/wordcount must be executable: The chmod +x step was removed, so the script is not executable.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -euo pipefail\n mkdir -p bin\n-cat > bin/wordcount <<'EOF'\n+cat | head -n 1 > bin/wordcount <<'EOF'\n #!/usr/bin/env bash\n set -euo pipefail\n wc -w < \"$1\"\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat | head -n 1 > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "91c0c0a053e9c4fde85cd4207902dc6e1a92272445d13ea251bef31a54d495d5",
+   "kind": "violating",
+   "operator": "sh-partial-output",
+   "task_id": "word-counter",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: bin/wordcount does not match /(?s)wc\\s+-w|\\$\\{?1\\}?|\\$@/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "bin/wordcount must print the word count of FILE: The pipeline writes only the first line (the shebang) to bin/wordcount, so the script has no word-counting code.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bin/wordcount does not match /(?s)wc\\s+-w|\\$\\{?1\\}?|\\$@/"
+      ],
+      "requirement": "R3",
+      "text": "Run as bin/wordcount FILE, print the number of words in FILE (as counted by wc -w) as a plain decimal integer on a single line, exit status 0. An empty file has 0 words."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "91c0c0a053e9c4fde85cd4207902dc6e1a92272445d13ea251bef31a54d495d5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -euo pipefail\n mkdir -p bin\n-cat > bin/wordcount <<'EOF'\n+cat > bin/wordcount.wrong <<'EOF'\n #!/usr/bin/env bash\n set -euo pipefail\n wc -w < \"$1\"\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount.wrong <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a73be19327451b313355feb156b7709e6b07034d54dfb7e457b6eafbe3ab87c0",
+   "kind": "violating",
+   "operator": "sh-target-file",
+   "task_id": "word-counter",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: bin/wordcount missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Create the script at bin/wordcount: The script is written to bin/wordcount.wrong, and chmod on bin/wordcount fails.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bin/wordcount missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Create a script at bin/wordcount."
+     },
+     {
+      "failed": [
+       "bin/wordcount missing"
+      ],
+      "requirement": "R2",
+      "text": "The script must start with #!/usr/bin/env bash or #!/bin/bash."
+     },
+     {
+      "failed": [
+       "bin/wordcount missing"
+      ],
+      "requirement": "R3",
+      "text": "Run as bin/wordcount FILE, print the number of words in FILE (as counted by wc -w) as a plain decimal integer on a single line, exit status 0. An empty file has 0 words."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a73be19327451b313355feb156b7709e6b07034d54dfb7e457b6eafbe3ab87c0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,8 +2,8 @@\n set -euo pipefail\n mkdir -p bin\n cat > bin/wordcount <<'EOF'\n-#!/usr/bin/env bash\n-set -euo pipefail\n+#!/usr/bin/env sh\n+set -eu\n wc -w < \"$1\"\n EOF\n chmod +x bin/wordcount\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env sh\nset -eu\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1e67ad4d47eb7fef94941b9767a08b66daf3a6e9cac4dd07e1641fbc86f92a16",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "word-counter",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: bin/wordcount does not match /\\A#!(/usr/bin/env bash|/bin/bash)[ \\t]*\\n/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Script must start with #!/usr/bin/env bash or #!/bin/bash: The shebang was changed to #!/usr/bin/env sh.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bin/wordcount does not match /\\A#!(/usr/bin/env bash|/bin/bash)[ \\t]*\\n/"
+      ],
+      "requirement": "R2",
+      "text": "The script must start with #!/usr/bin/env bash or #!/bin/bash."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1e67ad4d47eb7fef94941b9767a08b66daf3a6e9cac4dd07e1641fbc86f92a16"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n cat > bin/wordcount <<'EOF'\n #!/usr/bin/env bash\n set -euo pipefail\n-wc -w < \"$1\"\n+wc -l < \"$1\"\n EOF\n chmod +x bin/wordcount\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -l < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "112a2989760d7807c1220b5a3fed562c07181332817092c4e6d5118143e48ef2",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "word-counter",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Print the number of words as counted by wc -w: It counts lines with wc -l instead of words.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,9 @@\n #!/usr/bin/env bash\n set -euo pipefail\n mkdir -p bin\n-cat > bin/wordcount <<'EOF'\n+cat > bin/wordcount.sh <<'EOF'\n #!/usr/bin/env bash\n set -euo pipefail\n wc -w < \"$1\"\n EOF\n-chmod +x bin/wordcount\n+chmod +x bin/wordcount.sh\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount.sh <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount.sh\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "bed8574c5083dfd75780b593b2dedd1400af6098f71ff13c5dcda4823012226c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "word-counter",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: bin/wordcount missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Script must be at bin/wordcount: The script is created as bin/wordcount.sh instead.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bin/wordcount missing"
+      ],
+      "requirement": "R1",
+      "text": "Create a script at bin/wordcount."
+     },
+     {
+      "failed": [
+       "bin/wordcount missing"
+      ],
+      "requirement": "R2",
+      "text": "The script must start with #!/usr/bin/env bash or #!/bin/bash."
+     },
+     {
+      "failed": [
+       "bin/wordcount missing"
+      ],
+      "requirement": "R3",
+      "text": "Run as bin/wordcount FILE, print the number of words in FILE (as counted by wc -w) as a plain decimal integer on a single line, exit status 0. An empty file has 0 words."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "bed8574c5083dfd75780b593b2dedd1400af6098f71ff13c5dcda4823012226c"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,8 +2,13 @@\n set -euo pipefail\n mkdir -p bin\n cat > bin/wordcount <<'EOF'\n-#!/usr/bin/env bash\n+#!/bin/bash\n set -euo pipefail\n-wc -w < \"$1\"\n+count=0\n+while read -r -a words || [ \"${#words[@]}\" -gt 0 ]; do\n+  count=$((count + ${#words[@]}))\n+  words=()\n+done < \"$1\"\n+echo \"$count\"\n EOF\n chmod +x bin/wordcount\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/bin/bash\nset -euo pipefail\ncount=0\nwhile read -r -a words || [ \"${#words[@]}\" -gt 0 ]; do\n  count=$((count + ${#words[@]}))\n  words=()\ndone < \"$1\"\necho \"$count\"\nEOF\nchmod +x bin/wordcount\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "251b7c1db77569e71d34be74b6466742d52fa2d72aed3f33e73762725b2f0bc6",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "word-counter",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A word is a maximal run of non-whitespace characters, as counted by wc -w: The bash read/IFS splitting only splits on space, tab and newline, so other whitespace such as carriage returns or form feeds is counted differently from wc -w.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "251b7c1db77569e71d34be74b6466742d52fa2d72aed3f33e73762725b2f0bc6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -3,7 +3,8 @@\n mkdir -p bin\n cat > bin/wordcount <<'EOF'\n #!/usr/bin/env bash\n-set -euo pipefail\n-wc -w < \"$1\"\n+set -eu\n+n=$(wc -w < \"${1:?usage: wordcount FILE}\")\n+echo $n\n EOF\n chmod +x bin/wordcount\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -eu\nn=$(wc -w < \"${1:?usage: wordcount FILE}\")\necho $n\nEOF\nchmod +x bin/wordcount\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "34198fdf5d76b08daebbb7ab9d4253eb0a1905570860b44af3243f804b08e5d1",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "word-counter",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The script still prints the wc -w count as one integer line and exits 0.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "34198fdf5d76b08daebbb7ab9d4253eb0a1905570860b44af3243f804b08e5d1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,8 @@\n cat > bin/wordcount <<'EOF'\n #!/usr/bin/env bash\n set -euo pipefail\n-wc -w < \"$1\"\n+n=$(cat -- \"$1\" | wc -w | tr -d '[:space:]')\n+printf '%d\\n' \"$n\"\n+exit 0\n EOF\n-chmod +x bin/wordcount\n+chmod 755 bin/wordcount\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nn=$(cat -- \"$1\" | wc -w | tr -d '[:space:]')\nprintf '%d\\n' \"$n\"\nexit 0\nEOF\nchmod 755 bin/wordcount\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0c455632e7cda0de781e9ba6ea415ff9e4f43311b91ad4e26d10299415b28a64",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "word-counter",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The script still prints the wc -w count as a plain integer and exits 0, and it is executable.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "0c455632e7cda0de781e9ba6ea415ff9e4f43311b91ad4e26d10299415b28a64"
+   }
+  }
+ ]
+}

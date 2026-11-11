@@ -1,0 +1,60 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "7adc554c92ce1d51e2ca28730dc78ed07f17aa49c49ff2bef55fc10dc653dbac",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "demo:word-stats": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Writes the dict with str() instead of json.dumps(), so stats.json contains a Python repr with single quotes that is not a valid JSON object.",
+          "files": {
+            "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(str({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Counts lines with len(text.split(\"\\n\")), which yields an extra empty trailing element and reports 4 instead of 3.",
+          "files": {
+            "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = len(text.split(\"\\n\"))\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Estimates the word count as the number of spaces plus one, which ignores newline separators and reports a wrong value instead of 9.",
+          "files": {
+            "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = text.count(\" \") + 1\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Emits the keys in reverse order, pretty-printed with indent=2 and no trailing newline.",
+          "files": {
+            "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nstats = {\"words\": len(text.split()), \"lines\": text.count(\"\\n\")}\nPath(\"stats.json\").write_text(json.dumps(stats, indent=2))\n"
+          }
+        },
+        {
+          "description": "Counts lines and words by iterating over the file handle and writes sorted keys with indent=4 via json.dump plus a trailing newline.",
+          "files": {
+            "solve.py": "import json\n\nlines = 0\nwords = 0\nwith open(\"input.txt\") as f:\n    for line in f:\n        lines += 1\n        words += len(line.split())\nwith open(\"stats.json\", \"w\") as out:\n    json.dump({\"lines\": lines, \"words\": words}, out, indent=4, sort_keys=True)\n    out.write(\"\\n\")\n"
+          }
+        },
+        {
+          "description": "Uses splitlines() and a per-line word sum, writing compact JSON with no spaces after separators.",
+          "files": {
+            "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nparts = text.splitlines()\nresult = {\"lines\": len(parts), \"words\": sum(len(part.split()) for part in parts)}\nPath(\"stats.json\").write_text(json.dumps(result, separators=(\",\", \":\")) + \"\\n\")\n"
+          }
+        },
+        {
+          "description": "Uses regular expressions to count newlines and non-whitespace runs and writes sorted keys with indent=1.",
+          "files": {
+            "solve.py": "import json\nimport re\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = len(re.findall(r\"\\n\", text))\nwords = len(re.findall(r\"\\S+\", text))\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}, sort_keys=True, indent=1) + \"\\n\")\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

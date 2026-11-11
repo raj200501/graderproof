@@ -1,0 +1,1147 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "team.csv": "name,role,location\nAda Park,Engineering Manager,Berlin\nLuis Romero,Backend Engineer,Madrid\nGrace Kim,Product Designer,Seoul\nTomasz Nowak,Site Reliability Engineer,Warsaw\n",
+   "team.md": "| name | role | location |\n| --- | --- | --- |\n| Ada Park | Engineering Manager | Berlin |\n| Luis Romero | Backend Engineer | Madrid |\n| Grace Kim | Product Designer | Seoul |\n| Tomasz Nowak | Site Reliability Engineer | Warsaw |\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "team.md",
+     "type": "file_exists"
+    },
+    {
+     "code": 0,
+     "type": "exit_code"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write the Markdown table to team.md."
+  },
+  {
+   "checks": [
+    {
+     "path": "team.md",
+     "pattern": "\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "The first row of the table is the header row with the CSV column names (name, role, location), starting and ending with |, cells separated by |; spaces around cell text are optional."
+  },
+  {
+   "checks": [
+    {
+     "path": "team.md",
+     "pattern": "\\A[^\\n]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "The second row is a separator row; each separator cell consists of three or more - characters, optionally with a leading and/or trailing : for alignment."
+  },
+  {
+   "checks": [
+    {
+     "path": "team.md",
+     "pattern": "\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+  },
+  {
+   "checks": [
+    {
+     "path": "team.md",
+     "pattern": "\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z",
+     "type": "file_regex"
+    },
+    {
+     "count": 6,
+     "path": "team.md",
+     "type": "file_lines"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:csv-to-markdown",
+ "task_hash": "397e3795688e2a65325b67b4a756c06874d0ef1a76d7967e232c3c78ff3d69d0",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,12 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+{\n+  first=1\n+  while IFS=, read -r name role location; do\n+    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n+    if [ \"$first\" -eq 1 ]; then\n+      printf '| --- | --- | --- |\\n'\n+      first=0\n+    fi\n+  done < team.csv\n+} > team.md\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['team.md']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,12 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-{\n-  first=1\n-  while IFS=, read -r name role location; do\n-    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n-    if [ \"$first\" -eq 1 ]; then\n-      printf '| --- | --- | --- |\\n'\n-      first=0\n-    fi\n-  done < team.csv\n-} > team.md\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['team.md']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "62d1ac2e589ad5b816d945b264698426665e8da54d01806174940cc4db691924",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "one row per CSV record: The transform drops the last line of team.md, omitting the final record.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+       "team.md has 5 non-empty lines"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "62d1ac2e589ad5b816d945b264698426665e8da54d01806174940cc4db691924"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,12 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+{\n+  first=1\n+  while IFS=, read -r name role location; do\n+    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n+    if [ \"$first\" -eq 1 ]; then\n+      printf '| --- | --- | --- |\\n'\n+      first=0\n+    fi\n+  done < team.csv\n+} > team.md\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['team.md']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,12 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-{\n-  first=1\n-  while IFS=, read -r name role location; do\n-    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n-    if [ \"$first\" -eq 1 ]; then\n-      printf '| --- | --- | --- |\\n'\n-      first=0\n-    fi\n-  done < team.csv\n-} > team.md\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['team.md']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c9c78d9f0a19192ad0b3b1e7e979c9bb7962b6689342cb8361ad62291e57cd05",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "team.md contains only the table: A wrapper appends an extra line 'extra' to team.md.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+       "team.md has 7 non-empty lines"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c9c78d9f0a19192ad0b3b1e7e979c9bb7962b6689342cb8361ad62291e57cd05"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,12 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+{\n+  first=1\n+  while IFS=, read -r name role location; do\n+    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n+    if [ \"$first\" -eq 1 ]; then\n+      printf '| --- | --- | --- |\\n'\n+      first=0\n+    fi\n+  done < team.csv\n+} > team.md\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['team.md']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,12 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-{\n-  first=1\n-  while IFS=, read -r name role location; do\n-    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n-    if [ \"$first\" -eq 1 ]; then\n-      printf '| --- | --- | --- |\\n'\n-      first=0\n-    fi\n-  done < team.csv\n-} > team.md\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['team.md']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "646f69528b80d2c7a8587fda97c3618352ecd78514cfeed69510da54fe1e3519",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the optional final newline of team.md is toggled; the table content is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "646f69528b80d2c7a8587fda97c3618352ecd78514cfeed69510da54fe1e3519"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,12 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+{\n+  first=1\n+  while IFS=, read -r name role location; do\n+    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n+    if [ \"$first\" -eq 1 ]; then\n+      printf '| --- | --- | --- |\\n'\n+      first=0\n+    fi\n+  done < team.csv\n+} > team.md\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['team.md']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,12 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-{\n-  first=1\n-  while IFS=, read -r name role location; do\n-    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n-    if [ \"$first\" -eq 1 ]; then\n-      printf '| --- | --- | --- |\\n'\n-      first=0\n-    fi\n-  done < team.csv\n-} > team.md\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['team.md']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false,
+    false,
+    false
+   ],
+   "id": "d7dc33fbc2eaebff76dc7625af7060c021af1802969ea46d53d6e3588b010e70",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only trailing spaces are appended to each table line; cells, order, header, separator and leading and trailing pipes are unchanged, and surrounding spaces are stated to be ignored.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "d7dc33fbc2eaebff76dc7625af7060c021af1802969ea46d53d6e3588b010e70"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,12 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+{\n+  first=1\n+  while IFS=, read -r name role location; do\n+    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n+    if [ \"$first\" -eq 1 ]; then\n+      printf '| --- | --- | --- |\\n'\n+      first=0\n+    fi\n+  done < team.csv\n+} > team.md\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,12 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-{\n-  first=1\n-  while IFS=, read -r name role location; do\n-    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n-    if [ \"$first\" -eq 1 ]; then\n-      printf '| --- | --- | --- |\\n'\n-      first=0\n-    fi\n-  done < team.csv\n-} > team.md\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 3.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 3.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "40ad009743049b925c7e0a566b2dfdfcfe7f078592447978b3642dcba2b7a8d0",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper runs the original script unchanged with an identity transform and a delay, so team.md is the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "40ad009743049b925c7e0a566b2dfdfcfe7f078592447978b3642dcba2b7a8d0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -euo pipefail\n {\n-  first=1\n+  first=2\n   while IFS=, read -r name role location; do\n     printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n     if [ \"$first\" -eq 1 ]; then\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=2\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6ca7612be768fc1a37c2caa1e28f3d180a774ce73249be2bb6391ac31b15c817",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: team.md does not match /\\A[^\\n]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Table must have a separator row after the header: first=2 never equals 1, so the separator row is never written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md does not match /\\A[^\\n]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n/"
+      ],
+      "requirement": "R3",
+      "text": "The second row is a separator row; each separator cell consists of three or more - characters, optionally with a leading and/or trailing : for alignment."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+       "team.md has 5 non-empty lines"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6ca7612be768fc1a37c2caa1e28f3d180a774ce73249be2bb6391ac31b15c817"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -6,7 +6,7 @@\n     printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n     if [ \"$first\" -eq 1 ]; then\n       printf '| --- | --- | --- |\\n'\n-      first=0\n+      first=1\n     fi\n   done < team.csv\n } > team.md\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=1\n    fi\n  done < team.csv\n} > team.md\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a64ac4735257634e8c50b383fd630e6011120b3e155a083664e0be8865dd0fac",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Exactly one separator row after the header: first stays 1, so a separator row is printed after every row.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+       "team.md has 10 non-empty lines"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a64ac4735257634e8c50b383fd630e6011120b3e155a083664e0be8865dd0fac"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -euo pipefail\n {\n-  first=1\n+  :\n   while IFS=, read -r name role location; do\n     printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n     if [ \"$first\" -eq 1 ]; then\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  :\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "65ae9fa2c2bf6b02b06d08d1638d244afd002a7a883e25ab1f54dad09a99ba6a",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "produce team.md: The variable first is never set, so set -u aborts the script.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write the Markdown table to team.md."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[^\\n]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n/"
+      ],
+      "requirement": "R3",
+      "text": "The second row is a separator row; each separator cell consists of three or more - characters, optionally with a leading and/or trailing : for alignment."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+       "team.md has 1 non-empty lines"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "65ae9fa2c2bf6b02b06d08d1638d244afd002a7a883e25ab1f54dad09a99ba6a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -3,7 +3,7 @@\n {\n   first=1\n   while IFS=, read -r name role location; do\n-    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n+    :\n     if [ \"$first\" -eq 1 ]; then\n       printf '| --- | --- | --- |\\n'\n       first=0\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    :\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5baa52351b9ad662e4c09cee108a6e20631e0c004b4910f6153dcf40c4d31ae1",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Table contains header row and one row per CSV record: The printf of each data row was removed, so only the separator row is written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n/"
+      ],
+      "requirement": "R2",
+      "text": "The first row of the table is the header row with the CSV column names (name, role, location), starting and ending with |, cells separated by |; spaces around cell text are optional."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[^\\n]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n/"
+      ],
+      "requirement": "R3",
+      "text": "The second row is a separator row; each separator cell consists of three or more - characters, optionally with a leading and/or trailing : for alignment."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+       "team.md has 1 non-empty lines"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5baa52351b9ad662e4c09cee108a6e20631e0c004b4910f6153dcf40c4d31ae1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -5,7 +5,7 @@\n   while IFS=, read -r name role location; do\n     printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n     if [ \"$first\" -eq 1 ]; then\n-      printf '| --- | --- | --- |\\n'\n+      :\n       first=0\n     fi\n   done < team.csv\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      :\n      first=0\n    fi\n  done < team.csv\n} > team.md\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d94997ba28f1cbf1fea4832459872effa3786b96a9c447923d25e18b9a19746f",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: team.md does not match /\\A[^\\n]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "A separator row must follow the header row: The separator row is no longer printed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md does not match /\\A[^\\n]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n/"
+      ],
+      "requirement": "R3",
+      "text": "The second row is a separator row; each separator cell consists of three or more - characters, optionally with a leading and/or trailing : for alignment."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+       "team.md has 5 non-empty lines"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d94997ba28f1cbf1fea4832459872effa3786b96a9c447923d25e18b9a19746f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -6,7 +6,7 @@\n     printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n     if [ \"$first\" -eq 1 ]; then\n       printf '| --- | --- | --- |\\n'\n-      first=0\n+      :\n     fi\n   done < team.csv\n } > team.md\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      :\n    fi\n  done < team.csv\n} > team.md\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b428dd29727c9c0b79d8288c93eea9692999d44a5922275c7f8fa60504722777",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "one separator row after the header, then one row per record: first is never reset to 0, so a separator row is printed after every record.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+       "team.md has 10 non-empty lines"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b428dd29727c9c0b79d8288c93eea9692999d44a5922275c7f8fa60504722777"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -9,4 +9,4 @@\n       first=0\n     fi\n   done < team.csv\n-} > team.md\n+} | head -n 1 > team.md\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} | head -n 1 > team.md\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f0088152f0da3be32e113fc0d4733a14a07cc125d18a84831745146c3af78b75",
+   "kind": "violating",
+   "operator": "sh-partial-output",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: team.md does not match /\\A[^\\n]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "one row per CSV record plus separator row: head -n 1 keeps only the header row and drops the separator and all data rows.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md does not match /\\A[^\\n]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n/"
+      ],
+      "requirement": "R3",
+      "text": "The second row is a separator row; each separator cell consists of three or more - characters, optionally with a leading and/or trailing : for alignment."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+       "team.md has 1 non-empty lines"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f0088152f0da3be32e113fc0d4733a14a07cc125d18a84831745146c3af78b75"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -9,4 +9,4 @@\n       first=0\n     fi\n   done < team.csv\n-} > team.md\n+} > team.md.wrong\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md.wrong\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "505a2834bb368c276f003df2bfd523ef972b5a4f64ebd02d33563a86f37bc441",
+   "kind": "violating",
+   "operator": "sh-target-file",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: team.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "write the table to team.md: The output goes to team.md.wrong, so team.md is not created.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write the Markdown table to team.md."
+     },
+     {
+      "failed": [
+       "team.md missing"
+      ],
+      "requirement": "R2",
+      "text": "The first row of the table is the header row with the CSV column names (name, role, location), starting and ending with |, cells separated by |; spaces around cell text are optional."
+     },
+     {
+      "failed": [
+       "team.md missing"
+      ],
+      "requirement": "R3",
+      "text": "The second row is a separator row; each separator cell consists of three or more - characters, optionally with a leading and/or trailing : for alignment."
+     },
+     {
+      "failed": [
+       "team.md missing"
+      ],
+      "requirement": "R4",
+      "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+     },
+     {
+      "failed": [
+       "team.md missing",
+       "team.md missing"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "505a2834bb368c276f003df2bfd523ef972b5a4f64ebd02d33563a86f37bc441"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -9,4 +9,4 @@\n       first=0\n     fi\n   done < team.csv\n-} > team.md\n+} > table.md\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > table.md\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "bf0f3265ae0d9a335cf04cba7f8176eb64f4b6b293739715d36288a664c46eb1",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: team.md missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write the table to team.md: Output is written to table.md instead of team.md.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md missing"
+      ],
+      "requirement": "R1",
+      "text": "Write the Markdown table to team.md."
+     },
+     {
+      "failed": [
+       "team.md missing"
+      ],
+      "requirement": "R2",
+      "text": "The first row of the table is the header row with the CSV column names (name, role, location), starting and ending with |, cells separated by |; spaces around cell text are optional."
+     },
+     {
+      "failed": [
+       "team.md missing"
+      ],
+      "requirement": "R3",
+      "text": "The second row is a separator row; each separator cell consists of three or more - characters, optionally with a leading and/or trailing : for alignment."
+     },
+     {
+      "failed": [
+       "team.md missing"
+      ],
+      "requirement": "R4",
+      "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+     },
+     {
+      "failed": [
+       "team.md missing",
+       "team.md missing"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "bf0f3265ae0d9a335cf04cba7f8176eb64f4b6b293739715d36288a664c46eb1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -3,10 +3,12 @@\n {\n   first=1\n   while IFS=, read -r name role location; do\n-    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n     if [ \"$first\" -eq 1 ]; then\n+      printf '| %s | %s |\\n' \"$name\" \"$role\"\n       printf '| --- | --- | --- |\\n'\n       first=0\n+    else\n+      printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n     fi\n   done < team.csv\n } > team.md\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    if [ \"$first\" -eq 1 ]; then\n      printf '| %s | %s |\\n' \"$name\" \"$role\"\n      printf '| --- | --- | --- |\\n'\n      first=0\n    else\n      printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    fi\n  done < team.csv\n} > team.md\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "995f0cfb89c7b2a63f6bfc32f2efdeeec4da7982a7edcde17858c4225cae254f",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Header row contains all CSV column names: The header row omits the third column, so it has fewer cells than the separator row.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n/"
+      ],
+      "requirement": "R2",
+      "text": "The first row of the table is the header row with the CSV column names (name, role, location), starting and ending with |, cells separated by |; spaces around cell text are optional."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "995f0cfb89c7b2a63f6bfc32f2efdeeec4da7982a7edcde17858c4225cae254f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -5,7 +5,7 @@\n   while IFS=, read -r name role location; do\n     printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n     if [ \"$first\" -eq 1 ]; then\n-      printf '| --- | --- | --- |\\n'\n+      printf '| -- | -- | -- |\\n'\n       first=0\n     fi\n   done < team.csv\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| -- | -- | -- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "949e1d1390a0c461a7019971de5bc0c79ea2e40a8ddfeb599b58af19d306adf4",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: team.md does not match /\\A[^\\n]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "separator cells have three or more dashes: Separator cells have only two dashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md does not match /\\A[^\\n]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n/"
+      ],
+      "requirement": "R3",
+      "text": "The second row is a separator row; each separator cell consists of three or more - characters, optionally with a leading and/or trailing : for alignment."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "949e1d1390a0c461a7019971de5bc0c79ea2e40a8ddfeb599b58af19d306adf4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -8,5 +8,5 @@\n       printf '| --- | --- | --- |\\n'\n       first=0\n     fi\n-  done < team.csv\n+  done < <(head -n 1 team.csv; tail -n +2 team.csv | sort -r)\n } > team.md\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < <(head -n 1 team.csv; tail -n +2 team.csv | sort -r)\n} > team.md\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8b08c6dccfdb45103106d9272cedafe29804dc204e7d38db64f086f0b6f61ab2",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "one row per CSV record in the original order: The data rows are reverse sorted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8b08c6dccfdb45103106d9272cedafe29804dc204e7d38db64f086f0b6f61ab2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -9,4 +9,5 @@\n       first=0\n     fi\n   done < team.csv\n+  printf '\\nGenerated from team.csv\\n'\n } > team.md\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n  printf '\\nGenerated from team.csv\\n'\n} > team.md\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "211d620aa9c2594fb21166f88302943dcb4532bdff33ca2838b704f836f58470",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "team.md contains only the table: It appends a 'Generated from team.csv' line after the table.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "team.md does not match /\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+     },
+     {
+      "failed": [
+       "team.md does not match /\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z/",
+       "team.md has 7 non-empty lines"
+      ],
+      "requirement": "R5",
+      "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "211d620aa9c2594fb21166f88302943dcb4532bdff33ca2838b704f836f58470"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,12 +1,3 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-{\n-  first=1\n-  while IFS=, read -r name role location; do\n-    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n-    if [ \"$first\" -eq 1 ]; then\n-      printf '| --- | --- | --- |\\n'\n-      first=0\n-    fi\n-  done < team.csv\n-} > team.md\n+awk -F, '{ printf \"|%s|%s|%s|\\n\", $1, $2, $3; if (NR == 1) print \"|---|---|---|\" }' team.csv > team.md\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nawk -F, '{ printf \"|%s|%s|%s|\\n\", $1, $2, $3; if (NR == 1) print \"|---|---|---|\" }' team.csv > team.md\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "20b9a028951496fc88477861087289454ad589f2f28638897c5e56e4a7dad077",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The awk output is a valid table with header, separator, and rows; spacing around cells is explicitly optional.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "20b9a028951496fc88477861087289454ad589f2f28638897c5e56e4a7dad077"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -5,7 +5,7 @@\n   while IFS=, read -r name role location; do\n     printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n     if [ \"$first\" -eq 1 ]; then\n-      printf '| --- | --- | --- |\\n'\n+      printf '|:-----|:-----:|-----:|\\n'\n       first=0\n     fi\n   done < team.csv\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '|:-----|:-----:|-----:|\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0df15cce717f2b8413fd2a7d22c1e8301b8e71d1e36704ca8b2bf87d5f42e82c",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The new separator cells have three or more dashes with optional colons, which the task allows.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "0df15cce717f2b8413fd2a7d22c1e8301b8e71d1e36704ca8b2bf87d5f42e82c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,12 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-{\n-  first=1\n-  while IFS=, read -r name role location; do\n-    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n-    if [ \"$first\" -eq 1 ]; then\n-      printf '| --- | --- | --- |\\n'\n-      first=0\n-    fi\n-  done < team.csv\n-} > team.md\n+sed -e 's/,/ | /g' -e 's/^/| /' -e 's/$/ |/' team.csv | sed '1a\\\n+| ---- | ---- | ---- |' > team.md\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nsed -e 's/,/ | /g' -e 's/^/| /' -e 's/$/ |/' team.csv | sed '1a\\\n| ---- | ---- | ---- |' > team.md\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d4d7410403e8476c40c787fff971a91914cf60440cf328187f21479a42323fe9",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "csv-to-markdown",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The sed pipeline writes a header row, a separator row of four dashes per cell, and the data rows with unchanged cell text, all delimited by pipes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "d4d7410403e8476c40c787fff971a91914cf60440cf328187f21479a42323fe9"
+   }
+  }
+ ]
+}

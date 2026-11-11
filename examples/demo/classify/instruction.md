@@ -1,0 +1,1 @@
+Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `"fizzbuzz"` if `n` is divisible by both 3 and 5, `"fizz"` if it is divisible by 3 only, `"buzz"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `"7"`).

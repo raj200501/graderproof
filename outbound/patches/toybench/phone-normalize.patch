@@ -1,0 +1,779 @@
+diff --git a/grader/gp_repair_checker.py b/grader/gp_repair_checker.py
+new file mode 100644
+--- /dev/null
++++ b/grader/gp_repair_checker.py
+@@ -0,0 +1,594 @@
++"""graderproof repair checker (generated). Evaluates the requirements in
++gp_repair_checks.json on the workspace with graderproof's own check semantics.
++"""
++
++from __future__ import annotations
++
++import hashlib
++import json
++
++
++def canonical_json(obj):
++    return json.dumps(
++        obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False
++    )
++
++
++def sha256_text(text):
++    return hashlib.sha256(text.encode("utf-8")).hexdigest()
++
++"""Task requirements and machine-checkable checks, evaluated on solution outcomes.
++
++Requirements are derived from the task text (never from the grader). Each requirement
++holds one or more typed checks; a requirement holds on an outcome when all of its
++checks pass. Checks are evaluated in-process on data already collected from the
++sandbox (workspace files, process output, trajectory, final state, and the results of
++sandboxed function-call probes), so no untrusted code runs here.
++
++Check types (``{"type": ..., ...}``):
++
++* ``file_exists`` / ``file_absent``: ``path``
++* ``file_equals``: ``path``, ``text``, optional ``normalize`` (``none``, ``strip``,
++  ``trailing_ws``)
++* ``file_contains``: ``path``, ``text``; ``file_regex``: ``path``, ``pattern``
++* ``file_json``: ``path``, ``pointer`` (RFC 6901), ``equals``, optional ``lenient``
++* ``file_lines``: ``path``, ``count`` (non-empty lines)
++* ``stdout_contains``: ``text``; ``stdout_regex``: ``pattern``;
++  ``stdout_json``: ``pointer``, ``equals``, optional ``lenient``
++* ``exit_code``: ``code``
++* ``call``: ``probe`` (``function``, ``args``, ``kwargs``), and ``equals`` or
++  ``matches_reference: true`` (differential against the reference outcome)
++* ``same_as_reference``: ``target`` (``stdout``, ``state``, or ``file:<path>``),
++  optional ``normalize``
++* ``trajectory_includes`` / ``trajectory_excludes``: ``tool``, optional ``args`` subset
++* ``trajectory_before``: ``first`` and ``then`` (each ``{tool, args?}``)
++* ``state_equals``: ``pointer``, ``equals``
++
++``lenient`` JSON parsing strips surrounding whitespace and one Markdown code fence.
++"""
++
++
++import json
++import re
++from collections.abc import Mapping, Sequence
++from dataclasses import dataclass, field
++from typing import Any
++
++
++FENCE_RE = re.compile(r"^\s*```[A-Za-z0-9_-]*\s*\n(.*?)\n\s*```\s*$", re.S)
++CHECK_TYPES = frozenset(
++    {
++        "file_exists",
++        "file_absent",
++        "file_equals",
++        "file_contains",
++        "file_regex",
++        "file_json",
++        "file_lines",
++        "stdout_contains",
++        "stdout_regex",
++        "stdout_json",
++        "exit_code",
++        "call",
++        "same_as_reference",
++        "trajectory_includes",
++        "trajectory_excludes",
++        "trajectory_before",
++        "state_equals",
++    }
++)
++
++
++@dataclass(frozen=True)
++class Outcome:
++    """What one execution of a solution produced, as seen by checks.
++
++    Attributes:
++        files: Workspace text files after the solution ran, relative path to content.
++        stdout: Solution standard output.
++        stderr: Solution standard error.
++        exit_status: Solution exit status.
++        timed_out: Whether the solution hit its time limit.
++        trajectory: Tool calls executed, ``{"tool", "args", "result"|"error"}``.
++        state: Final environment state for stateful tool-use tasks.
++        probes: Results of sandboxed function-call probes, keyed by :func:`probe_key`.
++    """
++
++    files: Mapping[str, str] = field(default_factory=dict)
++    stdout: str = ""
++    stderr: str = ""
++    exit_status: int = 0
++    timed_out: bool = False
++    trajectory: Sequence[Mapping[str, Any]] = ()
++    state: Mapping[str, Any] | None = None
++    probes: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
++
++    def to_dict(self) -> dict[str, Any]:
++        """Plain-JSON representation."""
++        return {
++            "files": dict(self.files),
++            "stdout": self.stdout,
++            "stderr": self.stderr,
++            "exit_status": self.exit_status,
++            "timed_out": self.timed_out,
++            "trajectory": [dict(t) for t in self.trajectory],
++            "state": None if self.state is None else dict(self.state),
++            "probes": {k: dict(v) for k, v in self.probes.items()},
++        }
++
++    @classmethod
++    def from_dict(cls, data: Mapping[str, Any]) -> Outcome:
++        """Inverse of :meth:`to_dict`."""
++        state = data.get("state")
++        return cls(
++            files=dict(data.get("files", {})),
++            stdout=str(data.get("stdout", "")),
++            stderr=str(data.get("stderr", "")),
++            exit_status=int(data.get("exit_status", 0)),
++            timed_out=bool(data.get("timed_out", False)),
++            trajectory=tuple(data.get("trajectory", ())),
++            state=None if state is None else dict(state),
++            probes=dict(data.get("probes", {})),
++        )
++
++
++@dataclass(frozen=True)
++class CheckResult:
++    """Whether one check passed, with a short human-readable detail."""
++
++    passed: bool
++    detail: str
++
++
++@dataclass(frozen=True)
++class Requirement:
++    """One atomic requirement from the task text with its machine-checkable checks."""
++
++    id: str
++    text: str
++    checks: tuple[Mapping[str, Any], ...]
++    source: str = ""
++
++    def __post_init__(self) -> None:
++        if not self.checks:
++            raise ValueError(f"requirement {self.id} has no checks")
++        for c in self.checks:
++            if c.get("type") not in CHECK_TYPES:
++                raise ValueError(f"requirement {self.id}: unknown check type {c.get('type')!r}")
++
++    def to_dict(self) -> dict[str, Any]:
++        """Plain-JSON representation."""
++        return {
++            "id": self.id,
++            "text": self.text,
++            "checks": [dict(c) for c in self.checks],
++            "source": self.source,
++        }
++
++    @classmethod
++    def from_dict(cls, data: Mapping[str, Any]) -> Requirement:
++        """Inverse of :meth:`to_dict`."""
++        return cls(
++            id=str(data["id"]),
++            text=str(data["text"]),
++            checks=tuple(dict(c) for c in data["checks"]),
++            source=str(data.get("source", "")),
++        )
++
++
++def probe_key(probe: Mapping[str, Any]) -> str:
++    """Stable key for a function-call probe."""
++    return sha256_text(canonical_json(dict(probe)))[:16]
++
++
++def probes_of(requirements: Sequence[Requirement]) -> list[dict[str, Any]]:
++    """Every distinct function-call probe the requirements need, in first-use order."""
++    seen: dict[str, dict[str, Any]] = {}
++    for req in requirements:
++        for check in req.checks:
++            if check.get("type") == "call":
++                probe = dict(check["probe"])
++                seen.setdefault(probe_key(probe), probe)
++    return list(seen.values())
++
++
++def json_pointer(doc: Any, pointer: str) -> Any:
++    """Resolve an RFC 6901 JSON pointer; raises KeyError when it does not resolve."""
++    if pointer in ("", "/"):
++        return doc
++    cur = doc
++    for raw in pointer.lstrip("/").split("/"):
++        part = raw.replace("~1", "/").replace("~0", "~")
++        if isinstance(cur, list):
++            try:
++                cur = cur[int(part)]
++            except (ValueError, IndexError) as exc:
++                raise KeyError(pointer) from exc
++        elif isinstance(cur, dict):
++            if part not in cur:
++                raise KeyError(pointer)
++            cur = cur[part]
++        else:
++            raise KeyError(pointer)
++    return cur
++
++
++def parse_json(text: str, lenient: bool) -> Any:
++    """Parse JSON; with ``lenient`` also accept one surrounding Markdown code fence."""
++    if lenient:
++        m = FENCE_RE.match(text)
++        if m:
++            text = m.group(1)
++    return json.loads(text)
++
++
++def normalize(text: str, mode: str) -> str:
++    """Apply a text normalization mode."""
++    if mode == "strip":
++        return text.strip()
++    if mode == "trailing_ws":
++        return "\n".join(line.rstrip() for line in text.rstrip("\n").split("\n"))
++    return text
++
++
++def _call_matches(call: Mapping[str, Any], spec: Mapping[str, Any]) -> bool:
++    if call.get("tool") != spec.get("tool"):
++        return False
++    args = call.get("args") or {}
++    want = spec.get("args") or {}
++    return all(args.get(k) == v for k, v in want.items())
++
++
++def _first_index(traj: Sequence[Mapping[str, Any]], spec: Mapping[str, Any]) -> int | None:
++    for i, call in enumerate(traj):
++        if _call_matches(call, spec):
++            return i
++    return None
++
++
++def _target(outcome: Outcome, target: str) -> Any:
++    if target == "stdout":
++        return outcome.stdout
++    if target == "state":
++        return outcome.state
++    if target.startswith("file:"):
++        return outcome.files.get(target[5:])
++    raise ValueError(f"unknown same_as_reference target {target!r}")
++
++
++def evaluate(
++    check: Mapping[str, Any], outcome: Outcome, reference: Outcome | None = None
++) -> CheckResult:
++    """Evaluate one check on an outcome (``reference`` is needed by differential checks)."""
++    t = check.get("type")
++    path = str(check.get("path", ""))
++    content = outcome.files.get(path)
++    if t == "file_exists":
++        return CheckResult(
++            content is not None, f"{path} {'exists' if content is not None else 'missing'}"
++        )
++    if t == "file_absent":
++        return CheckResult(content is None, f"{path} {'absent' if content is None else 'present'}")
++    if t in ("file_equals", "file_contains", "file_regex", "file_json", "file_lines"):
++        if content is None:
++            return CheckResult(False, f"{path} missing")
++        return _evaluate_text(check, content, path)
++    if t == "stdout_contains":
++        ok = str(check["text"]) in outcome.stdout
++        return CheckResult(ok, f"stdout {'contains' if ok else 'lacks'} {check['text']!r}")
++    if t == "stdout_regex":
++        ok = re.search(str(check["pattern"]), outcome.stdout, re.M) is not None
++        return CheckResult(
++            ok, f"stdout {'matches' if ok else 'does not match'} /{check['pattern']}/"
++        )
++    if t == "stdout_json":
++        return _evaluate_json(check, outcome.stdout, "stdout")
++    if t == "exit_code":
++        ok = outcome.exit_status == int(check["code"]) and not outcome.timed_out
++        return CheckResult(
++            ok, f"exit {outcome.exit_status}{' (timeout)' if outcome.timed_out else ''}"
++        )
++    if t == "call":
++        return _evaluate_call(check, outcome, reference)
++    if t == "same_as_reference":
++        if reference is None:
++            raise ValueError("same_as_reference needs the reference outcome")
++        mode = str(check.get("normalize", "none"))
++        mine, theirs = (
++            _target(outcome, str(check["target"])),
++            _target(reference, str(check["target"])),
++        )
++        if isinstance(mine, str) and isinstance(theirs, str):
++            mine, theirs = normalize(mine, mode), normalize(theirs, mode)
++        ok = mine == theirs and mine is not None
++        return CheckResult(ok, f"{check['target']} {'equals' if ok else 'differs from'} reference")
++    if t == "trajectory_includes":
++        ok = _first_index(outcome.trajectory, check) is not None
++        return CheckResult(ok, f"trajectory {'has' if ok else 'lacks'} {check.get('tool')}")
++    if t == "trajectory_excludes":
++        ok = _first_index(outcome.trajectory, check) is None
++        return CheckResult(ok, f"trajectory {'avoids' if ok else 'has'} {check.get('tool')}")
++    if t == "trajectory_before":
++        a = _first_index(outcome.trajectory, check["first"])
++        b = _first_index(outcome.trajectory, check["then"])
++        ok = a is not None and b is not None and a < b
++        return CheckResult(
++            ok, f"order {check['first'].get('tool')} < {check['then'].get('tool')}: {a}, {b}"
++        )
++    if t == "state_equals":
++        try:
++            got = json_pointer(outcome.state, str(check["pointer"]))
++        except KeyError:
++            return CheckResult(False, f"state {check['pointer']} missing")
++        ok = got == check["equals"]
++        return CheckResult(ok, f"state {check['pointer']} = {got!r}")
++    raise ValueError(f"unknown check type {t!r}")
++
++
++def _evaluate_text(check: Mapping[str, Any], content: str, path: str) -> CheckResult:
++    t = check["type"]
++    if t == "file_equals":
++        mode = str(check.get("normalize", "none"))
++        ok = normalize(content, mode) == normalize(str(check["text"]), mode)
++        return CheckResult(ok, f"{path} {'equals' if ok else 'differs from'} expected text")
++    if t == "file_contains":
++        ok = str(check["text"]) in content
++        return CheckResult(ok, f"{path} {'contains' if ok else 'lacks'} {check['text']!r}")
++    if t == "file_regex":
++        ok = re.search(str(check["pattern"]), content, re.M) is not None
++        return CheckResult(
++            ok, f"{path} {'matches' if ok else 'does not match'} /{check['pattern']}/"
++        )
++    if t == "file_lines":
++        n = sum(1 for line in content.splitlines() if line.strip())
++        ok = n == int(check["count"])
++        return CheckResult(ok, f"{path} has {n} non-empty lines")
++    return _evaluate_json(check, content, path)
++
++
++def _evaluate_json(check: Mapping[str, Any], text: str, where: str) -> CheckResult:
++    try:
++        doc = parse_json(text, bool(check.get("lenient", False)))
++    except ValueError:
++        return CheckResult(False, f"{where} is not valid JSON")
++    try:
++        got = json_pointer(doc, str(check.get("pointer", "")))
++    except KeyError:
++        return CheckResult(False, f"{where} {check.get('pointer')} missing")
++    ok = got == check["equals"]
++    return CheckResult(ok, f"{where} {check.get('pointer')} = {got!r}")
++
++
++def _evaluate_call(
++    check: Mapping[str, Any], outcome: Outcome, reference: Outcome | None
++) -> CheckResult:
++    key = probe_key(check["probe"])
++    got = outcome.probes.get(key)
++    name = check["probe"].get("function")
++    if got is None:
++        return CheckResult(False, f"probe {name} not run")
++    if check.get("matches_reference"):
++        if reference is None:
++            raise ValueError("matches_reference needs the reference outcome")
++        want = reference.probes.get(key)
++        if want is None or not want.get("ok"):
++            return CheckResult(False, f"reference probe {name} unavailable")
++        ok = bool(got.get("ok")) and got.get("value") == want.get("value")
++        return CheckResult(ok, f"{name} {'matches' if ok else 'differs from'} reference")
++    ok = bool(got.get("ok")) and got.get("value") == check.get("equals")
++    return CheckResult(ok, f"{name} returned {got.get('value')!r}")
++
++
++def holds(
++    req: Requirement, outcome: Outcome, reference: Outcome | None = None
++) -> tuple[bool, list[CheckResult]]:
++    """Whether every check of ``req`` passes on ``outcome``."""
++    results = [evaluate(c, outcome, reference) for c in req.checks]
++    return all(r.passed for r in results), results
++
++
++def load_requirements(data: Mapping[str, Any]) -> list[Requirement]:
++    """Requirements from a ``{"requirements": [...]}`` document."""
++    return [Requirement.from_dict(r) for r in data.get("requirements", [])]
++
++"""Helper programs that run inside the sandbox (``python -m graderproof._runners``).
++
++* ``probe <module> <probes.json> <result.json>``: import ``<module>`` from the working
++  directory and call each probe ``{"function", "args", "kwargs"}``, recording
++  ``{"ok", "value"}`` or ``{"ok": false, "error"}`` under its probe key.
++* ``trajectory <env.py> <trajectory.json> <outdir>``: load a stateful tool environment
++  (``initial_state()`` and a ``TOOLS`` mapping of ``name -> fn(state, **args)``), execute
++  the trajectory's calls in order, and write ``state.json`` and ``trajectory.json``.
++
++These programs execute untrusted task code, so they are only ever started by a
++sandbox backend; they import nothing from graderproof except :mod:`graderproof.core`.
++"""
++
++
++import importlib
++import importlib.util
++import json
++import signal
++import sys
++from collections.abc import Mapping
++from pathlib import Path
++from typing import Any
++
++
++PROBE_TIMEOUT_S = 5
++
++
++def jsonable(value: Any) -> Any:
++    """Convert a Python value to plain JSON (tuples to lists, sets sorted, others repr)."""
++    if value is None or isinstance(value, bool | int | float | str):
++        return value
++    if isinstance(value, list | tuple):
++        return [jsonable(v) for v in value]
++    if isinstance(value, set | frozenset):
++        return sorted((jsonable(v) for v in value), key=canonical_json)
++    if isinstance(value, Mapping):
++        return {str(k): jsonable(v) for k, v in value.items()}
++    return {"__repr__": repr(value)}
++
++
++def probe_key(probe: Mapping[str, Any]) -> str:
++    """Same key as :func:`graderproof.spec.probe_key`."""
++    return sha256_text(canonical_json(dict(probe)))[:16]
++
++
++class ProbeTimeoutError(Exception):
++    """A probe exceeded its time budget."""
++
++
++def _alarm(signum: int, frame: object) -> None:  # pragma: no cover - signal handler
++    raise ProbeTimeoutError
++
++
++def run_probes(module_name: str, probes: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
++    """Import ``module_name`` from the working directory and run each probe."""
++    sys.path.insert(0, str(Path.cwd()))
++    results: dict[str, dict[str, Any]] = {}
++    try:
++        module = importlib.import_module(module_name)
++    except Exception as exc:  # untrusted code: any failure is a recorded outcome
++        err = f"import failed: {type(exc).__name__}: {exc}"
++        return {probe_key(p): {"ok": False, "error": err} for p in probes}
++    signal.signal(signal.SIGALRM, _alarm)
++    for p in probes:
++        key = probe_key(p)
++        try:
++            fn = getattr(module, str(p["function"]))
++            signal.alarm(PROBE_TIMEOUT_S)
++            try:
++                value = fn(*p.get("args", []), **p.get("kwargs", {}))
++            finally:
++                signal.alarm(0)
++            results[key] = {"ok": True, "value": jsonable(value)}
++        except ProbeTimeoutError:
++            results[key] = {"ok": False, "error": "timeout"}
++        except Exception as exc:  # untrusted code: record, never propagate
++            results[key] = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
++    return results
++
++
++def run_trajectory(env_path: Path, calls: list[dict[str, Any]]) -> tuple[Any, list[dict[str, Any]]]:
++    """Execute tool calls against the environment defined in ``env_path``."""
++    spec = importlib.util.spec_from_file_location("gp_task_env", env_path)
++    if spec is None or spec.loader is None:
++        raise RuntimeError(f"cannot load {env_path}")
++    env = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(env)
++    state = env.initial_state()
++    log: list[dict[str, Any]] = []
++    for call in calls:
++        tool = str(call.get("tool"))
++        args = dict(call.get("args") or {})
++        entry: dict[str, Any] = {"tool": tool, "args": args}
++        fn = env.TOOLS.get(tool)
++        if fn is None:
++            entry["error"] = f"unknown tool {tool}"
++        else:
++            try:
++                entry["result"] = jsonable(fn(state, **args))
++            except Exception as exc:  # task code: record, keep going
++                entry["error"] = f"{type(exc).__name__}: {exc}"
++        log.append(entry)
++    return jsonable(state), log
++
++
++def main(argv: list[str]) -> int:
++    """Entry point; returns the exit status."""
++    if len(argv) == 4 and argv[0] == "probe":
++        probes = json.loads(Path(argv[2]).read_text())
++        Path(argv[3]).write_text(json.dumps(run_probes(argv[1], probes)))
++        return 0
++    if len(argv) == 4 and argv[0] == "trajectory":
++        calls = json.loads(Path(argv[2]).read_text())
++        out = Path(argv[3])
++        out.mkdir(parents=True, exist_ok=True)
++        try:
++            state, log = run_trajectory(Path(argv[1]), calls)
++        except Exception as exc:  # task environment failed to load
++            (out / "error.txt").write_text(f"{type(exc).__name__}: {exc}")
++            return 1
++        (out / "state.json").write_text(json.dumps(state, sort_keys=True))
++        (out / "trajectory.json").write_text(json.dumps(log))
++        return 0
++    print("usage: python -m graderproof._runners probe|trajectory ...", file=sys.stderr)
++    return 2
++
++
++
++
++# ---- graderproof repair checker entry point -------------------------------------
++import os as _os
++import shutil as _shutil
++import tempfile as _tempfile
++from pathlib import Path as _Path
++
++MAX_FILE_BYTES = 1_000_000
++STATE_DIR = ".gp"
++
++
++def snapshot(root):
++    files = {}
++    for p in sorted(root.rglob("*")):
++        rel = p.relative_to(root).as_posix()
++        if not p.is_file() or rel == STATE_DIR or rel.startswith(STATE_DIR + "/"):
++            continue
++        data = p.read_bytes()
++        if len(data) > MAX_FILE_BYTES or b"\0" in data[:8192]:
++            files[rel] = f"<binary {len(data)} bytes>"
++        else:
++            files[rel] = data.decode("utf-8", errors="replace")
++    return files
++
++
++def _read_json(path):
++    return json.loads(path.read_text()) if path.exists() else None
++
++
++def checker_main():
++    data = json.loads((_Path(__file__).resolve().parent / "gp_repair_checks.json").read_text())
++    ws = _Path.cwd()
++    out_path = _os.environ.get("GP_SOLUTION_STDOUT", "")
++    stdout = _Path(out_path).read_text() if out_path and _Path(out_path).exists() else ""
++    requirements = [Requirement.from_dict(r) for r in data["requirements"]]
++    probes = probes_of(requirements)
++    results = {}
++    if probes:
++        tmp = _Path(_tempfile.mkdtemp(prefix="gp-probe-"))
++        try:
++            copy = tmp / "ws"
++            _shutil.copytree(ws, copy)
++            cwd = _Path.cwd()
++            _os.chdir(copy)
++            try:
++                results = run_probes(data["module"], probes)
++            finally:
++                _os.chdir(cwd)
++        finally:
++            _shutil.rmtree(tmp, ignore_errors=True)
++    outcome = Outcome(
++        files=snapshot(ws),
++        stdout=stdout,
++        trajectory=tuple(_read_json(ws / ".gp" / "trajectory.json") or ()),
++        state=_read_json(ws / ".gp" / "state.json"),
++        probes=results,
++    )
++    ref = data["reference"]
++    reference = Outcome(
++        files=ref["files"], stdout=ref["stdout"], state=ref["state"], probes=ref["probes"]
++    )
++    failed = []
++    for req in requirements:
++        ok, checks = holds(req, outcome, reference)
++        if not ok:
++            failed.append(req.id + ": " + "; ".join(c.detail for c in checks if not c.passed))
++    for line in failed:
++        print("repair check failed: " + line)
++    raise SystemExit(1 if failed else 0)
++
++
++if __name__ == "__main__":
++    checker_main()
+diff --git a/grader/gp_repair_checks.json b/grader/gp_repair_checks.json
+new file mode 100644
+--- /dev/null
++++ b/grader/gp_repair_checks.json
+@@ -0,0 +1,157 @@
++{
++  "module": "phones",
++  "reference": {
++    "files": {},
++    "probes": {
++      "0a86cfe7df13400a": {
++        "ok": true,
++        "value": "+14155550132"
++      },
++      "1d6470cda446a380": {
++        "error": "ValueError: not a US phone number: '415+5550132'",
++        "ok": false
++      },
++      "1e3c2bcc49896b33": {
++        "error": "ValueError: not a US phone number: '141555501320'",
++        "ok": false
++      },
++      "26c05653caa2f79b": {
++        "error": "ValueError: not a US phone number: '++14155550132'",
++        "ok": false
++      },
++      "2b90880e572df2f5": {
++        "ok": true,
++        "value": "+14155550132"
++      },
++      "2d56dcdc39135369": {
++        "ok": true,
++        "value": "+14155550132"
++      },
++      "2e8acea076840c0c": {
++        "error": "ValueError: not a US phone number: '415-555-CALL'",
++        "ok": false
++      },
++      "356d12dda9dd5558": {
++        "error": "ValueError: not a US phone number: '41555501322'",
++        "ok": false
++      },
++      "6c957d0dd6eb6f23": {
++        "ok": true,
++        "value": "+14155550132"
++      },
++      "81bce5c64d263ead": {
++        "error": "ValueError: not a US phone number: '   '",
++        "ok": false
++      },
++      "835375c7298be3b5": {
++        "error": "ValueError: not a US phone number: '415_555_0132'",
++        "ok": false
++      },
++      "9c4ba9a9a5d9b070": {
++        "error": "ValueError: not a US phone number: '1'",
++        "ok": false
++      },
++      "ad56cfb5a8950ab9": {
++        "error": "ValueError: not a US phone number: '415/555/0132'",
++        "ok": false
++      },
++      "b44debc93c529276": {
++        "error": "ValueError: not a US phone number: '24155550132'",
++        "ok": false
++      },
++      "ba076590b46e8f66": {
++        "error": "ValueError: not a US phone number: '#4155550132'",
++        "ok": false
++      },
++      "bb5cf07e042450cb": {
++        "ok": true,
++        "value": "+14155550132"
++      },
++      "c74a751f918a00c5": {
++        "error": "ValueError: not a US phone number: '415555013'",
++        "ok": false
++      },
++      "cff83f420f2682af": {
++        "error": "ValueError: not a US phone number: '\u0664\u0661\u0665\u0665\u0665\u0665\u0660\u0661\u0663\u0662'",
++        "ok": false
++      },
++      "d574df768a57b268": {
++        "ok": true,
++        "value": "+14155550132"
++      },
++      "e6b817ff914daf05": {
++        "error": "ValueError: not a US phone number: '+'",
++        "ok": false
++      },
++      "f57a529eb56417fd": {
++        "error": "ValueError: not a US phone number: ''",
++        "ok": false
++      },
++      "f7bd2b9b353c65ff": {
++        "ok": true,
++        "value": "+14155550132"
++      },
++      "f830c2c4d4b795d8": {
++        "ok": true,
++        "value": "+14155550132"
++      }
++    },
++    "state": null,
++    "stdout": ""
++  },
++  "requirements": [
++    {
++      "checks": [
++        {
++          "equals": "+14155550132",
++          "probe": {
++            "args": [
++              "(415) 555-0132"
++            ],
++            "function": "normalize_phone",
++            "kwargs": {}
++          },
++          "type": "call"
++        },
++        {
++          "equals": "+14155550132",
++          "probe": {
++            "args": [
++              "+1 415.555.0132"
++            ],
++            "function": "normalize_phone",
++            "kwargs": {}
++          },
++          "type": "call"
++        },
++        {
++          "equals": "+14155550132",
++          "probe": {
++            "args": [
++              "415-555-0132"
++            ],
++            "function": "normalize_phone",
++            "kwargs": {}
++          },
++          "type": "call"
++        },
++        {
++          "equals": "+14155550132",
++          "probe": {
++            "args": [
++              "4155550132"
++            ],
++            "function": "normalize_phone",
++            "kwargs": {}
++          },
++          "type": "call"
++        }
++      ],
++      "id": "R2",
++      "source": "model:requirements/v1",
++      "text": "Remove spaces, dots, dashes, and parentheses, then return +1 and the 10-digit number"
++    }
++  ],
++  "schema": "graderproof.repair_checks/1",
++  "task": "tasks:phone-normalize"
++}
+diff --git a/grader/gp_repaired.sh b/grader/gp_repaired.sh
+new file mode 100644
+--- /dev/null
++++ b/grader/gp_repaired.sh
+@@ -0,0 +1,4 @@
++#!/usr/bin/env bash
++here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
++python3 "$here/gp_repair_checker.py" || exit 1
++exec python3 "$here/grade.py"
+diff --git a/task.toml b/task.toml
+--- a/task.toml
++++ b/task.toml
+@@ -6,4 +6,4 @@
+ module = "phones"
+ 
+ [grader]
+-entry = "grade.py"
++entry = "gp_repaired.sh"

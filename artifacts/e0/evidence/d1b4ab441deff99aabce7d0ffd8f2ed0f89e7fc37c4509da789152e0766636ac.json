@@ -1,0 +1,1947 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [
+  {
+   "checks": [
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "1.2",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "1.2.3.4",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "01.2.3",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "1.02.3",
+       "minor"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "1.2.03",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "1.2.3-beta",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "v1.2.3",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "1.2.-3",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "1.2.3\n",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       " 1.2.3",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Raise ValueError for an invalid version (too few or too many parts, leading zeros, suffix, prefix, other non-matching strings)"
+  },
+  {
+   "checks": [
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "1.2.3",
+       "build"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "1.2.3",
+       "Major"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "1.2.3",
+       ""
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "Raise ValueError for an unknown part"
+  }
+ ],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+  },
+  "probes": {
+   "091fbc2cb1756db8": {
+    "error": "ValueError: invalid version: ''",
+    "ok": false
+   },
+   "0cafb986e3ad2231": {
+    "error": "ValueError: unknown part: 'build'",
+    "ok": false
+   },
+   "0f354f296924bda7": {
+    "error": "ValueError: invalid version: '1.2.03'",
+    "ok": false
+   },
+   "150919f19c406721": {
+    "ok": true,
+    "value": "1.3.0"
+   },
+   "170cfac287527502": {
+    "error": "ValueError: invalid version: '1.2.-3'",
+    "ok": false
+   },
+   "2a66831c0627dea3": {
+    "ok": true,
+    "value": "10.0.0"
+   },
+   "2b23bc82bfa4851a": {
+    "ok": true,
+    "value": "1.2.4"
+   },
+   "3ca45f3adf8a426f": {
+    "error": "ValueError: unknown part: ''",
+    "ok": false
+   },
+   "3ed02230712067ca": {
+    "error": "ValueError: invalid version: '1.2.3.4'",
+    "ok": false
+   },
+   "50e352f8b5124f74": {
+    "ok": true,
+    "value": "1.2.10"
+   },
+   "5f070f975cd4659a": {
+    "error": "ValueError: invalid version: ' 1.2.3'",
+    "ok": false
+   },
+   "6e97b28557d1f447": {
+    "error": "ValueError: invalid version: 'v1.2.3'",
+    "ok": false
+   },
+   "71b838bab949d37a": {
+    "error": "ValueError: invalid version: '1.2'",
+    "ok": false
+   },
+   "984a4dfa0a4ae806": {
+    "error": "ValueError: invalid version: '1.2.3\\n'",
+    "ok": false
+   },
+   "9b8b3f2317d65c35": {
+    "ok": true,
+    "value": "1.10.0"
+   },
+   "a01c55020a1106d9": {
+    "error": "ValueError: invalid version: '1.02.3'",
+    "ok": false
+   },
+   "a4033dd0d86d6e9d": {
+    "error": "ValueError: unknown part: 'Major'",
+    "ok": false
+   },
+   "bf599e78173f126e": {
+    "error": "ValueError: invalid version: '1.2.3-beta'",
+    "ok": false
+   },
+   "c0754a429af716dd": {
+    "error": "ValueError: invalid version: '01.2.3'",
+    "ok": false
+   },
+   "c11af4e3a720174b": {
+    "ok": true,
+    "value": "0.0.1"
+   },
+   "c67ef149b17d8b2e": {
+    "ok": true,
+    "value": "0.1.0"
+   },
+   "da5d55718014da81": {
+    "ok": true,
+    "value": "2.0.0"
+   },
+   "eea752dae55803a4": {
+    "ok": true,
+    "value": "1.0.0"
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "semver.py",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write a Python module semver.py"
+  },
+  {
+   "checks": [
+    {
+     "equals": "2.0.0",
+     "probe": {
+      "args": [
+       "1.9.9",
+       "major"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1.0.0",
+     "probe": {
+      "args": [
+       "0.0.0",
+       "major"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "10.0.0",
+     "probe": {
+      "args": [
+       "9.99.100",
+       "major"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0"
+  },
+  {
+   "checks": [
+    {
+     "equals": "1.3.0",
+     "probe": {
+      "args": [
+       "1.2.3",
+       "minor"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1.10.0",
+     "probe": {
+      "args": [
+       "1.9.9",
+       "minor"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "0.1.0",
+     "probe": {
+      "args": [
+       "0.0.7",
+       "minor"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Bumping minor increments MINOR and resets PATCH to 0"
+  },
+  {
+   "checks": [
+    {
+     "equals": "1.2.4",
+     "probe": {
+      "args": [
+       "1.2.3",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1.2.10",
+     "probe": {
+      "args": [
+       "1.2.9",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "0.0.1",
+     "probe": {
+      "args": [
+       "0.0.0",
+       "patch"
+      ],
+      "function": "bump",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Bumping patch increments PATCH"
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:semver-bump",
+ "task_hash": "d1b4ab441deff99aabce7d0ffd8f2ed0f89e7fc37c4509da789152e0766636ac",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -9,7 +9,7 @@\n         raise ValueError(\"invalid version: %r\" % (version,))\n     major, minor, patch = (int(g) for g in match.groups())\n     if part == \"major\":\n-        return \"%d.0.0\" % (major + 1)\n+        return \"%d.0.0\" % ((major) - (1))\n     if part == \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % ((major) - (1))\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "64ac9361388e6649114e1f327c63cd13c7e6e06514f2b0350f28149c5cb070fa",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: bump returned '0.0.0'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "bumping major increments MAJOR: Major bump decrements instead of incrementing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned '0.0.0'",
+       "bump returned '-1.0.0'",
+       "bump returned '8.0.0'"
+      ],
+      "requirement": "R2",
+      "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "64ac9361388e6649114e1f327c63cd13c7e6e06514f2b0350f28149c5cb070fa"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -11,7 +11,7 @@\n     if part == \"major\":\n         return \"%d.0.0\" % (major + 1)\n     if part == \"minor\":\n-        return \"%d.%d.0\" % (major, minor + 1)\n+        return \"%d.%d.0\" % (major, (minor) - (1))\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, (minor) - (1))\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7b7407fb0e90b2ea0d09be268d2b459f57aea720c7fcfe8f08f8b87eb161c39d",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: bump returned '1.1.0'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping minor increments MINOR: Minor is decremented instead of incremented.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned '1.1.0'",
+       "bump returned '1.8.0'",
+       "bump returned '0.-1.0'"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7b7407fb0e90b2ea0d09be268d2b459f57aea720c7fcfe8f08f8b87eb161c39d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -11,7 +11,7 @@\n     if part == \"major\":\n         return \"%d.0.0\" % (major + 1)\n     if part == \"minor\":\n-        return \"%d.%d.0\" % (major, minor + 1)\n+        return (\"%d.%d.0\") // ((major, minor + 1))\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return (\"%d.%d.0\") // ((major, minor + 1))\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "90b97d404d674b1e39abdb39ef29aacca8231d2a7e5e82b4ead2d548ff416bb7",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping minor returns the new version string: A str // tuple operation raises TypeError for minor bumps.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "90b97d404d674b1e39abdb39ef29aacca8231d2a7e5e82b4ead2d548ff416bb7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -13,5 +13,5 @@\n     if part == \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n-        return \"%d.%d.%d\" % (major, minor, patch + 1)\n+        return \"%d.%d.%d\" % (major, minor, (patch) - (1))\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, (patch) - (1))\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "834ed161f84cf266e433272a8348d2b51cf9fd05976e4c32451011b475c86fc2",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: bump returned '1.2.2'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping patch increments PATCH: It decrements PATCH instead.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned '1.2.2'",
+       "bump returned '1.2.8'",
+       "bump returned '0.0.-1'"
+      ],
+      "requirement": "R4",
+      "text": "Bumping patch increments PATCH"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "834ed161f84cf266e433272a8348d2b51cf9fd05976e4c32451011b475c86fc2"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -14,4 +14,4 @@\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n-    raise ValueError(\"unknown part: %r\" % (part,))\n+    raise ValueError((\"unknown part: %r\") // ((part,)))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError((\"unknown part: %r\") // ((part,)))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "33b78f26d2571fe0eb823050ee751ee539ed71f85de0a8360aaaff67a6b07898",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "semver-bump",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Raise ValueError for an unknown part: The '//' operator on a str and a tuple raises TypeError instead of ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -6,7 +6,7 @@\n def bump(version, part):\n     match = _VERSION.fullmatch(version)\n     if match is None:\n-        raise ValueError(\"invalid version: %r\" % (version,))\n+        raise ValueError((\"invalid version: %r\") // ((version,)))\n     major, minor, patch = (int(g) for g in match.groups())\n     if part == \"major\":\n         return \"%d.0.0\" % (major + 1)\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError((\"invalid version: %r\") // ((version,)))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "bed4ec81f17fbbd7531943c8f4c6ac88aa13bac6321efcd9602167281f625ce1",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "semver-bump",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Raise ValueError for an invalid version: The str // tuple expression raises TypeError instead of ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -8,7 +8,7 @@\n     if match is None:\n         raise ValueError(\"invalid version: %r\" % (version,))\n     major, minor, patch = (int(g) for g in match.groups())\n-    if part == \"major\":\n+    if part != \"major\":\n         return \"%d.0.0\" % (major + 1)\n     if part == \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part != \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e0d0eeaf10160d6e316e04d671696d78d0159d8f370236bd745cb50472a6eefc",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bump minor and patch correctly: The condition is inverted, so minor and patch bumps return a major bump and major bumps fall through to ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R2",
+      "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0"
+     },
+     {
+      "failed": [
+       "bump returned '2.0.0'",
+       "bump returned '2.0.0'",
+       "bump returned '1.0.0'"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     },
+     {
+      "failed": [
+       "bump returned '2.0.0'",
+       "bump returned '2.0.0'",
+       "bump returned '1.0.0'"
+      ],
+      "requirement": "R4",
+      "text": "Bumping patch increments PATCH"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e0d0eeaf10160d6e316e04d671696d78d0159d8f370236bd745cb50472a6eefc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -10,7 +10,7 @@\n     major, minor, patch = (int(g) for g in match.groups())\n     if part == \"major\":\n         return \"%d.0.0\" % (major + 1)\n-    if part == \"minor\":\n+    if part != \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part != \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7335849152154bca07c1ad60218a55f4ce983e038ccdc699c410a95db987a704",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bump minor only for part minor; patch and other parts handled correctly: The condition is inverted, so patch bumps return a minor bump and unknown parts do not raise.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     },
+     {
+      "failed": [
+       "bump returned '1.3.0'",
+       "bump returned '1.3.0'",
+       "bump returned '0.1.0'"
+      ],
+      "requirement": "R4",
+      "text": "Bumping patch increments PATCH"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7335849152154bca07c1ad60218a55f4ce983e038ccdc699c410a95db987a704"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -12,6 +12,6 @@\n         return \"%d.0.0\" % (major + 1)\n     if part == \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n-    if part == \"patch\":\n+    if part != \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part != \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5e64d9baa8195515573f6eb746e711c10740c6f596296480fe8217be75becb0e",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping patch increments PATCH: The condition is inverted, so 'patch' raises ValueError and an unknown part returns a version.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R4",
+      "text": "Bumping patch increments PATCH"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5e64d9baa8195515573f6eb746e711c10740c6f596296480fe8217be75becb0e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -10,7 +10,7 @@\n     major, minor, patch = (int(g) for g in match.groups())\n     if part == \"major\":\n         return \"%d.0.0\" % (major + 1)\n-    if part == \"minor\":\n+    if part == '':\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == '':\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ca8c32788ae4a0c896b15dbce83911c25c3ad170aff1867b3f937cd10098665f",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping minor increments MINOR: The minor branch now compares part to the empty string, so 'minor' raises ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ca8c32788ae4a0c896b15dbce83911c25c3ad170aff1867b3f937cd10098665f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -11,7 +11,7 @@\n     if part == \"major\":\n         return \"%d.0.0\" % (major + 1)\n     if part == \"minor\":\n-        return \"%d.%d.0\" % (major, minor + 1)\n+        return '%d.%d.' % (major, minor + 1)\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return '%d.%d.' % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "13845ee770132a94f4336ba970042d3e048b34b38dde40a459790e0a1116dd7b",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: bump returned '1.3.'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping minor resets PATCH to 0: A minor bump returns a string with a trailing dot such as 1.3. instead of 1.3.0.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned '1.3.'",
+       "bump returned '1.10.'",
+       "bump returned '0.1.'"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "13845ee770132a94f4336ba970042d3e048b34b38dde40a459790e0a1116dd7b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -11,7 +11,7 @@\n     if part == \"major\":\n         return \"%d.0.0\" % (major + 1)\n     if part == \"minor\":\n-        return \"%d.%d.0\" % (major, minor + 1)\n+        return '' % (major, minor + 1)\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return '' % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9345a521cb2605205f1322762e2df02d40494097823f84b0caa780d399a90cd1",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping minor returns the new version string: The minor branch evaluates '' % (...) which raises TypeError instead of returning a version.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9345a521cb2605205f1322762e2df02d40494097823f84b0caa780d399a90cd1"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -14,4 +14,4 @@\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n-    raise ValueError(\"unknown part: %r\" % (part,))\n+    raise ValueError('' % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError('' % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "574d78b08fc2aed07026c4d085c649f62f2f12cacf55e9ffbb6b9a61f8b91eb3",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "semver-bump",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Raise ValueError for an unknown part: '' % (part,) raises TypeError instead of ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -14,4 +14,4 @@\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n-    raise ValueError(\"unknown part: %r\" % (part,))\n+    raise ValueError('unknown part: %' % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError('unknown part: %' % (part,))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f6f94a1d01d09d75e339225e6829d47f3190f5ef35fdff71f5c8330238a42925",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "semver-bump",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The format string '%' with a tuple argument still raises ValueError (incomplete format), so an unknown part still raises ValueError as required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -1,6 +1,6 @@\n import re\n \n-_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n+_VERSION = re.compile('(0|[1-9][0-9]*)\\\\.(0|[1-9][0-9]*)\\\\.(0|[1-9][0-9]*')\n \n \n def bump(version, part):\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile('(0|[1-9][0-9]*)\\\\.(0|[1-9][0-9]*)\\\\.(0|[1-9][0-9]*')\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4ceea2f11de021818fba4eb70ba71e7f6b775689a0a9bad9a1dd852d151a128c",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "bump valid versions: The regex has an unbalanced parenthesis, so re.compile fails when the module is imported.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R2",
+      "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0"
+     },
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     },
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R4",
+      "text": "Bumping patch increments PATCH"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4ceea2f11de021818fba4eb70ba71e7f6b775689a0a9bad9a1dd852d151a128c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -8,7 +8,7 @@\n     if match is None:\n         raise ValueError(\"invalid version: %r\" % (version,))\n     major, minor, patch = (int(g) for g in match.groups())\n-    if part == \"major\":\n+    if not (part == \"major\"):\n         return \"%d.0.0\" % (major + 1)\n     if part == \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if not (part == \"major\"):\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "80beb5f7c4fcf109bdb2bbda511f5e4711a35bfe6b99cdaa3704a92717304630",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bump the requested part: The inverted condition makes minor and patch bumps return a major bump.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R2",
+      "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0"
+     },
+     {
+      "failed": [
+       "bump returned '2.0.0'",
+       "bump returned '2.0.0'",
+       "bump returned '1.0.0'"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     },
+     {
+      "failed": [
+       "bump returned '2.0.0'",
+       "bump returned '2.0.0'",
+       "bump returned '1.0.0'"
+      ],
+      "requirement": "R4",
+      "text": "Bumping patch increments PATCH"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "80beb5f7c4fcf109bdb2bbda511f5e4711a35bfe6b99cdaa3704a92717304630"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -10,7 +10,7 @@\n     major, minor, patch = (int(g) for g in match.groups())\n     if part == \"major\":\n         return \"%d.0.0\" % (major + 1)\n-    if part == \"minor\":\n+    if not (part == \"minor\"):\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if not (part == \"minor\"):\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "002d56e7d8d60ad720002d5308320be4325427215808a0f3f94267a0e86c351c",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "patch bump increments PATCH; unknown part raises ValueError: The inverted minor check makes patch and unknown parts perform a minor bump, and minor falls through.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     },
+     {
+      "failed": [
+       "bump returned '1.3.0'",
+       "bump returned '1.3.0'",
+       "bump returned '0.1.0'"
+      ],
+      "requirement": "R4",
+      "text": "Bumping patch increments PATCH"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "002d56e7d8d60ad720002d5308320be4325427215808a0f3f94267a0e86c351c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -12,6 +12,6 @@\n         return \"%d.0.0\" % (major + 1)\n     if part == \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n-    if part == \"patch\":\n+    if not (part == \"patch\"):\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if not (part == \"patch\"):\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b09530e46c8c9d2119f54449281d312eb18ba1a8c3b6fb458cbada6cbd5fab78",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "patch bump increments PATCH; unknown part raises ValueError: The condition is inverted, so major/minor-excluded parts like patch raise ValueError and unknown parts get bumped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R4",
+      "text": "Bumping patch increments PATCH"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b09530e46c8c9d2119f54449281d312eb18ba1a8c3b6fb458cbada6cbd5fab78"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -5,7 +5,7 @@\n \n def bump(version, part):\n     match = _VERSION.fullmatch(version)\n-    if match is None:\n+    if not (match is None):\n         raise ValueError(\"invalid version: %r\" % (version,))\n     major, minor, patch = (int(g) for g in match.groups())\n     if part == \"major\":\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if not (match is None):\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fefe6d8c8c871329abf4c7d1d3463f73d2347b945baf04faac3172a4b6a14988",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Raise ValueError only for invalid versions: The check is inverted, so valid versions raise ValueError and invalid ones crash.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R2",
+      "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0"
+     },
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     },
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R4",
+      "text": "Bumping patch increments PATCH"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fefe6d8c8c871329abf4c7d1d3463f73d2347b945baf04faac3172a4b6a14988"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -4,14 +4,14 @@\n \n \n def bump(version, part):\n-    match = _VERSION.fullmatch(version)\n-    if match is None:\n+    match_gp = _VERSION.fullmatch(version)\n+    if match_gp is None:\n         raise ValueError(\"invalid version: %r\" % (version,))\n-    major, minor, patch = (int(g) for g in match.groups())\n+    major_gp, minor_gp, patch_gp = (int(g_gp) for g_gp in match_gp.groups())\n     if part == \"major\":\n-        return \"%d.0.0\" % (major + 1)\n+        return \"%d.0.0\" % (major_gp + 1)\n     if part == \"minor\":\n-        return \"%d.%d.0\" % (major, minor + 1)\n+        return \"%d.%d.0\" % (major_gp, minor_gp + 1)\n     if part == \"patch\":\n-        return \"%d.%d.%d\" % (major, minor, patch + 1)\n+        return \"%d.%d.%d\" % (major_gp, minor_gp, patch_gp + 1)\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match_gp = _VERSION.fullmatch(version)\n    if match_gp is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major_gp, minor_gp, patch_gp = (int(g_gp) for g_gp in match_gp.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major_gp + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major_gp, minor_gp + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major_gp, minor_gp, patch_gp + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7c519ef5523d8ce2bbeb6ab1d5b517ab654b5e4cebc0b4995a0273bb9ca5bace",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variables were renamed; behavior is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "7c519ef5523d8ce2bbeb6ab1d5b517ab654b5e4cebc0b4995a0273bb9ca5bace"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -9,7 +9,7 @@\n         raise ValueError(\"invalid version: %r\" % (version,))\n     major, minor, patch = (int(g) for g in match.groups())\n     if part == \"major\":\n-        return \"%d.0.0\" % (major + 1)\n+        return None\n     if part == \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return None\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f894501b693ddfd8d4e9df99939d2c7af23fb231921477efc7a5d823a363687a",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the new version string when bumping major: bump(..., 'major') returns None instead of the incremented version.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R2",
+      "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f894501b693ddfd8d4e9df99939d2c7af23fb231921477efc7a5d823a363687a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -11,7 +11,7 @@\n     if part == \"major\":\n         return \"%d.0.0\" % (major + 1)\n     if part == \"minor\":\n-        return \"%d.%d.0\" % (major, minor + 1)\n+        return None\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return None\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d20eb1eba02353f0a46c056b975d56b27ac6ccc8a40701adc83e71be29b10b65",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping minor returns the new version string: The minor branch returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d20eb1eba02353f0a46c056b975d56b27ac6ccc8a40701adc83e71be29b10b65"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -13,5 +13,5 @@\n     if part == \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n-        return \"%d.%d.%d\" % (major, minor, patch + 1)\n+        return None\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return None\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "010a4d2b0dee6d92e6de56a49f8ff0e1cb1b95fdd81e65a0c0d9f1648dfda753",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping patch returns the new version string: The patch bump returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R4",
+      "text": "Bumping patch increments PATCH"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "010a4d2b0dee6d92e6de56a49f8ff0e1cb1b95fdd81e65a0c0d9f1648dfda753"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -8,8 +8,7 @@\n     if match is None:\n         raise ValueError(\"invalid version: %r\" % (version,))\n     major, minor, patch = (int(g) for g in match.groups())\n-    if part == \"major\":\n-        return \"%d.0.0\" % (major + 1)\n+    pass\n     if part == \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    pass\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8066e5f70c1e8bd43257f284a7a63d87b188c03ba4d2ce54d4ff957f16a6e727",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping major increments MAJOR and resets the rest: The major branch was removed, so bump(..., 'major') raises ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R2",
+      "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8066e5f70c1e8bd43257f284a7a63d87b188c03ba4d2ce54d4ff957f16a6e727"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -9,7 +9,7 @@\n         raise ValueError(\"invalid version: %r\" % (version,))\n     major, minor, patch = (int(g) for g in match.groups())\n     if part == \"major\":\n-        return \"%d.0.0\" % (major + 1)\n+        pass\n     if part == \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        pass\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d1a29dca839a4053b7f0c68f327ffddd988aa781e59e1d30271b49db1db70a16",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping major returns the next major version: The major branch falls through and ends in ValueError for 'major'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R2",
+      "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d1a29dca839a4053b7f0c68f327ffddd988aa781e59e1d30271b49db1db70a16"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -10,8 +10,7 @@\n     major, minor, patch = (int(g) for g in match.groups())\n     if part == \"major\":\n         return \"%d.0.0\" % (major + 1)\n-    if part == \"minor\":\n-        return \"%d.%d.0\" % (major, minor + 1)\n+    pass\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    pass\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "275a31d00ac368225abca008fa861ad58270c2686f4e917916643bccfb782124",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping minor increments MINOR and resets PATCH: The minor branch was removed, so bump(v, 'minor') raises ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "275a31d00ac368225abca008fa861ad58270c2686f4e917916643bccfb782124"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -14,4 +14,4 @@\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n-    raise ValueError(\"unknown part: %r\" % (part,))\n+    pass\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "73ee92542f90ce72febb4f6864644fd623f98ab5b6dfbf7dfab0f089c969bf43",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "semver-bump",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Raise ValueError for an unknown part: An unknown part now returns None instead of raising ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -4,7 +4,7 @@\n \n \n def bump(version, part):\n-    match = _VERSION.fullmatch(version)\n+    pass\n     if match is None:\n         raise ValueError(\"invalid version: %r\" % (version,))\n     major, minor, patch = (int(g) for g in match.groups())\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    pass\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c4addaca4b89de24f058486fd4e9acb117165efffaf8c32cafad014b50d75c9a",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: bump returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the bumped version: The regex match line was replaced with pass, so match is undefined and every call raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R2",
+      "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0"
+     },
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     },
+     {
+      "failed": [
+       "bump returned None",
+       "bump returned None",
+       "bump returned None"
+      ],
+      "requirement": "R4",
+      "text": "Bumping patch increments PATCH"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c4addaca4b89de24f058486fd4e9acb117165efffaf8c32cafad014b50d75c9a"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -6,7 +6,7 @@\n def bump(version, part):\n     match = _VERSION.fullmatch(version)\n     if match is None:\n-        raise ValueError(\"invalid version: %r\" % (version,))\n+        pass\n     major, minor, patch = (int(g) for g in match.groups())\n     if part == \"major\":\n         return \"%d.0.0\" % (major + 1)\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        pass\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "25efaa9988efe15ba3dc8fb1627d4eb1ea749154ba2b0fd96fe85ae16badc28a",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "semver-bump",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Raise ValueError for an invalid version: The raise was removed, so invalid input causes AttributeError instead of ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -9,7 +9,7 @@\n         raise ValueError(\"invalid version: %r\" % (version,))\n     major, minor, patch = (int(g) for g in match.groups())\n     if part == \"major\":\n-        return \"%d.0.0\" % (major + 1)\n+        return \"%d.%d.0\" % (major + 1, minor)\n     if part == \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.%d.0\" % (major + 1, minor)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "bef2ca30663abdfd3df6d75800c0bfd24a4b2651baa46ef6a6db4681cd060b42",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: bump returned '2.9.0'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping major resets MINOR and PATCH to 0: The major bump keeps the minor number.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned '2.9.0'",
+       "bump returned '10.99.0'"
+      ],
+      "requirement": "R2",
+      "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "bef2ca30663abdfd3df6d75800c0bfd24a4b2651baa46ef6a6db4681cd060b42"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -11,7 +11,7 @@\n     if part == \"major\":\n         return \"%d.0.0\" % (major + 1)\n     if part == \"minor\":\n-        return \"%d.%d.0\" % (major, minor + 1)\n+        return \"%d.%d.%d\" % (major, minor + 1, patch)\n     if part == \"patch\":\n         return \"%d.%d.%d\" % (major, minor, patch + 1)\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.%d\" % (major, minor + 1, patch)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "13ea082241b939f2312dbd50627502201be58e78b7724b25ec81620187b80f05",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: bump returned '1.3.3'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping minor resets PATCH to 0: The minor bump keeps the old patch value.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned '1.3.3'",
+       "bump returned '1.10.9'",
+       "bump returned '0.1.7'"
+      ],
+      "requirement": "R3",
+      "text": "Bumping minor increments MINOR and resets PATCH to 0"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "13ea082241b939f2312dbd50627502201be58e78b7724b25ec81620187b80f05"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -13,5 +13,5 @@\n     if part == \"minor\":\n         return \"%d.%d.0\" % (major, minor + 1)\n     if part == \"patch\":\n-        return \"%d.%d.%d\" % (major, minor, patch + 1)\n+        return \"%d.%d.%d\" % (major, minor, patch)\n     raise ValueError(\"unknown part: %r\" % (part,))\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "013a013ee39c16d8170492c60150d94b1916b578aa8b3a2309b2bc9066e97d1d",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: bump returned '1.2.3'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Bumping patch increments PATCH: The patch bump returns the patch unchanged instead of incrementing it.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "bump returned '1.2.3'",
+       "bump returned '1.2.9'",
+       "bump returned '0.0.0'"
+      ],
+      "requirement": "R4",
+      "text": "Bumping patch increments PATCH"
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "013a013ee39c16d8170492c60150d94b1916b578aa8b3a2309b2bc9066e97d1d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -1,17 +1,25 @@\n-import re\n-\n-_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n+def _parse(version):\n+    if not isinstance(version, str):\n+        raise ValueError(\"invalid version\")\n+    pieces = version.split(\".\")\n+    if len(pieces) != 3:\n+        raise ValueError(\"invalid version\")\n+    numbers = []\n+    for piece in pieces:\n+        if piece == \"\" or any(c not in \"0123456789\" for c in piece):\n+            raise ValueError(\"invalid version\")\n+        if len(piece) > 1 and piece[0] == \"0\":\n+            raise ValueError(\"invalid version\")\n+        numbers.append(int(piece))\n+    return numbers\n \n \n def bump(version, part):\n-    match = _VERSION.fullmatch(version)\n-    if match is None:\n-        raise ValueError(\"invalid version: %r\" % (version,))\n-    major, minor, patch = (int(g) for g in match.groups())\n-    if part == \"major\":\n-        return \"%d.0.0\" % (major + 1)\n-    if part == \"minor\":\n-        return \"%d.%d.0\" % (major, minor + 1)\n-    if part == \"patch\":\n-        return \"%d.%d.%d\" % (major, minor, patch + 1)\n-    raise ValueError(\"unknown part: %r\" % (part,))\n+    numbers = _parse(version)\n+    if part not in (\"major\", \"minor\", \"patch\"):\n+        raise ValueError(\"unknown part\")\n+    index = (\"major\", \"minor\", \"patch\").index(part)\n+    numbers[index] += 1\n+    for i in range(index + 1, 3):\n+        numbers[i] = 0\n+    return \".\".join(str(n) for n in numbers)\n",
+   "files": {
+    "semver.py": "def _parse(version):\n    if not isinstance(version, str):\n        raise ValueError(\"invalid version\")\n    pieces = version.split(\".\")\n    if len(pieces) != 3:\n        raise ValueError(\"invalid version\")\n    numbers = []\n    for piece in pieces:\n        if piece == \"\" or any(c not in \"0123456789\" for c in piece):\n            raise ValueError(\"invalid version\")\n        if len(piece) > 1 and piece[0] == \"0\":\n            raise ValueError(\"invalid version\")\n        numbers.append(int(piece))\n    return numbers\n\n\ndef bump(version, part):\n    numbers = _parse(version)\n    if part not in (\"major\", \"minor\", \"patch\"):\n        raise ValueError(\"unknown part\")\n    index = (\"major\", \"minor\", \"patch\").index(part)\n    numbers[index] += 1\n    for i in range(index + 1, 3):\n        numbers[i] = 0\n    return \".\".join(str(n) for n in numbers)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1d8574473991c96b755b8d71e452a1bd94a7e58871e6c0a13b90ec39ea3c4f5a",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The manual parser accepts and rejects the same versions and bumps and resets parts identically.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "1d8574473991c96b755b8d71e452a1bd94a7e58871e6c0a13b90ec39ea3c4f5a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -1,17 +1,19 @@\n import re\n \n-_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n+_PATTERN = re.compile(r\"^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\Z\", re.ASCII)\n+\n+_BUMPS = {\n+    \"major\": lambda a, b, c: (a + 1, 0, 0),\n+    \"minor\": lambda a, b, c: (a, b + 1, 0),\n+    \"patch\": lambda a, b, c: (a, b, c + 1),\n+}\n \n \n def bump(version, part):\n-    match = _VERSION.fullmatch(version)\n-    if match is None:\n-        raise ValueError(\"invalid version: %r\" % (version,))\n-    major, minor, patch = (int(g) for g in match.groups())\n-    if part == \"major\":\n-        return \"%d.0.0\" % (major + 1)\n-    if part == \"minor\":\n-        return \"%d.%d.0\" % (major, minor + 1)\n-    if part == \"patch\":\n-        return \"%d.%d.%d\" % (major, minor, patch + 1)\n-    raise ValueError(\"unknown part: %r\" % (part,))\n+    m = _PATTERN.match(version)\n+    if not m:\n+        raise ValueError(f\"invalid version: {version!r}\")\n+    if part not in _BUMPS:\n+        raise ValueError(f\"unknown part: {part!r}\")\n+    a, b, c = _BUMPS[part](*map(int, m.groups()))\n+    return f\"{a}.{b}.{c}\"\n",
+   "files": {
+    "semver.py": "import re\n\n_PATTERN = re.compile(r\"^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\Z\", re.ASCII)\n\n_BUMPS = {\n    \"major\": lambda a, b, c: (a + 1, 0, 0),\n    \"minor\": lambda a, b, c: (a, b + 1, 0),\n    \"patch\": lambda a, b, c: (a, b, c + 1),\n}\n\n\ndef bump(version, part):\n    m = _PATTERN.match(version)\n    if not m:\n        raise ValueError(f\"invalid version: {version!r}\")\n    if part not in _BUMPS:\n        raise ValueError(f\"unknown part: {part!r}\")\n    a, b, c = _BUMPS[part](*map(int, m.groups()))\n    return f\"{a}.{b}.{c}\"\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "40985f8978419e2c9bf3cb14f98aeb7be496ab1f5dbece5744ec4f93adc790d8",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The ASCII-only anchored regex accepts the same versions, the bump results are identical, and ValueError is raised for invalid versions and unknown parts.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "40985f8978419e2c9bf3cb14f98aeb7be496ab1f5dbece5744ec4f93adc790d8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/semver.py\n+++ b/semver.py\n@@ -4,14 +4,16 @@\n \n \n def bump(version, part):\n+    if part not in (\"major\", \"minor\", \"patch\"):\n+        raise ValueError(\"unknown part: {!r}\".format(part))\n     match = _VERSION.fullmatch(version)\n     if match is None:\n-        raise ValueError(\"invalid version: %r\" % (version,))\n-    major, minor, patch = (int(g) for g in match.groups())\n+        raise ValueError(\"invalid version: {!r}\".format(version))\n+    major, minor, patch = [int(g) for g in match.groups()]\n     if part == \"major\":\n-        return \"%d.0.0\" % (major + 1)\n-    if part == \"minor\":\n-        return \"%d.%d.0\" % (major, minor + 1)\n-    if part == \"patch\":\n-        return \"%d.%d.%d\" % (major, minor, patch + 1)\n-    raise ValueError(\"unknown part: %r\" % (part,))\n+        major, minor, patch = major + 1, 0, 0\n+    elif part == \"minor\":\n+        minor, patch = minor + 1, 0\n+    else:\n+        patch += 1\n+    return \"{}.{}.{}\".format(major, minor, patch)\n",
+   "files": {
+    "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    if part not in (\"major\", \"minor\", \"patch\"):\n        raise ValueError(\"unknown part: {!r}\".format(part))\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: {!r}\".format(version))\n    major, minor, patch = [int(g) for g in match.groups()]\n    if part == \"major\":\n        major, minor, patch = major + 1, 0, 0\n    elif part == \"minor\":\n        minor, patch = minor + 1, 0\n    else:\n        patch += 1\n    return \"{}.{}.{}\".format(major, minor, patch)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a8f60dc118057f5c5fbec49ef28d138fb3490d9bcb7b34798d16aa2c01ef1090",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "semver-bump",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Bump logic and both ValueError conditions are preserved; only the check order and formatting changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "a8f60dc118057f5c5fbec49ef28d138fb3490d9bcb7b34798d16aa2c01ef1090"
+   }
+  }
+ ]
+}

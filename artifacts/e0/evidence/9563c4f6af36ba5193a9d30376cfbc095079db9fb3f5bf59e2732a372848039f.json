@@ -1,0 +1,2550 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+  },
+  "probes": {
+   "0298a41d7fa539bc": {
+    "ok": true,
+    "value": false
+   },
+   "06c90ca80e548482": {
+    "ok": true,
+    "value": true
+   },
+   "0923dd7fbb31f708": {
+    "ok": true,
+    "value": false
+   },
+   "22bf5ea05ee21ddb": {
+    "ok": true,
+    "value": false
+   },
+   "2adfebaa6ecb12b8": {
+    "ok": true,
+    "value": false
+   },
+   "2fc116e0feb8f472": {
+    "ok": true,
+    "value": false
+   },
+   "39e8e039c848fa8e": {
+    "ok": true,
+    "value": false
+   },
+   "525d7e10c7337ad9": {
+    "ok": true,
+    "value": false
+   },
+   "5e8ac1e435dd9af1": {
+    "ok": true,
+    "value": false
+   },
+   "626c8fed1ff94434": {
+    "ok": true,
+    "value": false
+   },
+   "63fee741984b20c1": {
+    "ok": true,
+    "value": true
+   },
+   "64b96ee39b732cfb": {
+    "ok": true,
+    "value": true
+   },
+   "670f1c333ec3bff2": {
+    "ok": true,
+    "value": false
+   },
+   "71117c3c27560d43": {
+    "ok": true,
+    "value": true
+   },
+   "8c81133f54600338": {
+    "ok": true,
+    "value": true
+   },
+   "91d9d7e5d266a8c1": {
+    "ok": true,
+    "value": true
+   },
+   "9c9ed18f74147829": {
+    "ok": true,
+    "value": false
+   },
+   "ad357f03145f0a95": {
+    "ok": true,
+    "value": true
+   },
+   "b462d1c3639c8873": {
+    "ok": true,
+    "value": true
+   },
+   "bfb137993f5dc6d6": {
+    "ok": true,
+    "value": false
+   },
+   "c3a59ec5c29569df": {
+    "ok": true,
+    "value": false
+   },
+   "c53cfd548c3373d1": {
+    "ok": true,
+    "value": false
+   },
+   "c952b9f73f0f316a": {
+    "ok": true,
+    "value": true
+   },
+   "ccb4be4ab4ac45e6": {
+    "ok": true,
+    "value": false
+   },
+   "cd5c4a89329a4b99": {
+    "ok": true,
+    "value": false
+   },
+   "cdd3e1e84a9a0f35": {
+    "ok": true,
+    "value": true
+   },
+   "d3bcf37cbe764be1": {
+    "ok": true,
+    "value": false
+   },
+   "d7450dbf8edba66f": {
+    "ok": true,
+    "value": false
+   },
+   "d7e313635a89570d": {
+    "ok": true,
+    "value": true
+   },
+   "d9b79c3df5c0eec9": {
+    "ok": true,
+    "value": true
+   },
+   "da30c88b8379eb8b": {
+    "ok": true,
+    "value": false
+   },
+   "df8208ac8539d20b": {
+    "ok": true,
+    "value": true
+   },
+   "e6426f540e222d40": {
+    "ok": true,
+    "value": false
+   },
+   "f4e7554a3d811382": {
+    "ok": true,
+    "value": false
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "luhn.py",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Provide a module `luhn.py` with a function `luhn_valid(number)`."
+  },
+  {
+   "checks": [
+    {
+     "equals": true,
+     "probe": {
+      "args": [
+       "4111111111111111"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": true,
+     "probe": {
+      "args": [
+       "5500005555555559"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": true,
+     "probe": {
+      "args": [
+       "4539148803436467"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": true,
+     "probe": {
+      "args": [
+       "378282246310005"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+  },
+  {
+   "checks": [
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "4111111111111112"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "5500005555555558"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "4539148803436468"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Return False when the checksum fails (the sum is not divisible by 10)."
+  },
+  {
+   "checks": [
+    {
+     "equals": true,
+     "probe": {
+      "args": [
+       "4111 1111 1111 1111"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": true,
+     "probe": {
+      "args": [
+       "4111-1111-1111-1111"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": true,
+     "probe": {
+      "args": [
+       "4111 1111-1111 1111"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": true,
+     "probe": {
+      "args": [
+       " 4111111111111111 "
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "4111 1111 1111 1112"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Spaces and dashes are allowed as group separators and are removed first."
+  },
+  {
+   "checks": [
+    {
+     "equals": true,
+     "probe": {
+      "args": [
+       "0000000000000"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": true,
+     "probe": {
+      "args": [
+       "000000000000"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "00000000000"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": true,
+     "probe": {
+      "args": [
+       "0000000000000000000"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "00000000000000000000"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "0"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "4111111111111111111"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "41111111111"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+  },
+  {
+   "checks": [
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       ""
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       " - "
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "abcd efgh ijkl mnop"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "4111111111111111x"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "4111.1111.1111.1111"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "4111_1111_1111_1111"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "4111\t1111\t1111\t1111"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "\uff14\uff11\uff11\uff11\uff11\uff11\uff11\uff11\uff11\uff11\uff11\uff11\uff11\uff11\uff11\uff11"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "+4111111111111111"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "What remains must consist only of ASCII digits; any other character gives False, including empty input, and no exception is raised for a string argument."
+  },
+  {
+   "checks": [
+    {
+     "equals": false,
+     "probe": {
+      "args": [
+       "79927398713"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "799273987130"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": true,
+     "probe": {
+      "args": [
+       "6011111111111117"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "9999999999999995"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "1111111111111"
+      ],
+      "function": "luhn_valid",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R7",
+   "source": "model:requirements/v1",
+   "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:card-check",
+ "task_hash": "9563c4f6af36ba5193a9d30376cfbc095079db9fb3f5bf59e2732a372848039f",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -10,4 +10,4 @@\n             if value > 9:\n                 value -= 9\n         total += value\n-    return total % 10 == 0\n+    return (total) // (10) == 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return (total) // (10) == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e192b5b81aee781a59a95cecfb10738f6a376f7d924d1fe78056f93edfeddad4",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Luhn checksum: sum divisible by 10: total // 10 == 0 is only true for sums below 10, so valid numbers are rejected.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e192b5b81aee781a59a95cecfb10738f6a376f7d924d1fe78056f93edfeddad4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -5,7 +5,7 @@\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n         value = int(ch)\n-        if position % 2 == 1:\n+        if (position) // (2) == 1:\n             value *= 2\n             if value > 9:\n                 value -= 9\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if (position) // (2) == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fe2475fd9a3d76bbcad07bf772fabcf3b3cccb7b3d900b1c2cdc5b2e37f98771",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Double every second digit from the right: position // 2 == 1 only selects positions 2 and 3, not every odd position, so the checksum is wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fe2475fd9a3d76bbcad07bf772fabcf3b3cccb7b3d900b1c2cdc5b2e37f98771"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,6 +1,6 @@\n def luhn_valid(number):\n     digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n-    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n+    if (not 12 <= len(digits) <= 19) and (any(ch not in \"0123456789\" for ch in digits)):\n         return False\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if (not 12 <= len(digits) <= 19) and (any(ch not in \"0123456789\" for ch in digits)):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "85ade8b64bb5820e49e37e627076d84dfb275123a637bac58f957b877728d41c",
+   "kind": "violating",
+   "operator": "py-boolop",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: luhn_valid returned True",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return False for non-digit characters or wrong length: Changing or to and lets inputs with only one defect through, so non-digit input raises ValueError and wrong lengths can return True.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned True",
+       "luhn_valid returned True",
+       "luhn_valid returned True"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid returned True",
+       "luhn_valid returned True",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned True",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R6",
+      "text": "What remains must consist only of ASCII digits; any other character gives False, including empty input, and no exception is raised for a string argument."
+     },
+     {
+      "failed": [
+       "luhn_valid returned True"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "85ade8b64bb5820e49e37e627076d84dfb275123a637bac58f957b877728d41c"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -7,7 +7,7 @@\n         value = int(ch)\n         if position % 2 == 1:\n             value *= 2\n-            if value > 9:\n+            if value >= 9:\n                 value -= 9\n         total += value\n     return total % 10 == 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value >= 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c72564f621d789b0a405c0c3f7a63cb2490be8254e2a337f2282589910c75f02",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "card-check",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A doubled digit is always even, so it never equals 9 and changing > to >= alters no result.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -10,4 +10,4 @@\n             if value > 9:\n                 value -= 9\n         total += value\n-    return total % 10 == 0\n+    return total % 10 != 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 != 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "03a0dbabdf64b4eb6954c7e35a88435cbb7ae8485a51905d872f99174f9e95e0",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "True only when checksum divisible by 10: The final check is inverted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned True",
+       "luhn_valid returned True",
+       "luhn_valid returned True"
+      ],
+      "requirement": "R3",
+      "text": "Return False when the checksum fails (the sum is not divisible by 10)."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned True"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid differs from reference",
+       "luhn_valid returned False",
+       "luhn_valid differs from reference",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "03a0dbabdf64b4eb6954c7e35a88435cbb7ae8485a51905d872f99174f9e95e0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -5,7 +5,7 @@\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n         value = int(ch)\n-        if position % 2 == 1:\n+        if position % 2 != 1:\n             value *= 2\n             if value > 9:\n                 value -= 9\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 != 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "87b6c02049baacf329eb44e98cf2ade52c47eae1dfd958252b0c663f34b86590",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Luhn checksum doubles every second digit from the right: The parity test is inverted, so the wrong digits are doubled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid differs from reference",
+       "luhn_valid differs from reference",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "87b6c02049baacf329eb44e98cf2ade52c47eae1dfd958252b0c663f34b86590"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,5 +1,5 @@\n def luhn_valid(number):\n-    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n+    digits = number.replace('', \"\").replace(\"-\", \"\")\n     if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n         return False\n     total = 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace('', \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "11f51369c5847250c3b371dac94c00bcb4e99dddf53dce52396f3425ed77ef82",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Spaces are removed before checking: replace('', '') does not remove spaces, so numbers with space separators are wrongly rejected.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "11f51369c5847250c3b371dac94c00bcb4e99dddf53dce52396f3425ed77ef82"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,5 +1,5 @@\n def luhn_valid(number):\n-    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n+    digits = number.replace(\" \", \"\").replace('', \"\")\n     if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n         return False\n     total = 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace('', \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4b7bca235933a55eaa4c4e27bece7926a5a7a63a5760da3e7c4e1c25c4cae5ed",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "dashes are removed as group separators: replace with an empty pattern removes nothing, so dashed numbers are rejected.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4b7bca235933a55eaa4c4e27bece7926a5a7a63a5760da3e7c4e1c25c4cae5ed"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,6 +1,6 @@\n def luhn_valid(number):\n     digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n-    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n+    if not 12 <= len(digits) <= 19 or any(ch not in '' for ch in digits):\n         return False\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in '' for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7e50e05800e02fd62be3b0fc0b40f45be962745b9ecf14ddec98e92649f47e4d",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return True for valid Luhn numbers: The digit check against an empty string rejects every non-empty input, so valid numbers return False.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7e50e05800e02fd62be3b0fc0b40f45be962745b9ecf14ddec98e92649f47e4d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,6 +1,6 @@\n def luhn_valid(number):\n     digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n-    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n+    if not 12 <= len(digits) <= 20 or any(ch not in \"0123456789\" for ch in digits):\n         return False\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 20 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "63fabc6f8fcddddc4951af417179b81237666d979c82decc5e38a7a45b15a086",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: luhn_valid returned True",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "12 to 19 digits only: Accepts 20-digit numbers that pass Luhn, which must return False.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned True"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "63fabc6f8fcddddc4951af417179b81237666d979c82decc5e38a7a45b15a086"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -5,7 +5,7 @@\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n         value = int(ch)\n-        if position % 2 == 1:\n+        if position % 0 == 1:\n             value *= 2\n             if value > 9:\n                 value -= 9\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 0 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4ad392527052f59952735b57deacef06d1fdd0eaa012f803a1d832b446217917",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "never raise for a string argument; correct Luhn check: position % 0 raises ZeroDivisionError for valid-length digit strings.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R3",
+      "text": "Return False when the checksum fails (the sum is not divisible by 10)."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid differs from reference",
+       "luhn_valid returned None",
+       "luhn_valid differs from reference",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4ad392527052f59952735b57deacef06d1fdd0eaa012f803a1d832b446217917"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -6,7 +6,7 @@\n     for position, ch in enumerate(reversed(digits)):\n         value = int(ch)\n         if position % 2 == 1:\n-            value *= 2\n+            value *= 3\n             if value > 9:\n                 value -= 9\n         total += value\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 3\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d5517e09ad6dbdde24575234964a359a13c7e2bbece54ec1a768d927a6c20b76",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Double every second digit in the Luhn checksum: It triples the digits instead of doubling them, which gives a different checksum.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d5517e09ad6dbdde24575234964a359a13c7e2bbece54ec1a768d927a6c20b76"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -7,7 +7,7 @@\n         value = int(ch)\n         if position % 2 == 1:\n             value *= 2\n-            if value > 9:\n+            if not (value > 9):\n                 value -= 9\n         total += value\n     return total % 10 == 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if not (value > 9):\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ebfa9eb7323590937f9bf4f05c6a2c669924f92ed3f83671ac10b0d70a7bf983",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "subtract 9 from doubled results above 9: The condition is inverted, so the Luhn checksum is computed wrongly.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ebfa9eb7323590937f9bf4f05c6a2c669924f92ed3f83671ac10b0d70a7bf983"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,6 +1,6 @@\n def luhn_valid(number):\n     digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n-    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n+    if not (not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits)):\n         return False\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not (not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits)):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "00a275ac3b94abd469034a51877a3f6b59160ca98c67e6de4e3eea02a02f2d5d",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return True for valid Luhn numbers and False for invalid input: The validity guard is inverted, so valid-format numbers return False and malformed input proceeds to int() and may raise.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned True",
+       "luhn_valid returned False",
+       "luhn_valid returned True",
+       "luhn_valid returned True"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid returned True",
+       "luhn_valid returned True",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned True",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R6",
+      "text": "What remains must consist only of ASCII digits; any other character gives False, including empty input, and no exception is raised for a string argument."
+     },
+     {
+      "failed": [
+       "luhn_valid returned True",
+       "luhn_valid returned False",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "00a275ac3b94abd469034a51877a3f6b59160ca98c67e6de4e3eea02a02f2d5d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -5,7 +5,7 @@\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n         value = int(ch)\n-        if position % 2 == 1:\n+        if not (position % 2 == 1):\n             value *= 2\n             if value > 9:\n                 value -= 9\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if not (position % 2 == 1):\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ba78b81bd0181440fa767ffa518db4bc4f36d1b9e4c5922d9fc8b088980a801f",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Double every second digit from the right: The condition is inverted, so the wrong digits are doubled and the checksum is wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid differs from reference",
+       "luhn_valid differs from reference",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ba78b81bd0181440fa767ffa518db4bc4f36d1b9e4c5922d9fc8b088980a801f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -3,7 +3,7 @@\n     if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n         return False\n     total = 0\n-    for position, ch in enumerate(reversed(digits)):\n+    for position, ch in list(enumerate(reversed(digits)))[:-1]:\n         value = int(ch)\n         if position % 2 == 1:\n             value *= 2\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in list(enumerate(reversed(digits)))[:-1]:\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0ac4cc755b6d647f27b569e5294cb738b4ab44a36f42475b5818a7cefb3fc284",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Sum all digits in the Luhn checksum: The leftmost digit is skipped, giving wrong checksums.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0ac4cc755b6d647f27b569e5294cb738b4ab44a36f42475b5818a7cefb3fc284"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,13 +1,13 @@\n def luhn_valid(number):\n-    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n-    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n+    digits_gp = number.replace(\" \", \"\").replace(\"-\", \"\")\n+    if not 12 <= len(digits_gp) <= 19 or any(ch_gp not in \"0123456789\" for ch_gp in digits_gp):\n         return False\n-    total = 0\n-    for position, ch in enumerate(reversed(digits)):\n-        value = int(ch)\n-        if position % 2 == 1:\n-            value *= 2\n-            if value > 9:\n-                value -= 9\n-        total += value\n-    return total % 10 == 0\n+    total_gp = 0\n+    for position_gp, ch_gp in enumerate(reversed(digits_gp)):\n+        value_gp = int(ch_gp)\n+        if position_gp % 2 == 1:\n+            value_gp *= 2\n+            if value_gp > 9:\n+                value_gp -= 9\n+        total_gp += value_gp\n+    return total_gp % 10 == 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits_gp = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits_gp) <= 19 or any(ch_gp not in \"0123456789\" for ch_gp in digits_gp):\n        return False\n    total_gp = 0\n    for position_gp, ch_gp in enumerate(reversed(digits_gp)):\n        value_gp = int(ch_gp)\n        if position_gp % 2 == 1:\n            value_gp *= 2\n            if value_gp > 9:\n                value_gp -= 9\n        total_gp += value_gp\n    return total_gp % 10 == 0\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "23567857832ae1f42d94f8a24fbab94ed18f4a8d4db8951df1fa08c33cf85be4",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variable names changed; behavior is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "23567857832ae1f42d94f8a24fbab94ed18f4a8d4db8951df1fa08c33cf85be4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -10,4 +10,4 @@\n             if value > 9:\n                 value -= 9\n         total += value\n-    return total % 10 == 0\n+    return None\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a801937fc6739bfb687e6a97f04b23ba9ab67bedebd3925369f59fa4fdc3a111",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return True or False from the Luhn check: Valid-format inputs return None instead of a boolean.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R3",
+      "text": "Return False when the checksum fails (the sum is not divisible by 10)."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid differs from reference",
+       "luhn_valid returned None",
+       "luhn_valid differs from reference",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a801937fc6739bfb687e6a97f04b23ba9ab67bedebd3925369f59fa4fdc3a111"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,7 +1,7 @@\n def luhn_valid(number):\n     digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n     if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n-        return False\n+        return None\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n         value = int(ch)\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return None\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "07cdba4965fccb429b2e1265a2821fd661d030b19866238cd8fec3f99a598c4d",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: luhn_valid returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return False in every other case: Invalid input now returns None instead of False.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R6",
+      "text": "What remains must consist only of ASCII digits; any other character gives False, including empty input, and no exception is raised for a string argument."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "07cdba4965fccb429b2e1265a2821fd661d030b19866238cd8fec3f99a598c4d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -7,7 +7,6 @@\n         value = int(ch)\n         if position % 2 == 1:\n             value *= 2\n-            if value > 9:\n-                value -= 9\n+            pass\n         total += value\n     return total % 10 == 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            pass\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "323930b098599885839d28aaf3a5bde0b2db4fae1f9c605754b62ff6b99d92f7",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Subtract 9 from doubled digits above 9: The subtraction is removed, so valid card numbers with doubled digits above 9 fail the checksum.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "323930b098599885839d28aaf3a5bde0b2db4fae1f9c605754b62ff6b99d92f7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -8,6 +8,6 @@\n         if position % 2 == 1:\n             value *= 2\n             if value > 9:\n-                value -= 9\n+                pass\n         total += value\n     return total % 10 == 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                pass\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "027c049566dc9c594dd5c9ef0f26c832cc6ebacb5c91831469808e6007b3e8fa",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Subtract 9 from doubled digits above 9: The subtraction is removed, so the checksum is wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "027c049566dc9c594dd5c9ef0f26c832cc6ebacb5c91831469808e6007b3e8fa"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -10,4 +10,4 @@\n             if value > 9:\n                 value -= 9\n         total += value\n-    return total % 10 == 0\n+    pass\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4b44e42f7e54d309b05626f714333a7dd3b3023ff52865f9c328541ac3e409d0",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "return True or False from the checksum: The function returns None instead of the checksum result.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R3",
+      "text": "Return False when the checksum fails (the sum is not divisible by 10)."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid differs from reference",
+       "luhn_valid returned None",
+       "luhn_valid differs from reference",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4b44e42f7e54d309b05626f714333a7dd3b3023ff52865f9c328541ac3e409d0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,5 +1,5 @@\n def luhn_valid(number):\n-    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n+    pass\n     if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n         return False\n     total = 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    pass\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ae637b9b5bf21ca4388faa2115b22d297debe26f621584eebfe5431d8cf41d04",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return a bool and never raise for string input: digits is undefined, so the function raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R3",
+      "text": "Return False when the checksum fails (the sum is not divisible by 10)."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid differs from reference",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R6",
+      "text": "What remains must consist only of ASCII digits; any other character gives False, including empty input, and no exception is raised for a string argument."
+     },
+     {
+      "failed": [
+       "luhn_valid returned None",
+       "luhn_valid differs from reference",
+       "luhn_valid returned None",
+       "luhn_valid differs from reference",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ae637b9b5bf21ca4388faa2115b22d297debe26f621584eebfe5431d8cf41d04"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,7 +1,7 @@\n def luhn_valid(number):\n     digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n     if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n-        return False\n+        pass\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n         value = int(ch)\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        pass\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6d3c958e6f540628eefa5f55c03db47b78fe88cd32e0c1c776c8eda7541a0d50",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: luhn_valid returned True",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return False for invalid input and never raise: The early return was removed, so non-digit input raises ValueError and wrong-length digit strings can wrongly return True.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned True",
+       "luhn_valid returned True",
+       "luhn_valid returned True"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid returned True",
+       "luhn_valid returned True",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned None",
+       "luhn_valid returned True",
+       "luhn_valid returned None"
+      ],
+      "requirement": "R6",
+      "text": "What remains must consist only of ASCII digits; any other character gives False, including empty input, and no exception is raised for a string argument."
+     },
+     {
+      "failed": [
+       "luhn_valid returned True"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6d3c958e6f540628eefa5f55c03db47b78fe88cd32e0c1c776c8eda7541a0d50"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -5,9 +5,6 @@\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n         value = int(ch)\n-        if position % 2 == 1:\n-            value *= 2\n-            if value > 9:\n-                value -= 9\n+        pass\n         total += value\n     return total % 10 == 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        pass\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3dc167e988a800598bf966444ae2d8a0fb0ef16048cbfd426d60b7a622414181",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Luhn doubling of every second digit: The doubling step was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned True"
+      ],
+      "requirement": "R3",
+      "text": "Return False when the checksum fails (the sum is not divisible by 10)."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned True"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3dc167e988a800598bf966444ae2d8a0fb0ef16048cbfd426d60b7a622414181"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -10,4 +10,4 @@\n             if value > 9:\n                 value -= 9\n         total += value\n-    return total % 10 == 0\n+    return total % 5 == 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 5 == 0\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "9e86fbdc4be0bb029cdb84463437d702e3fd8a14c234e67b425a7cbf87783a21",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "card-check",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Luhn sum must be divisible by 10: The check uses modulo 5 instead of modulo 10.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,5 +1,5 @@\n def luhn_valid(number):\n-    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n+    digits = number.replace(\" \", \"\")\n     if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n         return False\n     total = 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "37379b6e4b40cb16f9698610b1afd9747433c65a89795bebac5fbf98f805396f",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "dashes are removed as group separators: Dashes are no longer stripped, so dashed numbers return False.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "37379b6e4b40cb16f9698610b1afd9747433c65a89795bebac5fbf98f805396f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,6 +1,6 @@\n def luhn_valid(number):\n     digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n-    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n+    if not 11 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n         return False\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 11 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "109f32c01dc227bdedc35a6ec98763f1511be3dc78c293c1e766e06bb32980bb",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: luhn_valid returned True",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Has 12 to 19 digits: The lower bound is 11, so valid-checksum 11-digit input returns True.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned True"
+      ],
+      "requirement": "R5",
+      "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+     },
+     {
+      "failed": [
+       "luhn_valid returned True"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "109f32c01dc227bdedc35a6ec98763f1511be3dc78c293c1e766e06bb32980bb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,6 +1,6 @@\n def luhn_valid(number):\n     digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n-    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n+    if not 12 <= len(digits) <= 19 or not digits.isdigit():\n         return False\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or not digits.isdigit():\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "3d7ae6af807b0ba577d7f11501f300f3228443ec4664c0cb8b2cedd5f74bb0e7",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R6: luhn_valid returned True",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Only ASCII digits are valid; never raise for a string argument: str.isdigit() accepts non-ASCII digits such as superscripts, which then make int() raise ValueError instead of returning False.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned True"
+      ],
+      "requirement": "R6",
+      "text": "What remains must consist only of ASCII digits; any other character gives False, including empty input, and no exception is raised for a string argument."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3d7ae6af807b0ba577d7f11501f300f3228443ec4664c0cb8b2cedd5f74bb0e7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -5,7 +5,7 @@\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n         value = int(ch)\n-        if position % 2 == 1:\n+        if position % 2 == 0:\n             value *= 2\n             if value > 9:\n                 value -= 9\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 0:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "30f8003b7bc6c025421774348b02ffb41c92b33800df0b42e43926dc724b3895",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: luhn_valid returned False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "double every second digit starting from the rightmost as the second digit: Parity changed to double positions 0, 2, 4..., which computes the wrong checksum.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R2",
+      "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+     },
+     {
+      "failed": [
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False",
+       "luhn_valid returned False"
+      ],
+      "requirement": "R4",
+      "text": "Spaces and dashes are allowed as group separators and are removed first."
+     },
+     {
+      "failed": [
+       "luhn_valid differs from reference",
+       "luhn_valid differs from reference",
+       "luhn_valid differs from reference"
+      ],
+      "requirement": "R7",
+      "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "30f8003b7bc6c025421774348b02ffb41c92b33800df0b42e43926dc724b3895"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,13 +1,14 @@\n def luhn_valid(number):\n-    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n-    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n+    digits = \"\".join(ch for ch in number if ch not in \" -\")\n+    if not 12 <= len(digits) <= 19:\n+        return False\n+    if not (digits.isascii() and digits.isdigit()):\n         return False\n     total = 0\n-    for position, ch in enumerate(reversed(digits)):\n-        value = int(ch)\n-        if position % 2 == 1:\n-            value *= 2\n-            if value > 9:\n-                value -= 9\n-        total += value\n+    for i, ch in enumerate(digits[::-1]):\n+        d = int(ch)\n+        if i % 2:\n+            tens, ones = divmod(d * 2, 10)\n+            d = tens + ones\n+        total += d\n     return total % 10 == 0\n",
+   "files": {
+    "luhn.py": "def luhn_valid(number):\n    digits = \"\".join(ch for ch in number if ch not in \" -\")\n    if not 12 <= len(digits) <= 19:\n        return False\n    if not (digits.isascii() and digits.isdigit()):\n        return False\n    total = 0\n    for i, ch in enumerate(digits[::-1]):\n        d = int(ch)\n        if i % 2:\n            tens, ones = divmod(d * 2, 10)\n            d = tens + ones\n        total += d\n    return total % 10 == 0\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0910c0b1d7ec6642fb823500a2e3eda4d23e48cf49b95dbaa43810283aeec6b8",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Same separator removal, length check, ASCII-digit check and Luhn arithmetic, only restructured.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "0910c0b1d7ec6642fb823500a2e3eda4d23e48cf49b95dbaa43810283aeec6b8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,13 +1,11 @@\n+import re\n+\n+\n def luhn_valid(number):\n-    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n-    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n+    cleaned = re.sub(r\"[ -]\", \"\", number)\n+    if re.fullmatch(r\"[0-9]{12,19}\", cleaned) is None:\n         return False\n-    total = 0\n-    for position, ch in enumerate(reversed(digits)):\n-        value = int(ch)\n-        if position % 2 == 1:\n-            value *= 2\n-            if value > 9:\n-                value -= 9\n-        total += value\n-    return total % 10 == 0\n+    nums = [int(c) for c in cleaned]\n+    odd = sum(nums[-1::-2])\n+    even = sum(sum(divmod(d * 2, 10)) for d in nums[-2::-2])\n+    return (odd + even) % 10 == 0\n",
+   "files": {
+    "luhn.py": "import re\n\n\ndef luhn_valid(number):\n    cleaned = re.sub(r\"[ -]\", \"\", number)\n    if re.fullmatch(r\"[0-9]{12,19}\", cleaned) is None:\n        return False\n    nums = [int(c) for c in cleaned]\n    odd = sum(nums[-1::-2])\n    even = sum(sum(divmod(d * 2, 10)) for d in nums[-2::-2])\n    return (odd + even) % 10 == 0\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "5aed1c872d1d3879a771d692417576cf8567e64d7ac8de1a66d75793623771df",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The regex rewrite keeps the same separator removal, 12 to 19 ASCII digit check and Luhn computation.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "5aed1c872d1d3879a771d692417576cf8567e64d7ac8de1a66d75793623771df"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,13 +1,17 @@\n+_DOUBLED = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9]\n+\n+\n def luhn_valid(number):\n-    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n-    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n+    digits = number.translate({ord(\" \"): None, ord(\"-\"): None})\n+    if len(digits) < 12 or len(digits) > 19:\n         return False\n+    for ch in digits:\n+        if ch < \"0\" or ch > \"9\":\n+            return False\n     total = 0\n-    for position, ch in enumerate(reversed(digits)):\n-        value = int(ch)\n-        if position % 2 == 1:\n-            value *= 2\n-            if value > 9:\n-                value -= 9\n-        total += value\n+    flip = False\n+    for ch in reversed(digits):\n+        d = ord(ch) - 48\n+        total += _DOUBLED[d] if flip else d\n+        flip = not flip\n     return total % 10 == 0\n",
+   "files": {
+    "luhn.py": "_DOUBLED = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9]\n\n\ndef luhn_valid(number):\n    digits = number.translate({ord(\" \"): None, ord(\"-\"): None})\n    if len(digits) < 12 or len(digits) > 19:\n        return False\n    for ch in digits:\n        if ch < \"0\" or ch > \"9\":\n            return False\n    total = 0\n    flip = False\n    for ch in reversed(digits):\n        d = ord(ch) - 48\n        total += _DOUBLED[d] if flip else d\n        flip = not flip\n    return total % 10 == 0\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "74bc97476dbc62196df255cf0845c566dfda040f6273f4d119b2732e77ba8291",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "card-check",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Same separator stripping, length and digit checks, and Luhn doubling via a lookup table give identical results.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "74bc97476dbc62196df255cf0845c566dfda040f6273f4d119b2732e77ba8291"
+   }
+  }
+ ]
+}

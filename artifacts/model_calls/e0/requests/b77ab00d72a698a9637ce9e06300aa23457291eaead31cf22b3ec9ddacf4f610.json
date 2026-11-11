@@ -1,0 +1,309 @@
+{
+  "created_utc": "2026-11-11T04:21:42Z",
+  "hash": "b77ab00d72a698a9637ce9e06300aa23457291eaead31cf22b3ec9ddacf4f610",
+  "instructions": "You are an independent adjudicator for an audit of benchmark graders. Each item is one\nmodified solution of one task. It gives the task text (the instructions a solver gets),\nthe reference solution, the grader's source, the modified solution (as a diff and as full\nfiles), what the grader did with the modified solution, and the auditing tool's witness:\nthe requirement(s) of the task text that the tool says the modified solution breaks (for\na \"false accept\" item) or keeps (for a \"false reject\" item).\n\nDecide only whether the tool's claim is correct, judging from the task text as written,\nnot from what the grader happens to check:\n- \"false accept\" item: the grader ACCEPTED the modified solution. Answer \"validates\" if\n  the modified solution really fails to do what the task text requires (the witness's\n  requirement, or another requirement the task text states explicitly), so that a careful\n  reader of the task text would reject it. Answer \"does-not-validate\" if the modified\n  solution is acceptable under the task text (for example, the named requirement is not\n  actually stated, or the change does not break it).\n- \"false reject\" item: the grader REJECTED the modified solution. Answer \"validates\" if\n  the modified solution satisfies everything the task text requires, so the rejection is\n  not justified by the task text. Answer \"does-not-validate\" if the task text does require\n  something the modified solution does not do.\nGive a reason of one or two sentences that names the requirement you relied on.\n",
+  "items": [
+    {
+      "flag": "false accept",
+      "grader_files": {
+        "grade.py": "import json\nimport sys\n\n\ndef fail(msg):\n    print(\"FAIL: \" + msg, file=sys.stderr)\n    sys.exit(1)\n\n\ntry:\n    with open(\".gp/state.json\", encoding=\"utf-8\") as fh:\n        state = json.load(fh)\nexcept (OSError, ValueError) as exc:\n    fail(\"cannot read final state: %s\" % exc)\n\nOTHER = {\"passenger\": \"Ruth Adeyemi\", \"flight\": \"NB 118 LIS-BER 2026-12-15\", \"fare_cents\": 28900,\n         \"fare_type\": \"refundable\", \"status\": \"ticketed\"}\n\nbookings = state.get(\"bookings\", {})\nif bookings.get(\"M3P9LA\") != OTHER:\n    fail(\"booking M3P9LA was changed\")\ntarget = bookings.get(\"X7K2QD\", {})\nif target.get(\"status\") != \"cancelled\":\n    fail(\"booking X7K2QD is not cancelled\")\nif target.get(\"fare_cents\") != 41200 or target.get(\"fare_type\") != \"nonrefundable\":\n    fail(\"booking X7K2QD fare details were changed\")\nif state.get(\"refunds\") != []:\n    fail(\"a non-refundable fare must not be refunded: %r\" % (state.get(\"refunds\"),))\nif state.get(\"credits\") != [{\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}]:\n    fail(\"expected one travel credit of 33700 cents for X7K2QD, found %r\" % (state.get(\"credits\"),))\n\nprint(\"ok\")\n"
+      },
+      "id": "0771bdc9b171dec4eddf19b4fa83470077976fbfb7da24a1aa987d872b3317e2",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\n+    \"tool\": \"get_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_travel_credit\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\",\n+      \"amount_cents\": 33700\n+    }\n+  }\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\n    \"tool\": \"get_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD-x\"\n    }\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"issue_travel_credit\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\",\n      \"amount_cents\": 33700\n    }\n  }\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+      },
+      "task_text": "# Cancel a flight booking\n\nNoah Fischer asks to cancel his booking `X7K2QD`. Look it up and apply the cancellation policy:\n\n- Cancel the booking with `cancel_booking`.\n- Refundable fare: refund the full fare to the original payment method with `issue_refund`.\n- Non-refundable fare: do not refund anything; instead issue a travel credit equal to the fare minus a 7500-cent change fee with `issue_travel_credit`.\n\nDo not change any other booking.\n\nTools (see `support/env.py`):\n\n- `get_booking(pnr)`\n- `cancel_booking(pnr)`\n- `issue_refund(pnr, amount_cents)`\n- `issue_travel_credit(pnr, amount_cents)`\n",
+      "witness": {
+        "broken": [
+          {
+            "failed": [
+              "trajectory lacks get_booking",
+              "order get_booking < cancel_booking: None, 1"
+            ],
+            "requirement": "R1",
+            "requirement_text": "Look up booking X7K2QD (with get_booking) before applying the policy.",
+            "text": "Look up booking X7K2QD (with get_booking) before applying the policy."
+          }
+        ]
+      }
+    },
+    {
+      "flag": "false accept",
+      "grader_files": {
+        "grade.py": "import os\nimport shutil\nimport subprocess\nimport sys\nimport tempfile\n\nTOOL = os.path.join(\"bin\", \"countlines\")\n\n\ndef fail(msg):\n    print(\"FAIL: \" + msg, file=sys.stderr)\n    sys.exit(1)\n\n\ndef write(path, text):\n    with open(path, \"w\", encoding=\"utf-8\") as fh:\n        fh.write(text)\n\n\ndef run(directory, limit_s):\n    try:\n        proc = subprocess.run([TOOL, directory], capture_output=True, text=True, timeout=limit_s)\n    except subprocess.TimeoutExpired:\n        fail(\"bin/countlines took longer than %.1f s on %s\" % (limit_s, os.path.basename(directory)))\n    if proc.returncode != 0:\n        fail(\"bin/countlines exited with %d: %s\" % (proc.returncode, proc.stderr.strip()[:200]))\n    return proc.stdout.strip()\n\n\nif not os.path.isfile(TOOL) or not os.access(TOOL, os.X_OK):\n    fail(\"bin/countlines is missing or not executable\")\nwith open(TOOL, encoding=\"utf-8\", errors=\"replace\") as fh:\n    if fh.readline().rstrip(\"\\n\") not in (\"#!/usr/bin/env bash\", \"#!/bin/bash\"):\n        fail(\"bin/countlines must start with a bash shebang line\")\n\nscratch = tempfile.mkdtemp(prefix=\".countlines-check-\", dir=\".\")\ntry:\n    small = os.path.join(scratch, \"small\")\n    os.makedirs(os.path.join(small, \"rotated\"))\n    write(os.path.join(small, \"api.log\"), \"a\\nb\\nc\\n\")\n    write(os.path.join(small, \"worker.log\"), \"x\\ny\")\n    write(os.path.join(small, \"notes.txt\"), \"1\\n2\\n3\\n4\\n\")\n    write(os.path.join(small, \"rotated\", \"api.log\"), \"old\\nold\\n\")\n    empty = os.path.join(scratch, \"empty\")\n    os.makedirs(empty)\n    big = os.path.join(scratch, \"big\")\n    os.makedirs(big)\n    expected_big = 0\n    for i in range(3000):\n        lines = 1 + i % 3\n        expected_big += lines\n        write(os.path.join(big, \"shard-%04d.log\" % i), \"event %d\\n\" % i * lines)\n\n    if run(small, 5) != \"4\":\n        fail(\"bin/countlines small/ should print 4\")\n    if run(empty, 5) != \"0\":\n        fail(\"bin/countlines on a directory without .log files should print 0\")\n    if run(big, 2.0) != str(expected_big):\n        fail(\"bin/countlines big/ should print %d\" % expected_big)\nfinally:\n    shutil.rmtree(scratch, ignore_errors=True)\n\nprint(\"ok\")\n"
+      },
+      "id": "391f45a86ed7ab0535e71bf9f2e88508c0c55875691238799b861b73bc3cebe1",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -14,7 +14,7 @@\n if [ \"${#files[@]}\" -eq 0 ]; then\n   echo 0\n else\n-  cat -- \"${files[@]}\" | wc -l\n+  cat -- \"${files[@]}\" | perl -ne '$n++ while /\\n/g; END { print $n + 0, \"\\n\" }'\n fi\n EOF\n chmod +x bin/countlines\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | perl -ne '$n++ while /\\n/g; END { print $n + 0, \"\\n\" }'\nfi\nEOF\nchmod +x bin/countlines\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\nchmod +x bin/countlines\n"
+      },
+      "task_text": "# Log line counter\n\nThe operations team wants a quick way to see how much a service has logged.\n\nCreate an executable bash script at `bin/countlines` (create the `bin/` directory). When run as `bin/countlines DIR`, it must print the total number of lines in all regular files directly inside DIR whose names end in `.log` (files in subdirectories do not count), as a plain decimal integer on one line, and exit with status 0.\n\n- Count lines the way `wc -l` does, that is, the number of newline characters.\n- If DIR contains no such files, print `0`.\n- The script must start with `#!/usr/bin/env bash` or `#!/bin/bash` and may use only bash and coreutils.\n",
+      "witness": {
+        "broken": [
+          {
+            "failed": [
+              "bin/countlines does not match /\\A(?![\\s\\S]*\\b(python3?|perl|ruby|node|awk|gawk)\\b)[\\s\\S]*\\Z/"
+            ],
+            "requirement": "R5",
+            "requirement_text": "The script may use only bash and coreutils.",
+            "text": "The script may use only bash and coreutils."
+          }
+        ]
+      }
+    },
+    {
+      "flag": "false accept",
+      "grader_files": {
+        "grade.py": "import os\nimport sys\n\nsys.path.insert(0, os.getcwd())\n\n\ndef fail(msg):\n    print(\"FAIL: \" + msg, file=sys.stderr)\n    sys.exit(1)\n\nCASES = [\n    (\"4539 1488 0343 6467\", True),\n    (\"4539 1488 0343 6468\", False),\n    (\"4111-1111-1111-1111\", True),\n    (\"4111 1111 1111 111a\", False),\n    (\"5555555555554444\", True),\n    (\"378282246310005\", True),\n    (\"378282246310006\", False),\n    (\"79927398713\", False),\n    (\"0000 0000 0000\", True),\n    (\"6011 1111 1111 1117 000\", True),\n    (\"6011 1111 1111 1117 001\", False),\n    (\"4111 1111 1111 1111 0000\", False),\n    (\"\", False),\n    (\"    \", False),\n    (\"4111.1111.1111.1111\", False),\n    (\"\uff11\uff12\uff13\uff14\uff15\uff16\uff17\uff18\uff19\uff10\uff11\uff12\", False),\n]\n\ntry:\n    from luhn import luhn_valid\nexcept Exception as exc:\n    fail(\"cannot import luhn_valid from luhn.py: %r\" % (exc,))\n\nfor number, expected in CASES:\n    try:\n        got = luhn_valid(number)\n    except Exception as exc:\n        fail(\"luhn_valid(%r) raised %r\" % (number, exc))\n    if got is not expected:\n        fail(\"luhn_valid(%r) = %r, expected %r\" % (number, got, expected))\n\nprint(\"ok\")\n"
+      },
+      "id": "3d7ae6af807b0ba577d7f11501f300f3228443ec4664c0cb8b2cedd5f74bb0e7",
+      "modified_diff": "--- a/luhn.py\n+++ b/luhn.py\n@@ -1,6 +1,6 @@\n def luhn_valid(number):\n     digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n-    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n+    if not 12 <= len(digits) <= 19 or not digits.isdigit():\n         return False\n     total = 0\n     for position, ch in enumerate(reversed(digits)):\n",
+      "modified_files": {
+        "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or not digits.isdigit():\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+      },
+      "reference_solution": {
+        "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+      },
+      "task_text": "# Card number check\n\nWrite a Python module `luhn.py` with a function `luhn_valid(number)` used to catch typos in card numbers before they are sent to the payment provider.\n\n- `number` is a string. Spaces and dashes are allowed as group separators and are removed first.\n- Return `True` if what remains consists only of ASCII digits, has 12 to 19 digits, and passes the Luhn checksum: starting from the rightmost digit and moving left, double every second digit (subtracting 9 from any result above 9), add up all the digits, and check that the sum is divisible by 10.\n- Return `False` in every other case, including empty input and input with other characters. Never raise an exception for a string argument.\n",
+      "witness": {
+        "broken": [
+          {
+            "failed": [
+              "luhn_valid returned True"
+            ],
+            "requirement": "R6",
+            "requirement_text": "What remains must consist only of ASCII digits; any other character gives False, including empty input, and no exception is raised for a string argument.",
+            "text": "What remains must consist only of ASCII digits; any other character gives False, including empty input, and no exception is raised for a string argument."
+          }
+        ]
+      }
+    },
+    {
+      "flag": "false accept",
+      "grader_files": {
+        "grade.py": "import os\nimport sys\n\nEXPECTED = (\n    \"metric\\trevenue\\tnew customers\\n\"\n    \"Q1\\t1.2 M\\t310\\n\"\n    \"Q2\\t1.4 M\\t355\\n\"\n    \"Q3\\t1.1 M\\t298\\n\"\n    \"Q4\\t1.9 M\\t502\\n\"\n)\n\n\ndef fail(msg):\n    print(\"FAIL: \" + msg, file=sys.stderr)\n    sys.exit(1)\n\n\nif not os.path.isfile(\"transposed.tsv\"):\n    fail(\"transposed.tsv was not created\")\nwith open(\"transposed.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    got = fh.read()\nif got != EXPECTED:\n    got_lines, want_lines = got.split(\"\\n\"), EXPECTED.split(\"\\n\")\n    for number, (g, w) in enumerate(zip(got_lines, want_lines), start=1):\n        if g != w:\n            fail(\"line %d is %r, expected %r\" % (number, g, w))\n    fail(\"transposed.tsv has %d newline-terminated rows, expected 5\" % got.count(\"\\n\"))\n\nprint(\"ok\")\n"
+      },
+      "id": "61c0231c0ddec1b49396eba3e8410abe5cdb3a40acd80470f1c732659bd8577a",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,10 @@\n with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n-    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n+    text = fh.read()\n+rows = [line.split(\"\\t\") for line in text.split(\"\\n\") if line != \"\"]\n \n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n     for column in columns:\n         fh.write(\"\\t\".join(column) + \"\\n\")\n+with open(\"matrix.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+    fh.write(\"\\n\".join(\"\\t\".join(row) for row in rows))\n",
+      "modified_files": {
+        "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    text = fh.read()\nrows = [line.split(\"\\t\") for line in text.split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\nwith open(\"matrix.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\\n\".join(\"\\t\".join(row) for row in rows))\n"
+      },
+      "reference_solution": {
+        "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+      },
+      "task_text": "# Transpose a TSV table\n\n`matrix.tsv` is a tab-separated table in which every row has the same number of cells. Write `transposed.tsv` with rows and columns swapped: the cell in row i, column j of the output is the cell in row j, column i of the input.\n\nWrite the output in the same format: cells separated by a single tab character, every row (including the last) terminated by a newline, and cell text unchanged (cells may contain spaces).\n",
+      "witness": {
+        "broken": [
+          {
+            "failed": [
+              "matrix.tsv differs from expected text"
+            ],
+            "requirement": "R4",
+            "requirement_text": "The input matrix.tsv is not modified.",
+            "text": "The input matrix.tsv is not modified."
+          }
+        ]
+      }
+    },
+    {
+      "flag": "false accept",
+      "grader_files": {
+        "grade.py": "import os\nimport sys\n\nsys.path.insert(0, os.getcwd())\n\n\ndef fail(msg):\n    print(\"FAIL: \" + msg, file=sys.stderr)\n    sys.exit(1)\n\nCASES = [\n    ((\"kitten\", \"sitting\"), 3), ((\"\", \"\"), 0), ((\"\", \"abc\"), 3), ((\"abc\", \"\"), 3), ((\"flaw\", \"lawn\"), 2),\n    ((\"Hilton\", \"hilton\"), 1), ((\"Marriott\", \"Mariott\"), 1), ((\"intention\", \"execution\"), 5),\n    ((\"caf\u00e9\", \"cafe\"), 1), ((\"abc\", \"abc\"), 0), ((\"ab\", \"ba\"), 2), ((\"Grand Budapest\", \"Grand Budapset\"), 2),\n]\n\ntry:\n    from distance import levenshtein\nexcept Exception as exc:\n    fail(\"cannot import levenshtein from distance.py: %r\" % (exc,))\n\nfor (a, b), expected in CASES:\n    try:\n        got = levenshtein(a, b)\n    except Exception as exc:\n        fail(\"levenshtein(%r, %r) raised %r\" % (a, b, exc))\n    if isinstance(got, bool) or got != expected:\n        fail(\"levenshtein(%r, %r) = %r, expected %r\" % (a, b, got, expected))\n\nprint(\"ok\")\n"
+      },
+      "id": "6a1d508ce180a3325ea9902463df57f7bd35f822f52d6becb89042ca61a48fbc",
+      "modified_diff": "--- a/distance.py\n+++ b/distance.py\n@@ -1,4 +1,11 @@\n+def _units(s):\n+    data = s.encode(\"utf-16-le\")\n+    return [data[i:i + 2] for i in range(0, len(data), 2)]\n+\n+\n def levenshtein(a, b):\n+    a = _units(a)\n+    b = _units(b)\n     previous = list(range(len(b) + 1))\n     for i, ca in enumerate(a, start=1):\n         current = [i]\n",
+      "modified_files": {
+        "distance.py": "def _units(s):\n    data = s.encode(\"utf-16-le\")\n    return [data[i:i + 2] for i in range(0, len(data), 2)]\n\n\ndef levenshtein(a, b):\n    a = _units(a)\n    b = _units(b)\n    previous = list(range(len(b) + 1))\n    for i, ca in enumerate(a, start=1):\n        current = [i]\n        for j, cb in enumerate(b, start=1):\n            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (ca != cb)))\n        previous = current\n    return previous[-1]\n"
+      },
+      "reference_solution": {
+        "distance.py": "def levenshtein(a, b):\n    previous = list(range(len(b) + 1))\n    for i, ca in enumerate(a, start=1):\n        current = [i]\n        for j, cb in enumerate(b, start=1):\n            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (ca != cb)))\n        previous = current\n    return previous[-1]\n"
+      },
+      "task_text": "# Edit distance for search suggestions\n\nThe search box suggests corrections for misspelled hotel names. Write a Python module `distance.py` with a function `levenshtein(a, b)` that returns the Levenshtein distance between the strings `a` and `b`: the minimum number of single-character insertions, deletions, and substitutions needed to turn `a` into `b`. Characters are compared exactly (case-sensitive), and each Unicode code point counts as one character.\n",
+      "witness": {
+        "broken": [
+          {
+            "failed": [
+              "levenshtein returned 2"
+            ],
+            "requirement": "R4",
+            "requirement_text": "Each Unicode code point counts as one character.",
+            "text": "Each Unicode code point counts as one character."
+          }
+        ]
+      }
+    },
+    {
+      "flag": "false accept",
+      "grader_files": {
+        "grade.py": "import json\nimport sys\n\n\ndef fail(msg):\n    print(\"FAIL: \" + msg, file=sys.stderr)\n    sys.exit(1)\n\n\ntry:\n    with open(\".gp/state.json\", encoding=\"utf-8\") as fh:\n        state = json.load(fh)\nexcept (OSError, ValueError) as exc:\n    fail(\"cannot read final state: %s\" % exc)\n\nPRESCRIPTIONS = {\n    \"RX-1001\": {\"patient_id\": \"P-5512\", \"drug\": \"atorvastatin 20 mg\", \"refills_left\": 1},\n    \"RX-1002\": {\"patient_id\": \"P-5512\", \"drug\": \"amoxicillin 500 mg\", \"refills_left\": 0},\n    \"RX-1107\": {\"patient_id\": \"P-6020\", \"drug\": \"atorvastatin 40 mg\", \"refills_left\": 5},\n}\n\nif state.get(\"prescriptions\") != PRESCRIPTIONS:\n    fail(\"prescriptions are %r, expected one refill of RX-1001 only\" % (state.get(\"prescriptions\"),))\nif state.get(\"refills\") != [{\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}]:\n    fail(\"refills are %r, expected RX-1001 at PH-ELM\" % (state.get(\"refills\"),))\n\nevents = state.get(\"events\", [])\nrefill_seq = min(e[\"seq\"] for e in events if e.get(\"kind\") == \"refill\")\ngood = [n for n, e in zip(state.get(\"notifications\", []), [e for e in events if e.get(\"kind\") == \"notify\"])\n        if e[\"seq\"] > refill_seq and n.get(\"patient_id\") == \"P-5512\"\n        and \"Elm Street\" in n.get(\"message\", \"\") and \"RX-1001\" in n.get(\"message\", \"\")]\nif not good:\n    fail(\"the patient was not notified after the refill with a message naming Elm Street and RX-1001\")\n\nprint(\"ok\")\n"
+      },
+      "id": "a29a0f5c8257d29ffb250d92e3d9ce3e9979fce044e2f9258f4b9f91c557f87c",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n   {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n+  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1002\", \"pharmacy_id\": \"PH-ELM\"}},\n   {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1002\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+      },
+      "task_text": "# Refill a prescription\n\nPatient `P-5512` asks to refill her atorvastatin prescription for pickup at the Elm Street pharmacy.\n\n1. Request a refill of prescription `RX-1001` at pharmacy `PH-ELM` with `request_refill`.\n2. Then notify the patient with `notify_patient`. The message must include the pharmacy name `Elm Street` and the prescription number `RX-1001`.\n\nDo not request refills of any other prescription.\n\nTools (see `support/env.py`):\n\n- `list_prescriptions(patient_id)`\n- `list_pharmacies()`\n- `request_refill(rx_id, pharmacy_id)`\n- `notify_patient(patient_id, message)`\n",
+      "witness": {
+        "broken": [
+          {
+            "failed": [
+              "trajectory has request_refill"
+            ],
+            "requirement": "R4",
+            "requirement_text": "Do not request refills of any other prescription.",
+            "text": "Do not request refills of any other prescription."
+          }
+        ]
+      }
+    },
+    {
+      "flag": "false accept",
+      "grader_files": {
+        "grade.py": "import json\nimport sys\n\n\ndef fail(msg):\n    print(\"FAIL: \" + msg, file=sys.stderr)\n    sys.exit(1)\n\n\ntry:\n    with open(\".gp/state.json\", encoding=\"utf-8\") as fh:\n        state = json.load(fh)\nexcept (OSError, ValueError) as exc:\n    fail(\"cannot read final state: %s\" % exc)\n\nREQUESTS = {\n    \"LR-298\": {\"employee_id\": \"E-77\", \"days\": 1, \"status\": \"approved\", \"reason\": None},\n    \"LR-301\": {\"employee_id\": \"E-77\", \"days\": 4, \"status\": \"approved\", \"reason\": None},\n    \"LR-302\": {\"employee_id\": \"E-81\", \"days\": 3, \"status\": \"rejected\", \"reason\": \"insufficient balance\"},\n    \"LR-303\": {\"employee_id\": \"E-90\", \"days\": 10, \"status\": \"approved\", \"reason\": None},\n    \"LR-288\": {\"employee_id\": \"E-81\", \"days\": 5, \"status\": \"rejected\", \"reason\": \"blackout period\"},\n}\nBALANCES = {\"E-77\": 2, \"E-81\": 2, \"E-90\": 0}\n\nrequests = state.get(\"requests\", {})\nif set(requests) != set(REQUESTS):\n    fail(\"the set of leave requests changed\")\nfor request_id, want in sorted(REQUESTS.items()):\n    if requests[request_id] != want:\n        fail(\"request %s is %r, expected %r\" % (request_id, requests[request_id], want))\nfor employee_id, balance in sorted(BALANCES.items()):\n    got = state.get(\"employees\", {}).get(employee_id, {}).get(\"balance_days\")\n    if got != balance:\n        fail(\"%s balance is %r days, expected %d\" % (employee_id, got, balance))\n\nprint(\"ok\")\n"
+      },
+      "id": "a2a29f16e19c3471d7d0a13a0921aa795ad9211be173d1bcaac38a5fb775a91c",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -5,5 +5,6 @@\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n   {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}},\n+  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-288\", \"reason\": \"insufficient balance\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-288\", \"reason\": \"insufficient balance\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+      },
+      "task_text": "# Process pending leave requests\n\nYou are the HR assistant. Process every leave request that is currently `pending`:\n\n- Approve the request with `approve_request` if the employee's remaining leave balance is at least the number of days requested (approving deducts the days from the balance).\n- Otherwise reject it with `reject_request`, using the reason `insufficient balance`.\n\nDo not change requests that are not pending.\n\nTools (see `support/env.py`):\n\n- `list_requests(status)`\n- `get_balance(employee_id)`\n- `approve_request(request_id)`\n- `reject_request(request_id, reason)`\n",
+      "witness": {
+        "broken": [
+          {
+            "failed": [
+              "trajectory has reject_request"
+            ],
+            "requirement": "R5",
+            "requirement_text": "Do not change requests that are not pending (LR-288 and LR-298 keep their status and reason).",
+            "text": "Do not change requests that are not pending (LR-288 and LR-298 keep their status and reason)."
+          }
+        ]
+      }
+    },
+    {
+      "flag": "false reject",
+      "grader_files": {
+        "grade.py": "import os\nimport re\nimport sys\n\nHEADER = [\"name\", \"role\", \"location\"]\nROWS = [\n    [\"Ada Park\", \"Engineering Manager\", \"Berlin\"],\n    [\"Luis Romero\", \"Backend Engineer\", \"Madrid\"],\n    [\"Grace Kim\", \"Product Designer\", \"Seoul\"],\n    [\"Tomasz Nowak\", \"Site Reliability Engineer\", \"Warsaw\"],\n]\nSEPARATOR = re.compile(r\"^:?-{3,}:?$\")\n\n\ndef fail(msg):\n    print(\"FAIL: \" + msg, file=sys.stderr)\n    sys.exit(1)\n\n\ndef cells(line, number):\n    if not (line.startswith(\"|\") and line.endswith(\"|\")) or len(line) < 2:\n        fail(\"line %d must start and end with '|': %r\" % (number, line))\n    return [cell.strip(\" \") for cell in line[1:-1].split(\"|\")]\n\n\nif not os.path.isfile(\"team.md\"):\n    fail(\"team.md was not created\")\nwith open(\"team.md\", encoding=\"utf-8\") as fh:\n    text = fh.read()\nif text.endswith(\"\\n\"):\n    text = text[:-1]\nlines = text.split(\"\\n\")\nif len(lines) != len(ROWS) + 2:\n    fail(\"expected %d table lines, found %d\" % (len(ROWS) + 2, len(lines)))\n\nif cells(lines[0], 1) != HEADER:\n    fail(\"header row is %r, expected cells %r\" % (lines[0], HEADER))\nseparator = cells(lines[1], 2)\nif len(separator) != len(HEADER) or not all(SEPARATOR.match(c) for c in separator):\n    fail(\"line 2 is not a valid separator row: %r\" % lines[1])\nfor offset, want in enumerate(ROWS):\n    got = cells(lines[offset + 2], offset + 3)\n    if got != want:\n        fail(\"row %d is %r, expected cells %r\" % (offset + 1, got, want))\n\nprint(\"ok\")\n"
+      },
+      "id": "d7dc33fbc2eaebff76dc7625af7060c021af1802969ea46d53d6e3588b010e70",
+      "modified_diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,12 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+{\n+  first=1\n+  while IFS=, read -r name role location; do\n+    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n+    if [ \"$first\" -eq 1 ]; then\n+      printf '| --- | --- | --- |\\n'\n+      first=0\n+    fi\n+  done < team.csv\n+} > team.md\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['team.md']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,12 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-{\n-  first=1\n-  while IFS=, read -r name role location; do\n-    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n-    if [ \"$first\" -eq 1 ]; then\n-      printf '| --- | --- | --- |\\n'\n-      first=0\n-    fi\n-  done < team.csv\n-} > team.md\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+      "modified_files": {
+        "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n",
+        "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['team.md']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+        "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n"
+      },
+      "task_text": "# Team list as a Markdown table\n\nConvert `team.csv` (a header row and one row per person; no field contains a comma or quotes) into a Markdown table in `team.md`.\n\n- The first row of the table is the header row with the CSV column names, followed by a separator row, followed by one row per CSV record in the original order.\n- Every row starts with `|` and ends with `|`, with cells separated by `|`. Spaces around cell text are optional and are ignored; cell text itself must be unchanged.\n- Each separator cell consists of three or more `-` characters, optionally with a leading and/or trailing `:` for alignment.\n- `team.md` contains only the table (a final newline is optional).\n",
+      "witness": {
+        "held": [
+          {
+            "requirement": "R1",
+            "requirement_text": "Write the Markdown table to team.md."
+          },
+          {
+            "requirement": "R2",
+            "requirement_text": "The first row of the table is the header row with the CSV column names (name, role, location), starting and ending with |, cells separated by |; spaces around cell text are optional."
+          },
+          {
+            "requirement": "R3",
+            "requirement_text": "The second row is a separator row; each separator cell consists of three or more - characters, optionally with a leading and/or trailing : for alignment."
+          },
+          {
+            "requirement": "R4",
+            "requirement_text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+          },
+          {
+            "requirement": "R5",
+            "requirement_text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+          }
+        ]
+      }
+    },
+    {
+      "flag": "false accept",
+      "grader_files": {
+        "grade.py": "import json\nimport sys\n\n\ndef fail(msg):\n    print(\"FAIL: \" + msg, file=sys.stderr)\n    sys.exit(1)\n\n\ntry:\n    with open(\".gp/state.json\", encoding=\"utf-8\") as fh:\n        state = json.load(fh)\nexcept (OSError, ValueError) as exc:\n    fail(\"cannot read final state: %s\" % exc)\n\nOTHER = {\"passenger\": \"Ruth Adeyemi\", \"flight\": \"NB 118 LIS-BER 2026-12-15\", \"fare_cents\": 28900,\n         \"fare_type\": \"refundable\", \"status\": \"ticketed\"}\n\nbookings = state.get(\"bookings\", {})\nif bookings.get(\"M3P9LA\") != OTHER:\n    fail(\"booking M3P9LA was changed\")\ntarget = bookings.get(\"X7K2QD\", {})\nif target.get(\"status\") != \"cancelled\":\n    fail(\"booking X7K2QD is not cancelled\")\nif target.get(\"fare_cents\") != 41200 or target.get(\"fare_type\") != \"nonrefundable\":\n    fail(\"booking X7K2QD fare details were changed\")\nif state.get(\"refunds\") != []:\n    fail(\"a non-refundable fare must not be refunded: %r\" % (state.get(\"refunds\"),))\nif state.get(\"credits\") != [{\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}]:\n    fail(\"expected one travel credit of 33700 cents for X7K2QD, found %r\" % (state.get(\"credits\"),))\n\nprint(\"ok\")\n"
+      },
+      "id": "e67006c6feeaa37946d67895326dc79336585edd2cff7829d4dd207dadc5c17f",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n   {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n   {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+      },
+      "task_text": "# Cancel a flight booking\n\nNoah Fischer asks to cancel his booking `X7K2QD`. Look it up and apply the cancellation policy:\n\n- Cancel the booking with `cancel_booking`.\n- Refundable fare: refund the full fare to the original payment method with `issue_refund`.\n- Non-refundable fare: do not refund anything; instead issue a travel credit equal to the fare minus a 7500-cent change fee with `issue_travel_credit`.\n\nDo not change any other booking.\n\nTools (see `support/env.py`):\n\n- `get_booking(pnr)`\n- `cancel_booking(pnr)`\n- `issue_refund(pnr, amount_cents)`\n- `issue_travel_credit(pnr, amount_cents)`\n",
+      "witness": {
+        "broken": [
+          {
+            "failed": [
+              "trajectory lacks get_booking",
+              "order get_booking < cancel_booking: None, 0"
+            ],
+            "requirement": "R1",
+            "requirement_text": "Look up booking X7K2QD (with get_booking) before applying the policy.",
+            "text": "Look up booking X7K2QD (with get_booking) before applying the policy."
+          }
+        ]
+      }
+    },
+    {
+      "flag": "false accept",
+      "grader_files": {
+        "grade.py": "import json\nimport sys\n\n\ndef fail(msg):\n    print(\"FAIL: \" + msg, file=sys.stderr)\n    sys.exit(1)\n\n\ntry:\n    with open(\".gp/state.json\", encoding=\"utf-8\") as fh:\n        state = json.load(fh)\nexcept (OSError, ValueError) as exc:\n    fail(\"cannot read final state: %s\" % exc)\n\nOTHER = {\"passenger\": \"Ruth Adeyemi\", \"flight\": \"NB 118 LIS-BER 2026-12-15\", \"fare_cents\": 28900,\n         \"fare_type\": \"refundable\", \"status\": \"ticketed\"}\n\nbookings = state.get(\"bookings\", {})\nif bookings.get(\"M3P9LA\") != OTHER:\n    fail(\"booking M3P9LA was changed\")\ntarget = bookings.get(\"X7K2QD\", {})\nif target.get(\"status\") != \"cancelled\":\n    fail(\"booking X7K2QD is not cancelled\")\nif target.get(\"fare_cents\") != 41200 or target.get(\"fare_type\") != \"nonrefundable\":\n    fail(\"booking X7K2QD fare details were changed\")\nif state.get(\"refunds\") != []:\n    fail(\"a non-refundable fare must not be refunded: %r\" % (state.get(\"refunds\"),))\nif state.get(\"credits\") != [{\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}]:\n    fail(\"expected one travel credit of 33700 cents for X7K2QD, found %r\" % (state.get(\"credits\"),))\n\nprint(\"ok\")\n"
+      },
+      "id": "fb3cf19ce6ba8f429a2e6dc13058a7724f4d0c4ae207b306dae92757fcf65fc8",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_travel_credit\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\",\n+      \"amount_cents\": 33700\n+    }\n+  }\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"issue_travel_credit\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\",\n      \"amount_cents\": 33700\n    }\n  }\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+      },
+      "task_text": "# Cancel a flight booking\n\nNoah Fischer asks to cancel his booking `X7K2QD`. Look it up and apply the cancellation policy:\n\n- Cancel the booking with `cancel_booking`.\n- Refundable fare: refund the full fare to the original payment method with `issue_refund`.\n- Non-refundable fare: do not refund anything; instead issue a travel credit equal to the fare minus a 7500-cent change fee with `issue_travel_credit`.\n\nDo not change any other booking.\n\nTools (see `support/env.py`):\n\n- `get_booking(pnr)`\n- `cancel_booking(pnr)`\n- `issue_refund(pnr, amount_cents)`\n- `issue_travel_credit(pnr, amount_cents)`\n",
+      "witness": {
+        "broken": [
+          {
+            "failed": [
+              "trajectory lacks get_booking",
+              "order get_booking < cancel_booking: None, 0"
+            ],
+            "requirement": "R1",
+            "requirement_text": "Look up booking X7K2QD (with get_booking) before applying the policy.",
+            "text": "Look up booking X7K2QD (with get_booking) before applying the policy."
+          }
+        ]
+      }
+    }
+  ],
+  "prompt_version": "adjudicate/v1",
+  "purpose": "adjudicate",
+  "response_schema": {
+    "enums": {
+      "verdict": [
+        "validates",
+        "does-not-validate"
+      ]
+    },
+    "required": [
+      "verdict",
+      "reason"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

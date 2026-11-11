@@ -1,0 +1,1014 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port not in used:\n            return port\n    return None\n"
+  },
+  "probes": {
+   "5093482be60209ef": {
+    "ok": true,
+    "value": 7
+   },
+   "5694a3b1a5c503d7": {
+    "ok": true,
+    "value": 81
+   },
+   "5b658def66885039": {
+    "ok": true,
+    "value": 80
+   },
+   "6bab660237a76231": {
+    "ok": true,
+    "value": 2
+   },
+   "716441e33b8931ae": {
+    "ok": true,
+    "value": null
+   },
+   "7789b3c4a36f73bf": {
+    "ok": true,
+    "value": 81
+   },
+   "8ed8676e591aa675": {
+    "ok": true,
+    "value": null
+   },
+   "bf04d067dc529b01": {
+    "ok": true,
+    "value": 8003
+   },
+   "c8ddc18c0db8aaf3": {
+    "ok": true,
+    "value": 3
+   },
+   "d01a00384e541a5b": {
+    "ok": true,
+    "value": null
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "ports.py",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Provide a module `ports.py` with a function `pick_port(used, low, high)`."
+  },
+  {
+   "checks": [
+    {
+     "equals": 80,
+     "probe": {
+      "args": [
+       [
+        81
+       ],
+       80,
+       81
+      ],
+      "function": "pick_port",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 81,
+     "probe": {
+      "args": [
+       [
+        80
+       ],
+       80,
+       81
+      ],
+      "function": "pick_port",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 7,
+     "probe": {
+      "args": [
+       [],
+       7,
+       7
+      ],
+      "function": "pick_port",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 8003,
+     "probe": {
+      "args": [
+       [
+        8000,
+        8001,
+        8002
+       ],
+       8000,
+       8003
+      ],
+      "function": "pick_port",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Both ends of the range are included: a free port at `low` or at `high` must be found when it is the only free one."
+  },
+  {
+   "checks": [
+    {
+     "equals": 3,
+     "probe": {
+      "args": [
+       [
+        1,
+        2
+       ],
+       1,
+       3
+      ],
+      "function": "pick_port",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 2,
+     "probe": {
+      "args": [
+       [
+        1,
+        3
+       ],
+       1,
+       3
+      ],
+      "function": "pick_port",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": 81,
+     "probe": {
+      "args": [
+       [
+        22,
+        80,
+        443,
+        9999
+       ],
+       80,
+       81
+      ],
+      "function": "pick_port",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "The returned port is not in `used` and lies within the range, when a free port exists (only one free port, so the answer is unique)."
+  },
+  {
+   "checks": [
+    {
+     "equals": null,
+     "probe": {
+      "args": [
+       [
+        1,
+        2,
+        3
+       ],
+       1,
+       3
+      ],
+      "function": "pick_port",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": null,
+     "probe": {
+      "args": [
+       [
+        5
+       ],
+       5,
+       5
+      ],
+      "function": "pick_port",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": null,
+     "probe": {
+      "args": [
+       [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+       ],
+       2,
+       5
+      ],
+      "function": "pick_port",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "If every port in the range is taken, return `None`."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:port-allocator",
+ "task_hash": "8c3d7d63e3f17244d8e25ed2a031c0176ceeda76dc97195cbd71a862456f8be4",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,5 @@\n def pick_port(used, low, high):\n-    for port in range(low, high + 1):\n+    for port in range(low, (high) - (1)):\n         if port not in used:\n             return port\n     return None\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port in range(low, (high) - (1)):\n        if port not in used:\n            return port\n    return None\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "585c79a6b91f51ca4a6bd6bf3de797809408c2666f802ddef91e086de3490188",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: pick_port returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Search low through high inclusive: range(low, high-1) excludes high-1 and high, so a free port there is missed and None may be returned wrongly.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R2",
+      "text": "Both ends of the range are included: a free port at `low` or at `high` must be found when it is the only free one."
+     },
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R3",
+      "text": "The returned port is not in `used` and lies within the range, when a free port exists (only one free port, so the answer is unique)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "585c79a6b91f51ca4a6bd6bf3de797809408c2666f802ddef91e086de3490188"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,5 @@\n def pick_port(used, low, high):\n-    for port in range(low, high + 1):\n+    for port in range(low, high + 0):\n         if port not in used:\n             return port\n     return None\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 0):\n        if port not in used:\n            return port\n    return None\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "d98b354b995852b9c97b0be4dc40c016c39d84884b2a771b0c80ef26f229a86b",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: pick_port returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "high is included in the range: range(low, high + 0) excludes high, so a range whose only free port is high returns None, and low == high always returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R2",
+      "text": "Both ends of the range are included: a free port at `low` or at `high` must be found when it is the only free one."
+     },
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R3",
+      "text": "The returned port is not in `used` and lies within the range, when a free port exists (only one free port, so the answer is unique)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d98b354b995852b9c97b0be4dc40c016c39d84884b2a771b0c80ef26f229a86b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,5 @@\n def pick_port(used, low, high):\n-    for port in range(low, high + 1):\n+    for port in range(low, high + 2):\n         if port not in used:\n             return port\n     return None\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 2):\n        if port not in used:\n            return port\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "673d494574378a2ca3f1e768cfe1a5e866de43084cb94f5c61d0fb2f93f10a6a",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: pick_port returned 4",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "returned port must satisfy low <= p <= high: The range now includes high+1, which can be returned when the whole range is used, instead of None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "pick_port returned 4",
+       "pick_port returned 6"
+      ],
+      "requirement": "R4",
+      "text": "If every port in the range is taken, return `None`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "673d494574378a2ca3f1e768cfe1a5e866de43084cb94f5c61d0fb2f93f10a6a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,5 @@\n def pick_port(used, low, high):\n     for port in range(low, high + 1):\n-        if port not in used:\n+        if not (port not in used):\n             return port\n     return None\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if not (port not in used):\n            return port\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fd5ff9e166cfba15097ce2364e5b40ffba8ce5141797fb7772fd407d8a5898b4",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: pick_port returned 81",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return a port in range that is not in used: The condition is inverted, so it returns a used port or None when free ports exist.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "pick_port returned 81",
+       "pick_port returned 80",
+       "pick_port returned None",
+       "pick_port returned 8000"
+      ],
+      "requirement": "R2",
+      "text": "Both ends of the range are included: a free port at `low` or at `high` must be found when it is the only free one."
+     },
+     {
+      "failed": [
+       "pick_port returned 1",
+       "pick_port returned 1",
+       "pick_port returned 80"
+      ],
+      "requirement": "R3",
+      "text": "The returned port is not in `used` and lies within the range, when a free port exists (only one free port, so the answer is unique)."
+     },
+     {
+      "failed": [
+       "pick_port returned 1",
+       "pick_port returned 5",
+       "pick_port returned 2"
+      ],
+      "requirement": "R4",
+      "text": "If every port in the range is taken, return `None`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fd5ff9e166cfba15097ce2364e5b40ffba8ce5141797fb7772fd407d8a5898b4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,5 @@\n def pick_port(used, low, high):\n-    for port in range(low, high + 1):\n+    for port in list(range(low, high + 1))[:-1]:\n         if port not in used:\n             return port\n     return None\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port in list(range(low, high + 1))[:-1]:\n        if port not in used:\n            return port\n    return None\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "fa4a30656076e41290e3b52cff49718ec2b00dd5b6d9f1bf346ad7d4bb7b69e0",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: pick_port returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Include high in the allowed range: The range excludes port high, so it returns None when only high is free.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R2",
+      "text": "Both ends of the range are included: a free port at `low` or at `high` must be found when it is the only free one."
+     },
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R3",
+      "text": "The returned port is not in `used` and lies within the range, when a free port exists (only one free port, so the answer is unique)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fa4a30656076e41290e3b52cff49718ec2b00dd5b6d9f1bf346ad7d4bb7b69e0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,5 @@\n def pick_port(used, low, high):\n-    for port in range(low, high + 1):\n-        if port not in used:\n-            return port\n+    for port_gp in range(low, high + 1):\n+        if port_gp not in used:\n+            return port_gp\n     return None\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port_gp in range(low, high + 1):\n        if port_gp not in used:\n            return port_gp\n    return None\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ff77c45c4caec6d2d83b8b47f86d580a3a8ac5c74a171d7fc655865bfe2f709e",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only a local variable was renamed; behaviour is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ff77c45c4caec6d2d83b8b47f86d580a3a8ac5c74a171d7fc655865bfe2f709e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,5 @@\n def pick_port(used, low, high):\n     for port in range(low, high + 1):\n         if port not in used:\n-            return port\n+            return None\n     return None\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port not in used:\n            return None\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2e185b9aa9a7b199422c43049080c531eccacd0a6dc667d94b0e1d9368b55024",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: pick_port returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return a free port in the range: It returns None even when a free port exists.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R2",
+      "text": "Both ends of the range are included: a free port at `low` or at `high` must be found when it is the only free one."
+     },
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R3",
+      "text": "The returned port is not in `used` and lies within the range, when a free port exists (only one free port, so the answer is unique)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2e185b9aa9a7b199422c43049080c531eccacd0a6dc667d94b0e1d9368b55024"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,3 @@\n def pick_port(used, low, high):\n-    for port in range(low, high + 1):\n-        if port not in used:\n-            return port\n+    pass\n     return None\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    pass\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2472e2db775ef461166e5cf877e850d75207aedb1b55526b008a93b23dc7f662",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: pick_port returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return a free port in the range when one exists: The function always returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R2",
+      "text": "Both ends of the range are included: a free port at `low` or at `high` must be found when it is the only free one."
+     },
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R3",
+      "text": "The returned port is not in `used` and lies within the range, when a free port exists (only one free port, so the answer is unique)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2472e2db775ef461166e5cf877e850d75207aedb1b55526b008a93b23dc7f662"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,4 @@\n def pick_port(used, low, high):\n     for port in range(low, high + 1):\n-        if port not in used:\n-            return port\n+        pass\n     return None\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        pass\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9056323b5ed6aca85d216bb3b028f5e448b980aaea21236d243c74c28b8c5f28",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: pick_port returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return a free port in the range: The function always returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R2",
+      "text": "Both ends of the range are included: a free port at `low` or at `high` must be found when it is the only free one."
+     },
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R3",
+      "text": "The returned port is not in `used` and lies within the range, when a free port exists (only one free port, so the answer is unique)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9056323b5ed6aca85d216bb3b028f5e448b980aaea21236d243c74c28b8c5f28"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,5 @@\n def pick_port(used, low, high):\n     for port in range(low, high + 1):\n         if port not in used:\n-            return port\n+            pass\n     return None\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port not in used:\n            pass\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c5d9d07318625ef9be8de74944b0deea8a29da69aee2df3c543258483e39c0c3",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: pick_port returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return a free port in the range: The return was replaced with pass, so the function always returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R2",
+      "text": "Both ends of the range are included: a free port at `low` or at `high` must be found when it is the only free one."
+     },
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R3",
+      "text": "The returned port is not in `used` and lies within the range, when a free port exists (only one free port, so the answer is unique)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c5d9d07318625ef9be8de74944b0deea8a29da69aee2df3c543258483e39c0c3"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -2,4 +2,4 @@\n     for port in range(low, high + 1):\n         if port not in used:\n             return port\n-    return None\n+    pass\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port not in used:\n            return port\n    pass\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "fd3bb49316cf9fa76005807e49d073efe7b6c0b0ea1e23280084f8842095e3ae",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "port-allocator",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Falling through with pass returns None implicitly, which is identical to the explicit return None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,5 @@\n def pick_port(used, low, high):\n-    for port in range(low, high + 1):\n+    for port in range(low, high):\n         if port not in used:\n             return port\n     return None\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high):\n        if port not in used:\n            return port\n    return None\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "62b887a65a66ba3617c85df21f954264dc6e719ce988de2274f84985ef790de0",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: pick_port returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Both ends of the range are included: high is excluded, so it returns None when only high is free.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R2",
+      "text": "Both ends of the range are included: a free port at `low` or at `high` must be found when it is the only free one."
+     },
+     {
+      "failed": [
+       "pick_port returned None",
+       "pick_port returned None"
+      ],
+      "requirement": "R3",
+      "text": "The returned port is not in `used` and lies within the range, when a free port exists (only one free port, so the answer is unique)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "62b887a65a66ba3617c85df21f954264dc6e719ce988de2274f84985ef790de0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -2,4 +2,4 @@\n     for port in range(low, high + 1):\n         if port not in used:\n             return port\n-    return None\n+    return high\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port not in used:\n            return port\n    return high\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e373e21bf6ae6ea5b0314bc8c237a7544721a8e9c0c42a3b5ad4207f0b1fde79",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: pick_port returned 3",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return None if every port in the range is taken: It returns high, a taken port, when the range is full.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "pick_port returned 3",
+       "pick_port returned 5",
+       "pick_port returned 5"
+      ],
+      "requirement": "R4",
+      "text": "If every port in the range is taken, return `None`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e373e21bf6ae6ea5b0314bc8c237a7544721a8e9c0c42a3b5ad4207f0b1fde79"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,5 @@\n def pick_port(used, low, high):\n-    for port in range(low, high + 1):\n+    for port in range(high, low - 1, -1):\n         if port not in used:\n             return port\n     return None\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    for port in range(high, low - 1, -1):\n        if port not in used:\n            return port\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false,
+    false,
+    false
+   ],
+   "id": "afb4716c0962317f62a3a927125a139278d286d7b1e4e96f9aa69270f5552c07",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Scanning from high to low still returns a free port in range or None, and any free port is acceptable.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "afb4716c0962317f62a3a927125a139278d286d7b1e4e96f9aa69270f5552c07"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,5 @@\n def pick_port(used, low, high):\n-    for port in range(low, high + 1):\n-        if port not in used:\n-            return port\n-    return None\n+    free = set(range(low, high + 1)) - set(used)\n+    if not free:\n+        return None\n+    return min(free)\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    free = set(range(low, high + 1)) - set(used)\n    if not free:\n        return None\n    return min(free)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "2645448a35d0ce4dfdb1450441028c84d3761389c2c01e81f03b8b74cea36085",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It returns the minimum free port in range or None, which satisfies the 'any free port' requirement.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "2645448a35d0ce4dfdb1450441028c84d3761389c2c01e81f03b8b74cea36085"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,2 @@\n def pick_port(used, low, high):\n-    for port in range(low, high + 1):\n-        if port not in used:\n-            return port\n-    return None\n+    return next((p for p in range(low, high + 1) if p not in used), None)\n",
+   "files": {
+    "ports.py": "def pick_port(used, low, high):\n    return next((p for p in range(low, high + 1) if p not in used), None)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "177e3c6df0153b67a48f722e55886d9b1e61191f63f4d0c40848da4141b69d05",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "port-allocator",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Same first-free-port logic written with next() over a generator.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "177e3c6df0153b67a48f722e55886d9b1e61191f63f4d0c40848da4141b69d05"
+   }
+  }
+ ]
+}

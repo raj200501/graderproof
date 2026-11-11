@@ -1,0 +1,1485 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "messages": {
+    "M-01": {
+     "archived": false,
+     "from": "ops@contoso.example",
+     "labels": [],
+     "subject": "Server maintenance window"
+    },
+    "M-02": {
+     "archived": true,
+     "from": "billing@northwind.example",
+     "labels": [
+      "invoices"
+     ],
+     "subject": "Invoice INV-2207"
+    },
+    "M-03": {
+     "archived": false,
+     "from": "lena.ortiz@example.com",
+     "labels": [
+      "budget"
+     ],
+     "subject": "Re: Q4 budget"
+    },
+    "M-04": {
+     "archived": true,
+     "from": "billing@northwind.example",
+     "labels": [
+      "vendors",
+      "invoices"
+     ],
+     "subject": "Payment received, thank you"
+    },
+    "M-05": {
+     "archived": false,
+     "from": "billing@northwind-example.com",
+     "labels": [],
+     "subject": "URGENT: update payment details"
+    },
+    "M-06": {
+     "archived": true,
+     "from": "noreply@fabrikam.example",
+     "labels": [],
+     "subject": "Your statement is ready"
+    },
+    "M-07": {
+     "archived": true,
+     "from": "billing@northwind.example",
+     "labels": [
+      "invoices"
+     ],
+     "subject": "Invoice INV-2231"
+    },
+    "M-08": {
+     "archived": false,
+     "from": "accounts@northwind.example",
+     "labels": [],
+     "subject": "New account manager"
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {},
+    "result": {
+     "messages": {
+      "M-01": {
+       "archived": false,
+       "from": "ops@contoso.example",
+       "labels": [],
+       "subject": "Server maintenance window"
+      },
+      "M-02": {
+       "archived": false,
+       "from": "billing@northwind.example",
+       "labels": [],
+       "subject": "Invoice INV-2207"
+      },
+      "M-03": {
+       "archived": false,
+       "from": "lena.ortiz@example.com",
+       "labels": [
+        "budget"
+       ],
+       "subject": "Re: Q4 budget"
+      },
+      "M-04": {
+       "archived": false,
+       "from": "billing@northwind.example",
+       "labels": [
+        "vendors"
+       ],
+       "subject": "Payment received, thank you"
+      },
+      "M-05": {
+       "archived": false,
+       "from": "billing@northwind-example.com",
+       "labels": [],
+       "subject": "URGENT: update payment details"
+      },
+      "M-06": {
+       "archived": true,
+       "from": "noreply@fabrikam.example",
+       "labels": [],
+       "subject": "Your statement is ready"
+      },
+      "M-07": {
+       "archived": false,
+       "from": "billing@northwind.example",
+       "labels": [],
+       "subject": "Invoice INV-2231"
+      },
+      "M-08": {
+       "archived": false,
+       "from": "accounts@northwind.example",
+       "labels": [],
+       "subject": "New account manager"
+      }
+     },
+     "ok": true
+    },
+    "tool": "list_messages"
+   },
+   {
+    "args": {
+     "label": "invoices",
+     "message_id": "M-02"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "add_label"
+   },
+   {
+    "args": {
+     "message_id": "M-02"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "archive"
+   },
+   {
+    "args": {
+     "label": "invoices",
+     "message_id": "M-04"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "add_label"
+   },
+   {
+    "args": {
+     "message_id": "M-04"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "archive"
+   },
+   {
+    "args": {
+     "label": "invoices",
+     "message_id": "M-07"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "add_label"
+   },
+   {
+    "args": {
+     "message_id": "M-07"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "archive"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "equals": [
+      "invoices"
+     ],
+     "pointer": "/messages/M-02/labels",
+     "type": "state_equals"
+    },
+    {
+     "equals": [
+      "vendors",
+      "invoices"
+     ],
+     "pointer": "/messages/M-04/labels",
+     "type": "state_equals"
+    },
+    {
+     "equals": [
+      "invoices"
+     ],
+     "pointer": "/messages/M-07/labels",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Apply the label invoices to every message whose sender is exactly billing@northwind.example (M-02, M-04, M-07)."
+  },
+  {
+   "checks": [
+    {
+     "equals": true,
+     "pointer": "/messages/M-02/archived",
+     "type": "state_equals"
+    },
+    {
+     "equals": true,
+     "pointer": "/messages/M-04/archived",
+     "type": "state_equals"
+    },
+    {
+     "equals": true,
+     "pointer": "/messages/M-07/archived",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Archive each of those messages."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "archived": false,
+      "from": "ops@contoso.example",
+      "labels": [],
+      "subject": "Server maintenance window"
+     },
+     "pointer": "/messages/M-01",
+     "type": "state_equals"
+    },
+    {
+     "equals": {
+      "archived": false,
+      "from": "lena.ortiz@example.com",
+      "labels": [
+       "budget"
+      ],
+      "subject": "Re: Q4 budget"
+     },
+     "pointer": "/messages/M-03",
+     "type": "state_equals"
+    },
+    {
+     "equals": {
+      "archived": false,
+      "from": "billing@northwind-example.com",
+      "labels": [],
+      "subject": "URGENT: update payment details"
+     },
+     "pointer": "/messages/M-05",
+     "type": "state_equals"
+    },
+    {
+     "equals": {
+      "archived": true,
+      "from": "noreply@fabrikam.example",
+      "labels": [],
+      "subject": "Your statement is ready"
+     },
+     "pointer": "/messages/M-06",
+     "type": "state_equals"
+    },
+    {
+     "equals": {
+      "archived": false,
+      "from": "accounts@northwind.example",
+      "labels": [],
+      "subject": "New account manager"
+     },
+     "pointer": "/messages/M-08",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "message_id": "M-05"
+     },
+     "tool": "add_label",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "message_id": "M-05"
+     },
+     "tool": "archive",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "message_id": "M-08"
+     },
+     "tool": "add_label",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "message_id": "M-08"
+     },
+     "tool": "archive",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Do not label, archive, or otherwise change any other message, including the look-alike sender billing@northwind-example.com and accounts@northwind.example."
+  },
+  {
+   "checks": [
+    {
+     "args": {},
+     "tool": "remove_label",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": "vendors",
+     "pointer": "/messages/M-04/labels/0",
+     "type": "state_equals"
+    },
+    {
+     "equals": [
+      "budget"
+     ],
+     "pointer": "/messages/M-03/labels",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Do not remove existing labels (M-04 keeps vendors, M-03 keeps budget)."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "label": "invoices",
+      "message_id": "M-02"
+     },
+     "tool": "add_label",
+     "type": "trajectory_includes"
+    },
+    {
+     "args": {
+      "message_id": "M-02"
+     },
+     "tool": "archive",
+     "type": "trajectory_includes"
+    },
+    {
+     "args": {
+      "label": "invoices",
+      "message_id": "M-04"
+     },
+     "tool": "add_label",
+     "type": "trajectory_includes"
+    },
+    {
+     "args": {
+      "message_id": "M-04"
+     },
+     "tool": "archive",
+     "type": "trajectory_includes"
+    },
+    {
+     "args": {
+      "label": "invoices",
+      "message_id": "M-07"
+     },
+     "tool": "add_label",
+     "type": "trajectory_includes"
+    },
+    {
+     "args": {
+      "message_id": "M-07"
+     },
+     "tool": "archive",
+     "type": "trajectory_includes"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "The agent actually uses the tools to label and archive the target messages."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:inbox-triage",
+ "task_hash": "59b064eebb4490fcc2d0857ec54a3ef2e22fa29decad603c6cbbf8b564cb3962",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,49 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f3bda1732096f312f5e96dbc90cdde68f9e2836f3afc429cf7098c1add3f8db2",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A duplicated read-only list_messages call changes no state; the same labels and archives are applied.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "f3bda1732096f312f5e96dbc90cdde68f9e2836f3afc429cf7098c1add3f8db2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices-x\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "04aef4b8a0debd6381d560eea23346884901c3cc0bcfbb63a30f2313ff435b92",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /messages/M-02/labels = ['invoices-x']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Apply the label invoices to every billing message: M-02 receives the label invoices-x instead of invoices.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-02/labels = ['invoices-x']"
+      ],
+      "requirement": "R1",
+      "text": "Apply the label invoices to every message whose sender is exactly billing@northwind.example (M-02, M-04, M-07)."
+     },
+     {
+      "failed": [
+       "trajectory lacks add_label"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "04aef4b8a0debd6381d560eea23346884901c3cc0bcfbb63a30f2313ff435b92"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02-x\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02-x\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "20ec3c5fd231caa034cfb8639e56e5e0fb0f3e7db4744ccf4d41578e805708c0",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /messages/M-02/labels = []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Label every message from billing@northwind.example with invoices: add_label targets M-02-x, so M-02 is never labeled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-02/labels = []"
+      ],
+      "requirement": "R1",
+      "text": "Apply the label invoices to every message whose sender is exactly billing@northwind.example (M-02, M-04, M-07)."
+     },
+     {
+      "failed": [
+       "trajectory lacks add_label"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "20ec3c5fd231caa034cfb8639e56e5e0fb0f3e7db4744ccf4d41578e805708c0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04-x\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "db92ca906a6073268e3c5fd03fc6ec82b346323ed8740515f1a6544867d8eb6b",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /messages/M-04/archived = False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Archive every message from billing@northwind.example: M-04 is archived with id M-04-x, so M-04 is not archived.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-04/archived = False"
+      ],
+      "requirement": "R2",
+      "text": "Archive each of those messages."
+     },
+     {
+      "failed": [
+       "trajectory lacks archive"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "db92ca906a6073268e3c5fd03fc6ec82b346323ed8740515f1a6544867d8eb6b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices-x\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "640ab02f4b5817c7023c1b4f4a850bed2c40fe2b01ad946b2af2ae0c0dbf9de3",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /messages/M-07/labels = ['invoices-x']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "apply label invoices to every billing message: M-07 is labeled invoices-x instead of invoices.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-07/labels = ['invoices-x']"
+      ],
+      "requirement": "R1",
+      "text": "Apply the label invoices to every message whose sender is exactly billing@northwind.example (M-02, M-04, M-07)."
+     },
+     {
+      "failed": [
+       "trajectory lacks add_label"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "640ab02f4b5817c7023c1b4f4a850bed2c40fe2b01ad946b2af2ae0c0dbf9de3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07-x\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07-x\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f97c703a2ee5eed8a1e03af54d300fc944e5954c38b46cd999d0b72d5f477ba7",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /messages/M-07/labels = []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Label every invoice message from billing@northwind.example: add_label is applied to message 'M-07-x' instead of M-07, so M-07 is archived but not labeled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-07/labels = []"
+      ],
+      "requirement": "R1",
+      "text": "Apply the label invoices to every message whose sender is exactly billing@northwind.example (M-02, M-04, M-07)."
+     },
+     {
+      "failed": [
+       "trajectory lacks add_label"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f97c703a2ee5eed8a1e03af54d300fc944e5954c38b46cd999d0b72d5f477ba7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "db13ea3ae164ced1f8003d626d6268c01ed344ba403a2e999c8dd023b37af14a",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /messages/M-07/archived = False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Archive every message from billing@northwind.example: M-07 is archived with id M-07-x, so M-07 is not archived.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-07/archived = False"
+      ],
+      "requirement": "R2",
+      "text": "Archive each of those messages."
+     },
+     {
+      "failed": [
+       "trajectory lacks archive"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "db13ea3ae164ced1f8003d626d6268c01ed344ba403a2e999c8dd023b37af14a"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,41 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c37d35c558b17513dd4836953c130bea3790a8745d8e12c7bbccb633430eea4c",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "inbox-triage",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It still labels and archives exactly the three billing messages, and the list call is not required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,38 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4de1d26ceb52279dd9efdcd29a5f8b5aa6fec3eb4ad6bf028199e534d9e5aeb6",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /messages/M-02/labels = []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "label every message from billing@northwind.example with invoices: M-02 is archived but never labeled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-02/labels = []"
+      ],
+      "requirement": "R1",
+      "text": "Apply the label invoices to every message whose sender is exactly billing@northwind.example (M-02, M-04, M-07)."
+     },
+     {
+      "failed": [
+       "trajectory lacks add_label"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4de1d26ceb52279dd9efdcd29a5f8b5aa6fec3eb4ad6bf028199e534d9e5aeb6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,38 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "57fb1e359cc479231bd3ce1367144aef72eb90eaa3d325f4abfc0c7bb06a22ae",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /messages/M-04/labels = ['vendors']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Label every billing message invoices: M-04 is archived but never labeled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-04/labels = ['vendors']"
+      ],
+      "requirement": "R1",
+      "text": "Apply the label invoices to every message whose sender is exactly billing@northwind.example (M-02, M-04, M-07)."
+     },
+     {
+      "failed": [
+       "trajectory lacks add_label"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "57fb1e359cc479231bd3ce1367144aef72eb90eaa3d325f4abfc0c7bb06a22ae"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,39 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a8053150f48efe4072b500e8e52ace9976ab8e8ad2fcf3041fb09b69c69dac21",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /messages/M-04/archived = False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Archive every message from billing@northwind.example: The archive call for M-04 was dropped, so that message is labeled but not archived.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-04/archived = False"
+      ],
+      "requirement": "R2",
+      "text": "Archive each of those messages."
+     },
+     {
+      "failed": [
+       "trajectory lacks archive"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a8053150f48efe4072b500e8e52ace9976ab8e8ad2fcf3041fb09b69c69dac21"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,38 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "48e8fe16c3c9aeedeb947875c9eded159507f1132d2ac7c1653ba71b79edfd84",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /messages/M-07/labels = []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Label every billing message invoices: The add_label step for M-07 is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-07/labels = []"
+      ],
+      "requirement": "R1",
+      "text": "Apply the label invoices to every message whose sender is exactly billing@northwind.example (M-02, M-04, M-07)."
+     },
+     {
+      "failed": [
+       "trajectory lacks add_label"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "48e8fe16c3c9aeedeb947875c9eded159507f1132d2ac7c1653ba71b79edfd84"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,39 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "54cac55ab34bdd66cea32d7477f37932382787b3dfec26c6a967be0c9807f8b9",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /messages/M-07/archived = False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Archive each invoice message: M-07 is labeled but never archived.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-07/archived = False"
+      ],
+      "requirement": "R2",
+      "text": "Archive each of those messages."
+     },
+     {
+      "failed": [
+       "trajectory lacks archive"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "54cac55ab34bdd66cea32d7477f37932382787b3dfec26c6a967be0c9807f8b9"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "e71050704fe8228ec7805aacd02addb065e0547426d4c85403ae89c785dfda9b",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "inbox-triage",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "M-02 is archived before being labelled, but the task sets no order, and all three invoice messages end up labelled and archived.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f64012c2c5bbd769a815af0cd6ba71797c1fc8c276f26b23a61bb5cb377bb0f0",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "inbox-triage",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same messages are labeled and archived; only formatting and the relative order of per-message calls changed, which the task does not constrain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "9f1ee3122bd628166926ed44c118b65d02bd094edeffcf696149c3421df37ab9",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "inbox-triage",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same messages are labeled and archived with the same labels, and the task does not specify the order of label and archive.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a8edbd8efd5bb57a015890063692c13fd6c7948d6700e0077d924e9a38fc29fc",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The add_label for M-02 is only moved before list_messages; the same set of labels and archives results.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "a8edbd8efd5bb57a015890063692c13fd6c7948d6700e0077d924e9a38fc29fc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "6f6f624f3602c82bd4aa60eaf686be99ec64c5399bc827eee1fe10ff736e1c24",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same three messages are labeled and archived, only the interleaving order changed, and the task states no ordering.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "6f6f624f3602c82bd4aa60eaf686be99ec64c5399bc827eee1fe10ff736e1c24"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,45 @@\n [\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n+  {\n+    \"tool\": \"list_messages\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-02\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-02\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-04\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"add_label\",\n+    \"args\": {\n+      \"message_id\": \"M-07\",\n+      \"label\": \"invoices\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-04\"\n+    }\n+  },\n+  {\n+    \"tool\": \"archive\",\n+    \"args\": {\n+      \"message_id\": \"M-07\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_messages\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-02\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-02\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-04\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"add_label\",\n    \"args\": {\n      \"message_id\": \"M-07\",\n      \"label\": \"invoices\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-04\"\n    }\n  },\n  {\n    \"tool\": \"archive\",\n    \"args\": {\n      \"message_id\": \"M-07\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "cbcb9a0f54053531a4ab48e9f9710225f05e75a572a4b30f3ec1627c17e5d388",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same labels and archives are applied to the same messages, only reordered, so the final state is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "cbcb9a0f54053531a4ab48e9f9710225f05e75a572a4b30f3ec1627c17e5d388"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -4,6 +4,5 @@\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "21e5cec552724abb5bc0b1caca15e5f27c11dc17e2d9b901bacc6a3a11207472",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /messages/M-07/labels = []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Label every message from billing@northwind.example with invoices: The label is not added to M-07, which is still archived.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-07/labels = []"
+      ],
+      "requirement": "R1",
+      "text": "Apply the label invoices to every message whose sender is exactly billing@northwind.example (M-02, M-04, M-07)."
+     },
+     {
+      "failed": [
+       "trajectory lacks add_label"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "21e5cec552724abb5bc0b1caca15e5f27c11dc17e2d9b901bacc6a3a11207472"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -3,7 +3,6 @@\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "31a43f26674412f9474b7dba1b9aa09a772b91fa8e9841a2fc55b70b339df7b5",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /messages/M-04/archived = False",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "archive every message from billing@northwind.example: M-04 is labeled but never archived.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-04/archived = False"
+      ],
+      "requirement": "R2",
+      "text": "Archive each of those messages."
+     },
+     {
+      "failed": [
+       "trajectory lacks archive"
+      ],
+      "requirement": "R5",
+      "text": "The agent actually uses the tools to label and archive the target messages."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "31a43f26674412f9474b7dba1b9aa09a772b91fa8e9841a2fc55b70b339df7b5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -2,6 +2,8 @@\n   {\"tool\": \"list_messages\", \"args\": {}},\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n+  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-03\", \"label\": \"invoices\"}},\n+  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-03\"}},\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-03\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-03\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b6cafb2b95f99c96d37b00cc7be7af6e69fde2fea6f072252e3e1dac603bdd2f",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: state /messages/M-03 = {'archived': True, 'from': 'lena.ortiz@example.com', 'labels': ['budget', 'invoices'], 'subject': 'Re: Q4 budget'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not label or archive any other message: It additionally labels and archives M-03, which the reference does not treat as a billing@northwind.example message.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-03 = {'archived': True, 'from': 'lena.ortiz@example.com', 'labels': ['budget', 'invoices'], 'subject': 'Re: Q4 budget'}"
+      ],
+      "requirement": "R3",
+      "text": "Do not label, archive, or otherwise change any other message, including the look-alike sender billing@northwind-example.com and accounts@northwind.example."
+     },
+     {
+      "failed": [
+       "state /messages/M-03/labels = ['budget', 'invoices']"
+      ],
+      "requirement": "R4",
+      "text": "Do not remove existing labels (M-04 keeps vendors, M-03 keeps budget)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b6cafb2b95f99c96d37b00cc7be7af6e69fde2fea6f072252e3e1dac603bdd2f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -3,6 +3,7 @@\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n+  {\"tool\": \"remove_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"vendors\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"remove_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"vendors\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8dc7a3b967f87bff58ec31557a45ea8f2a3af7fb7da44ff6809ee717a56d101c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /messages/M-04/labels = ['invoices']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "do not remove existing labels: It removes the vendors label from M-04.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /messages/M-04/labels = ['invoices']"
+      ],
+      "requirement": "R1",
+      "text": "Apply the label invoices to every message whose sender is exactly billing@northwind.example (M-02, M-04, M-07)."
+     },
+     {
+      "failed": [
+       "trajectory has remove_label",
+       "state /messages/M-04/labels/0 = 'invoices'"
+      ],
+      "requirement": "R4",
+      "text": "Do not remove existing labels (M-04 keeps vendors, M-03 keeps budget)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8dc7a3b967f87bff58ec31557a45ea8f2a3af7fb7da44ff6809ee717a56d101c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1,9 @@\n [\n   {\"tool\": \"list_messages\", \"args\": {}},\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n+  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n+  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ae61842ee0fabf1cf222b1e604a97e26c6017087efc3a4087e888f34f991220f",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same three messages are labeled and archived, only the interleaving of label and archive calls changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ae61842ee0fabf1cf222b1e604a97e26c6017087efc3a4087e888f34f991220f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,9 +1 @@\n-[\n-  {\"tool\": \"list_messages\", \"args\": {}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n-  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n-  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n-]\n+[{\"tool\":\"list_messages\",\"args\":{}},{\"tool\":\"archive\",\"args\":{\"message_id\":\"M-07\"}},{\"tool\":\"add_label\",\"args\":{\"message_id\":\"M-07\",\"label\":\"invoices\"}},{\"tool\":\"archive\",\"args\":{\"message_id\":\"M-04\"}},{\"tool\":\"add_label\",\"args\":{\"message_id\":\"M-04\",\"label\":\"invoices\"}},{\"tool\":\"archive\",\"args\":{\"message_id\":\"M-02\"}},{\"tool\":\"add_label\",\"args\":{\"message_id\":\"M-02\",\"label\":\"invoices\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"list_messages\",\"args\":{}},{\"tool\":\"archive\",\"args\":{\"message_id\":\"M-07\"}},{\"tool\":\"add_label\",\"args\":{\"message_id\":\"M-07\",\"label\":\"invoices\"}},{\"tool\":\"archive\",\"args\":{\"message_id\":\"M-04\"}},{\"tool\":\"add_label\",\"args\":{\"message_id\":\"M-04\",\"label\":\"invoices\"}},{\"tool\":\"archive\",\"args\":{\"message_id\":\"M-02\"}},{\"tool\":\"add_label\",\"args\":{\"message_id\":\"M-02\",\"label\":\"invoices\"}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c36b6be7b4483e56d902f5d01c6aeff890628499f6ccb85d02727a8c84f528f6",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "inbox-triage",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same three messages are still labeled and archived; only the order of the operations changed, which the task does not constrain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "c36b6be7b4483e56d902f5d01c6aeff890628499f6ccb85d02727a8c84f528f6"
+   }
+  }
+ ]
+}

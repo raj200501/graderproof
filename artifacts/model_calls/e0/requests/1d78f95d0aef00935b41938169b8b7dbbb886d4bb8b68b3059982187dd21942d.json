@@ -1,0 +1,409 @@
+{
+  "created_utc": "2026-11-04T02:29:00Z",
+  "hash": "1d78f95d0aef00935b41938169b8b7dbbb886d4bb8b68b3059982187dd21942d",
+  "instructions": "You turn a task's text into atomic, machine-checkable requirements. For each item you\nget the task text, the task kind, the reference solution (it satisfies the task), the\ninitial workspace, and what the reference produced (files, stdout, exit status, tool\ncalls, final state). You are not shown how the task is graded and must not guess.\n\nWrite one requirement per distinct obligation in the task text (outputs, their\ncontent, required steps, ordering constraints, prohibited actions, policies). Each\nrequirement has an \"id\" (R1, R2, ...), \"text\" (the obligation in plain words, quoting\nthe task where possible), and \"checks\": a list of typed checks that pass on the\nreference outcome and fail when the obligation is broken. Allowed check types and\nfields: file_exists {path}; file_absent {path}; file_equals {path, text, normalize:\nnone|strip|trailing_ws}; file_contains {path, text}; file_regex {path, pattern};\nfile_json {path, pointer, equals, lenient}; file_lines {path, count};\nstdout_contains {text}; stdout_regex {pattern}; stdout_json {pointer, equals,\nlenient}; exit_code {code}; call {probe: {function, args, kwargs}, equals} or\n{probe, matches_reference: true}; same_as_reference {target: stdout|state|file:<path>,\nnormalize}; trajectory_includes {tool, args}; trajectory_excludes {tool, args};\ntrajectory_before {first: {tool, args}, then: {tool, args}}; state_equals {pointer,\nequals}.\n\nBe exactly as strict as the task text. If the text demands an exact format, check it\nexactly; if it only asks for content, check content (use \"normalize\" or \"lenient\" so\nthat harmless formatting does not fail the check). For function tasks, add call\nprobes on the examples in the text and on a few further valid inputs, using\nmatches_reference for inputs whose expected output the text does not state. Return\nfor each item: {\"requirements\": [ ... ]}.\n",
+  "items": [
+    {
+      "id": "48291b01dda76eea6f86c94512002e448ec747fdd5920ee32a3c446e00381e93",
+      "initial_workspace": {
+        "chat.txt": "[09:14] Agent: Thanks for contacting Northwind support. Can I have the email on the account?\n[09:15] Customer: Sure, it's jamie.lee+orders@mailbox.example, or try jamie_lee@work-mail.example.org if that fails.\n[09:15] Agent: Thanks! I found the account under jamie.lee+orders@mailbox.example.\n[09:16] Customer: Great. Please don't write to old-address@example any more, that inbox is closed.\n[09:17] Agent: Noted. Replies come from support@northwind.example (or billing@northwind.example for invoices).\n[09:18] Customer: Perfect, thanks. My colleague (r.okafor@partner.example.co.uk) may also call.\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "chat.txt": "[09:14] Agent: Thanks for contacting Northwind support. Can I have the email on the account?\n[09:15] Customer: Sure, it's jamie.lee+orders@mailbox.example, or try jamie_lee@work-mail.example.org if that fails.\n[09:15] Agent: Thanks! I found the account under jamie.lee+orders@mailbox.example.\n[09:16] Customer: Great. Please don't write to old-address@example any more, that inbox is closed.\n[09:17] Agent: Noted. Replies come from support@northwind.example (or billing@northwind.example for invoices).\n[09:18] Customer: Perfect, thanks. My colleague (r.okafor@partner.example.co.uk) may also call.\n",
+          "chat_redacted.txt": "[09:14] Agent: Thanks for contacting Northwind support. Can I have the email on the account?\n[09:15] Customer: Sure, it's [email], or try [email] if that fails.\n[09:15] Agent: Thanks! I found the account under [email].\n[09:16] Customer: Great. Please don't write to old-address@example any more, that inbox is closed.\n[09:17] Agent: Noted. Replies come from [email] (or [email] for invoices).\n[09:18] Customer: Perfect, thanks. My colleague ([email]) may also call.\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "import re\n\nEMAIL = re.compile(r\"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)+\")\n\nwith open(\"chat.txt\", encoding=\"utf-8\", newline=\"\") as fh:\n    text = fh.read()\nwith open(\"chat_redacted.txt\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(EMAIL.sub(\"[email]\", text))\n"
+      },
+      "task_text": "# Redact email addresses from a support transcript\n\nBefore support transcripts are shared with the training team, email addresses must be removed. Read `chat.txt` and write `chat_redacted.txt`, which is identical except that every email address is replaced by `[email]`. Leave `chat.txt` unchanged.\n\nFor this task an email address is:\n\n- a local part of one or more characters, each a letter, digit, `.`, `_`, `%`, `+`, or `-`;\n- then `@`;\n- then a domain made of two or more labels separated by single dots, where each label is one or more letters, digits, or `-`.\n\nReplace the longest such match at each position. A dot that ends a sentence right after an address is not part of the address. Text such as `old-address@example`, whose domain has only one label, is not an email address and stays as it is.\n"
+    },
+    {
+      "id": "4a3b957bdc5240204aa71bcb07c93341dc47dacce349e739182411b1bdcf0b9f",
+      "initial_workspace": {
+        "logs/app.log": "2026-11-04 00:00:01 INFO rotate check\n2026-11-04 06:12:40 WARN slow query 2140 ms\n",
+        "logs/app.log.1": "2026-11-03 00:00:01 INFO rotate check\n2026-11-03 18:44:02 INFO deploy 4.12.0\n",
+        "logs/app.log.2": "2026-11-02 00:00:01 INFO rotate check\n",
+        "logs/app.log.3": "2026-11-01 00:00:01 INFO rotate check\n2026-11-01 13:05:55 ERROR payment gateway timeout\n",
+        "logs/audit.log": "2026-11-04 06:00:00 AUDIT admin login from 10.0.4.7\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "logs/app.log": "",
+          "logs/app.log.1": "2026-11-04 00:00:01 INFO rotate check\n2026-11-04 06:12:40 WARN slow query 2140 ms\n",
+          "logs/app.log.2": "2026-11-03 00:00:01 INFO rotate check\n2026-11-03 18:44:02 INFO deploy 4.12.0\n",
+          "logs/app.log.3": "2026-11-02 00:00:01 INFO rotate check\n",
+          "logs/audit.log": "2026-11-04 06:00:00 AUDIT admin login from 10.0.4.7\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n"
+      },
+      "task_text": "# Rotate the application log\n\n`logs/` contains the current log `app.log` and three older copies, `app.log.1` (newest) to `app.log.3` (oldest). Rotate the logs, keeping three old copies:\n\n1. Delete `app.log.3`.\n2. Rename `app.log.2` to `app.log.3`, then `app.log.1` to `app.log.2`, then `app.log` to `app.log.1`.\n3. Create a new, empty `app.log`.\n\nFile contents must not change during the renames. Other files in `logs/` must be left as they are.\n"
+    },
+    {
+      "id": "59b064eebb4490fcc2d0857ec54a3ef2e22fa29decad603c6cbbf8b564cb3962",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "messages": {
+            "M-01": {
+              "archived": false,
+              "from": "ops@contoso.example",
+              "labels": [],
+              "subject": "Server maintenance window"
+            },
+            "M-02": {
+              "archived": true,
+              "from": "billing@northwind.example",
+              "labels": [
+                "invoices"
+              ],
+              "subject": "Invoice INV-2207"
+            },
+            "M-03": {
+              "archived": false,
+              "from": "lena.ortiz@example.com",
+              "labels": [
+                "budget"
+              ],
+              "subject": "Re: Q4 budget"
+            },
+            "M-04": {
+              "archived": true,
+              "from": "billing@northwind.example",
+              "labels": [
+                "vendors",
+                "invoices"
+              ],
+              "subject": "Payment received, thank you"
+            },
+            "M-05": {
+              "archived": false,
+              "from": "billing@northwind-example.com",
+              "labels": [],
+              "subject": "URGENT: update payment details"
+            },
+            "M-06": {
+              "archived": true,
+              "from": "noreply@fabrikam.example",
+              "labels": [],
+              "subject": "Your statement is ready"
+            },
+            "M-07": {
+              "archived": true,
+              "from": "billing@northwind.example",
+              "labels": [
+                "invoices"
+              ],
+              "subject": "Invoice INV-2231"
+            },
+            "M-08": {
+              "archived": false,
+              "from": "accounts@northwind.example",
+              "labels": [],
+              "subject": "New account manager"
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {},
+            "result": {
+              "messages": {
+                "M-01": {
+                  "archived": false,
+                  "from": "ops@contoso.example",
+                  "labels": [],
+                  "subject": "Server maintenance window"
+                },
+                "M-02": {
+                  "archived": false,
+                  "from": "billing@northwind.example",
+                  "labels": [],
+                  "subject": "Invoice INV-2207"
+                },
+                "M-03": {
+                  "archived": false,
+                  "from": "lena.ortiz@example.com",
+                  "labels": [
+                    "budget"
+                  ],
+                  "subject": "Re: Q4 budget"
+                },
+                "M-04": {
+                  "archived": false,
+                  "from": "billing@northwind.example",
+                  "labels": [
+                    "vendors"
+                  ],
+                  "subject": "Payment received, thank you"
+                },
+                "M-05": {
+                  "archived": false,
+                  "from": "billing@northwind-example.com",
+                  "labels": [],
+                  "subject": "URGENT: update payment details"
+                },
+                "M-06": {
+                  "archived": true,
+                  "from": "noreply@fabrikam.example",
+                  "labels": [],
+                  "subject": "Your statement is ready"
+                },
+                "M-07": {
+                  "archived": false,
+                  "from": "billing@northwind.example",
+                  "labels": [],
+                  "subject": "Invoice INV-2231"
+                },
+                "M-08": {
+                  "archived": false,
+                  "from": "accounts@northwind.example",
+                  "labels": [],
+                  "subject": "New account manager"
+                }
+              },
+              "ok": true
+            },
+            "tool": "list_messages"
+          },
+          {
+            "args": {
+              "label": "invoices",
+              "message_id": "M-02"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "add_label"
+          },
+          {
+            "args": {
+              "message_id": "M-02"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "archive"
+          },
+          {
+            "args": {
+              "label": "invoices",
+              "message_id": "M-04"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "add_label"
+          },
+          {
+            "args": {
+              "message_id": "M-04"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "archive"
+          },
+          {
+            "args": {
+              "label": "invoices",
+              "message_id": "M-07"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "add_label"
+          },
+          {
+            "args": {
+              "message_id": "M-07"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "archive"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+      },
+      "task_text": "# Triage the shared inbox\n\nIn the finance team's shared inbox, apply the label `invoices` to every message whose sender is exactly `billing@northwind.example`, and archive each of those messages.\n\nDo not label, archive, or otherwise change any other message, and do not remove existing labels.\n\nTools (see `support/env.py`):\n\n- `list_messages()`\n- `add_label(message_id, label)`\n- `remove_label(message_id, label)`\n- `archive(message_id)`\n"
+    },
+    {
+      "id": "5ef4358f009839c1d392a236272c458c465faf5e9709f1482f68a80145cf87bf",
+      "initial_workspace": {
+        "products.csv": "sku,name,price,in_stock\nA-100,Desk Lamp,24.99,yes\nA-101,Monitor Stand,39.50,no\nB-200,USB-C Hub,18.00,yes\nB-201,\"Braided Cable, 2 m\",7.25,yes\nC-300,Ergonomic Chair,189.00,no\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "products.csv": "sku,name,price,in_stock\nA-100,Desk Lamp,24.99,yes\nA-101,Monitor Stand,39.50,no\nB-200,USB-C Hub,18.00,yes\nB-201,\"Braided Cable, 2 m\",7.25,yes\nC-300,Ergonomic Chair,189.00,no\n",
+          "products.json": "[\n  {\n    \"sku\": \"A-100\",\n    \"name\": \"Desk Lamp\",\n    \"price\": 24.99,\n    \"in_stock\": true\n  },\n  {\n    \"sku\": \"A-101\",\n    \"name\": \"Monitor Stand\",\n    \"price\": 39.5,\n    \"in_stock\": false\n  },\n  {\n    \"sku\": \"B-200\",\n    \"name\": \"USB-C Hub\",\n    \"price\": 18.0,\n    \"in_stock\": true\n  },\n  {\n    \"sku\": \"B-201\",\n    \"name\": \"Braided Cable, 2 m\",\n    \"price\": 7.25,\n    \"in_stock\": true\n  },\n  {\n    \"sku\": \"C-300\",\n    \"name\": \"Ergonomic Chair\",\n    \"price\": 189.0,\n    \"in_stock\": false\n  }\n]\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+      },
+      "task_text": "# Product catalog to JSON\n\nThe online shop exports its catalog as `products.csv` in the working directory. The new storefront needs the same data as JSON.\n\nWrite `products.json` in the working directory. It must contain a JSON array with one object per data row of `products.csv`, in the same order as the rows. Each object has exactly these four keys:\n\n- `sku`: the SKU, as a string, unchanged.\n- `name`: the product name, as a string, unchanged. The CSV uses standard quoting, so a quoted value such as `\"Braided Cable, 2 m\"` is a single field.\n- `price`: the price as a JSON number (for example `39.5` for `39.50`).\n- `in_stock`: `true` if the `in_stock` column is `yes`, `false` if it is `no`.\n\nIndentation, spacing, and the order of keys inside each object are up to you.\n"
+    },
+    {
+      "id": "603b70601045f508922412a469a233a11947cb6f35b334098ef30454b5226189",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+      },
+      "task_text": "# Human-readable file sizes\n\nWrite a Python module `sizes.py` with a function `format_size(n)` for the file browser, where `n` is a non-negative integer number of bytes.\n\n- If `n` is less than 1024, return the number followed by ` B`, for example `\"0 B\"` or `\"1023 B\"`.\n- Otherwise choose the largest unit among `KiB` (1024 bytes), `MiB` (1024\u00b2 bytes), `GiB` (1024\u00b3 bytes), and `TiB` (1024\u2074 bytes) that is not larger than `n`, divide `n` by it, and write the result with exactly one decimal place, a space, and the unit, for example `format_size(1536)` returns `\"1.5 KiB\"`. Sizes of 1024 TiB or more are still written in TiB.\n- Round to one decimal place with halves rounded up (1280 bytes is `\"1.3 KiB\"`). The unit is chosen before rounding, so 1048575 bytes is `\"1024.0 KiB\"`.\n"
+    },
+    {
+      "id": "659c9cc9425f157a5355d9525048c047193f6d27cc3ac5015fbc953c2a6648a7",
+      "initial_workspace": {
+        "commits.txt": "feat(search): add fuzzy matching for hotel names\nfix: handle an empty guest list in the booking form\ndocs: update API examples\nfeat: support waitlists for sold-out classes\nchore(deps): bump the HTTP client library\nfix(payments): round refunds to the cent\nrefactor: split the booking service module\nfeat!: drop the legacy v1 endpoints\nfixture: add sample data for demos\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "CHANGELOG.md": "## Features\n- add fuzzy matching for hotel names\n- support waitlists for sold-out classes\n- drop the legacy v1 endpoints\n\n## Fixes\n- handle an empty guest list in the booking form\n- round refunds to the cent\n",
+          "commits.txt": "feat(search): add fuzzy matching for hotel names\nfix: handle an empty guest list in the booking form\ndocs: update API examples\nfeat: support waitlists for sold-out classes\nchore(deps): bump the HTTP client library\nfix(payments): round refunds to the cent\nrefactor: split the booking service module\nfeat!: drop the legacy v1 endpoints\nfixture: add sample data for demos\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "import re\n\nSUBJECT = re.compile(r\"^([A-Za-z]+)(\\([^)]*\\))?!?: (.*)$\")\nsections = {\"feat\": [], \"fix\": []}\nwith open(\"commits.txt\", encoding=\"utf-8\") as fh:\n    for line in fh.read().split(\"\\n\"):\n        match = SUBJECT.match(line)\n        if match and match.group(1) in sections:\n            sections[match.group(1)].append(match.group(3))\n\nout = []\nfor kind, title in ((\"feat\", \"## Features\"), (\"fix\", \"## Fixes\")):\n    if sections[kind]:\n        out.append(title)\n        out.extend(\"- \" + description for description in sections[kind])\n        out.append(\"\")\nwith open(\"CHANGELOG.md\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+      },
+      "task_text": "# Build a changelog from commit subjects\n\n`commits.txt` lists the subjects of the commits in the next release, one per line, in the form `type(scope): description` or `type: description` (an optional `!` may follow the type or scope, as in `feat!:`).\n\nWrite `CHANGELOG.md`:\n\n- A commit's type is the text before the first `:`, without any `(scope)` part and without a trailing `!`. Its description is the text after the first `: `.\n- Write a line `## Features` followed by one line `- <description>` for every `feat` commit, then a line `## Fixes` followed by one line `- <description>` for every `fix` commit. Keep the order in which the commits appear in `commits.txt`.\n- Ignore commits of any other type. Leave out a section heading if the section would be empty.\n- Blank lines between or around these lines are optional; the file must contain no other text.\n"
+    },
+    {
+      "id": "665e7a352c7e64732dbf3c55aff71f9bb6a6269b62a4cd1be13866b8e89cfc0b",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "users": {
+            "U-7781": {
+              "department": "Analytics",
+              "display_name": "Maya R. Okafor",
+              "phone": "+1 312 555 0148",
+              "pronouns": "she/her",
+              "title": "Data Analyst"
+            },
+            "U-7790": {
+              "department": "Design",
+              "display_name": "Luis Ferreira",
+              "phone": "+1 312 555 0191",
+              "pronouns": "he/him",
+              "title": "Product Designer"
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "user_id": "U-7781"
+            },
+            "result": {
+              "ok": true,
+              "profile": {
+                "department": "Analytics",
+                "display_name": "MAYA OKAFOR",
+                "phone": "+1 312 555 0148",
+                "pronouns": "",
+                "title": "Data Analyst"
+              }
+            },
+            "tool": "get_profile"
+          },
+          {
+            "args": {
+              "field": "display_name",
+              "user_id": "U-7781",
+              "value": "Maya R. Okafor"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "update_profile"
+          },
+          {
+            "args": {
+              "field": "pronouns",
+              "user_id": "U-7781",
+              "value": "she/her"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "update_profile"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+      },
+      "task_text": "# Correct a staff directory profile\n\nHR forwarded a request from user `U-7781`: their name was entered in capitals and without their middle initial, and their pronouns are missing.\n\nUsing the directory tools, set the `display_name` of user `U-7781` to exactly `Maya R. Okafor` (with this capitalization, spacing, and punctuation) and set their `pronouns` to exactly `she/her`. Do not change any other field or any other user.\n\nTools (see `support/env.py`):\n\n- `get_profile(user_id)`\n- `update_profile(user_id, field, value)`, where `field` is one of `display_name`, `pronouns`, `title`, `phone`\n"
+    },
+    {
+      "id": "686a601b7d247fa7edce7b8afada3993b5588e4f5e9fca55b9efdb7054e62399",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "naming.py": "def _upper(ch):\n    return \"A\" <= ch <= \"Z\"\n\n\ndef _lower_or_digit(ch):\n    return \"a\" <= ch <= \"z\" or \"0\" <= ch <= \"9\"\n\n\ndef to_snake(name):\n    out = []\n    for i, ch in enumerate(name):\n        if i > 0 and _upper(ch):\n            prev = name[i - 1]\n            nxt = name[i + 1] if i + 1 < len(name) else \"\"\n            if _lower_or_digit(prev) or (_upper(prev) and \"a\" <= nxt <= \"z\" and nxt != \"\"):\n                out.append(\"_\")\n        out.append(ch.lower())\n    return \"\".join(out)\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "naming.py": "def _upper(ch):\n    return \"A\" <= ch <= \"Z\"\n\n\ndef _lower_or_digit(ch):\n    return \"a\" <= ch <= \"z\" or \"0\" <= ch <= \"9\"\n\n\ndef to_snake(name):\n    out = []\n    for i, ch in enumerate(name):\n        if i > 0 and _upper(ch):\n            prev = name[i - 1]\n            nxt = name[i + 1] if i + 1 < len(name) else \"\"\n            if _lower_or_digit(prev) or (_upper(prev) and \"a\" <= nxt <= \"z\" and nxt != \"\"):\n                out.append(\"_\")\n        out.append(ch.lower())\n    return \"\".join(out)\n"
+      },
+      "task_text": "# camelCase to snake_case\n\nWrite a Python module `naming.py` with a function `to_snake(name)` used when generating database column names. `name` is a non-empty identifier made of ASCII letters and digits, in camelCase or PascalCase, possibly containing acronyms.\n\n- Insert `_` before an uppercase letter whose previous character is a lowercase letter or a digit.\n- Also insert `_` before an uppercase letter that is preceded by an uppercase letter and followed by a lowercase letter (this separates an acronym from the next word).\n- Then convert the whole result to lowercase.\n\nExamples: `\"userId\"` gives `\"user_id\"`, `\"HTTPServer\"` gives `\"http_server\"`, and `\"getHTTPResponseCode\"` gives `\"get_http_response_code\"`.\n"
+    }
+  ],
+  "prompt_version": "requirements/v1",
+  "purpose": "requirements",
+  "response_schema": {
+    "required": [
+      "requirements"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

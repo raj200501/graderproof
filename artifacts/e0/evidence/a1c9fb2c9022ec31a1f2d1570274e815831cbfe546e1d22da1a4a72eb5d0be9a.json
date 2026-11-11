@@ -1,0 +1,888 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [
+  {
+   "checks": [
+    {
+     "path": "nginx.conf",
+     "text": "worker_connections 4096;",
+     "type": "file_contains"
+    },
+    {
+     "path": "nginx.conf",
+     "pattern": "\\A(?:(?!worker_connections 1024;).)*\\Z",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "In nginx.conf, change worker_connections 1024; to worker_connections 4096;."
+  },
+  {
+   "checks": [
+    {
+     "path": "nginx.conf",
+     "text": "keepalive_timeout 30;",
+     "type": "file_contains"
+    },
+    {
+     "path": "nginx.conf",
+     "pattern": "\\A(?:(?!keepalive_timeout 65;).)*\\Z",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "In nginx.conf, change keepalive_timeout 65; to keepalive_timeout 30;."
+  }
+ ],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "nginx.conf": "user www-data;\nworker_processes auto;\npid /run/nginx.pid;\n\nevents {\n    worker_connections 4096;\n    multi_accept on;\n}\n\nhttp {\n    sendfile on;\n    tcp_nopush on;\n    keepalive_timeout 30;\n    types_hash_max_size 2048;\n\n    include /etc/nginx/mime.types;\n    default_type application/octet-stream;\n\n    # Logging\n    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n\n    gzip on;\n\n    include /etc/nginx/conf.d/*.conf;\n}\n",
+   "nginx.conf.orig": "user www-data;\nworker_processes auto;\npid /run/nginx.pid;\n\nevents {\n    worker_connections 1024;\n    multi_accept on;\n}\n\nhttp {\n    sendfile on;\n    tcp_nopush on;\n    keepalive_timeout 65;\n    types_hash_max_size 2048;\n\n    include /etc/nginx/mime.types;\n    default_type application/octet-stream;\n\n    # Logging\n    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n\n    gzip on;\n\n    include /etc/nginx/conf.d/*.conf;\n}\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "nginx.conf.orig",
+     "type": "file_exists"
+    },
+    {
+     "normalize": "none",
+     "path": "nginx.conf.orig",
+     "text": "user www-data;\nworker_processes auto;\npid /run/nginx.pid;\n\nevents {\n    worker_connections 1024;\n    multi_accept on;\n}\n\nhttp {\n    sendfile on;\n    tcp_nopush on;\n    keepalive_timeout 65;\n    types_hash_max_size 2048;\n\n    include /etc/nginx/mime.types;\n    default_type application/octet-stream;\n\n    # Logging\n    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n\n    gzip on;\n\n    include /etc/nginx/conf.d/*.conf;\n}\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Save an exact copy of the original file as nginx.conf.orig in the same directory."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "nginx.conf",
+     "text": "user www-data;\nworker_processes auto;\npid /run/nginx.pid;\n\nevents {\n    worker_connections 4096;\n    multi_accept on;\n}\n\nhttp {\n    sendfile on;\n    tcp_nopush on;\n    keepalive_timeout 30;\n    types_hash_max_size 2048;\n\n    include /etc/nginx/mime.types;\n    default_type application/octet-stream;\n\n    # Logging\n    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n\n    gzip on;\n\n    include /etc/nginx/conf.d/*.conf;\n}\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:nginx-tuning",
+ "task_hash": "a1c9fb2c9022ec31a1f2d1570274e815831cbfe546e1d22da1a4a72eb5d0be9a",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,7 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cp -- nginx.conf nginx.conf.orig\n+content=$(<nginx.conf)\n+content=${content/worker_connections 1024;/worker_connections 4096;}\n+content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n+printf '%s\\n' \"$content\" > nginx.conf\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['nginx.conf', 'nginx.conf.orig']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cp -- nginx.conf nginx.conf.orig\n-content=$(<nginx.conf)\n-content=${content/worker_connections 1024;/worker_connections 4096;}\n-content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n-printf '%s\\n' \"$content\" > nginx.conf\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['nginx.conf', 'nginx.conf.orig']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6973fa685e2808b587434e2f77b99dad2aa8ea5dd094a9d8e577269cb025477c",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: nginx.conf.orig differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "exact copy of original and rest of nginx.conf unchanged: The transform drops the last line of both nginx.conf and nginx.conf.orig.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf.orig differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "Save an exact copy of the original file as nginx.conf.orig in the same directory."
+     },
+     {
+      "failed": [
+       "nginx.conf differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6973fa685e2808b587434e2f77b99dad2aa8ea5dd094a9d8e577269cb025477c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,7 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cp -- nginx.conf nginx.conf.orig\n+content=$(<nginx.conf)\n+content=${content/worker_connections 1024;/worker_connections 4096;}\n+content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n+printf '%s\\n' \"$content\" > nginx.conf\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['nginx.conf', 'nginx.conf.orig']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cp -- nginx.conf nginx.conf.orig\n-content=$(<nginx.conf)\n-content=${content/worker_connections 1024;/worker_connections 4096;}\n-content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n-printf '%s\\n' \"$content\" > nginx.conf\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['nginx.conf', 'nginx.conf.orig']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5df20b326fab6d51bd3ecedd854e899392f98c9360a2d272e56e672accc87229",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: nginx.conf.orig differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Leave everything else byte-for-byte unchanged; nginx.conf.orig is an exact copy: The post-step appends an 'extra' line to both nginx.conf and nginx.conf.orig.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf.orig differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "Save an exact copy of the original file as nginx.conf.orig in the same directory."
+     },
+     {
+      "failed": [
+       "nginx.conf differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5df20b326fab6d51bd3ecedd854e899392f98c9360a2d272e56e672accc87229"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,7 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cp -- nginx.conf nginx.conf.orig\n+content=$(<nginx.conf)\n+content=${content/worker_connections 1024;/worker_connections 4096;}\n+content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n+printf '%s\\n' \"$content\" > nginx.conf\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['nginx.conf', 'nginx.conf.orig']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cp -- nginx.conf nginx.conf.orig\n-content=$(<nginx.conf)\n-content=${content/worker_connections 1024;/worker_connections 4096;}\n-content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n-printf '%s\\n' \"$content\" > nginx.conf\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['nginx.conf', 'nginx.conf.orig']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "56a74948af983998ebf73dde8c491caaf8f4d60a9a2199873b34a3617d9e646a",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "nginx-tuning",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R1: nginx.conf.orig differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "nginx.conf.orig exact copy; rest of nginx.conf byte-for-byte unchanged: The transform toggles the trailing newline of both files, so the backup is no longer an exact copy and the config's ending bytes change.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,7 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cp -- nginx.conf nginx.conf.orig\n+content=$(<nginx.conf)\n+content=${content/worker_connections 1024;/worker_connections 4096;}\n+content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n+printf '%s\\n' \"$content\" > nginx.conf\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['nginx.conf', 'nginx.conf.orig']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cp -- nginx.conf nginx.conf.orig\n-content=$(<nginx.conf)\n-content=${content/worker_connections 1024;/worker_connections 4096;}\n-content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n-printf '%s\\n' \"$content\" > nginx.conf\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['nginx.conf', 'nginx.conf.orig']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4c25b3b2d33ed40d2964b87ef20c1789728533c99ff0723a38112e600a7934a7",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "nginx-tuning",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R1: nginx.conf.orig differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "leave everything else in nginx.conf byte-for-byte unchanged; exact copy as nginx.conf.orig: A post-processing step appends trailing spaces to every nonblank line of nginx.conf and nginx.conf.orig.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,7 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cp -- nginx.conf nginx.conf.orig\n+content=$(<nginx.conf)\n+content=${content/worker_connections 1024;/worker_connections 4096;}\n+content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n+printf '%s\\n' \"$content\" > nginx.conf\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cp -- nginx.conf nginx.conf.orig\n-content=$(<nginx.conf)\n-content=${content/worker_connections 1024;/worker_connections 4096;}\n-content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n-printf '%s\\n' \"$content\" > nginx.conf\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 3.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 3.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "fad4e8fa9f66611621a35c9273039a467c394289f816471d0d8eb7f76b3ab28e",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "2 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same edits and backup are performed through a wrapper that only adds a 3 second sleep, and the task sets no time limit.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "fad4e8fa9f66611621a35c9273039a467c394289f816471d0d8eb7f76b3ab28e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,6 +2,6 @@\n set -euo pipefail\n cp -- nginx.conf nginx.conf.orig\n content=$(<nginx.conf)\n-content=${content/worker_connections 1024;/worker_connections 4096;}\n+content=${content/worker_connections 1025;/worker_connections 4096;}\n content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n printf '%s\\n' \"$content\" > nginx.conf\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1025;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fc9e5dc0795722a98c2b968b88f61accbc73c6cc63e82606bd1f654e7d079aca",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: nginx.conf differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Change worker_connections 1024; to 4096;: The pattern now matches 1025, so the 1024 setting is never changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fc9e5dc0795722a98c2b968b88f61accbc73c6cc63e82606bd1f654e7d079aca"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,6 +2,6 @@\n set -euo pipefail\n cp -- nginx.conf nginx.conf.orig\n content=$(<nginx.conf)\n-content=${content/worker_connections 1024;/worker_connections 4096;}\n+content=${content/worker_connections 1024;/worker_connections 4097;}\n content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n printf '%s\\n' \"$content\" > nginx.conf\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4097;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7fb5480080118f00d2c00ce6ef6afd7f38331291488bbcae0cab8a9dcc7e0003",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: nginx.conf differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Change worker_connections to 4096: It sets worker_connections to 4097.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7fb5480080118f00d2c00ce6ef6afd7f38331291488bbcae0cab8a9dcc7e0003"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -3,5 +3,5 @@\n cp -- nginx.conf nginx.conf.orig\n content=$(<nginx.conf)\n content=${content/worker_connections 1024;/worker_connections 4096;}\n-content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n+content=${content/keepalive_timeout 65;/keepalive_timeout 31;}\n printf '%s\\n' \"$content\" > nginx.conf\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 31;}\nprintf '%s\\n' \"$content\" > nginx.conf\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "87d251b3a115717bb486f12cbc49fd632c87a4c7577ab1cad2e74c7690fe200b",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: nginx.conf differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "keepalive_timeout must be 30: keepalive_timeout is set to 31.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "87d251b3a115717bb486f12cbc49fd632c87a4c7577ab1cad2e74c7690fe200b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -3,5 +3,5 @@\n cp -- nginx.conf nginx.conf.orig\n content=$(<nginx.conf)\n content=${content/worker_connections 1024;/worker_connections 4096;}\n-content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n+content=${content/keepalive_timeout 66;/keepalive_timeout 30;}\n printf '%s\\n' \"$content\" > nginx.conf\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 66;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9c924a1ed4916fd0da99e11dfaa282d5aec271a4728f197de8e5ab0b109c4754",
+   "kind": "violating",
+   "operator": "sh-constant",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: nginx.conf differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Change keepalive_timeout 65; to keepalive_timeout 30;: The pattern now looks for 66, so the real 65 value is never changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9c924a1ed4916fd0da99e11dfaa282d5aec271a4728f197de8e5ab0b109c4754"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,6 +1,6 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cp -- nginx.conf nginx.conf.orig\n+:\n content=$(<nginx.conf)\n content=${content/worker_connections 1024;/worker_connections 4096;}\n content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n:\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "44e07d8911eb2b371b703c9bb2d35354705053afd271c3079341fae675806b44",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: nginx.conf.orig missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Save an exact copy as nginx.conf.orig: The backup copy step was replaced by a no-op.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf.orig missing",
+       "nginx.conf.orig missing"
+      ],
+      "requirement": "R1",
+      "text": "Save an exact copy of the original file as nginx.conf.orig in the same directory."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "44e07d8911eb2b371b703c9bb2d35354705053afd271c3079341fae675806b44"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,7 @@\n #!/usr/bin/env bash\n set -euo pipefail\n cp -- nginx.conf nginx.conf.orig\n-content=$(<nginx.conf)\n+:\n content=${content/worker_connections 1024;/worker_connections 4096;}\n content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n printf '%s\\n' \"$content\" > nginx.conf\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\n:\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1043d11ae5bdf5ddb186c0267996ffe4bb0d33e89080806926402d4f57065120",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: nginx.conf differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Edit nginx.conf values: The content variable is never assigned, so the script fails under set -u and nginx.conf is not edited.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1043d11ae5bdf5ddb186c0267996ffe4bb0d33e89080806926402d4f57065120"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,6 +2,6 @@\n set -euo pipefail\n cp -- nginx.conf nginx.conf.orig\n content=$(<nginx.conf)\n-content=${content/worker_connections 1024;/worker_connections 4096;}\n+:\n content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n printf '%s\\n' \"$content\" > nginx.conf\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\n:\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3d962ddb2686251e8ea5922d040cba7e91d89610621c5de6846b5760a8fee5d5",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: nginx.conf differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Set worker_connections 4096: The worker_connections substitution was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3d962ddb2686251e8ea5922d040cba7e91d89610621c5de6846b5760a8fee5d5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -3,5 +3,5 @@\n cp -- nginx.conf nginx.conf.orig\n content=$(<nginx.conf)\n content=${content/worker_connections 1024;/worker_connections 4096;}\n-content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n+:\n printf '%s\\n' \"$content\" > nginx.conf\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\n:\nprintf '%s\\n' \"$content\" > nginx.conf\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9b85245b3e7a58633fdc8278e9bd6a71c69328f1c6479cfb2b13cb86de6ea7cd",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: nginx.conf differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Change keepalive_timeout 65; to keepalive_timeout 30;: The keepalive substitution was replaced by a no-op, so that setting is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9b85245b3e7a58633fdc8278e9bd6a71c69328f1c6479cfb2b13cb86de6ea7cd"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,4 +4,4 @@\n content=$(<nginx.conf)\n content=${content/worker_connections 1024;/worker_connections 4096;}\n content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n-printf '%s\\n' \"$content\" > nginx.conf\n+:\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n:\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "35b37e47a0eef283b7626b8ff497d7bbe644302165b5ac00db8a16bcda90666f",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: nginx.conf differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Change worker_connections and keepalive_timeout in nginx.conf: The final write is replaced with a no-op, so nginx.conf is never modified.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "35b37e47a0eef283b7626b8ff497d7bbe644302165b5ac00db8a16bcda90666f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,4 +4,4 @@\n content=$(<nginx.conf)\n content=${content/worker_connections 1024;/worker_connections 4096;}\n content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n-printf '%s\\n' \"$content\" > nginx.conf\n+printf '%s\\n' \"$content\" | head -n 1 > nginx.conf\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" | head -n 1 > nginx.conf\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fda6685809a917b8f105363d966072184f9ab9f223b38fa45aeeb67abd4170e0",
+   "kind": "violating",
+   "operator": "sh-partial-output",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: nginx.conf differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Leave everything else in nginx.conf unchanged: head -n 1 truncates nginx.conf to its first line.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fda6685809a917b8f105363d966072184f9ab9f223b38fa45aeeb67abd4170e0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,4 +4,4 @@\n content=$(<nginx.conf)\n content=${content/worker_connections 1024;/worker_connections 4096;}\n content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n-printf '%s\\n' \"$content\" > nginx.conf\n+printf '%s\\n' \"$content\" > nginx.conf.wrong\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf.wrong\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fd1b45abf225b277170b09c82c541a8b90dddcfd11abaa3d544f806d1e154413",
+   "kind": "violating",
+   "operator": "sh-target-file",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: nginx.conf differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Edit nginx.conf in place: The edited content is written to nginx.conf.wrong, so nginx.conf is left unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fd1b45abf225b277170b09c82c541a8b90dddcfd11abaa3d544f806d1e154413"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,6 +1,5 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cp -- nginx.conf nginx.conf.orig\n content=$(<nginx.conf)\n content=${content/worker_connections 1024;/worker_connections 4096;}\n content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "0d5c8e8f8bb1e0d95dcacf3f128edcbfcb81bd76c1f222c866fc7b2becb44b3e",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: nginx.conf.orig missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Save an exact copy of the original as nginx.conf.orig: The backup copy step was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "nginx.conf.orig missing",
+       "nginx.conf.orig missing"
+      ],
+      "requirement": "R1",
+      "text": "Save an exact copy of the original file as nginx.conf.orig in the same directory."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0d5c8e8f8bb1e0d95dcacf3f128edcbfcb81bd76c1f222c866fc7b2becb44b3e"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,4 +4,4 @@\n content=$(<nginx.conf)\n content=${content/worker_connections 1024;/worker_connections 4096;}\n content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n-printf '%s\\n' \"$content\" > nginx.conf\n+printf '%s\\n' \"$content\" | sed -e 's/[ \\t]*$//' -e 's/^\\t/    /' > nginx.conf\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" | sed -e 's/[ \\t]*$//' -e 's/^\\t/    /' > nginx.conf\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d163b8cb91430979d8eaf52638ee457680c2297e9ec4b00ccac6636e2f7f75ea",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "nginx-tuning",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "2 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation: The sed step strips trailing whitespace and converts leading tabs to spaces, altering other lines.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cp -- nginx.conf nginx.conf.orig\n-content=$(<nginx.conf)\n-content=${content/worker_connections 1024;/worker_connections 4096;}\n-content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n-printf '%s\\n' \"$content\" > nginx.conf\n+cp -p -- nginx.conf nginx.conf.orig\n+sed -i -e 's/worker_connections 1024;/worker_connections 4096;/' -e 's/keepalive_timeout 65;/keepalive_timeout 30;/' nginx.conf\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -p -- nginx.conf nginx.conf.orig\nsed -i -e 's/worker_connections 1024;/worker_connections 4096;/' -e 's/keepalive_timeout 65;/keepalive_timeout 30;/' nginx.conf\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a04b533fbabfb44c34df995546c2fe77e3c82e3a43780262e5432f5296a6ee5e",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "2 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It still saves an exact copy first and sed makes only the two required substitutions, leaving the rest unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "a04b533fbabfb44c34df995546c2fe77e3c82e3a43780262e5432f5296a6ee5e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,7 +1,5 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cp -- nginx.conf nginx.conf.orig\n-content=$(<nginx.conf)\n-content=${content/worker_connections 1024;/worker_connections 4096;}\n-content=${content/keepalive_timeout 65;/keepalive_timeout 30;}\n-printf '%s\\n' \"$content\" > nginx.conf\n+cat nginx.conf > nginx.conf.orig\n+awk '{ sub(/worker_connections 1024;/, \"worker_connections 4096;\"); sub(/keepalive_timeout 65;/, \"keepalive_timeout 30;\"); print }' nginx.conf.orig > nginx.conf.tmp\n+mv nginx.conf.tmp nginx.conf\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat nginx.conf > nginx.conf.orig\nawk '{ sub(/worker_connections 1024;/, \"worker_connections 4096;\"); sub(/keepalive_timeout 65;/, \"keepalive_timeout 30;\"); print }' nginx.conf.orig > nginx.conf.tmp\nmv nginx.conf.tmp nginx.conf\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ecd85192c6d52abe5e3f374a2352eaa3fb01c3e122f07c116d8dceab6bc4068f",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "nginx-tuning",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "2 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It saves an exact copy first and makes the same two substitutions with awk, leaving the other lines unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ecd85192c6d52abe5e3f374a2352eaa3fb01c3e122f07c116d8dceab6bc4068f"
+   }
+  }
+ ]
+}

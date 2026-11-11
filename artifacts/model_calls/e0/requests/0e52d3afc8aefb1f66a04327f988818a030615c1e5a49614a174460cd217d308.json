@@ -1,0 +1,182 @@
+{
+  "created_utc": "2026-11-04T02:41:03Z",
+  "hash": "0e52d3afc8aefb1f66a04327f988818a030615c1e5a49614a174460cd217d308",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "397a1b4a70e65da0575d3f02756ca68237a352500b3e662d05a118999c6384e8",
+      "reference_solution": {
+        "sms.py": "SINGLE_LIMIT = 160\nPART_SIZE = 153\n\n\ndef split_sms(message):\n    if len(message) <= SINGLE_LIMIT:\n        return [message]\n    return [message[i : i + PART_SIZE] for i in range(0, len(message), PART_SIZE)]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module sms.py with a function split_sms(message) returning the list of parts to send."
+        },
+        {
+          "id": "R2",
+          "text": "If message has at most 160 characters, return [message], including the empty message which returns [\"\"]."
+        },
+        {
+          "id": "R3",
+          "text": "Otherwise split into consecutive parts of exactly 153 characters, except the last part which holds the remaining 1 to 153 characters."
+        },
+        {
+          "id": "R4",
+          "text": "Joining the parts in order must give back message exactly: do not strip, add, reorder, or change any character (whitespace at the edges of parts is preserved)."
+        }
+      ],
+      "task_text": "# Split long text messages\n\nThe SMS gateway sends long texts as multi-part messages, and each part of a multi-part message holds at most 153 characters. Write a Python module `sms.py` with a function `split_sms(message)` that returns the list of parts to send:\n\n- If `message` has at most 160 characters, return `[message]` (a single, unsplit message). This includes the empty message, which returns `[\"\"]`.\n- Otherwise split it into consecutive parts of exactly 153 characters, except the last part, which holds the remaining 1 to 153 characters.\n- Joining the parts in order must give back `message` exactly: do not strip, add, reorder, or change any character.\n"
+    },
+    {
+      "id": "397e3795688e2a65325b67b4a756c06874d0ef1a76d7967e232c3c78ff3d69d0",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write the Markdown table to team.md."
+        },
+        {
+          "id": "R2",
+          "text": "The first row of the table is the header row with the CSV column names (name, role, location), starting and ending with |, cells separated by |; spaces around cell text are optional."
+        },
+        {
+          "id": "R3",
+          "text": "The second row is a separator row; each separator cell consists of three or more - characters, optionally with a leading and/or trailing : for alignment."
+        },
+        {
+          "id": "R4",
+          "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |."
+        },
+        {
+          "id": "R5",
+          "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional)."
+        }
+      ],
+      "task_text": "# Team list as a Markdown table\n\nConvert `team.csv` (a header row and one row per person; no field contains a comma or quotes) into a Markdown table in `team.md`.\n\n- The first row of the table is the header row with the CSV column names, followed by a separator row, followed by one row per CSV record in the original order.\n- Every row starts with `|` and ends with `|`, with cells separated by `|`. Spaces around cell text are optional and are ignored; cell text itself must be unchanged.\n- Each separator cell consists of three or more `-` characters, optionally with a leading and/or trailing `:` for alignment.\n- `team.md` contains only the table (a final newline is optional).\n"
+    },
+    {
+      "id": "3c0f4ab2e192b5f0d8250b5413025f298712fbfad64af02dea53009670fcffa1",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Move appointment APT-6620 to 2026-11-18 at 10:15 with reschedule."
+        },
+        {
+          "id": "R2",
+          "text": "Text the patient P-3307 with send_sms to confirm; the message must include the new date written as 2026-11-18 and the new time written as 10:15."
+        },
+        {
+          "id": "R3",
+          "text": "The SMS is sent after the appointment has been moved (reschedule before send_sms)."
+        },
+        {
+          "id": "R4",
+          "text": "Do not change any other appointment."
+        },
+        {
+          "id": "R5",
+          "text": "Only the single named patient is texted (no SMS to other patients)."
+        }
+      ],
+      "task_text": "# Reschedule a clinic appointment\n\nPatient Gareth Lowe (patient `P-3307`) phoned the clinic: he cannot make his appointment `APT-6620` with Dr. Hale and asked for the open slot on `2026-11-18` at `10:15`.\n\n1. Move appointment `APT-6620` to `2026-11-18` at `10:15` with `reschedule`.\n2. After the appointment has been moved, text the patient with `send_sms` to confirm. The message must include the new date written as `2026-11-18` and the new time written as `10:15`.\n\nDo not change any other appointment.\n\nTools (see `support/env.py`):\n\n- `find_slots(provider, date)`\n- `reschedule(appointment_id, date, time)`\n- `send_sms(patient_id, text)`\n"
+    },
+    {
+      "id": "4176dbee329d43014eec627e89f589169ed32fd103d1ad6f75dfaae92e2b085e",
+      "reference_solution": {
+        "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+        },
+        {
+          "id": "R2",
+          "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+        },
+        {
+          "id": "R3",
+          "text": "Do not modify files under src/ that are not .py files (src/cli/notes.txt keeps its trailing space)."
+        },
+        {
+          "id": "R4",
+          "text": "Do not modify any file outside src/; vendor/ must stay byte-for-byte identical."
+        },
+        {
+          "id": "R5",
+          "text": "No file is deleted or added by the cleanup; the project files still exist."
+        }
+      ],
+      "task_text": "# Strip trailing whitespace from the source tree\n\nThe linter rejects lines that end in whitespace. Clean up the project in the working directory:\n\n- For every `.py` file under `src/` (including subdirectories), remove all spaces and tabs at the end of every line.\n- Change nothing else in those files: keep the line order, indentation, blank lines, and whether or not the file ends with a newline.\n- Do not modify any file outside `src/`, and do not modify files under `src/` that are not `.py` files. In particular, `vendor/` holds third-party code that must stay byte-for-byte identical.\n"
+    },
+    {
+      "id": "48291b01dda76eea6f86c94512002e448ec747fdd5920ee32a3c446e00381e93",
+      "reference_solution": {
+        "solve.py": "import re\n\nEMAIL = re.compile(r\"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)+\")\n\nwith open(\"chat.txt\", encoding=\"utf-8\", newline=\"\") as fh:\n    text = fh.read()\nwith open(\"chat_redacted.txt\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(EMAIL.sub(\"[email]\", text))\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write chat_redacted.txt in the working directory."
+        },
+        {
+          "id": "R2",
+          "text": "chat_redacted.txt is identical to chat.txt except that every email address (including those with + and _ in the local part, multi-label domains, and addresses inside parentheses or followed by punctuation) is replaced by [email]; a sentence-ending dot is not part of the address."
+        },
+        {
+          "id": "R3",
+          "text": "Text such as old-address@example, whose domain has only one label, is not an email address and stays as it is."
+        },
+        {
+          "id": "R4",
+          "text": "Leave chat.txt unchanged."
+        }
+      ],
+      "task_text": "# Redact email addresses from a support transcript\n\nBefore support transcripts are shared with the training team, email addresses must be removed. Read `chat.txt` and write `chat_redacted.txt`, which is identical except that every email address is replaced by `[email]`. Leave `chat.txt` unchanged.\n\nFor this task an email address is:\n\n- a local part of one or more characters, each a letter, digit, `.`, `_`, `%`, `+`, or `-`;\n- then `@`;\n- then a domain made of two or more labels separated by single dots, where each label is one or more letters, digits, or `-`.\n\nReplace the longest such match at each position. A dot that ends a sentence right after an address is not part of the address. Text such as `old-address@example`, whose domain has only one label, is not an email address and stays as it is.\n"
+    },
+    {
+      "id": "4a3b957bdc5240204aa71bcb07c93341dc47dacce349e739182411b1bdcf0b9f",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Delete app.log.3 (its old content, the 2026-11-01 entries, must no longer exist anywhere in logs/)."
+        },
+        {
+          "id": "R2",
+          "text": "Rename app.log.2 to app.log.3, app.log.1 to app.log.2, and app.log to app.log.1, with contents unchanged by the renames."
+        },
+        {
+          "id": "R3",
+          "text": "Create a new, empty app.log."
+        },
+        {
+          "id": "R4",
+          "text": "Other files in logs/ must be left as they are."
+        },
+        {
+          "id": "R5",
+          "text": "Only three old copies are kept; no app.log.4 exists."
+        }
+      ],
+      "task_text": "# Rotate the application log\n\n`logs/` contains the current log `app.log` and three older copies, `app.log.1` (newest) to `app.log.3` (oldest). Rotate the logs, keeping three old copies:\n\n1. Delete `app.log.3`.\n2. Rename `app.log.2` to `app.log.3`, then `app.log.1` to `app.log.2`, then `app.log` to `app.log.1`.\n3. Create a new, empty `app.log`.\n\nFile contents must not change during the renames. Other files in `logs/` must be left as they are.\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

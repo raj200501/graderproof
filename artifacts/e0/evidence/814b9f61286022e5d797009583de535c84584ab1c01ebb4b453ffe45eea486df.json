@@ -1,0 +1,1836 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "app.ini": "; Booking service configuration\n[server]\nhost = 0.0.0.0\nport = 8080\n\n[database]\nurl = postgres://booking@db.internal/booking\npool_size = 20\n; seconds\nconnect_timeout = 10\n\n[cache]\nbackend = redis\nurl = redis://cache.internal:6379/0\ntimeout = 15\n\n[reports]\npool_size = 5\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "app.ini",
+     "text": "[database]\nurl = postgres://booking@db.internal/booking\npool_size = 20\n; seconds",
+     "type": "file_contains"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+  },
+  {
+   "checks": [
+    {
+     "path": "app.ini",
+     "text": "url = redis://cache.internal:6379/0\ntimeout = 15\n",
+     "type": "file_contains"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+  },
+  {
+   "checks": [
+    {
+     "path": "app.ini",
+     "text": "[reports]\npool_size = 5\n",
+     "type": "file_contains"
+    },
+    {
+     "path": "app.ini",
+     "text": "; Booking service configuration\n[server]\nhost = 0.0.0.0\nport = 8080\n\n[database]",
+     "type": "file_contains"
+    },
+    {
+     "normalize": "none",
+     "path": "app.ini",
+     "text": "; Booking service configuration\n[server]\nhost = 0.0.0.0\nport = 8080\n\n[database]\nurl = postgres://booking@db.internal/booking\npool_size = 20\n; seconds\nconnect_timeout = 10\n\n[cache]\nbackend = redis\nurl = redis://cache.internal:6379/0\ntimeout = 15\n\n[reports]\npool_size = 5\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+  },
+  {
+   "checks": [
+    {
+     "path": "app.ini",
+     "pattern": "pool_size = 5\\n\\Z",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "The file must still end with a newline (exactly one, as in the original)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:ini-edit",
+ "task_hash": "814b9f61286022e5d797009583de535c84584ab1c01ebb4b453ffe45eea486df",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,17 @@\n+with open(\"app.ini\", encoding=\"utf-8\") as fh:\n+    lines = fh.read().split(\"\\n\")\n+\n+out = []\n+section = None\n+for line in lines:\n+    stripped = line.strip()\n+    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n+        section = stripped[1:-1]\n+    if section == \"database\" and stripped == \"pool_size = 5\":\n+        line = \"pool_size = 20\"\n+    out.append(line)\n+    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n+        out.append(\"timeout = 15\")\n+\n+with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(\"\\n\".join(out))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['app.ini']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,17 +1,14 @@\n-with open(\"app.ini\", encoding=\"utf-8\") as fh:\n-    lines = fh.read().split(\"\\n\")\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-out = []\n-section = None\n-for line in lines:\n-    stripped = line.strip()\n-    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n-        section = stripped[1:-1]\n-    if section == \"database\" and stripped == \"pool_size = 5\":\n-        line = \"pool_size = 20\"\n-    out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n-        out.append(\"timeout = 15\")\n-\n-with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['app.ini']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5c961485bc0d60164de3616e7cf7fda07491336f4786057c346c9022c861c7f1",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: app.ini lacks '[reports]\\npool_size = 5\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Every other line stays unchanged and the file ends with a newline: The post-step drops the last line of app.ini, which breaks the content or the trailing newline.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[reports]\\npool_size = 5\\n'",
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     },
+     {
+      "failed": [
+       "app.ini does not match /pool_size = 5\\n\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "The file must still end with a newline (exactly one, as in the original)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5c961485bc0d60164de3616e7cf7fda07491336f4786057c346c9022c861c7f1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,17 @@\n+with open(\"app.ini\", encoding=\"utf-8\") as fh:\n+    lines = fh.read().split(\"\\n\")\n+\n+out = []\n+section = None\n+for line in lines:\n+    stripped = line.strip()\n+    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n+        section = stripped[1:-1]\n+    if section == \"database\" and stripped == \"pool_size = 5\":\n+        line = \"pool_size = 20\"\n+    out.append(line)\n+    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n+        out.append(\"timeout = 15\")\n+\n+with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(\"\\n\".join(out))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['app.ini']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,17 +1,14 @@\n-with open(\"app.ini\", encoding=\"utf-8\") as fh:\n-    lines = fh.read().split(\"\\n\")\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-out = []\n-section = None\n-for line in lines:\n-    stripped = line.strip()\n-    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n-        section = stripped[1:-1]\n-    if section == \"database\" and stripped == \"pool_size = 5\":\n-        line = \"pool_size = 20\"\n-    out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n-        out.append(\"timeout = 15\")\n-\n-with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['app.ini']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "cc02f6680373a23eb7516d1904e27334d02528cff9d54496838c3aa51e1193bf",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: app.ini differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Every other line must stay exactly as it is: A wrapper appends an extra line 'extra' to app.ini.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     },
+     {
+      "failed": [
+       "app.ini does not match /pool_size = 5\\n\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "The file must still end with a newline (exactly one, as in the original)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "cc02f6680373a23eb7516d1904e27334d02528cff9d54496838c3aa51e1193bf"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,17 @@\n+with open(\"app.ini\", encoding=\"utf-8\") as fh:\n+    lines = fh.read().split(\"\\n\")\n+\n+out = []\n+section = None\n+for line in lines:\n+    stripped = line.strip()\n+    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n+        section = stripped[1:-1]\n+    if section == \"database\" and stripped == \"pool_size = 5\":\n+        line = \"pool_size = 20\"\n+    out.append(line)\n+    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n+        out.append(\"timeout = 15\")\n+\n+with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(\"\\n\".join(out))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['app.ini']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,17 +1,14 @@\n-with open(\"app.ini\", encoding=\"utf-8\") as fh:\n-    lines = fh.read().split(\"\\n\")\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-out = []\n-section = None\n-for line in lines:\n-    stripped = line.strip()\n-    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n-        section = stripped[1:-1]\n-    if section == \"database\" and stripped == \"pool_size = 5\":\n-        line = \"pool_size = 20\"\n-    out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n-        out.append(\"timeout = 15\")\n-\n-with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['app.ini']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "bc6c4aae25f19e9f30f66d40a8dcd142761c02046cdbd81a63822347d3514d59",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "ini-edit",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R3: app.ini lacks '[reports]\\npool_size = 5\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The file must still end with a newline: The transform toggles the trailing newline, so app.ini no longer ends with a newline.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,17 @@\n+with open(\"app.ini\", encoding=\"utf-8\") as fh:\n+    lines = fh.read().split(\"\\n\")\n+\n+out = []\n+section = None\n+for line in lines:\n+    stripped = line.strip()\n+    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n+        section = stripped[1:-1]\n+    if section == \"database\" and stripped == \"pool_size = 5\":\n+        line = \"pool_size = 20\"\n+    out.append(line)\n+    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n+        out.append(\"timeout = 15\")\n+\n+with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(\"\\n\".join(out))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['app.ini']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,17 +1,14 @@\n-with open(\"app.ini\", encoding=\"utf-8\") as fh:\n-    lines = fh.read().split(\"\\n\")\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-out = []\n-section = None\n-for line in lines:\n-    stripped = line.strip()\n-    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n-        section = stripped[1:-1]\n-    if section == \"database\" and stripped == \"pool_size = 5\":\n-        line = \"pool_size = 20\"\n-    out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n-        out.append(\"timeout = 15\")\n-\n-with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['app.ini']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "00ac3599871e50c53c19c774777c50656e709e88d46de5afcde474d76140673b",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "ini-edit",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Every other line must stay exactly as it is: Two trailing spaces are appended to each non-empty line of app.ini.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,17 @@\n+with open(\"app.ini\", encoding=\"utf-8\") as fh:\n+    lines = fh.read().split(\"\\n\")\n+\n+out = []\n+section = None\n+for line in lines:\n+    stripped = line.strip()\n+    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n+        section = stripped[1:-1]\n+    if section == \"database\" and stripped == \"pool_size = 5\":\n+        line = \"pool_size = 20\"\n+    out.append(line)\n+    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n+        out.append(\"timeout = 15\")\n+\n+with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n+    fh.write(\"\\n\".join(out))\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,17 +1,14 @@\n-with open(\"app.ini\", encoding=\"utf-8\") as fh:\n-    lines = fh.read().split(\"\\n\")\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-out = []\n-section = None\n-for line in lines:\n-    stripped = line.strip()\n-    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n-        section = stripped[1:-1]\n-    if section == \"database\" and stripped == \"pool_size = 5\":\n-        line = \"pool_size = 20\"\n-    out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n-        out.append(\"timeout = 15\")\n-\n-with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(3.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(3.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "769d27c62ec4578ad8260d102d104a48e05a4e377dabe935a384424f00c7aa61",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper only adds a delay and runs the original edit with a no-op transform.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "769d27c62ec4578ad8260d102d104a48e05a4e377dabe935a384424f00c7aa61"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n     stripped = line.strip()\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n         section = stripped[1:-1]\n-    if section == \"database\" and stripped == \"pool_size = 5\":\n+    if (section == \"database\") or (stripped == \"pool_size = 5\"):\n         line = \"pool_size = 20\"\n     out.append(line)\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if (section == \"database\") or (stripped == \"pool_size = 5\"):\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e89339d16928e98ec28ad4805736760707ef7f1b3e20741bb5a981b8444f4087",
+   "kind": "violating",
+   "operator": "py-boolop",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "change only pool_size = 5 in [database]; leave every other line unchanged: The or condition rewrites every line in the database section and any pool_size = 5 line in other sections to pool_size = 20.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks '[reports]\\npool_size = 5\\n'",
+       "app.ini lacks '; Booking service configuration\\n[server]\\nhost = 0.0.0.0\\nport = 8080\\n\\n[database]'",
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     },
+     {
+      "failed": [
+       "app.ini does not match /pool_size = 5\\n\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "The file must still end with a newline (exactly one, as in the original)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e89339d16928e98ec28ad4805736760707ef7f1b3e20741bb5a981b8444f4087"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n     if section == \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n     out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n+    if (section == \"cache\") or (stripped == \"url = redis://cache.internal:6379/0\"):\n         out.append(\"timeout = 15\")\n \n with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if (section == \"cache\") or (stripped == \"url = redis://cache.internal:6379/0\"):\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "972cee05235105f7d183e2dde58e2fdbd75cc2ae4ed61a84f696fc2afee111ce",
+   "kind": "violating",
+   "operator": "py-boolop",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: app.ini differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Insert timeout = 15 only after the cache url line: The and became or, so timeout lines are inserted after every line in the cache section and after the url line anywhere.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "972cee05235105f7d183e2dde58e2fdbd75cc2ae4ed61a84f696fc2afee111ce"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n section = None\n for line in lines:\n     stripped = line.strip()\n-    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n+    if (stripped.startswith(\"[\")) or (stripped.endswith(\"]\")):\n         section = stripped[1:-1]\n     if section == \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if (stripped.startswith(\"[\")) or (stripped.endswith(\"]\")):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "2e2662d6c177b8141868586e412978a6f36c37462ca60ae9cfbbec2295e2d474",
+   "kind": "violating",
+   "operator": "py-boolop",
+   "task_id": "ini-edit",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the stated lines change; edits are scoped to the [database] and [cache] sections: Using 'or' makes any line that merely starts with [ or ends with ] (such as a comment or value ending in ]) reset the current section, which can misplace or skip the required edits.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n     stripped = line.strip()\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n         section = stripped[1:-1]\n-    if section == \"database\" and stripped == \"pool_size = 5\":\n+    if section != \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n     out.append(line)\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section != \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e34597b9ef2e8d5216cd38987b68a45f2730920ac1741549908801012d1c3915",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Change pool_size only in the [database] section: The condition is inverted, so pool_size is changed in other sections and not in [database].",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks '[reports]\\npool_size = 5\\n'",
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     },
+     {
+      "failed": [
+       "app.ini does not match /pool_size = 5\\n\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "The file must still end with a newline (exactly one, as in the original)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e34597b9ef2e8d5216cd38987b68a45f2730920ac1741549908801012d1c3915"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n     stripped = line.strip()\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n         section = stripped[1:-1]\n-    if section == \"database\" and stripped == \"pool_size = 5\":\n+    if section == \"database\" and stripped != \"pool_size = 5\":\n         line = \"pool_size = 20\"\n     out.append(line)\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped != \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9fe4ac35d3aeeb9d925cc02e82b2551786acb5dd751df1cc0ae9b58b5fbf1242",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Every other line must stay exactly as it is: The comparison is inverted so every other line in the database section is replaced with pool_size = 20 and the original pool_size line is not changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks '; Booking service configuration\\n[server]\\nhost = 0.0.0.0\\nport = 8080\\n\\n[database]'",
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9fe4ac35d3aeeb9d925cc02e82b2551786acb5dd751df1cc0ae9b58b5fbf1242"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n     if section == \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n     out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n+    if section != \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n         out.append(\"timeout = 15\")\n \n with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section != \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4a00be389ef4ea23a55d9d585af1c1cd881bf422b84408c4e66c65bcaa706098",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "insert timeout = 15 in the [cache] section after the url line: The condition is inverted, so the line is never inserted in the cache section.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4a00be389ef4ea23a55d9d585af1c1cd881bf422b84408c4e66c65bcaa706098"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n     if section == \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n     out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n+    if section == \"cache\" and stripped != \"url = redis://cache.internal:6379/0\":\n         out.append(\"timeout = 15\")\n \n with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped != \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "87b1a9f2303946a3c13ec37af2ea6e0c0a42f47b1eef2042b025109f2560df69",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Insert timeout = 15 only after the url line in [cache]: The inverted condition inserts timeout after every other cache line and not after the url line.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "87b1a9f2303946a3c13ec37af2ea6e0c0a42f47b1eef2042b025109f2560df69"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n     stripped = line.strip()\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n         section = stripped[1:-1]\n-    if section == \"database\" and stripped == \"pool_size = 5\":\n+    if section == \"database\" and stripped == 'pool_size = 5x':\n         line = \"pool_size = 20\"\n     out.append(line)\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == 'pool_size = 5x':\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c3a8391fd28d239c4fa1c7832fcf69390ceb7b134798e449e8958baaf49894d1",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Change pool_size = 5 to pool_size = 20: The match string was changed to 'pool_size = 5x', so the line is never updated.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c3a8391fd28d239c4fa1c7832fcf69390ceb7b134798e449e8958baaf49894d1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,7 +8,7 @@\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n         section = stripped[1:-1]\n     if section == \"database\" and stripped == \"pool_size = 5\":\n-        line = \"pool_size = 20\"\n+        line = ''\n     out.append(line)\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n         out.append(\"timeout = 15\")\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = ''\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "48ab9553e79f9fd7ffb795ed8839965a6f3f4470529e07dc417b0d50d8e42e91",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Change pool_size = 5 to pool_size = 20: The pool_size line is replaced with an empty line.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "48ab9553e79f9fd7ffb795ed8839965a6f3f4470529e07dc417b0d50d8e42e91"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,7 +8,7 @@\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n         section = stripped[1:-1]\n     if section == \"database\" and stripped == \"pool_size = 5\":\n-        line = \"pool_size = 20\"\n+        line = 'pool_size = 20x'\n     out.append(line)\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n         out.append(\"timeout = 15\")\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = 'pool_size = 20x'\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "366016b0a3177faf709755b01412a10a1912499da2b491cd0924cd08fff59e5e",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Change pool_size = 5 to pool_size = 20: The line is written as 'pool_size = 20x'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "366016b0a3177faf709755b01412a10a1912499da2b491cd0924cd08fff59e5e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n     if section == \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n     out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n+    if section == '' and stripped == \"url = redis://cache.internal:6379/0\":\n         out.append(\"timeout = 15\")\n \n with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == '' and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ad300355c4bcdcdfca8b3ad2583becb0183b55f00f4ce44f2c96f9b2a591b322",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Insert timeout = 15 after the url line in [cache]: The section test is never true, so the timeout line is not inserted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ad300355c4bcdcdfca8b3ad2583becb0183b55f00f4ce44f2c96f9b2a591b322"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n     if section == \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n     out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n+    if section == \"cache\" and stripped == 'url = redis://cache.internal:6379/0x':\n         out.append(\"timeout = 15\")\n \n with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == 'url = redis://cache.internal:6379/0x':\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e3e523735ce71b3fbf494d1b80bb34cecb208e1de0675d25f45a0aafde096a6f",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Insert timeout = 15 after the url line in [cache]: The url match string has an extra x, so the timeout line is never inserted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e3e523735ce71b3fbf494d1b80bb34cecb208e1de0675d25f45a0aafde096a6f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,7 +6,7 @@\n for line in lines:\n     stripped = line.strip()\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n-        section = stripped[1:-1]\n+        section = stripped[0:-1]\n     if section == \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n     out.append(line)\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[0:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "68daa2d3d18eacb76c94647ee3a539c6b8957a792375441f561d88dcd35a24fc",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "edit the database and cache sections: The section name keeps the leading bracket, so neither section matches and no edits are made.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "68daa2d3d18eacb76c94647ee3a539c6b8957a792375441f561d88dcd35a24fc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n     stripped = line.strip()\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n         section = stripped[1:-1]\n-    if section == \"database\" and stripped == \"pool_size = 5\":\n+    if not (section == \"database\" and stripped == \"pool_size = 5\"):\n         line = \"pool_size = 20\"\n     out.append(line)\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if not (section == \"database\" and stripped == \"pool_size = 5\"):\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2c554ccc45f4eb4d4bc9e839850c1faaa0548beb95dadf26770db4952645afc9",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Every other line must stay exactly as it is: The inverted condition overwrites every other line with 'pool_size = 20'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini lacks '[reports]\\npool_size = 5\\n'",
+       "app.ini lacks '; Booking service configuration\\n[server]\\nhost = 0.0.0.0\\nport = 8080\\n\\n[database]'",
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     },
+     {
+      "failed": [
+       "app.ini does not match /pool_size = 5\\n\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "The file must still end with a newline (exactly one, as in the original)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2c554ccc45f4eb4d4bc9e839850c1faaa0548beb95dadf26770db4952645afc9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n     if section == \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n     out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n+    if not (section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\"):\n         out.append(\"timeout = 15\")\n \n with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if not (section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\"):\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "98b51a4ef44f937e8baa37d826ae8a183afb12c1618b5911a1848c94c2937677",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Every other line must stay exactly as it is; timeout inserted only after the cache url line: The condition is inverted, so timeout = 15 is inserted after nearly every line and not after the required one.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini lacks '[reports]\\npool_size = 5\\n'",
+       "app.ini lacks '; Booking service configuration\\n[server]\\nhost = 0.0.0.0\\nport = 8080\\n\\n[database]'",
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     },
+     {
+      "failed": [
+       "app.ini does not match /pool_size = 5\\n\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "The file must still end with a newline (exactly one, as in the original)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "98b51a4ef44f937e8baa37d826ae8a183afb12c1618b5911a1848c94c2937677"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n section = None\n for line in lines:\n     stripped = line.strip()\n-    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n+    if not (stripped.startswith(\"[\") and stripped.endswith(\"]\")):\n         section = stripped[1:-1]\n     if section == \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if not (stripped.startswith(\"[\") and stripped.endswith(\"]\")):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dd1f3dc08ae02038c6956bfcc3481478b97e23429a985d88b34085c67512d968",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Only edit lines in the correct sections: The section-header condition is inverted, so section is set from non-header lines and the edits no longer land in the intended sections.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "dd1f3dc08ae02038c6956bfcc3481478b97e23429a985d88b34085c67512d968"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,7 +3,7 @@\n \n out = []\n section = None\n-for line in lines:\n+for line in list(lines)[:-1]:\n     stripped = line.strip()\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n         section = stripped[1:-1]\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in list(lines)[:-1]:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "62b9494348948339c999c9fa3ef3b9d5fa019bded1f32d45d17c30b31cbeee8d",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: app.ini lacks '[reports]\\npool_size = 5\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The file must still end with a newline and every other line stays as is: Dropping the last split element (the empty string after the final newline) removes the trailing newline from app.ini.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[reports]\\npool_size = 5\\n'",
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     },
+     {
+      "failed": [
+       "app.ini does not match /pool_size = 5\\n\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "The file must still end with a newline (exactly one, as in the original)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "62b9494348948339c999c9fa3ef3b9d5fa019bded1f32d45d17c30b31cbeee8d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,5 +1,4 @@\n-with open(\"app.ini\", encoding=\"utf-8\") as fh:\n-    lines = fh.read().split(\"\\n\")\n+pass\n \n out = []\n section = None\n",
+   "files": {
+    "solve.py": "pass\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e9360695aee52a561a7530789099400f731bdc56a1e5df7cc0d12ca07d76ac1a",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "edit app.ini in place: The file is never read, so lines is undefined and the script raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e9360695aee52a561a7530789099400f731bdc56a1e5df7cc0d12ca07d76ac1a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,8 +10,7 @@\n     if section == \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n     out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n-        out.append(\"timeout = 15\")\n+    pass\n \n with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n     fh.write(\"\\n\".join(out))\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    pass\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3a4a0a1025885b2711ab1c3b475b9d69147380b0c75ee04c13fa27e7d5722b77",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Insert timeout = 15 after the cache url line: The insertion step was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3a4a0a1025885b2711ab1c3b475b9d69147380b0c75ee04c13fa27e7d5722b77"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,7 +11,7 @@\n         line = \"pool_size = 20\"\n     out.append(line)\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n-        out.append(\"timeout = 15\")\n+        pass\n \n with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n     fh.write(\"\\n\".join(out))\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        pass\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "94251f0895b113ebbefd557527ea05567a5a6cbbfe113bcefa8bec2c34635413",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Insert timeout = 15 after the cache url line: The insertion is replaced by pass, so the line is never added.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "94251f0895b113ebbefd557527ea05567a5a6cbbfe113bcefa8bec2c34635413"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,5 +1,5 @@\n with open(\"app.ini\", encoding=\"utf-8\") as fh:\n-    lines = fh.read().split(\"\\n\")\n+    pass\n \n out = []\n section = None\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    pass\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f082429135bcdc60cea080d138c70dd39f2bd4a8330f2a4cba74fd29cfc281cb",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "edit app.ini in place: The file is never read into lines, so the script raises NameError and does not edit app.ini.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f082429135bcdc60cea080d138c70dd39f2bd4a8330f2a4cba74fd29cfc281cb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n with open(\"app.ini\", encoding=\"utf-8\") as fh:\n     lines = fh.read().split(\"\\n\")\n \n-out = []\n+pass\n section = None\n for line in lines:\n     stripped = line.strip()\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\npass\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f5f28763a4b9f88cf0f452a2812dc6954984a71e157a5095dfeb6eddaf2749b9",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "edit app.ini in place: The out list is no longer defined, so the script raises NameError and does not edit the file.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f5f28763a4b9f88cf0f452a2812dc6954984a71e157a5095dfeb6eddaf2749b9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,7 +6,7 @@\n for line in lines:\n     stripped = line.strip()\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n-        section = stripped[1:-1]\n+        pass\n     if section == \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n     out.append(line)\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        pass\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8d0af54736256b9c9dcdf260c90f17312dc240dd9e914d183bbe047507aae54c",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Edit pool_size and add timeout in their sections: The section is never set, so neither edit is applied.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8d0af54736256b9c9dcdf260c90f17312dc240dd9e914d183bbe047507aae54c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,4 +1,4 @@\n-with open(\"app.ini\", encoding=\"utf-8\") as fh:\n+with open('app.ini.bak', encoding=\"utf-8\") as fh:\n     lines = fh.read().split(\"\\n\")\n \n out = []\n",
+   "files": {
+    "solve.py": "with open('app.ini.bak', encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "082e0697358324120d0543f33b508b5e257bf240f09e5ba2fafbab2d9d48e2c1",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Edit app.ini in place: The script reads app.ini.bak rather than app.ini.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "082e0697358324120d0543f33b508b5e257bf240f09e5ba2fafbab2d9d48e2c1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -13,5 +13,5 @@\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n         out.append(\"timeout = 15\")\n \n-with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n+with open('app.ini.bak', \"w\", encoding=\"utf-8\") as fh:\n     fh.write(\"\\n\".join(out))\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open('app.ini.bak', \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "007b4d1cc07d4b8e485be520f22470f4ddcc2d516d5faee42dca8bc163cc90a9",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Edit app.ini in place: The output is written to app.ini.bak and app.ini is left unmodified.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "007b4d1cc07d4b8e485be520f22470f4ddcc2d516d5faee42dca8bc163cc90a9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,8 +7,6 @@\n     stripped = line.strip()\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n         section = stripped[1:-1]\n-    if section == \"database\" and stripped == \"pool_size = 5\":\n-        line = \"pool_size = 20\"\n     out.append(line)\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n         out.append(\"timeout = 15\")\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4449b8fd0af3e4d626fc073a78138d4f0c46f454a01aadfb3515e819335c9ba5",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Change pool_size = 5 to pool_size = 20 in [database]: The pool_size edit has been removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[database]\\nurl = postgres://booking@db.internal/booking\\npool_size = 20\\n; seconds'"
+      ],
+      "requirement": "R1",
+      "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4449b8fd0af3e4d626fc073a78138d4f0c46f454a01aadfb3515e819335c9ba5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,9 +9,9 @@\n         section = stripped[1:-1]\n     if section == \"database\" and stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n-    out.append(line)\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n         out.append(\"timeout = 15\")\n+    out.append(line)\n \n with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n     fh.write(\"\\n\".join(out))\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n    out.append(line)\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ca5a5808bce909ae6b2fd7f766de4e2fb28b330390b2b7616e3827f693f14ab6",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Insert `timeout = 15` directly after the url line in [cache]: The timeout line is now inserted before the url line instead of after it.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks 'url = redis://cache.internal:6379/0\\ntimeout = 15\\n'"
+      ],
+      "requirement": "R2",
+      "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+     },
+     {
+      "failed": [
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ca5a5808bce909ae6b2fd7f766de4e2fb28b330390b2b7616e3827f693f14ab6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n     stripped = line.strip()\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n         section = stripped[1:-1]\n-    if section == \"database\" and stripped == \"pool_size = 5\":\n+    if stripped == \"pool_size = 5\":\n         line = \"pool_size = 20\"\n     out.append(line)\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c7c91e78e3455d1cf287c715fccfc21c726ef6f012e0d09bb341ab546aaaf35d",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: app.ini lacks '[reports]\\npool_size = 5\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Only change pool_size in the [database] section; every other line must stay unchanged: Dropping the section check changes any `pool_size = 5` line in other sections as well.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[reports]\\npool_size = 5\\n'",
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     },
+     {
+      "failed": [
+       "app.ini does not match /pool_size = 5\\n\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "The file must still end with a newline (exactly one, as in the original)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c7c91e78e3455d1cf287c715fccfc21c726ef6f012e0d09bb341ab546aaaf35d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -14,4 +14,4 @@\n         out.append(\"timeout = 15\")\n \n with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+    fh.write(\"\\n\".join(out).rstrip(\"\\n\"))\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out).rstrip(\"\\n\"))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "aebf3b3bfe0774dd158b918660c4dcbf8caa48eefbfa71d53d39b48bd4e63420",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: app.ini lacks '[reports]\\npool_size = 5\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The file must still end with a newline: rstrip removes the trailing newline so app.ini no longer ends with a newline.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "app.ini lacks '[reports]\\npool_size = 5\\n'",
+       "app.ini differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+     },
+     {
+      "failed": [
+       "app.ini does not match /pool_size = 5\\n\\Z/"
+      ],
+      "requirement": "R4",
+      "text": "The file must still end with a newline (exactly one, as in the original)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "aebf3b3bfe0774dd158b918660c4dcbf8caa48eefbfa71d53d39b48bd4e63420"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,5 +1,5 @@\n-with open(\"app.ini\", encoding=\"utf-8\") as fh:\n-    lines = fh.read().split(\"\\n\")\n+with open(\"app.ini\", encoding=\"utf-8\", newline=\"\") as fh:\n+    lines = fh.readlines()\n \n out = []\n section = None\n@@ -8,10 +8,10 @@\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n         section = stripped[1:-1]\n     if section == \"database\" and stripped == \"pool_size = 5\":\n-        line = \"pool_size = 20\"\n+        line = \"pool_size = 20\" + line[len(line.rstrip(\"\\r\\n\")):]\n     out.append(line)\n     if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n-        out.append(\"timeout = 15\")\n+        out.append(\"timeout = 15\\n\")\n \n-with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+with open(\"app.ini\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+    fh.writelines(out)\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\", newline=\"\") as fh:\n    lines = fh.readlines()\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\" + line[len(line.rstrip(\"\\r\\n\")):]\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\\n\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.writelines(out)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3bf3e0ac13e0b87cb8ad887fce8503130718d42fb025add2a0df0be24e751ca9",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same two edits are made, other lines and the trailing newline are kept.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "3bf3e0ac13e0b87cb8ad887fce8503130718d42fb025add2a0df0be24e751ca9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,17 +1,20 @@\n with open(\"app.ini\", encoding=\"utf-8\") as fh:\n     lines = fh.read().split(\"\\n\")\n \n-out = []\n section = None\n-for line in lines:\n+url_index = None\n+for i, line in enumerate(lines):\n     stripped = line.strip()\n     if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n         section = stripped[1:-1]\n+        continue\n     if section == \"database\" and stripped == \"pool_size = 5\":\n-        line = \"pool_size = 20\"\n-    out.append(line)\n-    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n-        out.append(\"timeout = 15\")\n+        lines[i] = \"pool_size = 20\"\n+    elif section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n+        url_index = i\n+\n+if url_index is not None:\n+    lines.insert(url_index + 1, \"timeout = 15\")\n \n with open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n-    fh.write(\"\\n\".join(out))\n+    fh.write(\"\\n\".join(lines))\n",
+   "files": {
+    "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nsection = None\nurl_index = None\nfor i, line in enumerate(lines):\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n        continue\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        lines[i] = \"pool_size = 20\"\n    elif section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        url_index = i\n\nif url_index is not None:\n    lines.insert(url_index + 1, \"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(lines))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "633b9ce39e2d0002bc6b09246ac68390694228f1793e3702d9cc546fd6a032fa",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "ini-edit",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It makes the same two edits and preserves all other lines and the file ending.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "633b9ce39e2d0002bc6b09246ac68390694228f1793e3702d9cc546fd6a032fa"
+   }
+  }
+ ]
+}

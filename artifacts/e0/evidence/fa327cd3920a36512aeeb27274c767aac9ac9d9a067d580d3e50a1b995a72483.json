@@ -1,0 +1,1095 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "call_log": [
+    {
+     "detail": "PRM-7730",
+     "status": "ok",
+     "tool": "renew_permit"
+    },
+    {
+     "detail": "CU-5521",
+     "status": "ok",
+     "tool": "charge_card"
+    }
+   ],
+   "charges": [
+    {
+     "amount_cents": 9600,
+     "customer_id": "CU-5521",
+     "description": "permit renewal PRM-7730"
+    }
+   ],
+   "customers": {
+    "CU-5521": {
+     "card_last4": "0094",
+     "name": "Dana Kowalski"
+    },
+    "CU-6100": {
+     "card_last4": "7781",
+     "name": "Raul Mendes"
+    }
+   },
+   "permits": {
+    "PRM-7730": {
+     "customer_id": "CU-5521",
+     "expires": "2027-11-30",
+     "plate": "KX-482-LM",
+     "status": "active",
+     "zone": "R4"
+    },
+    "PRM-7731": {
+     "customer_id": "CU-6100",
+     "expires": "2027-02-28",
+     "plate": "KX-713-AB",
+     "status": "active",
+     "zone": "R4"
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "plate": "KX-482-LM"
+    },
+    "result": {
+     "customer_id": "CU-5521",
+     "expires": "2026-11-30",
+     "ok": true,
+     "permit_id": "PRM-7730",
+     "plate": "KX-482-LM",
+     "status": "active",
+     "zone": "R4"
+    },
+    "tool": "lookup_permit"
+   },
+   {
+    "args": {
+     "months": 12,
+     "permit_id": "PRM-7730"
+    },
+    "result": {
+     "expires": "2027-11-30",
+     "ok": true
+    },
+    "tool": "renew_permit"
+   },
+   {
+    "args": {
+     "amount_cents": 9600,
+     "customer_id": "CU-5521",
+     "description": "permit renewal PRM-7730"
+    },
+    "result": {
+     "charge_id": "CH-1",
+     "ok": true
+    },
+    "tool": "charge_card"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "plate": "KX-482-LM"
+     },
+     "tool": "lookup_permit",
+     "type": "trajectory_includes"
+    },
+    {
+     "first": {
+      "args": {
+       "plate": "KX-482-LM"
+      },
+      "tool": "lookup_permit"
+     },
+     "then": {
+      "args": {
+       "months": 12,
+       "permit_id": "PRM-7730"
+      },
+      "tool": "renew_permit"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Look up the permit by plate KX-482-LM with `lookup_permit`."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "months": 12,
+      "permit_id": "PRM-7730"
+     },
+     "tool": "renew_permit",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "2027-11-30",
+     "pointer": "/permits/PRM-7730/expires",
+     "type": "state_equals"
+    },
+    {
+     "equals": "active",
+     "pointer": "/permits/PRM-7730/status",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Renew PRM-7730 for 12 months with `renew_permit`, extending the expiry by 12 months."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "amount_cents": 9600,
+      "customer_id": "CU-5521",
+      "description": "permit renewal PRM-7730"
+     },
+     "tool": "charge_card",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": {
+      "amount_cents": 9600,
+      "customer_id": "CU-5521",
+      "description": "permit renewal PRM-7730"
+     },
+     "pointer": "/charges/0",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Charge Dana Kowalski's card on file (customer CU-5521) 9600 cents with `charge_card`, using the description `permit renewal PRM-7730`."
+  },
+  {
+   "checks": [
+    {
+     "equals": [
+      {
+       "amount_cents": 9600,
+       "customer_id": "CU-5521",
+       "description": "permit renewal PRM-7730"
+      }
+     ],
+     "pointer": "/charges",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "customer_id": "CU-6100"
+     },
+     "tool": "charge_card",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Do not make any other charge."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "permit_id": "PRM-7731"
+     },
+     "tool": "renew_permit",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": {
+      "customer_id": "CU-6100",
+      "expires": "2027-02-28",
+      "plate": "KX-713-AB",
+      "status": "active",
+      "zone": "R4"
+     },
+     "pointer": "/permits/PRM-7731",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Do not change any other permit."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:permit-renewal",
+ "task_hash": "fa327cd3920a36512aeeb27274c767aac9ac9d9a067d580d3e50a1b995a72483",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,29 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\n+    \"tool\": \"lookup_permit\",\n+    \"args\": {\n+      \"plate\": \"KX-482-LM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"lookup_permit\",\n+    \"args\": {\n+      \"plate\": \"KX-482-LM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_permit\",\n+    \"args\": {\n+      \"permit_id\": \"PRM-7730\",\n+      \"months\": 12\n+    }\n+  },\n+  {\n+    \"tool\": \"charge_card\",\n+    \"args\": {\n+      \"customer_id\": \"CU-5521\",\n+      \"amount_cents\": 9600,\n+      \"description\": \"permit renewal PRM-7730\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"lookup_permit\",\n    \"args\": {\n      \"plate\": \"KX-482-LM\"\n    }\n  },\n  {\n    \"tool\": \"lookup_permit\",\n    \"args\": {\n      \"plate\": \"KX-482-LM\"\n    }\n  },\n  {\n    \"tool\": \"renew_permit\",\n    \"args\": {\n      \"permit_id\": \"PRM-7730\",\n      \"months\": 12\n    }\n  },\n  {\n    \"tool\": \"charge_card\",\n    \"args\": {\n      \"customer_id\": \"CU-5521\",\n      \"amount_cents\": 9600,\n      \"description\": \"permit renewal PRM-7730\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "d7af74d708ff21a59ec56d12289948a5402c77b8ed4698f62e06b40959d10b61",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The extra lookup_permit call is read-only, and the required renewal and charge are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "d7af74d708ff21a59ec56d12289948a5402c77b8ed4698f62e06b40959d10b61"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\n+    \"tool\": \"lookup_permit\",\n+    \"args\": {\n+      \"plate\": \"KX-482-LM-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_permit\",\n+    \"args\": {\n+      \"permit_id\": \"PRM-7730\",\n+      \"months\": 12\n+    }\n+  },\n+  {\n+    \"tool\": \"charge_card\",\n+    \"args\": {\n+      \"customer_id\": \"CU-5521\",\n+      \"amount_cents\": 9600,\n+      \"description\": \"permit renewal PRM-7730\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"lookup_permit\",\n    \"args\": {\n      \"plate\": \"KX-482-LM-x\"\n    }\n  },\n  {\n    \"tool\": \"renew_permit\",\n    \"args\": {\n      \"permit_id\": \"PRM-7730\",\n      \"months\": 12\n    }\n  },\n  {\n    \"tool\": \"charge_card\",\n    \"args\": {\n      \"customer_id\": \"CU-5521\",\n      \"amount_cents\": 9600,\n      \"description\": \"permit renewal PRM-7730\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "5810940246b8e0939d6a929dca6ef96e785ea6bdca44f2c0e86afbc5c224314d",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks lookup_permit",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Look up the permit by plate KX-482-LM: lookup_permit is called with the wrong plate KX-482-LM-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks lookup_permit",
+       "order lookup_permit < renew_permit: None, 1"
+      ],
+      "requirement": "R1",
+      "text": "Look up the permit by plate KX-482-LM with `lookup_permit`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5810940246b8e0939d6a929dca6ef96e785ea6bdca44f2c0e86afbc5c224314d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\n+    \"tool\": \"lookup_permit\",\n+    \"args\": {\n+      \"plate\": \"KX-482-LM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_permit\",\n+    \"args\": {\n+      \"permit_id\": \"PRM-7730\",\n+      \"months\": 13\n+    }\n+  },\n+  {\n+    \"tool\": \"charge_card\",\n+    \"args\": {\n+      \"customer_id\": \"CU-5521\",\n+      \"amount_cents\": 9600,\n+      \"description\": \"permit renewal PRM-7730\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"lookup_permit\",\n    \"args\": {\n      \"plate\": \"KX-482-LM\"\n    }\n  },\n  {\n    \"tool\": \"renew_permit\",\n    \"args\": {\n      \"permit_id\": \"PRM-7730\",\n      \"months\": 13\n    }\n  },\n  {\n    \"tool\": \"charge_card\",\n    \"args\": {\n      \"customer_id\": \"CU-5521\",\n      \"amount_cents\": 9600,\n      \"description\": \"permit renewal PRM-7730\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "da8d9dd6cc6fa75d40102f94793cbe431824f7c33031ddf73f2ce730676bfaa7",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: order lookup_permit < renew_permit: 0, None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Renew the permit for 12 months: renew_permit is called with months 13 instead of 12.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order lookup_permit < renew_permit: 0, None"
+      ],
+      "requirement": "R1",
+      "text": "Look up the permit by plate KX-482-LM with `lookup_permit`."
+     },
+     {
+      "failed": [
+       "trajectory lacks renew_permit",
+       "state /permits/PRM-7730/expires = '2027-12-30'"
+      ],
+      "requirement": "R2",
+      "text": "Renew PRM-7730 for 12 months with `renew_permit`, extending the expiry by 12 months."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "da8d9dd6cc6fa75d40102f94793cbe431824f7c33031ddf73f2ce730676bfaa7"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\n+    \"tool\": \"lookup_permit\",\n+    \"args\": {\n+      \"plate\": \"KX-482-LM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_permit\",\n+    \"args\": {\n+      \"permit_id\": \"PRM-7730-x\",\n+      \"months\": 12\n+    }\n+  },\n+  {\n+    \"tool\": \"charge_card\",\n+    \"args\": {\n+      \"customer_id\": \"CU-5521\",\n+      \"amount_cents\": 9600,\n+      \"description\": \"permit renewal PRM-7730\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"lookup_permit\",\n    \"args\": {\n      \"plate\": \"KX-482-LM\"\n    }\n  },\n  {\n    \"tool\": \"renew_permit\",\n    \"args\": {\n      \"permit_id\": \"PRM-7730-x\",\n      \"months\": 12\n    }\n  },\n  {\n    \"tool\": \"charge_card\",\n    \"args\": {\n      \"customer_id\": \"CU-5521\",\n      \"amount_cents\": 9600,\n      \"description\": \"permit renewal PRM-7730\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1a2a9989d2adfcffc35b4a04301a5cfdf3f281050e0c95434ecb917c87e06336",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: order lookup_permit < renew_permit: 0, None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Renew permit PRM-7730: renew_permit is called with PRM-7730-x, so the correct permit is not renewed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order lookup_permit < renew_permit: 0, None"
+      ],
+      "requirement": "R1",
+      "text": "Look up the permit by plate KX-482-LM with `lookup_permit`."
+     },
+     {
+      "failed": [
+       "trajectory lacks renew_permit",
+       "state /permits/PRM-7730/expires = '2026-11-30'"
+      ],
+      "requirement": "R2",
+      "text": "Renew PRM-7730 for 12 months with `renew_permit`, extending the expiry by 12 months."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1a2a9989d2adfcffc35b4a04301a5cfdf3f281050e0c95434ecb917c87e06336"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\n+    \"tool\": \"lookup_permit\",\n+    \"args\": {\n+      \"plate\": \"KX-482-LM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_permit\",\n+    \"args\": {\n+      \"permit_id\": \"PRM-7730\",\n+      \"months\": 12\n+    }\n+  },\n+  {\n+    \"tool\": \"charge_card\",\n+    \"args\": {\n+      \"customer_id\": \"CU-5521\",\n+      \"amount_cents\": 9601,\n+      \"description\": \"permit renewal PRM-7730\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"lookup_permit\",\n    \"args\": {\n      \"plate\": \"KX-482-LM\"\n    }\n  },\n  {\n    \"tool\": \"renew_permit\",\n    \"args\": {\n      \"permit_id\": \"PRM-7730\",\n      \"months\": 12\n    }\n  },\n  {\n    \"tool\": \"charge_card\",\n    \"args\": {\n      \"customer_id\": \"CU-5521\",\n      \"amount_cents\": 9601,\n      \"description\": \"permit renewal PRM-7730\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "fa9eee2649ac6c13f264d1f4b10a71ae7ebd026cbe2ce706f780790922b35974",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks charge_card",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Charge 9600 cents: The charge amount is 9601 cents instead of 9600.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks charge_card",
+       "state /charges/0 = {'amount_cents': 9601, 'customer_id': 'CU-5521', 'description': 'permit renewal PRM-7730'}"
+      ],
+      "requirement": "R3",
+      "text": "Charge Dana Kowalski's card on file (customer CU-5521) 9600 cents with `charge_card`, using the description `permit renewal PRM-7730`."
+     },
+     {
+      "failed": [
+       "state /charges = [{'amount_cents': 9601, 'customer_id': 'CU-5521', 'description': 'permit renewal PRM-7730'}]"
+      ],
+      "requirement": "R4",
+      "text": "Do not make any other charge."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fa9eee2649ac6c13f264d1f4b10a71ae7ebd026cbe2ce706f780790922b35974"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\n+    \"tool\": \"lookup_permit\",\n+    \"args\": {\n+      \"plate\": \"KX-482-LM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_permit\",\n+    \"args\": {\n+      \"permit_id\": \"PRM-7730\",\n+      \"months\": 12\n+    }\n+  },\n+  {\n+    \"tool\": \"charge_card\",\n+    \"args\": {\n+      \"customer_id\": \"CU-5521-x\",\n+      \"amount_cents\": 9600,\n+      \"description\": \"permit renewal PRM-7730\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"lookup_permit\",\n    \"args\": {\n      \"plate\": \"KX-482-LM\"\n    }\n  },\n  {\n    \"tool\": \"renew_permit\",\n    \"args\": {\n      \"permit_id\": \"PRM-7730\",\n      \"months\": 12\n    }\n  },\n  {\n    \"tool\": \"charge_card\",\n    \"args\": {\n      \"customer_id\": \"CU-5521-x\",\n      \"amount_cents\": 9600,\n      \"description\": \"permit renewal PRM-7730\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a101111612b3893ebeda75907bb0613e20e6c97bc6159299d938d1872ced67bd",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks charge_card",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Charge customer CU-5521: The charge uses customer_id CU-5521-x, which is the wrong customer.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks charge_card",
+       "state /charges/0 missing"
+      ],
+      "requirement": "R3",
+      "text": "Charge Dana Kowalski's card on file (customer CU-5521) 9600 cents with `charge_card`, using the description `permit renewal PRM-7730`."
+     },
+     {
+      "failed": [
+       "state /charges = []"
+      ],
+      "requirement": "R4",
+      "text": "Do not make any other charge."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a101111612b3893ebeda75907bb0613e20e6c97bc6159299d938d1872ced67bd"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\n+    \"tool\": \"lookup_permit\",\n+    \"args\": {\n+      \"plate\": \"KX-482-LM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_permit\",\n+    \"args\": {\n+      \"permit_id\": \"PRM-7730\",\n+      \"months\": 12\n+    }\n+  },\n+  {\n+    \"tool\": \"charge_card\",\n+    \"args\": {\n+      \"customer_id\": \"CU-5521\",\n+      \"amount_cents\": 9600,\n+      \"description\": \"permit renewal PRM-7730-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"lookup_permit\",\n    \"args\": {\n      \"plate\": \"KX-482-LM\"\n    }\n  },\n  {\n    \"tool\": \"renew_permit\",\n    \"args\": {\n      \"permit_id\": \"PRM-7730\",\n      \"months\": 12\n    }\n  },\n  {\n    \"tool\": \"charge_card\",\n    \"args\": {\n      \"customer_id\": \"CU-5521\",\n      \"amount_cents\": 9600,\n      \"description\": \"permit renewal PRM-7730-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "f651d4d771b69095bcb033cc0c147111271ca4fdedcff928c1cfaee8dfb6515b",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks charge_card",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Charge with description 'permit renewal PRM-7730': The charge description was changed to 'permit renewal PRM-7730-x'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks charge_card",
+       "state /charges/0 = {'amount_cents': 9600, 'customer_id': 'CU-5521', 'description': 'permit renewal PRM-7730-x'}"
+      ],
+      "requirement": "R3",
+      "text": "Charge Dana Kowalski's card on file (customer CU-5521) 9600 cents with `charge_card`, using the description `permit renewal PRM-7730`."
+     },
+     {
+      "failed": [
+       "state /charges = [{'amount_cents': 9600, 'customer_id': 'CU-5521', 'description': 'permit renewal PRM-7730-x'}]"
+      ],
+      "requirement": "R4",
+      "text": "Do not make any other charge."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f651d4d771b69095bcb033cc0c147111271ca4fdedcff928c1cfaee8dfb6515b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,17 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\n+    \"tool\": \"renew_permit\",\n+    \"args\": {\n+      \"permit_id\": \"PRM-7730\",\n+      \"months\": 12\n+    }\n+  },\n+  {\n+    \"tool\": \"charge_card\",\n+    \"args\": {\n+      \"customer_id\": \"CU-5521\",\n+      \"amount_cents\": 9600,\n+      \"description\": \"permit renewal PRM-7730\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"renew_permit\",\n    \"args\": {\n      \"permit_id\": \"PRM-7730\",\n      \"months\": 12\n    }\n  },\n  {\n    \"tool\": \"charge_card\",\n    \"args\": {\n      \"customer_id\": \"CU-5521\",\n      \"amount_cents\": 9600,\n      \"description\": \"permit renewal PRM-7730\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "af06354b53f874a563af5fdcb7612b16e14b755b644f14360e060553895ed369",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks lookup_permit",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Look up the permit by plate with lookup_permit: The required lookup_permit step is skipped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks lookup_permit",
+       "order lookup_permit < renew_permit: None, 0"
+      ],
+      "requirement": "R1",
+      "text": "Look up the permit by plate KX-482-LM with `lookup_permit`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "af06354b53f874a563af5fdcb7612b16e14b755b644f14360e060553895ed369"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,16 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\n+    \"tool\": \"lookup_permit\",\n+    \"args\": {\n+      \"plate\": \"KX-482-LM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"charge_card\",\n+    \"args\": {\n+      \"customer_id\": \"CU-5521\",\n+      \"amount_cents\": 9600,\n+      \"description\": \"permit renewal PRM-7730\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"lookup_permit\",\n    \"args\": {\n      \"plate\": \"KX-482-LM\"\n    }\n  },\n  {\n    \"tool\": \"charge_card\",\n    \"args\": {\n      \"customer_id\": \"CU-5521\",\n      \"amount_cents\": 9600,\n      \"description\": \"permit renewal PRM-7730\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "33fd1c7b043300c591402dc3ed3e99e7d4d284f11b37760be9e5cbd75758dc87",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: order lookup_permit < renew_permit: 0, None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Renew the permit for 12 months with renew_permit: The renew_permit step was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order lookup_permit < renew_permit: 0, None"
+      ],
+      "requirement": "R1",
+      "text": "Look up the permit by plate KX-482-LM with `lookup_permit`."
+     },
+     {
+      "failed": [
+       "trajectory lacks renew_permit",
+       "state /permits/PRM-7730/expires = '2026-11-30'"
+      ],
+      "requirement": "R2",
+      "text": "Renew PRM-7730 for 12 months with `renew_permit`, extending the expiry by 12 months."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "33fd1c7b043300c591402dc3ed3e99e7d4d284f11b37760be9e5cbd75758dc87"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\n+    \"tool\": \"lookup_permit\",\n+    \"args\": {\n+      \"plate\": \"KX-482-LM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_permit\",\n+    \"args\": {\n+      \"permit_id\": \"PRM-7730\",\n+      \"months\": 12\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"lookup_permit\",\n    \"args\": {\n      \"plate\": \"KX-482-LM\"\n    }\n  },\n  {\n    \"tool\": \"renew_permit\",\n    \"args\": {\n      \"permit_id\": \"PRM-7730\",\n      \"months\": 12\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "14a41aa8e96217ea18253fa05ef78fa2684ca5ae1383b36e51f95302aa1b351f",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks charge_card",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Charge her card 9600 cents: The charge_card step is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks charge_card",
+       "state /charges/0 missing"
+      ],
+      "requirement": "R3",
+      "text": "Charge Dana Kowalski's card on file (customer CU-5521) 9600 cents with `charge_card`, using the description `permit renewal PRM-7730`."
+     },
+     {
+      "failed": [
+       "state /charges = []"
+      ],
+      "requirement": "R4",
+      "text": "Do not make any other charge."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "14a41aa8e96217ea18253fa05ef78fa2684ca5ae1383b36e51f95302aa1b351f"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\n+    \"tool\": \"renew_permit\",\n+    \"args\": {\n+      \"permit_id\": \"PRM-7730\",\n+      \"months\": 12\n+    }\n+  },\n+  {\n+    \"tool\": \"lookup_permit\",\n+    \"args\": {\n+      \"plate\": \"KX-482-LM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"charge_card\",\n+    \"args\": {\n+      \"customer_id\": \"CU-5521\",\n+      \"amount_cents\": 9600,\n+      \"description\": \"permit renewal PRM-7730\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"renew_permit\",\n    \"args\": {\n      \"permit_id\": \"PRM-7730\",\n      \"months\": 12\n    }\n  },\n  {\n    \"tool\": \"lookup_permit\",\n    \"args\": {\n      \"plate\": \"KX-482-LM\"\n    }\n  },\n  {\n    \"tool\": \"charge_card\",\n    \"args\": {\n      \"customer_id\": \"CU-5521\",\n      \"amount_cents\": 9600,\n      \"description\": \"permit renewal PRM-7730\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "99923b1134721a3b2be0e32f851dbabe1129e75056f71970d5156479bc9820c4",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "permit-renewal",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R1: order lookup_permit < renew_permit: 1, 0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The same renew and charge calls are made with the same arguments and the permit id is given in the task, so only the order of a read-only lookup changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,23 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\n+    \"tool\": \"lookup_permit\",\n+    \"args\": {\n+      \"plate\": \"KX-482-LM\"\n+    }\n+  },\n+  {\n+    \"tool\": \"charge_card\",\n+    \"args\": {\n+      \"customer_id\": \"CU-5521\",\n+      \"amount_cents\": 9600,\n+      \"description\": \"permit renewal PRM-7730\"\n+    }\n+  },\n+  {\n+    \"tool\": \"renew_permit\",\n+    \"args\": {\n+      \"permit_id\": \"PRM-7730\",\n+      \"months\": 12\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"lookup_permit\",\n    \"args\": {\n      \"plate\": \"KX-482-LM\"\n    }\n  },\n  {\n    \"tool\": \"charge_card\",\n    \"args\": {\n      \"customer_id\": \"CU-5521\",\n      \"amount_cents\": 9600,\n      \"description\": \"permit renewal PRM-7730\"\n    }\n  },\n  {\n    \"tool\": \"renew_permit\",\n    \"args\": {\n      \"permit_id\": \"PRM-7730\",\n      \"months\": 12\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "29aa60e24ade76b62d60d7d4466409842e2c5880f079a266f3dec0b60851c591",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same lookup, renewal and 9600-cent charge are made with the same arguments; only the order of the last two steps changed and the task does not strictly require it.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "29aa60e24ade76b62d60d7d4466409842e2c5880f079a266f3dec0b60851c591"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n   {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n   {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "fb5e6fca3e2b82d0ddbfe3721a643a12d5c106893062cd319b172d2cd0249a37",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks lookup_permit",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Look up the permit by plate with lookup_permit: The required lookup_permit step was skipped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks lookup_permit",
+       "order lookup_permit < renew_permit: None, 0"
+      ],
+      "requirement": "R1",
+      "text": "Look up the permit by plate KX-482-LM with `lookup_permit`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fb5e6fca3e2b82d0ddbfe3721a643a12d5c106893062cd319b172d2cd0249a37"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n+  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 1}},\n   {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 1}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "656a09bd77018c56478604a96891c260b307c6c5a34ed0147a87ad549a8c85f6",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: order lookup_permit < renew_permit: 0, None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Renew it for 12 months: It renews for 1 month.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order lookup_permit < renew_permit: 0, None"
+      ],
+      "requirement": "R1",
+      "text": "Look up the permit by plate KX-482-LM with `lookup_permit`."
+     },
+     {
+      "failed": [
+       "trajectory lacks renew_permit",
+       "state /permits/PRM-7730/expires = '2026-12-30'"
+      ],
+      "requirement": "R2",
+      "text": "Renew PRM-7730 for 12 months with `renew_permit`, extending the expiry by 12 months."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "656a09bd77018c56478604a96891c260b307c6c5a34ed0147a87ad549a8c85f6"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n   {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 960, \"description\": \"permit renewal PRM-7730\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 960, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "61829072f9dc8a3dc502abdeae322c2629817416d17802412f196385631bc7bf",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks charge_card",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Charge 9600 cents: The charge amount is 960 cents.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks charge_card",
+       "state /charges/0 = {'amount_cents': 960, 'customer_id': 'CU-5521', 'description': 'permit renewal PRM-7730'}"
+      ],
+      "requirement": "R3",
+      "text": "Charge Dana Kowalski's card on file (customer CU-5521) 9600 cents with `charge_card`, using the description `permit renewal PRM-7730`."
+     },
+     {
+      "failed": [
+       "state /charges = [{'amount_cents': 960, 'customer_id': 'CU-5521', 'description': 'permit renewal PRM-7730'}]"
+      ],
+      "requirement": "R4",
+      "text": "Do not make any other charge."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "61829072f9dc8a3dc502abdeae322c2629817416d17802412f196385631bc7bf"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n   {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n+  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}},\n   {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "a172fe63812ca4969f040e84579c27db01bdb24d962bc674bbb6e6552be7e3eb",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: state /charges = [{'amount_cents': 9600, 'customer_id': 'CU-5521', 'description': 'permit renewal PRM-7730'}, {'amount_cents': 9600, 'customer_id': 'CU-5521', 'description': 'permit renewal PRM-7730'}]",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not make any other charge: The card is charged twice.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /charges = [{'amount_cents': 9600, 'customer_id': 'CU-5521', 'description': 'permit renewal PRM-7730'}, {'amount_cents': 9600, 'customer_id': 'CU-5521', 'description': 'permit renewal PRM-7730'}]"
+      ],
+      "requirement": "R4",
+      "text": "Do not make any other charge."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a172fe63812ca4969f040e84579c27db01bdb24d962bc674bbb6e6552be7e3eb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n   {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n+  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7731\", \"months\": 12}},\n   {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7731\", \"months\": 12}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "3b32b04c8136bf8a28eaec242da495efcb37c864bc60edfba67ea81d636cc0e2",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: trajectory has renew_permit",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "do not change any other permit: It also renews PRM-7731.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory has renew_permit",
+       "state /permits/PRM-7731 = {'customer_id': 'CU-6100', 'expires': '2028-02-28', 'plate': 'KX-713-AB', 'status': 'active', 'zone': 'R4'}"
+      ],
+      "requirement": "R5",
+      "text": "Do not change any other permit."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3b32b04c8136bf8a28eaec242da495efcb37c864bc60edfba67ea81d636cc0e2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n-]\n+[{\"args\":{\"plate\":\"KX-482-LM\"},\"tool\":\"lookup_permit\"},{\"args\":{\"months\":12,\"permit_id\":\"PRM-7730\"},\"tool\":\"renew_permit\"},{\"args\":{\"amount_cents\":9600,\"customer_id\":\"CU-5521\",\"description\":\"permit renewal PRM-7730\"},\"tool\":\"charge_card\"}]\n",
+   "files": {
+    "trajectory.json": "[{\"args\":{\"plate\":\"KX-482-LM\"},\"tool\":\"lookup_permit\"},{\"args\":{\"months\":12,\"permit_id\":\"PRM-7730\"},\"tool\":\"renew_permit\"},{\"args\":{\"amount_cents\":9600,\"customer_id\":\"CU-5521\",\"description\":\"permit renewal PRM-7730\"},\"tool\":\"charge_card\"}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "56931b8f74813a227576d3deb7782cb39bbbc6772a269fdbcd8aa1e661927532",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only JSON formatting and key order changed; the calls and arguments are identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "56931b8f74813a227576d3deb7782cb39bbbc6772a269fdbcd8aa1e661927532"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n+  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}},\n+  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1db3e559c93a2636bcc6b08726512832caff1d3f6edea1f2ef66df22d958af5e",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "permit-renewal",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same lookup, renewal, and charge are made with the same arguments; the task does not mandate renew-before-charge ordering.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "1db3e559c93a2636bcc6b08726512832caff1d3f6edea1f2ef66df22d958af5e"
+   }
+  }
+ ]
+}

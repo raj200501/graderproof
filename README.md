@@ -1,276 +1,154 @@
 # graderproof
 
-**Mutation and metamorphic testing for agent-benchmark graders: measure how often a grader accepts a broken solution or rejects a correct one, find the tasks responsible, and write the missing checks.**
+**Mutation and metamorphic testing for agent-benchmark graders: how often does a grader accept a broken solution, or reject a correct one?**
 
-> **This README is a build brief, not a finished project.** It is the complete kickoff prompt for an autonomous Claude Code session that builds graderproof from an empty repository. Nothing below is a result yet. Claude replaces this file with the real README described in section 11 once real results exist (gate G13 checks it); the brief itself stays at `docs/BUILD_BRIEF.md`.
+Agent benchmarks and RL environments trust their graders. A grader that accepts a broken solution inflates scores and rewards a loophole; one that rejects a correct solution deflates scores and punishes correct behavior. graderproof measures both errors for any task with a reference solution and a grading command: it edits the reference into variants that break a stated requirement (mutation testing) and variants that keep every requirement (metamorphic testing), counts a variant only when a deterministic requirement witness and an independent model review agree on its label, runs the grader on each variant in a network-free sandbox, reports task-level false-accept and false-reject rates with task-clustered intervals, and synthesizes grader repairs that are kept only if they pass validation. Hypotheses are preregistered before their data exist, and every number in this README is rendered from a banked artifact.
 
-## 0. Launch (for Raj)
+On a preregistered planted-ground-truth test (synthetic, project-written tasks), graderproof detected 26<!--claim:e0.n_detected--> of 32<!--claim:e0.n_planted--> planted grader weaknesses: recall 0.81<!--claim:e0.recall--> (95% CI 0.68<!--claim:e0.recall_lo--> to 0.93<!--claim:e0.recall_hi-->), short of its preregistered 0.90 target, at precision 0.93<!--claim:e0.precision--> (95% CI 0.82<!--claim:e0.precision_lo--> to 1.00<!--claim:e0.precision_hi-->), which met it. It also found witness-backed weaknesses that an independent adjudicator confirmed in graders that were written to be clean. Its synthesized repairs were accepted for 36<!--claim:e4.tb.repaired--> of the 36<!--claim:e4.tb.with_survivors--> toybench graders with a surviving violating variant (1<!--claim:e4.tb.adjudicated_not_real--> of them an adjudicated false positive), and on a fresh batch of variants they had never seen, caught 21<!--claim:e4.tb.caught--> of 23<!--claim:e4.tb.survivors_original--> new survivors while rejecting 0<!--claim:e4.tb.induced_fr--> of the correct solutions that the original graders accepted. No public benchmark has been audited yet (see [Status](#status)).
 
-**Cost: $0 cash.** Everything runs on Claude through your Claude Code Max plan, free open-weight models running locally, and optional free tiers you choose to switch on. No paid API is ever called (section 8). Plan usage limits are shared across sessions, so run at most two of these five projects at the same time.
+![Recall and precision of graderproof on the planted toybench weaknesses, with 95% CI bootstrap intervals](docs/figures/e0-headline.svg)
 
-1. **Pick a machine** where the `claude` CLI is logged in to your Max plan. Your laptop works. Docker is a bonus: some experiments use it, and each one has a Docker-free fallback. Claude Code on the web can build the project too, but experiments that use Claude as a test subject need the `claude` CLI inside the environment. `make doctor` reports what is possible and the plan adapts.
-2. **Clone:**
-   ```bash
-   git clone https://github.com/raj200501/graderproof.git && cd graderproof
-   ```
-   This repository is private. Make it public yourself after you have read docs/REPORT.md.
-3. **Optional settings** (skip freely). Set them only as environment variables, never in files:
-   - Free tiers: `GEMINI_API_KEY` from a Google AI Studio project with no billing attached, `OPENROUTER_API_KEY` from an account with zero credits (only `:free` models get used), `GITHUB_MODELS_TOKEN` (fine-grained token with `models:read`). Then `export FREE_TIER_KEYS_CONFIRMED=1` to confirm none of them can charge you. Without that flag, Claude ignores them.
-   - `export ALLOW_PUSH=1` lets Claude push commits (never tags) to this private repo, so you can follow progress on GitHub.
-   - `export CAP_SHARE=0.5` in each shell if you run two projects at once, so they split the usage caps in section 8.
-4. **Check that nothing can bill you, then start Claude Code in auto mode.** First run `env | grep -E '^(ANTHROPIC_|CLAUDE_CODE_USE_)'` and unset anything it prints: an API key in the environment is billed per token even when you are logged in. Then:
-   ```bash
-   claude --permission-mode auto
-   ```
-   Inside Claude Code, `/status` should show your Max subscription as the login method. Or press Shift+Tab until auto mode shows. Avoid `--dangerously-skip-permissions` unless you are inside a throwaway VM or container.
-5. **Paste message 1, the heartbeat.** It schedules itself every 30 minutes for 7 days and only fires while the session is idle, so it restarts work whenever the goal finishes, pauses on a usage limit, or stalls:
-   ```text
-   /loop 30m Heartbeat for graderproof. If docs/BUILD_BRIEF.md does not exist, run only the Bootstrap in section 10.1 of README.md. Otherwise read CLAUDE.md, STATUS.md, and section 10 of docs/BUILD_BRIEF.md. If the STATE line of STATUS.md says BLOCKED ON RAJ or LADDER COMPLETE and nothing new has come from Raj since (a commit, file, or environment change), reply with that line only. If a background run is still in progress, check on it and do only work that starts no new model runs. Otherwise run exactly one Loop Protocol iteration: the next failing Definition-of-Done gate, or, once all 14 gates pass, the next Stretch Ladder rung in section 7. Verify with `python tools/ship_check.py --fast` (section 10.6 says when to run the full check), update STATUS.md, commit, and finish with a three-line summary.
-   ```
-6. **Paste message 2, the goal.** Work starts immediately and continues turn after turn until the Definition of Done is proven in the transcript, or until Claude shows it is blocked on something only you can do:
-   ```text
-   /goal Build the graderproof project exactly as specified in its build brief. If docs/BUILD_BRIEF.md does not exist, copy README.md verbatim to it and run the Bootstrap in section 10.1. If it exists, it is the immutable brief: check it against docs/BUILD_BRIEF.sha256, never copy over it or bootstrap again, and continue the Loop Protocol in section 10.2. Done means (A) or (B) appears in this conversation after your latest commit. (A) Shipped: one message of yours quotes the full stdout of a full `make ship-check` (output marked FAST never counts), with one line for each of G1 to G14 from section 6 of docs/BUILD_BRIEF.md, none weakened, skipped, or redefined, and last line exactly `SHIP-CHECK: PASS 14/14`; the final line of the latest `make review`, `REVIEW: SHIP`; then `git rev-parse HEAD` printing the SHA named on the first line of the ship-check output, `git status` showing a clean working tree, and `git tag --points-at HEAD` showing v1.0. (B) Blocked: one message of yours starts with `BLOCKED ON RAJ`, quotes a ship-check run from that turn, and shows that every failing gate is listed under "Needs Raj" in STATUS.md with the exact action Raj must take, and that no further progress is possible without him. A usage-limit pause, missing Docker, or work that only needs more time is not (B) and does not make this impossible. Constraints on every turn: spend $0 cash (never call a paid API, buy credits, or change any plan); never edit docs/BUILD_BRIEF.md; never invent or hand-type a result number (every reported number comes from a banked artifact and passes claimcheck); never send email, open issues or pull requests, post, or publish anything, and push only as section 10.1 step 11 allows; work autonomously and record assumptions in DECISIONS.md instead of asking questions. Keep `goal_turn: N` as the first line of STATUS.md, add 1 at the start of every turn, and end each turn by stating goal_turn and which gates pass. Or stop once goal_turn reaches 300.
-   ```
-7. **Check in** with `/goal` (status and the evaluator's latest reason), `head -2 STATUS.md`, or `git log --oneline`. To stop: `/goal clear`, then ask Claude to cancel the scheduled loop. When the 7-day loop expires, a bare `/loop 30m` restarts it from `.claude/loop.md`. If a session ends, start a new one in the repo and paste the same two messages; the goal text resumes from the existing state instead of starting over.
+| Planted weakness type (E0, synthetic toybench) | Planted | Detected |
+|---|---|---|
+| presence-not-content | 6<!--claim:e0.type.presence-not-content.planted--> | 6<!--claim:e0.type.presence-not-content.detected--> |
+| exit-code-only | 5<!--claim:e0.type.exit-code-only.planted--> | 5<!--claim:e0.type.exit-code-only.detected--> |
+| outcome-only-process | 5<!--claim:e0.type.outcome-only-process.planted--> | 5<!--claim:e0.type.outcome-only-process.detected--> |
+| loose-matching | 6<!--claim:e0.type.loose-matching.planted--> | 5<!--claim:e0.type.loose-matching.detected--> |
+| brittle-parsing (false reject) | 5<!--claim:e0.type.brittle-parsing.planted--> | 3<!--claim:e0.type.brittle-parsing.detected--> |
+| timing | 5<!--claim:e0.type.timing.planted--> | 2<!--claim:e0.type.timing.detected--> |
 
-**If your Claude Code surface does not support `/goal` or `/loop`**, paste this single message instead:
+### Quickstart (about a minute, offline)
 
-```text
-Read docs/BUILD_BRIEF.md in full (README.md if that file does not exist yet) and execute it as your build brief. If docs/BUILD_BRIEF.md does not exist, start with the Bootstrap in section 10.1. Then repeat the Loop Protocol in section 10.2 without stopping to ask questions (record assumptions in DECISIONS.md), finish with the final sequence in section 10.6, and keep climbing the Stretch Ladder in section 7. Follow every rule in section 9 and the $0 budget in section 8.
+```bash
+git clone https://github.com/raj200501/graderproof && cd graderproof
+uv sync                 # Python 3.11 or 3.12
+make demo               # five synthetic demo tasks, recorded model responses, no network
 ```
 
-### 0.1 For Claude: if you were started without the two messages above
+The demo builds requirements, generates violating and preserving variants, runs each grader in a sandbox, and prints which graders accept broken solutions and which reject correct ones, with the witness for each. Its output is compared with a committed golden file.
 
-If Raj only asked you to "do the README" or "complete the prompt in the README", do not stop to ask. (a) If you have a scheduling tool that delivers its prompt back into this same session (for example CronCreate), schedule a recurring task every 30 minutes whose prompt is the message-1 text above without the leading `/loop 30m`. Never use a scheduler that starts a separate session per firing: two sessions must never work in one repository at once. (b) Then follow the fallback message exactly. (c) End your first reply with one line telling Raj he can paste the message-2 `/goal` line from section 0 to have an independent evaluator keep you going until the Definition of Done is proven.
+## What it is, and what it is not
 
-## 1. Mission
+graderproof is a measurement tool for the people who build and use agent benchmarks and RL environments. Given a task with a reference solution and a grading command, it asks two questions of the grader:
 
-Every agentic benchmark and RL environment rests on a grader. When a grader accepts a solution that violates the task, scores overstate capability and RL training learns the loophole. When it rejects a valid solution, scores understate capability and training punishes correct behavior. Those two error rates are almost never measured.
+- **False accept (E1):** does the grader pass a solution that breaks a requirement stated in the task text? graderproof mutates the reference solution (mutation testing), checks independently that each mutant really breaks a stated requirement, and runs the grader on it.
+- **False reject (E2):** does the grader fail a solution that still meets every requirement? graderproof applies changes the task text allows, such as output formatting, key order, or call order where order is free (metamorphic testing), checks that each variant still meets every requirement, and runs the grader on it.
 
-Build **graderproof**, the instrument that measures them:
+A variant counts only when two independent validators agree on its label (a deterministic requirement witness and a model review that never sees the grader), it carries a witness, and the grader's verdict is stable across repeated runs. Every flagged task comes with the evidence a maintainer needs to reproduce it.
 
-- A library and CLI that, for any task with a reference solution and a grading command, measures the grader's **false-accept rate** (validated spec-violating variants it passes) and **false-reject rate** (validated spec-satisfying variants it fails), with evidence for every flag.
-- The first two-sided grader audit across several public agentic benchmarks, with confidence intervals, per-task evidence, and a taxonomy of root causes.
-- Validated repairs: extra checks that catch the surviving violating variants without rejecting valid ones, packaged as upstream-ready patches.
-- A ranking-impact analysis that shows how published results change once graders are repaired.
+It is not an adversarial agent and it does not search for exploits: variants come only from the reference solution and the task text, so every finding is attributable and nothing here is a kit for gaming benchmarks. It is not a benchmark score either: a false accept says the grader is weaker than its task text, not that any agent exploited it.
 
-**Quality bar.** A research engineer on OpenAI's frontier evals and environments work, Anthropic's RL environments work, or the Terminal-Bench and Inspect maintainers should finish the README thinking "we should run this in CI on every new task." Hit the signals those teams say they value: measurement science (validity, reliability, variance), tools that drop into real workflows (Harbor, Inspect), clean engineering, and honest reporting.
+## Key results
 
-## 2. Why now, and what to beat
+| Experiment | Status | Result | Artifacts |
+|---|---|---|---|
+| **E0** tool validity on planted ground truth (synthetic) | done, as preregistered (one disclosed deviation in the adjudication prompt) | recall 0.81<!--claim:e0.recall--> (95% CI 0.68<!--claim:e0.recall_lo--> to 0.93<!--claim:e0.recall_hi-->): **H1 not met**; precision 0.93<!--claim:e0.precision--> (95% CI 0.82<!--claim:e0.precision_lo--> to 1.00<!--claim:e0.precision_hi-->): H2 met | [`artifacts/e0/results.json`](artifacts/e0/results.json), [`prereg/0001`](prereg/0001-e0-tool-validity.md), [misses](docs/E0_MISSES.md) |
+| **E1/E2** false accepts and false rejects on tau2-bench, BFCL, and HumanEval | preregistered, sample committed, not yet run (an amendment is in preparation; see [Status](#status)) | none yet | [`prereg/0002`](prereg/0002-e1e2-audit.md), [`prereg/0002-sample.json`](prereg/0002-sample.json) |
+| **E4** repair and generalization on toybench (synthetic) | done, as preregistered in `prereg/0002` | 36<!--claim:e4.tb.repaired--> of 36<!--claim:e4.tb.with_survivors--> graders with a surviving variant repaired (1<!--claim:e4.tb.adjudicated_not_real--> an adjudicated false positive); on a fresh batch, the repairs caught 21<!--claim:e4.tb.caught--> of 23<!--claim:e4.tb.survivors_original--> new survivors and induced 0<!--claim:e4.tb.induced_fr--> false rejects | [`artifacts/e4/toybench/summary.json`](artifacts/e4/toybench/summary.json), [`outbound/patches/toybench/`](outbound/patches/toybench/) |
+| **E3, E5, E6** root causes, impact on published results, lint validity | preregistered in `prereg/0002`; E3 and E6 runners built, E5 runner not yet | none yet; they need E1/E2 data | [`prereg/0002`](prereg/0002-e1e2-audit.md) |
 
-Read and position against these. Verify each before citing and drop any you cannot open.
+**E0 in brief.** An independent planting agent, which never saw graderproof's operators or validators, wrote 72<!--claim:e0.n_tasks--> small tasks in three formats (scripts, Python modules, tool-call trajectories): 32<!--claim:e0.n_planted--> with one planted grader weakness of a known type, 32<!--claim:e0.n_clean--> with graders meant to be clean, and 8<!--claim:e0.extra_n--> with weakness types outside the written list. The SHA-256 of its labels was committed before graderproof first ran on the tasks, and the analysis was frozen in [`prereg/0001`](prereg/0001-e0-tool-validity.md). Results:
 
-- OpenAI, "Why we no longer evaluate SWE-bench Verified" (2026). An audit found many tasks with flawed tests. https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified/
-- "Hardening Agent Benchmarks with Adversarial Hacker-Fixer Loops" (2026), https://arxiv.org/abs/2606.08960 (code: https://github.com/few-sh/harden-v0), and the follow-up "Scalable Weak-to-Strong Verifier Hardening" (2026), https://arxiv.org/abs/2610.15924. They measure attack success by adversarial agents, so coverage is bounded by how strong the attackers are.
-- "Terminal Wrench" (2026), a catalog of exploitable terminal tasks: https://arxiv.org/abs/2604.17596
-- "Auditing Reward Hackability in Code RL Training Environments" (2026), wrong patches passing on small samples of tasks, one error direction only: https://arxiv.org/abs/2606.16062
-- "Checking the Checkers" (2026), a review arguing that learnable verifier false positives destabilize RL with verifiable rewards: https://arxiv.org/abs/2610.17824
-- "Establishing Best Practices for Building Rigorous Agentic Benchmarks" (2025), the Agentic Benchmark Checklist: https://arxiv.org/abs/2507.02825
-- EvalPlus (2023), test augmentation for classic code benchmarks: https://arxiv.org/abs/2305.01210
-- The Terminal-Bench paper (2026): https://arxiv.org/abs/2601.11868
-- Raj's Fencecheck, https://github.com/raj200501/arc-ttt-public: a markdown fence makes graders score correct answers as zero. graderproof generalizes that false-reject finding and adds the false-accept direction.
+- graderproof detected every planted presence-not-content, exit-code-only, and outcome-only-process weakness, and most loose-matching ones. It missed 6<!--claim:e0.n_misses-->, mostly timing and brittle-parsing weaknesses; [docs/E0_MISSES.md](docs/E0_MISSES.md) explains each miss from the evidence and the grader source.
+- Recall missed the preregistered 0.90 target. The result is reported as it is; per the preregistration, an improved tool will be evaluated on a newly planted set under a new preregistration, never by re-running this one.
+- Of the flags that were not detections, an independent adjudicator confirmed 6<!--claim:e0.n_real--> as real weaknesses, including real weaknesses in graders the planter intended to be clean, and judged 2<!--claim:e0.n_fp--> to be false positives. Precision before adjudication was 0.76<!--claim:e0.precision_raw-->.
+- In the extra slice of unlisted weakness types, graderproof detected 5<!--claim:e0.extra_detected--> of 8<!--claim:e0.extra_n-->.
+- 1,362<!--claim:e0.n_headline--> variants counted in these numbers, each with two agreeing validations and a witness; validator agreement was 0.90<!--claim:e0.agreement-->; 289<!--claim:e0.n_excluded--> variants were excluded, 180<!--claim:e0.n_disagreed--> because the validators disagreed (or the model review was unsure) and 109<!--claim:e0.n_rejected--> because both validators labeled them the other way. E0 used 64<!--claim:e0.n_calls--> model calls.
 
-**The gap.** A principled, two-sided, per-task measurement of grader adequacy that does not depend on how clever an attacking agent is, backs every flag with validated evidence, and ends in a repair. Classic software testing supplies the vocabulary: mutation score for sensitivity and metamorphic relations for specificity.
+![Share of planted toybench weaknesses that graderproof detected, for each weakness type](docs/figures/e0-by-type.svg)
 
-## 3. Research questions
+**E4 in brief.** For every toybench grader with a surviving variant, graderproof grafted checks for the broken requirements onto the original grader and accepted the repair only if the patched grader passes the reference three times, still accepts every counted preserving variant, rejects every surviving variant it targets, and is deterministic. All 36<!--claim:e4.tb.repaired--> repairs were accepted. To test whether they generalize rather than overfit to the variants they were built from, a fresh batch of 188<!--claim:e4.tb.fresh--> variants (new seed, new model proposals) was run on the original and the repaired graders: of 23<!--claim:e4.tb.survivors_original--> fresh violating variants the original graders accepted, the repaired graders rejected 21<!--claim:e4.tb.caught-->, and of 65<!--claim:e4.tb.preserving_accepted--> fresh preserving variants the original graders accepted, the repaired graders rejected 0<!--claim:e4.tb.induced_fr-->. Two caveats: the fresh variants are labeled by the same requirement checks that the repairs graft, so this measures whether the grafted checks cover new survivors rather than giving an independent judgment (zero induced false rejects among counted variants follows by construction); and 1<!--claim:e4.tb.adjudicated_not_real--> repaired grader rests on an E0 flag the adjudicator ruled a false positive, so its repair enforces a requirement the task text does not state. The patches and their validation logs are in `outbound/patches/toybench/`.
 
-- **RQ1 False accepts.** For each benchmark, what fraction of tasks pass at least one validated spec-violating variant of the reference solution? What is the distribution of per-task mutation scores?
-- **RQ2 False rejects.** What fraction of tasks fail at least one validated spec-satisfying variant?
-- **RQ3 Root causes.** Which grader patterns explain RQ1 and RQ2: checking presence instead of content, exit-code-only checks, loose matching, outcome-only checks that ignore a required process, brittle parsing, timing?
-- **RQ4 Repair.** Can synthesized checks raise mutation scores without raising false rejects, and do they generalize to variants generated after the repair?
-- **RQ5 Impact.** When public per-task results are re-graded with repaired graders (or flagged tasks are excluded), how many pass/fail outcomes and model-pair orderings change, with intervals?
-- **RQ6 Cheap triage.** Do static grader features ("grader lint") predict low mutation scores well enough to prioritize audits?
+## Status
 
-Write formal, falsifiable hypotheses with frozen thresholds into `prereg/` before confirmatory runs. Do not presume directions: "these graders are mostly adequate" is a valid and publishable finding.
+Gate state from `python tools/ship_check.py --fast` on 4f53770 (a fast check; only a full `make ship-check` counts):
 
-## 4. What to build
+- **Passing:** G1 build and tests, G2 static quality, G3 CI parity, G4 offline demo, G6 validation integrity, G10 claim integrity, G11 preregistration, G13 documentation, G14 hygiene.
+- **Failing:** G5 tool validity, because E0 recall is below its preregistered threshold (a negative result, reported as it is). G7, G8, and G9 need the confirmatory audit of public benchmarks (E1/E2), repairs on them, and the impact study (E5), none of which has run. G12 needs an independent review of the current code: the last review, of 5677b9f, blocked on six issues, all fixed in 4f53770, which awaits its re-review.
+- **In progress:** E1/E2 on tau2-bench, BFCL, and HumanEval. Answering the first requirement-extraction requests showed that the frozen code clipped long task texts, which hid every tau2-bench customer request from the model, so a dated amendment to the preregistration comes before any E1/E2 data is collected ([D38](DECISIONS.md)). Until E1/E2 runs, this repository makes no claim about the graders of any public benchmark.
 
-Package `graderproof` (Python 3.11+, src layout, uv, MIT):
+## How it works
 
-- **`core`**: `Task` (id, instructions, environment spec, reference solution, grading entrypoint, metadata), `Variant` (kind violating or preserving, operator, diff, witness, validation status), `GraderRun` (exit status, outputs, duration, determinism).
-- **`adapters`**: one adapter per task format, each with recorded-fixture contract tests.
-  - Harbor and Terminal-Bench 2.0 task directories (instruction, environment, solution, tests). Needs Docker.
-  - BFCL-style function-calling checkers (AST and executable categories). No Docker.
-  - tau2-bench-style stateful tool-use tasks, whose graders compare final environment state and required outputs. No Docker, and no model calls are needed to run a grader on a constructed trajectory.
-  - inspect_evals tasks with deterministic scorers.
-  - `toybench`, a local format used for tests and the planted-weakness study.
-  - Check current docs and versions for every external format before writing its adapter.
-- **`variants.violating`**: spec-violating variants of the reference solution.
-  - Classical mutation operators for Python and shell: statement deletion, constant and boundary changes, negated conditions, skipped steps, wrong target file, partial output.
-  - Requirement-targeted variants: parse the task instructions into atomic requirements; for each one, a model (section 8) proposes a minimal edit to the reference solution that breaks exactly that requirement and leaves the rest intact. Batch requirements per task to save calls.
-  - Process variants for trajectory-graded tool-use tasks: drop a required confirmation step, reorder dependent actions, or take a policy-violating path that reaches the same end state.
-- **`variants.preserving`**: metamorphic, spec-satisfying variants: output formatting (whitespace, key order, number formats, code fences around structured output, trailing newline), equivalent implementations (a different algorithm or tool path), harmless ordering and naming changes, and valid alternative argument forms.
-- **`validate`**: independent evidence for every variant's label. A violating variant needs a machine-checkable witness derived from the task text (never from the grader) showing which requirement it breaks. A preserving variant needs differential evidence that it satisfies every requirement the reference satisfies. Use two independent validators (a deterministic witness plus a model review with a different prompt or model). Disagreements go to `private/review_queue/` for Raj and are excluded from headline numbers. Report the agreement rate.
-- **`run`**: sandboxed grader execution with backends (Docker, the Harbor runner, and a local subprocess sandbox with resource limits), content-addressed caching, and a determinism pre-check: run the grader on the unmodified reference k times first. Flaky tasks are reported separately, never silently dropped.
-- **`score`**: per-task mutation score, false-accept and false-reject indicators, handling of equivalent variants, and benchmark aggregates with task-clustered bootstrap intervals.
-- **`repair`**: synthesize additional checks that catch surviving violating variants. Accept a repair only if it passes the reference k times, passes every validated preserving variant, catches its target variants, and stays deterministic. Emit one patch file per task.
-- **`impact`**: re-grade public per-task artifacts where licenses allow (for example BFCL result files, tau2-bench trajectories, Harbor job outputs, or SWE-bench experiment logs if Docker and time allow) and compute pass flips and rank changes with a paired bootstrap.
-- **`lint`**: static grader smells: existence-only checks, exit-code-only checks, overly loose patterns, parse failure scored as zero, comparisons against files the agent itself can write, and outcome-only checks for process requirements.
-- **CLI**: `graderproof audit <path-or-dataset> --adapter ...`, `graderproof report`, `graderproof repair`, `graderproof lint`, and `graderproof card` (a one-page grader card per benchmark).
-- **Outputs**: per-task JSON with evidence (under `private/` for third-party tasks not yet fixed upstream, with only aggregates and hashes in `artifacts/`), per-benchmark grader cards (Markdown and JSON), and `docs/REPORT.md`.
-
-## 5. Experiments
-
-- **E0 Tool validity (planted ground truth).** Build `toybench` with at least 60 tasks across formats: half with deliberately planted grader weaknesses of known types (including planted false-reject brittleness), half clean. Measure graderproof's recall and precision against the planted labels, with intervals. A separate subagent that has not read `src/graderproof/variants/` or `src/graderproof/validate/` plants the weaknesses from a written list of the root-cause types in section 3, and the labels are committed as a hash before graderproof first runs on toybench. An extra slice of weakness types outside that list is reported beside G5 and not counted in it. A flag on a "clean" task whose witness validates is adjudicated as a real weakness and reported separately.
-- **E1 False-accept audit (confirmatory).** At least 3 public agentic benchmarks, including at least one tool-use benchmark, and a terminal or coding benchmark if Docker exists (otherwise a documented Docker-free substitute). Draw a stratified random sample of tasks per benchmark with a fixed seed. Set sample sizes by a power analysis in the preregistration: at least 40 tasks per benchmark, or all tasks if fewer.
-- **E2 False-reject audit (confirmatory).** The same tasks.
-- **E3 Root-cause coding.** Two independent coders (a rule-based coder and a model coder) classify every surviving variant into the taxonomy. Report agreement.
-- **E4 Repair and generalization.** Repair every task with a surviving variant. Measure the mutation-score gain and any change in false rejects. Then generate a fresh batch of variants after repair to test whether repairs generalize rather than overfit to the variants they were built from.
-- **E5 Impact on published results.** At least one benchmark with public per-task results.
-- **E6 Lint validity.** AUC of the lint score for predicting a mutation score below 0.8 (exploratory unless preregistered).
-
-**Analysis rules.** The task is the unit of analysis. Use cluster bootstrap over tasks, Holm correction across benchmarks for confirmatory tests, and report every preregistered outcome.
-
-## 6. Definition of Done (ship gates)
-
-`make ship-check` must print PASS for all 14 gates, checked on a fresh clone.
-
-- **G1 Build and tests.** `make setup` succeeds on a fresh clone and `make test` passes. Line coverage is at least 85% on core modules. Adapters that need external services may be excluded from coverage only if recorded-fixture contract tests cover them.
-- **G2 Static quality.** `ruff check`, `ruff format --check`, and `mypy --strict` on the package pass with zero errors. Every `type: ignore` carries a reason.
-- **G3 CI parity.** `.github/workflows/ci.yml` runs `make ci` (lint, typecheck, test, offline demo) on Python 3.11 and 3.12, and `make ci` passes locally.
-- **G4 Offline demo.** `make demo` finishes in under 3 minutes with no network and no model calls (recorded fixtures only) and matches its committed golden output.
-- **G5 Tool validity.** On toybench (E0), planted-weakness recall and precision (point estimates) are each at least 0.90, with 95% intervals printed. Every miss is explained in docs/E0_MISSES.md.
-- **G6 Validation integrity.** Every variant counted in a headline number has two agreeing validations. The agreement rate and excluded count are printed. Zero headline variants lack a witness.
-- **G7 Confirmatory audit.** E1 and E2 ran as preregistered on at least 3 benchmarks, and results are banked with intervals. If a benchmark cannot run in this environment, a substitute was chosen and justified in DECISIONS.md before any data collection.
-- **G8 Repair.** E4 ran, including the post-repair generalization batch. Every repaired task has a patch and a validation log. For third-party tasks not yet fixed upstream, both live under `private/outbound/patches/`, and the repository tracks only `outbound/patches/MANIFEST.json` with each file's SHA-256; ship-check verifies those hashes in the original checkout before it clones. Patches for toybench and for tasks already fixed upstream live under `outbound/patches/`.
-- **G9 Impact and cards.** E5 ran on at least one benchmark, and every audited benchmark has a grader card under `docs/cards/`. Cards show only aggregates for tasks not yet fixed upstream.
-- **G10 Claim integrity.** `make claimcheck` and `make freshness` pass on README.md and docs/REPORT.md.
-- **G11 Preregistration integrity.** `make prereg-verify` passes: every confirmatory artifact cites a preregistration whose commit predates the artifact's first commit, and no preregistration changed after it was frozen.
-- **G12 Independent review.** The latest `make review` ends with `REVIEW: SHIP` for the current code, with zero open blocking issues. Non-blocking issues are listed in docs/REVIEW_LOG.md.
-- **G13 Documentation.** README.md follows section 11, docs/REPORT.md is complete, and `make citecheck` shows every reference verified.
-- **G14 Hygiene.** `make secrets-scan` is clean. `make budget` shows `cash_usd = 0` and every cap respected. Nothing under private/ is tracked. LICENSE, CITATION.cff, SECURITY.md, and CONTRIBUTING.md exist. The original checkout's working tree is clean.
-
-## 7. Stretch Ladder (after the Definition of Done, one rung per iteration)
-
-1. Audit more suites: Harbor registry datasets that run here, plus open RL environment collections, up to three more suites.
-2. Package graderproof as a GitHub Action and a Harbor or Inspect plugin, ready for Raj to publish, so benchmark authors can get a grader-coverage check on every pull request.
-3. Compare with hacker-fixer hardening using its published findings and released outputs on overlapping tasks, without running adversarial agents (rule 15): overlap, unique finds on each side, and cost.
-4. Process-versus-outcome study for tool-use benchmarks: how often outcome-only graders pass trajectories that break a stated policy.
-5. Prepare, for Raj to release, a dataset of validated variants for tasks that maintainers have already patched (canary string, datasheet).
-6. A static site of grader cards, built locally under `site/`; Raj decides whether to publish it.
-7. An arXiv-ready LaTeX version of docs/REPORT.md for Raj to submit.
-8. Speed demo: run graderproof on a newly released benchmark and prepare its grader card and disclosure draft (in `private/` and `outbound/`) for Raj within a week.
-9. Last rung: when every rung is done or listed under "Blocked", set `STATE: LADDER COMPLETE` in STATUS.md and stop.
-
-## 8. Budget and compute
-
-**Cash budget: $0. This is absolute.** Never call a paid API, add a payment method, buy credits, upgrade a plan, or rent paid compute. If any call returns a billing, credit, or payment error, stop that path, log it, and continue with other work.
-
-Allowed model backends, in order of preference:
-
-1. **Local open-weight models** through Ollama, llama.cpp, or transformers. Pin the model, revision, quantization, and file hash. Respect the disk floor below.
-2. **Claude through Raj's Claude Code plan.** As an experimental subject or a pipeline worker, call headless Claude Code: `claude -p --model <haiku|sonnet|opus> --output-format stream-json --verbose`, run in a disposable workspace outside this repo. Plan usage is shared with Raj's other work, so be frugal; for a handful of pipeline calls, Claude Code subagents are fine.
-   - **Billing guard.** If `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL`, any `CLAUDE_CODE_USE_*` variable, or an `apiKeyHelper` setting is present, the client wrapper refuses to launch Claude children and adds the problem to "Needs Raj". Never use `--bare`: it ignores the Max login and authenticates only with an API key. The `total_cost_usd` field in stream-json output is an API-price estimate, not cash: log it as `plan_equivalent_usd`, never add it to `cash_usd`, and never treat `--max-budget-usd` as the $0 control.
-   - **Nesting.** If a child refuses to start or hangs because it detects the parent session, launch it with the parent-session markers removed from its environment only (for example `env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT claude -p ...`), the usual pattern for scripted automation. If it still fails, use subagents for small pipeline jobs and local models for subject runs, and add the limitation to "Needs Raj".
-3. **Optional free tiers, only if `FREE_TIER_KEYS_CONFIRMED=1` is set:** the Gemini API free tier or Gemini CLI with a personal login, OpenRouter models whose IDs end in `:free` (check that the models endpoint lists a zero price before every batch), and the GitHub Models free tier. Obey each provider's rate limits and terms. Never send anything under `private/` to a free-tier provider.
-
-Caps live in `budget.toml`, created at bootstrap from the defaults below. Claude may lower a cap and must never raise one. If a cap blocks the Definition of Done, add it to STATUS.md under "Needs Raj" and keep working on everything else.
-
-```toml
-cash_usd = 0                        # absolute; never change
-claude_agent_runs_per_day = 30      # multi-turn headless runs used as test subjects
-claude_agent_max_turns = 40         # per headless run (or per subtask message in resumed sessions)
-claude_single_calls_per_day = 300   # short single-turn calls (labeling, judging, extraction)
-claude_review_runs_per_day = 6      # make review
-local_model_max_params_b = 8        # make doctor may lower this to fit RAM
-disk_floor_gb = 8                   # never download if free disk would fall below this
+```mermaid
+flowchart LR
+    T[Task text and reference solution] --> R[Requirement extraction]
+    T --> V[Variant generation: violating and preserving]
+    R --> W[Deterministic witness]
+    V --> W
+    V --> M[Independent model review]
+    W --> A{Two validators agree?}
+    M --> A
+    A -- no --> Q[Review queue, excluded]
+    A -- yes --> S[Run grader in sandbox, repeated for stability]
+    S --> F[False-accept and false-reject flags per task]
+    F --> B[Task-clustered bootstrap intervals]
+    F --> C[Root causes, repairs, grader cards]
 ```
 
-If `CAP_SHARE` is set below 1 (Raj sets it when two projects run at once), the wrapper multiplies every `claude_*` cap by it. docs/PLAN.md schedules the Claude subject arms against the caps and starts them as early as the preregistration allows.
+1. **Requirements.** A model reads the task text and the reference outcome and writes checkable requirements (file contents, output, state, tool-call order, function results). A requirement that does not hold on the reference is dropped.
+2. **Variants.** Classical operators mutate Python, shell, and tool-call trajectories; preserving operators change only what the task leaves free; a model proposes further variants of both kinds from the task text. Sampling is capped per operator and per task, with a reserved share for preserving variants.
+3. **Validation.** The requirement witness and the model review each label every variant. Disagreements and unsure verdicts are excluded and queued for a human.
+4. **Execution.** Graders run under bubblewrap with no network, a scrubbed environment, the home and `private/` directories hidden, and resource limits. The reference runs three times; flagged verdicts are confirmed by two more runs. Executions are cached by a key that covers the code and the sandbox.
+5. **Statistics.** Task-level rates with percentile bootstrap intervals over tasks, exact binomial tests with Holm correction across benchmarks, and Clopper-Pearson intervals reported beside them.
 
-Usage hygiene:
+The full method is in [docs/REPORT.md](docs/REPORT.md).
 
-- Every model call goes through one client wrapper that enforces the caps, logs tokens and wall time to `artifacts/usage/ledger.jsonl`, and caches responses by content hash. A banked call is never re-run.
-- Prefer haiku for bulk work, sonnet for main arms, and opus for small confirmatory slices.
-- When a child run reports a usage limit, stop launching model runs, record the reset time in STATUS.md, commit, and end the turn; the heartbeat resumes after the reset. Runs longer than a few minutes go in the background with a PID file and a log under `runs/<id>/` (git-ignored), and at most one model-heavy run is active at a time.
-- `make doctor` detects Docker, GPU, RAM, free disk, the `claude` CLI and its login, Ollama, and any confirmed free-tier keys. Choose backends from its output and record them in STATUS.md.
-- **Sandboxing.** Subject agents, minimal-agent tool calls, and third-party code (graders, task repositories, benchmark scripts) never run directly on the host. Use Docker with `--network none` when available. Otherwise use an OS sandbox that blocks network and allows writes only inside a temporary workspace (bubblewrap on Linux, sandbox-exec on macOS, or Claude Code's built-in Bash sandbox for Claude subjects; check current docs), with `GH_TOKEN`, `GITHUB_TOKEN`, `SSH_AUTH_SOCK`, cloud credentials, and all API keys removed from the environment, and with `GIT_CONFIG_NOSYSTEM=1` and `GIT_CONFIG_GLOBAL=/dev/null`. If no sandbox works, run only this project's own generated tasks, record that in DECISIONS.md, and add it to "Needs Raj". Never use `bypassPermissions` outside a container.
-- **Clean Claude children.** Launch every Claude child with `--restricted --strict-mcp-config`, an explicit `--tools` list, and the matching permission rules (for example `--permission-mode dontAsk` plus `--allowedTools` scoped to the sandbox), so Raj's settings files, the hooks and plugins they enable, and his MCP servers do not load. Pass any hooks an experiment needs through `--settings`. On a smoke run, confirm the child can run the task's commands and that none of Raj's personal configuration reaches it; if his user-level CLAUDE.md or memory still loads, record it as a known contaminant in DECISIONS.md and in run provenance, and never edit or delete Raj's files. Single calls use `--tools ""` and a short `--system-prompt`, batching 20 to 50 items per call. If no max-turns option works, enforce `claude_agent_max_turns` by counting turns in the stream-json output and stopping the child at the cap. Record the exact command line in each run's provenance.
-- CPU first. Docker and GPU are optional and never required for the Definition of Done. Every Docker-dependent step needs a Docker-free fallback or a substitution recorded in DECISIONS.md before any data is collected.
+## Use it on your own benchmark
 
-## 9. Non-negotiables
+A task is a directory with `task.toml`, `instruction.md`, `solution/` (the reference), `grader/` (the grading command), and optional `workspace/` and `support/` (see `src/graderproof/adapters/toybench.py`). Adapters convert existing suites into that format from pinned commits: [HumanEval](docs/adapters/humaneval.md), [BFCL](docs/adapters/bfcl.md), and [tau2-bench](docs/adapters/tau2.md).
 
-These hold on every turn. Copy them verbatim into CLAUDE.md during bootstrap so they survive context compaction.
+```bash
+uv run graderproof audit path/to/tasks --sandbox bwrap --out runs/audit
+uv run graderproof models pending      # model requests are files; answer them, then
+uv run graderproof models ingest       # ingest and rerun the audit to continue
+uv run graderproof repair path/to/tasks --evidence runs/audit/evidence --out runs/e4 --benchmark mine
+```
 
-1. **No fabricated or hand-typed numbers.** Every result number (a measured rate, count of outcomes, estimate, interval, or test statistic) in README.md, docs/REPORT.md, other results documents, figures, and tables is produced by a committed script from a banked artifact under `artifacts/`. Design parameters, thresholds, caps, dates, versions, and the text of docs/BUILD_BRIEF.md are not result numbers. `make claimcheck` enforces this and `make freshness` re-derives every live number.
-2. **Preregister before confirmatory runs.** Hypotheses, metrics, analysis plan, thresholds, sample sizes, exclusions, and stopping rules go in `prereg/NNNN-*.md`, committed and hashed before any confirmatory data exists. A needed change is a new, dated amendment file that cites the original, is committed before any data it affects, and is reported as a deviation; the original is never edited. Anything not preregistered is labeled exploratory.
-3. **Publish failures beside successes.** Null and negative results get the same prominence as positive ones. Every changed or withdrawn claim gets a dated entry in CORRECTIONS.md.
-4. **Label synthetic and mock data everywhere.** Synthetic, procedurally generated, or mock results are never presented as model results or real-world results.
-5. **$0 cash, with caps enforced in code** (section 8).
-6. **Secrets stay in the environment.** Never write keys or tokens to files, logs, artifacts, or command lines. `make secrets-scan` runs in CI and in ship-check.
-7. **Defensive scope only.** Mock tools and disposable sandboxes. No real credentials, real systems, or harmful payloads. Build nothing that helps an agent evade graders, monitors, or safety measures beyond what the measurement strictly requires.
-8. **No outbound actions.** Never send email, open issues or pull requests, post, publish packages, datasets, or sites, or contact anyone. Pushing is allowed only under section 10.1 step 11. Prepare drafts in `outbound/` for Raj to review and send.
-9. **Respect licenses and terms.** Record the source, license, and retrieval date of all third-party data in docs/DATA.md. Do not redistribute what a license does not allow. Add a canary string to any dataset meant for release.
-10. **The brief is immutable.** Never edit docs/BUILD_BRIEF.md. Record deviations, substitutions, and interpretations in DECISIONS.md, with a reason, before acting on them.
-11. **Verified citations only.** Never cite from memory. Open and check every reference (title, authors, year, URL) once and bank what you saw in `artifacts/citecheck.json` (retrieval date, final URL, page title, content hash); `make citecheck` validates that file offline, so ship-check never needs the network. If a site blocks scripted access, use the arXiv, DOI, or another official copy, and never work around bot protection. If nothing opens, drop the reference and list it under "Needs Raj" for a manual check.
-12. **Plain writing.** Precise, scoped claims. No hype words such as "revolutionary", "groundbreaking", or "state of the art". No em dashes anywhere (Raj's style rule).
-13. **Honest progress.** Never pass a gate by weakening its check. If a gate cannot pass, say so in STATUS.md and keep working on what can.
-14. **Responsible disclosure.** Task-level details for unpatched third-party tasks (surviving variants and their witnesses) live only in `private/`, which is git-ignored; commit only their hashes. Aggregate statistics may be public. Disclosure drafts and patches go in `outbound/` for Raj. Claude never contacts maintainers.
-15. **No adversarial agent search.** Variants come from the reference solution and the task text, never from agents trying to beat the grader. This keeps every finding attributable and avoids building a kit for gaming benchmarks.
+Model calls go through one file-based, content-addressed client with daily caps and a usage ledger (`src/graderproof/models.py`); a banked response is never requested twice.
 
-## 10. Operating protocol
+## Reproduce
 
-### 10.1 Bootstrap (first turn only)
+```bash
+make reproduce     # every figure and every number in this README and docs/REPORT.md, from artifacts
+make ship-check    # the fourteen ship gates, on a fresh clone
+make prereg-verify # the preregistration chain and the dating of confirmatory data
+```
 
-1. Copy README.md verbatim to `docs/BUILD_BRIEF.md` and write its SHA-256 to `docs/BUILD_BRIEF.sha256`.
-2. Write and run `make doctor`. Record the environment, the usable backends, and the resulting fallbacks in STATUS.md. `make doctor` marks the Claude backend unusable while any variable or setting named in the section 8 billing guard is present.
-3. Create `CLAUDE.md` (under 150 lines): a one-paragraph mission, section 9 verbatim, the state files, the command list, and this line: "After any compaction or restart, re-read CLAUDE.md, STATUS.md, and sections 6 to 10 of docs/BUILD_BRIEF.md before acting."
-4. Create `.claude/loop.md` containing the message-1 heartbeat text from section 0 without the leading `/loop 30m`, so a bare `/loop 30m` after the 7-day expiry behaves the same.
-5. Create project subagents in `.claude/agents/`:
-   - `reviewer.md`: an adversarial reviewer with fresh eyes. It tries to falsify every claim and checks statistics, leakage, preregistration adherence, reproducibility, and the gate implementations themselves (could a gate pass while the property it guards is false?). An issue is blocking only if it names a file, line, or artifact and shows one of: a gate that can pass while its property is false; a reported number that is wrong, unreproducible, or not from an artifact; a preregistration violation; a broken section 9 rule; or a defect that changes a reported result. Everything else is non-blocking and goes to docs/REVIEW_LOG.md. It reads the previous review and the fixes since, and re-raises a resolved issue only with new evidence. It ends with `REVIEW: SHIP` or `REVIEW: BLOCK` plus a numbered list of blocking issues, each with its evidence.
-   - `citation-checker.md`: opens each reference, confirms title, authors, year, and URL, and banks what it saw in `artifacts/citecheck.json` (rule 11).
-6. Scaffold: `pyproject.toml` (uv, Python 3.11+), `src/graderproof/`, `tests/`, `Makefile`, `.github/workflows/ci.yml`, `.gitignore` (private/, runs/, .env*, caches, model weights), `LICENSE` (MIT), `CITATION.cff`, `SECURITY.md`, `CONTRIBUTING.md`, `budget.toml`, `STATUS.md`, `DECISIONS.md`, `CORRECTIONS.md`, `prereg/`, `artifacts/`, `outbound/`, `private/` (git-ignored), and `runs/` (git-ignored).
-7. Make targets, all present from day one even if some fail at first: `setup doctor test lint typecheck ci demo prereg-verify claimcheck freshness citecheck secrets-scan budget review report reproduce ship-check`.
-8. `make review` runs the reviewer through headless `claude -p --model opus` when available. Otherwise the `reviewer` subagent runs and writes `artifacts/review/latest.json` itself; the main session never edits that file, and `make review` validates and prints it. Either way the file records the commit that was reviewed, which may differ from HEAD only in `artifacts/review/`, `STATUS.md`, and `docs/LOG.md`. When the daily review cap is used up, work on other gates or end the turn; never wait in a loop.
-9. Write `tools/ship_check.py`. It implements G1 to G14 exactly as section 6 states them. It first checks, in the original checkout, the parts of G14 about the working tree and private/ (and any private hash manifests), then makes a fresh clone of HEAD in a temporary directory and runs every other check there. It verifies banked artifacts (presence, provenance, hashes, preregistration links, thresholds) and recomputes statistics from them; it never runs an experiment or calls a model. It writes nothing inside the working tree; sub-command logs go to the temporary directory. Its stdout is exactly `HEAD <sha> fresh-clone`, then one line per gate, `G<n> <PASS|FAIL> <short evidence>`, then `SHIP-CHECK: PASS 14/14` or `SHIP-CHECK: FAIL <passed>/14`. With `--fast` it may skip slow steps, and its last line is then `SHIP-CHECK-FAST (does not count): <passed>/14`. Only a full run counts.
-10. Write `docs/PLAN.md`: milestones mapped to gates, risks, environment-dependent fallbacks, and usage estimates.
-11. Commit ("bootstrap"). Push only if `ALLOW_PUSH=1` is set, only to this repository's `origin`, and never force-push, push tags, or change repository visibility or settings.
+Every number above is rendered by `make report` from a banked artifact under `artifacts/` and checked by `make claimcheck` and `make freshness`; none is typed by hand. Each preregistration is hashed into an append-only chain (`prereg/FROZEN.jsonl`) and was committed before the data it governs. Assumptions and deviations are logged in [DECISIONS.md](DECISIONS.md), corrections in [CORRECTIONS.md](CORRECTIONS.md).
 
-### 10.2 Loop Protocol (every iteration)
+## Limitations
 
-1. **Orient.** Read STATUS.md. Run `python tools/ship_check.py --fast`.
-2. **Choose one thing.** The highest-leverage next step: a failing gate on the critical path first; once all gates pass, the next Stretch Ladder rung in section 7. Write it under "Now" in STATUS.md.
-3. **Build it test-first** in small commits, with types, docstrings, and tests for every public function.
-4. **Verify.** `make lint typecheck test`, plus the specific check for what you built. For experiments: dry run, usage estimate, preregistration check, then the real run. Pilots and dry runs use tasks and seeds disjoint from the confirmatory sample, recorded in the preregistration, and are never pooled with confirmatory data.
-5. **Bank** results as artifacts with provenance: git SHA, config hash, model IDs and revisions, seeds, timestamps, environment, exact command lines, and usage.
-6. **Review** milestone-level changes with the `reviewer` subagent and fix every blocking issue.
-7. **Record.** Update STATUS.md (gate table, what changed, next three actions, usage to date, "Needs Raj" items), plus DECISIONS.md and CORRECTIONS.md as needed. The first line of STATUS.md is `goal_turn: N` and the second is `STATE: ACTIVE`, `STATE: BLOCKED ON RAJ`, or `STATE: LADDER COMPLETE`. Keep STATUS.md under 200 lines and move history to docs/LOG.md.
-8. **Commit** with a descriptive message, and push only under the rule in 10.1 step 11. Tag milestones locally: v0.1 (offline demo), v0.5 (first real results), v1.0 (Definition of Done, set during the final sequence in 10.6).
-9. **Raise the bar.** At each milestone ask what would make a research engineer on an OpenAI or Anthropic evals, safety, or agents team say "we should use this", and add one concrete suggestion to the backlog in STATUS.md. Backlog items are suggestions for Raj, not Stretch Ladder rungs.
+- toybench is synthetic and was written by a model; its tasks are small. E0 measures graderproof on planted weaknesses of known types, not on the full variety of real graders.
+- The planter, the model reviewer, the requirement extractor, and the adjudicator are Claude Code subagents (the cloud environment blocked headless Claude, D17), so they share a model family. Every worker transcript was audited for file access.
+- E0's intervals are wide at this sample size, and recall missed its target. Timing and brittle-parsing weaknesses need operators graderproof does not have yet, and for some misses the exposing variant was generated but excluded because the two validators disagreed ([docs/E0_MISSES.md](docs/E0_MISSES.md)).
+- The confirmatory audit of public benchmarks (E1/E2) has not run: at the daily model-call cap it needs several days of calls. Until it runs, nothing here says how weak any public grader is.
+- HumanEval stands in for Terminal-Bench 2.0, which needs Docker (D18).
 
-### 10.3 When stuck
+## Responsible disclosure
 
-After three failed attempts at the same problem, write what you tried under "Blocked" in STATUS.md, switch to the next highest-leverage item, and come back later. Never fake progress or quietly narrow a gate.
+Task-level findings for third-party tasks that are not fixed upstream (surviving variants and their witnesses) stay in the git-ignored `private/` directory; this repository publishes only their hashes and aggregate statistics. Disclosure drafts are prepared in `outbound/` for the maintainer of this repository to review and send; nothing is sent automatically.
 
-### 10.4 Subagents and parallelism
+## Related work
 
-Use subagents for literature verification, wide code review, and data audits so the main context stays focused. A subagent never declares a gate passed. Only `make ship-check` does.
+- [Hardening Agent Benchmarks with Adversarial Hacker-Fixer Loops](https://arxiv.org/abs/2606.08960) and [Scalable Weak-to-Strong Verifier Hardening for Agent Environments](https://arxiv.org/abs/2610.15924) harden graders with adversarial agents; graderproof instead derives every variant from the reference and the task text.
+- [Checking the Checkers](https://arxiv.org/abs/2610.17824), [Auditing Reward Hackability in Code RL Training Environments](https://arxiv.org/abs/2606.16062), and [Terminal Wrench](https://arxiv.org/abs/2604.17596) audit checkers and environments for exploitable weaknesses.
+- [Establishing Best Practices for Building Rigorous Agentic Benchmarks](https://arxiv.org/abs/2507.02825) sets out benchmark-construction practice that graders can be tested against.
+- [EvalPlus](https://arxiv.org/abs/2305.01210) augments the tests of classic code benchmarks; graderproof measures the grader itself and covers false rejects as well as false accepts.
+- The author's [Fencecheck](https://github.com/raj200501/arc-ttt-public) found that a Markdown code fence around a correct answer makes graders score it as zero; graderproof generalizes that false-reject finding and adds the false-accept direction.
+- Benchmarks audited or adapted: [tau2-bench](https://arxiv.org/abs/2506.07982), the [Berkeley Function Calling Leaderboard](https://proceedings.mlr.press/v267/patil25a.html), [HumanEval](https://arxiv.org/abs/2107.03374), and [Terminal-Bench](https://arxiv.org/abs/2601.11868).
 
-### 10.5 Reuse from Raj's existing repositories
+Every reference was opened and checked; the record is in `artifacts/citecheck.json` and `make citecheck` validates it offline.
 
-You may clone these public repositories (same author) and port code with attribution instead of rewriting it:
+## How this was built
 
-- https://github.com/raj200501/raise-v1-public (Apache-2.0): the preregistration chain (`tools/prereg.py`), the outbound-copy number gate (`tools/claimcheck.py`), the freshness check (`tools/freshness.py`), and mutation tests for gates (`tests/mutation_test.py`).
-- https://github.com/raj200501/armour (MIT): the trace schema, rule monitors, and policy packs for tool-using agents.
-- https://github.com/raj200501/arc-ttt-public (MIT): Fencecheck (`tools/fencecheck.py`), which finds eval code that scores correct-but-fenced JSON as zero.
+Raj Kashikar wrote the specification ([docs/BUILD_BRIEF.md](docs/BUILD_BRIEF.md)): the research questions, the experiments, fourteen ship gates, and fifteen non-negotiables (no hand-typed numbers, preregistration before confirmatory runs, failures published beside successes, defensive scope only). Claude Code agents built the system under that specification, with every assumption recorded in DECISIONS.md, an adversarial reviewer agent, and gates in `tools/ship_check.py` that recompute every statistic from banked rows. [STATUS.md](STATUS.md) shows which gates pass today.
 
-### 10.6 Final sequence
+## Citation
 
-When every gate other than G12 and G13 passes in the fast check, do the following in one turn, in this order, with no other commits:
+See [CITATION.cff](CITATION.cff).
 
-1. Make sure README.md follows section 11, update STATUS.md, and commit.
-2. Run `make review`. On `REVIEW: SHIP`, commit only `artifacts/review/`. On `REVIEW: BLOCK`, fix the issues and start again at step 1 in a later turn.
-3. Run the full `make ship-check`.
-4. If it ends with `SHIP-CHECK: PASS 14/14`, create or move the local tag v1.0 to HEAD, then run `git rev-parse HEAD`, `git status`, and `git tag --points-at HEAD`.
-5. Quote the ship-check stdout, the review's final line, and the three git outputs in your final message.
+## License
 
-Never commit after step 3 in this turn. Record the outcome in STATUS.md at the start of the next iteration.
+MIT, see [LICENSE](LICENSE). Third-party data is fetched from pinned commits and not redistributed beyond small fixtures their licenses allow; sources, licenses, and retrieval dates are in [docs/DATA.md](docs/DATA.md).
 
-## 11. What the shipped README must look like
-
-Once real results exist, replace this file with the real README (the brief already lives at docs/BUILD_BRIEF.md). G13 checks it.
-
-- **First screen:** the project name, a one-sentence finding with its confidence interval, the headline figure (an SVG generated by `make report`), a small headline table, and a 60-second quickstart that runs offline.
-- **Then:** what it is and is not; key results, each linked to its artifact and preregistration; how it works (one diagram); how to use it on your own benchmark or agent; how to reproduce every figure with one command; limitations and threats to validity; a responsible-disclosure note where relevant; verified related work; citation; license.
-- **Tone:** plain and exact. No hype, no em dashes, and every number from an artifact.
-- **Also ship `docs/REPORT.md`:** a technical report (abstract, introduction, related work, method, experiments, results with intervals, limitations, ethics and disclosure, reproducibility) of 4,000 to 8,000 words, with figures generated from artifacts.
+<!-- generated by tools/report.py from docs/templates/README.md.in; edit the template, then run make report -->

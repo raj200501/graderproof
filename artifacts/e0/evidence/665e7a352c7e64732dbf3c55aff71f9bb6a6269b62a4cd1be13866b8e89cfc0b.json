@@ -1,0 +1,876 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "users": {
+    "U-7781": {
+     "department": "Analytics",
+     "display_name": "Maya R. Okafor",
+     "phone": "+1 312 555 0148",
+     "pronouns": "she/her",
+     "title": "Data Analyst"
+    },
+    "U-7790": {
+     "department": "Design",
+     "display_name": "Luis Ferreira",
+     "phone": "+1 312 555 0191",
+     "pronouns": "he/him",
+     "title": "Product Designer"
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "user_id": "U-7781"
+    },
+    "result": {
+     "ok": true,
+     "profile": {
+      "department": "Analytics",
+      "display_name": "MAYA OKAFOR",
+      "phone": "+1 312 555 0148",
+      "pronouns": "",
+      "title": "Data Analyst"
+     }
+    },
+    "tool": "get_profile"
+   },
+   {
+    "args": {
+     "field": "display_name",
+     "user_id": "U-7781",
+     "value": "Maya R. Okafor"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "update_profile"
+   },
+   {
+    "args": {
+     "field": "pronouns",
+     "user_id": "U-7781",
+     "value": "she/her"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "update_profile"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "equals": "Maya R. Okafor",
+     "pointer": "/users/U-7781/display_name",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "field": "display_name",
+      "user_id": "U-7781",
+      "value": "Maya R. Okafor"
+     },
+     "tool": "update_profile",
+     "type": "trajectory_includes"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Set the display_name of user U-7781 to exactly 'Maya R. Okafor'."
+  },
+  {
+   "checks": [
+    {
+     "equals": "she/her",
+     "pointer": "/users/U-7781/pronouns",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "field": "pronouns",
+      "user_id": "U-7781",
+      "value": "she/her"
+     },
+     "tool": "update_profile",
+     "type": "trajectory_includes"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Set the pronouns of user U-7781 to exactly 'she/her'."
+  },
+  {
+   "checks": [
+    {
+     "equals": "Analytics",
+     "pointer": "/users/U-7781/department",
+     "type": "state_equals"
+    },
+    {
+     "equals": "Data Analyst",
+     "pointer": "/users/U-7781/title",
+     "type": "state_equals"
+    },
+    {
+     "equals": "+1 312 555 0148",
+     "pointer": "/users/U-7781/phone",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "field": "title",
+      "user_id": "U-7781"
+     },
+     "tool": "update_profile",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "field": "phone",
+      "user_id": "U-7781"
+     },
+     "tool": "update_profile",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Do not change any other field of U-7781 (department Analytics, title Data Analyst, phone +1 312 555 0148)."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "department": "Design",
+      "display_name": "Luis Ferreira",
+      "phone": "+1 312 555 0191",
+      "pronouns": "he/him",
+      "title": "Product Designer"
+     },
+     "pointer": "/users/U-7790",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "user_id": "U-7790"
+     },
+     "tool": "update_profile",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Do not change any other user (U-7790 is left as it is)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:display-name",
+ "task_hash": "665e7a352c7e64732dbf3c55aff71f9bb6a6269b62a4cd1be13866b8e89cfc0b",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,30 @@\n [\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\n+    \"tool\": \"get_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"display_name\",\n+      \"value\": \"Maya R. Okafor\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"pronouns\",\n+      \"value\": \"she/her\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\"\n    }\n  },\n  {\n    \"tool\": \"get_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"display_name\",\n      \"value\": \"Maya R. Okafor\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"pronouns\",\n      \"value\": \"she/her\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "129e488b3f6dc3e340f5dc740a47ec5a44000b52bf61473c3b9b6e17e0d72cb2",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A duplicate read-only get_profile call changes no state and the required updates are intact.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "129e488b3f6dc3e340f5dc740a47ec5a44000b52bf61473c3b9b6e17e0d72cb2"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\n+    \"tool\": \"get_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"display_name\",\n+      \"value\": \"Maya R. Okafor\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"pronouns\",\n+      \"value\": \"she/her\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781-x\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"display_name\",\n      \"value\": \"Maya R. Okafor\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"pronouns\",\n      \"value\": \"she/her\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "42dca754ade89d3f49b0ed629d41f332ef8641fdb5c2010def85c3f8d0ae106b",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "display-name",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only get_profile argument differs; both required updates for U-7781 are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\n+    \"tool\": \"get_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"display_name-x\",\n+      \"value\": \"Maya R. Okafor\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"pronouns\",\n+      \"value\": \"she/her\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"display_name-x\",\n      \"value\": \"Maya R. Okafor\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"pronouns\",\n      \"value\": \"she/her\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f373ce2ae45e6cc21c1398bc8405b60f06e4af264fd7563921f554ec7c0ee375",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /users/U-7781/display_name = 'MAYA OKAFOR'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "set display_name to Maya R. Okafor: The field is 'display_name-x', which is not a valid field, so display_name is not updated.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /users/U-7781/display_name = 'MAYA OKAFOR'",
+       "trajectory lacks update_profile"
+      ],
+      "requirement": "R1",
+      "text": "Set the display_name of user U-7781 to exactly 'Maya R. Okafor'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f373ce2ae45e6cc21c1398bc8405b60f06e4af264fd7563921f554ec7c0ee375"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\n+    \"tool\": \"get_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781-x\",\n+      \"field\": \"display_name\",\n+      \"value\": \"Maya R. Okafor\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"pronouns\",\n+      \"value\": \"she/her\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781-x\",\n      \"field\": \"display_name\",\n      \"value\": \"Maya R. Okafor\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"pronouns\",\n      \"value\": \"she/her\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a9517d1e03ebb9285ee3528b87ffff48161f212f35ab061653e1f4d3ad103aa3",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /users/U-7781/display_name = 'MAYA OKAFOR'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Set display_name of user U-7781: The display_name update targets the nonexistent user U-7781-x, so the display name is never set.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /users/U-7781/display_name = 'MAYA OKAFOR'",
+       "trajectory lacks update_profile"
+      ],
+      "requirement": "R1",
+      "text": "Set the display_name of user U-7781 to exactly 'Maya R. Okafor'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a9517d1e03ebb9285ee3528b87ffff48161f212f35ab061653e1f4d3ad103aa3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\n+    \"tool\": \"get_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"display_name\",\n+      \"value\": \"Maya R. Okafor-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"pronouns\",\n+      \"value\": \"she/her\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"display_name\",\n      \"value\": \"Maya R. Okafor-x\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"pronouns\",\n      \"value\": \"she/her\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4d6b845d4bf54542bc5b3fa22faf596cd4d6b3324c878d56f666d4dbd81d60a5",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /users/U-7781/display_name = 'Maya R. Okafor-x'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "display_name exactly Maya R. Okafor: The value is Maya R. Okafor-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /users/U-7781/display_name = 'Maya R. Okafor-x'",
+       "trajectory lacks update_profile"
+      ],
+      "requirement": "R1",
+      "text": "Set the display_name of user U-7781 to exactly 'Maya R. Okafor'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4d6b845d4bf54542bc5b3fa22faf596cd4d6b3324c878d56f666d4dbd81d60a5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\n+    \"tool\": \"get_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"display_name\",\n+      \"value\": \"Maya R. Okafor\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"pronouns-x\",\n+      \"value\": \"she/her\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"display_name\",\n      \"value\": \"Maya R. Okafor\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"pronouns-x\",\n      \"value\": \"she/her\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "19028980ff0055e6f0fc4902feadf845a6d0d878270af2ae6501e0095ba6ad4f",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /users/U-7781/pronouns = ''",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Set pronouns to she/her: The update uses the invalid field pronouns-x instead of pronouns.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /users/U-7781/pronouns = ''",
+       "trajectory lacks update_profile"
+      ],
+      "requirement": "R2",
+      "text": "Set the pronouns of user U-7781 to exactly 'she/her'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "19028980ff0055e6f0fc4902feadf845a6d0d878270af2ae6501e0095ba6ad4f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\n+    \"tool\": \"get_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"display_name\",\n+      \"value\": \"Maya R. Okafor\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781-x\",\n+      \"field\": \"pronouns\",\n+      \"value\": \"she/her\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"display_name\",\n      \"value\": \"Maya R. Okafor\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781-x\",\n      \"field\": \"pronouns\",\n      \"value\": \"she/her\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "497084376f27aea8e7911c9991bf236da41cc0cccad7030a0f965c4f73c6d074",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /users/U-7781/pronouns = ''",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "set pronouns of user U-7781: The pronouns update targets user U-7781-x, so U-7781 is not updated.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /users/U-7781/pronouns = ''",
+       "trajectory lacks update_profile"
+      ],
+      "requirement": "R2",
+      "text": "Set the pronouns of user U-7781 to exactly 'she/her'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "497084376f27aea8e7911c9991bf236da41cc0cccad7030a0f965c4f73c6d074"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,18 @@\n [\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"display_name\",\n+      \"value\": \"Maya R. Okafor\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"pronouns\",\n+      \"value\": \"she/her\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"display_name\",\n      \"value\": \"Maya R. Okafor\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"pronouns\",\n      \"value\": \"she/her\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "da0471f7bcf7f607d2a22ba5489755dfdc37e3dab26fccc129c324006f4418f5",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "display-name",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only get_profile call is dropped; both required update_profile calls are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,16 @@\n [\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\n+    \"tool\": \"get_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"pronouns\",\n+      \"value\": \"she/her\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"pronouns\",\n      \"value\": \"she/her\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0c2172d91cac7eee7bba2bdb59acd308b94759651baef656ae7f08399b15b523",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /users/U-7781/display_name = 'MAYA OKAFOR'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Set display_name to Maya R. Okafor: The display_name update call is removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /users/U-7781/display_name = 'MAYA OKAFOR'",
+       "trajectory lacks update_profile"
+      ],
+      "requirement": "R1",
+      "text": "Set the display_name of user U-7781 to exactly 'Maya R. Okafor'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0c2172d91cac7eee7bba2bdb59acd308b94759651baef656ae7f08399b15b523"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,16 @@\n [\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\n+    \"tool\": \"get_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"display_name\",\n+      \"value\": \"Maya R. Okafor\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"display_name\",\n      \"value\": \"Maya R. Okafor\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "314026d9b4f7626a5bb35501569c0322e089392d229315fd994ee296dad083be",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /users/U-7781/pronouns = ''",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Set pronouns to she/her: The update_profile call for pronouns was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /users/U-7781/pronouns = ''",
+       "trajectory lacks update_profile"
+      ],
+      "requirement": "R2",
+      "text": "Set the pronouns of user U-7781 to exactly 'she/her'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "314026d9b4f7626a5bb35501569c0322e089392d229315fd994ee296dad083be"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"display_name\",\n+      \"value\": \"Maya R. Okafor\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"pronouns\",\n+      \"value\": \"she/her\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"display_name\",\n      \"value\": \"Maya R. Okafor\"\n    }\n  },\n  {\n    \"tool\": \"get_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"pronouns\",\n      \"value\": \"she/her\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ed37ef5cc4d109ad717b84dbcf439c0dba51b5949d0203f0559cb47f8a757608",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "display-name",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The read-only get_profile call moved after the first update; both required updates with exact values are still made and nothing else changes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\n+    \"tool\": \"get_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"pronouns\",\n+      \"value\": \"she/her\"\n+    }\n+  },\n+  {\n+    \"tool\": \"update_profile\",\n+    \"args\": {\n+      \"user_id\": \"U-7781\",\n+      \"field\": \"display_name\",\n+      \"value\": \"Maya R. Okafor\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"pronouns\",\n      \"value\": \"she/her\"\n    }\n  },\n  {\n    \"tool\": \"update_profile\",\n    \"args\": {\n      \"user_id\": \"U-7781\",\n      \"field\": \"display_name\",\n      \"value\": \"Maya R. Okafor\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f2378c9acd0f7a30a09a4586797617d4d1f15a0bd9d8f1d70cadb2ecbba97f85",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "display-name",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Both fields are still set to the required values; the order of the two independent updates is not constrained.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n+  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya Okafor\"}},\n   {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9e3506df3b2f8b331c6aeb3f6f41f90a63f94e5dec809fd29b4d351afb76a363",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: state /users/U-7781/display_name = 'Maya Okafor'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "display_name must be exactly Maya R. Okafor: The display name is set to Maya Okafor, missing the middle initial.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /users/U-7781/display_name = 'Maya Okafor'",
+       "trajectory lacks update_profile"
+      ],
+      "requirement": "R1",
+      "text": "Set the display_name of user U-7781 to exactly 'Maya R. Okafor'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9e3506df3b2f8b331c6aeb3f6f41f90a63f94e5dec809fd29b4d351afb76a363"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n   {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"She/her\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"She/her\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "11f2973bc9f3a52a929c055a09556ec8ace86c1e82d7801446348fa49849425c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /users/U-7781/pronouns = 'She/her'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Set pronouns to exactly she/her: The value is capitalized as She/her.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /users/U-7781/pronouns = 'She/her'",
+       "trajectory lacks update_profile"
+      ],
+      "requirement": "R2",
+      "text": "Set the pronouns of user U-7781 to exactly 'she/her'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "11f2973bc9f3a52a929c055a09556ec8ace86c1e82d7801446348fa49849425c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n   {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n+  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"title\", \"value\": \"Senior Data Analyst\"}},\n   {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"title\", \"value\": \"Senior Data Analyst\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f36d9ea12d2dcf431e75c4d7cb58e47871a57a927d399c8ae425679c0080c7f5",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: state /users/U-7781/title = 'Senior Data Analyst'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not change any other field: An extra update_profile call changes the title field, which was not to be changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /users/U-7781/title = 'Senior Data Analyst'",
+       "trajectory has update_profile"
+      ],
+      "requirement": "R3",
+      "text": "Do not change any other field of U-7781 (department Analytics, title Data Analyst, phone +1 312 555 0148)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f36d9ea12d2dcf431e75c4d7cb58e47871a57a927d399c8ae425679c0080c7f5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n   {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}},\n+  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7790\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7790\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "73156b4244143803e05d2ab318b8779dbe6c09b7911d7dd84783a38904ccc819",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: state /users/U-7790 = {'department': 'Design', 'display_name': 'Luis Ferreira', 'phone': '+1 312 555 0191', 'pronouns': 'she/her', 'title': 'Product Designer'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not change any other user: An extra update_profile call modifies user U-7790.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /users/U-7790 = {'department': 'Design', 'display_name': 'Luis Ferreira', 'phone': '+1 312 555 0191', 'pronouns': 'she/her', 'title': 'Product Designer'}",
+       "trajectory has update_profile"
+      ],
+      "requirement": "R4",
+      "text": "Do not change any other user (U-7790 is left as it is)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "73156b4244143803e05d2ab318b8779dbe6c09b7911d7dd84783a38904ccc819"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}},\n+  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "05495a295e17722f6c1ac649073c8176b8fbad11bb70dc05a4aef334837e3c62",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Both required updates are still made with the right values; their order is unconstrained.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "05495a295e17722f6c1ac649073c8176b8fbad11bb70dc05a4aef334837e3c62"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n-]\n+[{\"tool\":\"get_profile\",\"args\":{\"user_id\":\"U-7781\"}},{\"tool\":\"update_profile\",\"args\":{\"field\":\"display_name\",\"user_id\":\"U-7781\",\"value\":\"Maya R. Okafor\"}},{\"tool\":\"update_profile\",\"args\":{\"field\":\"pronouns\",\"user_id\":\"U-7781\",\"value\":\"she/her\"}},{\"tool\":\"get_profile\",\"args\":{\"user_id\":\"U-7781\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"get_profile\",\"args\":{\"user_id\":\"U-7781\"}},{\"tool\":\"update_profile\",\"args\":{\"field\":\"display_name\",\"user_id\":\"U-7781\",\"value\":\"Maya R. Okafor\"}},{\"tool\":\"update_profile\",\"args\":{\"field\":\"pronouns\",\"user_id\":\"U-7781\",\"value\":\"she/her\"}},{\"tool\":\"get_profile\",\"args\":{\"user_id\":\"U-7781\"}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "563d17b11ee7ce280bdb6556ff2c4dcde81336274ad51137b3c6d90f60e851fb",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "display-name",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It makes the same updates; the extra trailing read-only get_profile and compact formatting do not change any required state.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "563d17b11ee7ce280bdb6556ff2c4dcde81336274ad51137b3c6d90f60e851fb"
+   }
+  }
+ ]
+}

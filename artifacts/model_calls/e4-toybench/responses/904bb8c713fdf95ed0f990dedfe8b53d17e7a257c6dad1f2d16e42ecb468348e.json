@@ -1,0 +1,184 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "904bb8c713fdf95ed0f990dedfe8b53d17e7a257c6dad1f2d16e42ecb468348e",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "9e5efee08af90eb9b89c3bcb282f1953b59d0a7068c373e286cc88156c6dfb44": {
+      "requirements": [
+        {"id": "R1", "text": "Renew L-501 (due 2026-11-06, no holds by others) exactly once with renew_loan.", "checks": [
+          {"type": "trajectory_includes", "tool": "renew_loan", "args": {"loan_id": "L-501"}},
+          {"type": "state_equals", "pointer": "/loans/L-501/renewals", "equals": 1},
+          {"type": "state_equals", "pointer": "/loans/L-501/due", "equals": "2026-11-20"}
+        ]},
+        {"id": "R2", "text": "Renew L-503 (due 2026-11-10, no holds by others) exactly once with renew_loan.", "checks": [
+          {"type": "trajectory_includes", "tool": "renew_loan", "args": {"loan_id": "L-503"}},
+          {"type": "state_equals", "pointer": "/loans/L-503/renewals", "equals": 2},
+          {"type": "state_equals", "pointer": "/loans/L-503/due", "equals": "2026-11-24"}
+        ]},
+        {"id": "R3", "text": "Do not renew L-502, which is due on or before 2026-11-10 but whose title has a hold by another member.", "checks": [
+          {"type": "trajectory_excludes", "tool": "renew_loan", "args": {"loan_id": "L-502"}},
+          {"type": "state_equals", "pointer": "/loans/L-502/renewals", "equals": 0},
+          {"type": "state_equals", "pointer": "/loans/L-502/due", "equals": "2026-11-08"}
+        ]},
+        {"id": "R4", "text": "Do not renew any other loan: L-504 (due after 2026-11-10) and L-611 (another member's loan) stay unchanged.", "checks": [
+          {"type": "trajectory_excludes", "tool": "renew_loan", "args": {"loan_id": "L-504"}},
+          {"type": "trajectory_excludes", "tool": "renew_loan", "args": {"loan_id": "L-611"}},
+          {"type": "state_equals", "pointer": "/loans/L-504/renewals", "equals": 0},
+          {"type": "state_equals", "pointer": "/loans/L-504/due", "equals": "2026-11-24"},
+          {"type": "state_equals", "pointer": "/loans/L-611/renewals", "equals": 0},
+          {"type": "state_equals", "pointer": "/loans/L-611/due", "equals": "2026-11-09"}
+        ]},
+        {"id": "R5", "text": "Use list_loans to see the member's loans and holds before renewing.", "checks": [
+          {"type": "trajectory_includes", "tool": "list_loans", "args": {"member_id": "M-1209"}},
+          {"type": "trajectory_before", "first": {"tool": "list_loans", "args": {"member_id": "M-1209"}}, "then": {"tool": "renew_loan", "args": {"loan_id": "L-501"}}}
+        ]}
+      ]
+    },
+    "a0fe68f7cf0abe5b40dcaac502bbdffdd038190336c3afe95a6d0637e056418a": {
+      "requirements": [
+        {"id": "R1", "text": "Book a reservation for name Priya Raman, phone +44 20 7946 0321, date 2026-11-14, time 19:30, party size 4, notes wheelchair access, using create_reservation.", "checks": [
+          {"type": "trajectory_includes", "tool": "create_reservation", "args": {"name": "Priya Raman", "phone": "+44 20 7946 0321", "date": "2026-11-14", "time": "19:30", "party_size": 4, "notes": "wheelchair access"}},
+          {"type": "state_equals", "pointer": "/reservations/R-503/name", "equals": "Priya Raman"},
+          {"type": "state_equals", "pointer": "/reservations/R-503/phone", "equals": "+44 20 7946 0321"},
+          {"type": "state_equals", "pointer": "/reservations/R-503/date", "equals": "2026-11-14"},
+          {"type": "state_equals", "pointer": "/reservations/R-503/time", "equals": "19:30"},
+          {"type": "state_equals", "pointer": "/reservations/R-503/party_size", "equals": 4},
+          {"type": "state_equals", "pointer": "/reservations/R-503/notes", "equals": "wheelchair access"},
+          {"type": "state_equals", "pointer": "/reservations/R-503/status", "equals": "booked"}
+        ]},
+        {"id": "R2", "text": "Make exactly one new reservation.", "checks": [
+          {"type": "state_equals", "pointer": "/next_id", "equals": 504}
+        ]},
+        {"id": "R3", "text": "Leave all existing reservations as they are: no cancellations, and R-501 and R-502 unchanged.", "checks": [
+          {"type": "trajectory_excludes", "tool": "cancel_reservation", "args": {}},
+          {"type": "state_equals", "pointer": "/reservations/R-501", "equals": {"date": "2026-11-14", "name": "Oliver Grant", "notes": "", "party_size": 4, "phone": "+44 20 7946 0102", "status": "booked", "table": "T3", "time": "19:30"}},
+          {"type": "state_equals", "pointer": "/reservations/R-502", "equals": {"date": "2026-11-14", "name": "Sofia Marin", "notes": "anniversary", "party_size": 2, "phone": "+44 20 7946 0877", "status": "booked", "table": "T1", "time": "20:00"}}
+        ]}
+      ]
+    },
+    "a181f23e6ce28a6235bbc8a64b26759e1338dc12d12ea8c7ac9e0248686bc490": {
+      "requirements": [
+        {"id": "R1", "text": "Write schema.sql in the working directory and run without errors.", "checks": [
+          {"type": "file_exists", "path": "schema.sql"},
+          {"type": "exit_code", "code": 0}
+        ]},
+        {"id": "R2", "text": "Table customers with columns in order: id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL.", "checks": [
+          {"type": "file_regex", "path": "schema.sql", "pattern": "(?is)CREATE\\s+TABLE\\s+customers\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*email\\s+TEXT\\s+NOT\\s+NULL\\s+UNIQUE\\s*,\\s*created_at\\s+TEXT\\s+NOT\\s+NULL\\s*\\)"}
+        ]},
+        {"id": "R3", "text": "Table orders with columns in order: id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), total_cents INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending'.", "checks": [
+          {"type": "file_regex", "path": "schema.sql", "pattern": "(?is)CREATE\\s+TABLE\\s+orders\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*customer_id\\s+INTEGER\\s+NOT\\s+NULL\\s+REFERENCES\\s+customers\\s*\\(\\s*id\\s*\\)\\s*,\\s*total_cents\\s+INTEGER\\s+NOT\\s+NULL\\s*,\\s*status\\s+TEXT\\s+NOT\\s+NULL\\s+DEFAULT\\s+'pending'\\s*\\)"}
+        ]},
+        {"id": "R4", "text": "An index named idx_orders_customer on orders(customer_id).", "checks": [
+          {"type": "file_regex", "path": "schema.sql", "pattern": "(?is)CREATE\\s+INDEX\\s+idx_orders_customer\\s+ON\\s+orders\\s*\\(\\s*customer_id\\s*\\)"}
+        ]},
+        {"id": "R5", "text": "Create no other table, view, index, or trigger.", "checks": [
+          {"type": "file_regex", "path": "schema.sql", "pattern": "(?is)\\A(?:(?!CREATE\\s+(?:VIEW|TRIGGER|TEMP|TEMPORARY|VIRTUAL|UNIQUE)).)*\\Z"},
+          {"type": "file_regex", "path": "schema.sql", "pattern": "(?is)\\A(?:(?!CREATE\\s+TABLE\\s+(?!customers\\b|orders\\b)).)*\\Z"},
+          {"type": "file_regex", "path": "schema.sql", "pattern": "(?is)\\A(?:(?!CREATE\\s+INDEX\\s+(?!idx_orders_customer\\b)).)*\\Z"}
+        ]}
+      ]
+    },
+    "a1c9fb2c9022ec31a1f2d1570274e815831cbfe546e1d22da1a4a72eb5d0be9a": {
+      "requirements": [
+        {"id": "R1", "text": "Save an exact copy of the original file as nginx.conf.orig in the same directory.", "checks": [
+          {"type": "file_exists", "path": "nginx.conf.orig"},
+          {"type": "file_equals", "path": "nginx.conf.orig", "text": "user www-data;\nworker_processes auto;\npid /run/nginx.pid;\n\nevents {\n    worker_connections 1024;\n    multi_accept on;\n}\n\nhttp {\n    sendfile on;\n    tcp_nopush on;\n    keepalive_timeout 65;\n    types_hash_max_size 2048;\n\n    include /etc/nginx/mime.types;\n    default_type application/octet-stream;\n\n    # Logging\n    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n\n    gzip on;\n\n    include /etc/nginx/conf.d/*.conf;\n}\n", "normalize": "none"}
+        ]},
+        {"id": "R2", "text": "In nginx.conf, change worker_connections 1024; to worker_connections 4096;.", "checks": [
+          {"type": "file_contains", "path": "nginx.conf", "text": "worker_connections 4096;"},
+          {"type": "file_regex", "path": "nginx.conf", "pattern": "\\A(?:(?!worker_connections 1024;).)*\\Z"}
+        ]},
+        {"id": "R3", "text": "In nginx.conf, change keepalive_timeout 65; to keepalive_timeout 30;.", "checks": [
+          {"type": "file_contains", "path": "nginx.conf", "text": "keepalive_timeout 30;"},
+          {"type": "file_regex", "path": "nginx.conf", "pattern": "\\A(?:(?!keepalive_timeout 65;).)*\\Z"}
+        ]},
+        {"id": "R4", "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines.", "checks": [
+          {"type": "file_equals", "path": "nginx.conf", "text": "user www-data;\nworker_processes auto;\npid /run/nginx.pid;\n\nevents {\n    worker_connections 4096;\n    multi_accept on;\n}\n\nhttp {\n    sendfile on;\n    tcp_nopush on;\n    keepalive_timeout 30;\n    types_hash_max_size 2048;\n\n    include /etc/nginx/mime.types;\n    default_type application/octet-stream;\n\n    # Logging\n    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n\n    gzip on;\n\n    include /etc/nginx/conf.d/*.conf;\n}\n", "normalize": "none"}
+        ]}
+      ]
+    },
+    "a749069371764e852585b3334d2639404996882f6269f0bf582d324f423227f6": {
+      "requirements": [
+        {"id": "R1", "text": "Request a refill of prescription RX-1001 at pharmacy PH-ELM with request_refill.", "checks": [
+          {"type": "trajectory_includes", "tool": "request_refill", "args": {"rx_id": "RX-1001", "pharmacy_id": "PH-ELM"}},
+          {"type": "state_equals", "pointer": "/refills", "equals": [{"pharmacy_id": "PH-ELM", "rx_id": "RX-1001"}]},
+          {"type": "state_equals", "pointer": "/prescriptions/RX-1001/refills_left", "equals": 1}
+        ]},
+        {"id": "R2", "text": "Notify patient P-5512 with notify_patient (the message must include the pharmacy name Elm Street and the prescription number RX-1001).", "checks": [
+          {"type": "trajectory_includes", "tool": "notify_patient", "args": {"patient_id": "P-5512"}},
+          {"type": "state_equals", "pointer": "/notifications/0/patient_id", "equals": "P-5512"},
+          {"type": "state_equals", "pointer": "/notifications/0/message", "equals": "Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00."}
+        ]},
+        {"id": "R3", "text": "Ordering: request the refill first, then notify the patient.", "checks": [
+          {"type": "trajectory_before", "first": {"tool": "request_refill", "args": {"rx_id": "RX-1001", "pharmacy_id": "PH-ELM"}}, "then": {"tool": "notify_patient", "args": {"patient_id": "P-5512"}}}
+        ]},
+        {"id": "R4", "text": "Do not request refills of any other prescription.", "checks": [
+          {"type": "trajectory_excludes", "tool": "request_refill", "args": {"rx_id": "RX-1002"}},
+          {"type": "trajectory_excludes", "tool": "request_refill", "args": {"rx_id": "RX-1107"}},
+          {"type": "trajectory_excludes", "tool": "request_refill", "args": {"pharmacy_id": "PH-HBR"}},
+          {"type": "state_equals", "pointer": "/prescriptions/RX-1002/refills_left", "equals": 0},
+          {"type": "state_equals", "pointer": "/prescriptions/RX-1107/refills_left", "equals": 5}
+        ]}
+      ]
+    },
+    "a8739f693f08108b084de7eaae06e5be158c001280f2a6650feb7a370f60a29a": {
+      "requirements": [
+        {"id": "R1", "text": "Copy hosts to hosts.bak unchanged.", "checks": [
+          {"type": "file_exists", "path": "hosts.bak"},
+          {"type": "file_equals", "path": "hosts.bak", "text": "127.0.0.1   localhost\n::1         localhost ip6-localhost ip6-loopback\n10.20.0.4   git.internal\n10.20.0.9   ci.internal\n", "normalize": "none"}
+        ]},
+        {"id": "R2", "text": "Append the line '10.20.0.15  build-cache.internal' (two spaces) to the end of hosts, keeping all existing lines unchanged.", "checks": [
+          {"type": "file_contains", "path": "hosts", "text": "\n10.20.0.15  build-cache.internal\n"},
+          {"type": "file_regex", "path": "hosts", "pattern": "\\A127\\.0\\.0\\.1   localhost\\n::1         localhost ip6-localhost ip6-loopback\\n10\\.20\\.0\\.4   git\\.internal\\n10\\.20\\.0\\.9   ci\\.internal\\n10\\.20\\.0\\.15  build-cache\\.internal\\n\\Z"}
+        ]},
+        {"id": "R3", "text": "The hosts file must end with a newline and have exactly the expected content.", "checks": [
+          {"type": "file_equals", "path": "hosts", "text": "127.0.0.1   localhost\n::1         localhost ip6-localhost ip6-loopback\n10.20.0.4   git.internal\n10.20.0.9   ci.internal\n10.20.0.15  build-cache.internal\n", "normalize": "none"},
+          {"type": "file_lines", "path": "hosts", "count": 5}
+        ]},
+        {"id": "R4", "text": "The backup must be completely written before hosts is modified in any way (backup must equal the original, which is only possible if the copy preceded the edit).", "checks": [
+          {"type": "file_equals", "path": "hosts.bak", "text": "127.0.0.1   localhost\n::1         localhost ip6-localhost ip6-loopback\n10.20.0.4   git.internal\n10.20.0.9   ci.internal\n", "normalize": "none"},
+          {"type": "exit_code", "code": 0}
+        ]}
+      ]
+    },
+    "a9a7c1d97fd3c78dd18688155a10c3c6b3bc718265de4ed5d482d86605022219": {
+      "requirements": [
+        {"id": "R1", "text": "Create a script at bin/wordcount.", "checks": [
+          {"type": "file_exists", "path": "bin/wordcount"},
+          {"type": "exit_code", "code": 0}
+        ]},
+        {"id": "R2", "text": "The script must start with #!/usr/bin/env bash or #!/bin/bash.", "checks": [
+          {"type": "file_regex", "path": "bin/wordcount", "pattern": "\\A#!(/usr/bin/env bash|/bin/bash)[ \\t]*\\n"}
+        ]},
+        {"id": "R3", "text": "Run as bin/wordcount FILE, print the number of words in FILE (as counted by wc -w) as a plain decimal integer on a single line, exit status 0. An empty file has 0 words.", "checks": [
+          {"type": "file_regex", "path": "bin/wordcount", "pattern": "(?s)wc\\s+-w|\\$\\{?1\\}?|\\$@"}
+        ]},
+        {"id": "R4", "text": "The script may use only bash and coreutils.", "checks": [
+          {"type": "file_regex", "path": "bin/wordcount", "pattern": "\\A(?:(?!\\b(?:python3?|perl|awk|gawk|ruby|node|php)\\b).)*\\Z"}
+        ]}
+      ]
+    },
+    "b20808fda577e1dc8435672390b70a83bc57e00f138a807b0d6b7ab68512d19b": {
+      "requirements": [
+        {"id": "R1", "text": "Print exactly five lines of the form '<word> <count>' and nothing else, most frequent first, with ties broken alphabetically: words are maximal runs of ASCII letters, compared case-insensitively, printed lowercase.", "checks": [
+          {"type": "stdout_regex", "pattern": "\\Ato 6\\nthe 5\\nwe 5\\na 4\\nand 4\\n?\\Z"},
+          {"type": "same_as_reference", "target": "stdout", "normalize": "strip"},
+          {"type": "exit_code", "code": 0}
+        ]},
+        {"id": "R2", "text": "Counts are correct for the top words: to 6, the 5, we 5, a 4, and 4.", "checks": [
+          {"type": "stdout_contains", "text": "to 6"},
+          {"type": "stdout_contains", "text": "the 5"},
+          {"type": "stdout_contains", "text": "we 5"},
+          {"type": "stdout_contains", "text": "a 4"},
+          {"type": "stdout_contains", "text": "and 4"}
+        ]},
+        {"id": "R3", "text": "Tie-breaking by alphabetical order: 'the 5' appears before 'we 5', and 'a 4' before 'and 4'.", "checks": [
+          {"type": "stdout_regex", "pattern": "the 5\\nwe 5\\n"},
+          {"type": "stdout_regex", "pattern": "a 4\\nand 4"}
+        ]}
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

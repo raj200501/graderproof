@@ -1,0 +1,463 @@
+{
+  "created_utc": "2026-11-04T02:56:39Z",
+  "hash": "e02db069bc4f98c5b895e1e8ecadf620e8d3c19767003ecf81b003b995505e0e",
+  "instructions": "You review modified solutions to software tasks. For each item you get the task text,\nthe original reference solution (which satisfies the task), and a modified solution\n(as a unified diff plus the full changed files). Decide whether the modified solution\nstill satisfies every requirement that the task text states or clearly implies.\n\nAnswer \"violating\" if it breaks at least one requirement (name it), \"preserving\" if it\nsatisfies all of them, or \"unsure\" if you cannot tell. Judge only against the task\ntext: a change in formatting, naming, ordering, or implementation is \"preserving\"\nunless the task text requires the exact form that changed. A change that makes the\nsolution crash, produce a different result, skip a required step, write to the wrong\nplace, or omit required output is \"violating\". You are not told how the task is\ngraded and must not guess; do not reward or penalize anything for how a checker might\nreact.\nReturn for each item: {\"verdict\": \"violating\"|\"preserving\"|\"unsure\",\n\"requirement\": \"<the broken requirement, or empty>\", \"reason\": \"<one sentence>\"}.\n",
+  "items": [
+    {
+      "id": "7ebbdd5fa9eb4a907bb87e4faf572e35903a6288fa52b55e84a6d159339dd249",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -3,8 +3,8 @@\n cat > schema.sql <<'EOF'\n CREATE TABLE customers (\n     id INTEGER PRIMARY KEY,\n-    email TEXT NOT NULL UNIQUE,\n-    created_at TEXT NOT NULL\n+    created_at TEXT NOT NULL,\n+    email TEXT NOT NULL UNIQUE\n );\n \n CREATE TABLE orders (\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    created_at TEXT NOT NULL,\n    email TEXT NOT NULL UNIQUE\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+      },
+      "task_text": "# SQLite schema for the orders service\n\nWrite `schema.sql` in the working directory: a SQLite script that, run on an empty database, creates exactly the following.\n\n- Table `customers` with columns, in this order: `id INTEGER PRIMARY KEY`, `email TEXT NOT NULL UNIQUE`, `created_at TEXT NOT NULL`.\n- Table `orders` with columns, in this order: `id INTEGER PRIMARY KEY`, `customer_id INTEGER NOT NULL` with a foreign key referencing `customers(id)`, `total_cents INTEGER NOT NULL`, `status TEXT NOT NULL DEFAULT 'pending'`.\n- An index named `idx_orders_customer` on `orders(customer_id)`.\n\nThe script must run without errors and must not create any other table, view, index, or trigger (the automatic index SQLite creates for a `UNIQUE` column does not count).\n"
+    },
+    {
+      "id": "7f39b251d473b603afe0df222b96946c29f297c0cb5d697e0d67afdf1d4fa5ff",
+      "modified_diff": "--- a/dupes.py\n+++ b/dupes.py\n@@ -1,6 +1,12 @@\n+from itertools import groupby\n+\n+\n def duplicate_groups(files):\n-    by_content = {}\n-    for path, content in files.items():\n-        by_content.setdefault(content, []).append(path)\n-    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n-    return sorted(groups)\n+    items = sorted(files.items(), key=lambda kv: (kv[1], kv[0]))\n+    groups = []\n+    for _, grp in groupby(items, key=lambda kv: kv[1]):\n+        paths = [p for p, _ in grp]\n+        if len(paths) > 1:\n+            groups.append(paths)\n+    groups.sort(key=lambda g: g[0])\n+    return groups\n",
+      "modified_files": {
+        "dupes.py": "from itertools import groupby\n\n\ndef duplicate_groups(files):\n    items = sorted(files.items(), key=lambda kv: (kv[1], kv[0]))\n    groups = []\n    for _, grp in groupby(items, key=lambda kv: kv[1]):\n        paths = [p for p, _ in grp]\n        if len(paths) > 1:\n            groups.append(paths)\n    groups.sort(key=lambda g: g[0])\n    return groups\n"
+      },
+      "reference_solution": {
+        "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n    return sorted(groups)\n"
+      },
+      "task_text": "# Find duplicate files\n\nA cleanup tool needs to report files with identical contents. Write a Python module `dupes.py` with a function `duplicate_groups(files)`.\n\n- `files` is a dict mapping a file path (a string) to that file's contents (a string).\n- Two files are duplicates when their contents are exactly equal.\n- Return a list of groups, one group for each content that is shared by two or more paths. A group is the sorted list of all paths with that content. Contents that belong to only one path produce no group.\n- Order the groups by their first path. If there are no duplicates, return `[]`.\n"
+    },
+    {
+      "id": "7fa5b506b0e955b96d38ef14e2a8bf7d0623b52a455497a4a5a24ded4cc51528",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n-]\n+[{\"args\":{\"student_id\":\"S-4471\"},\"tool\":\"get_student\"},{\"args\":{\"course\":\"CS201\"},\"tool\":\"list_sections\"},{\"args\":{\"section_id\":\"CS201-D\",\"student_id\":\"S-4471\"},\"tool\":\"enroll\"}]\n",
+      "modified_files": {
+        "trajectory.json": "[{\"args\":{\"student_id\":\"S-4471\"},\"tool\":\"get_student\"},{\"args\":{\"course\":\"CS201\"},\"tool\":\"list_sections\"},{\"args\":{\"section_id\":\"CS201-D\",\"student_id\":\"S-4471\"},\"tool\":\"enroll\"}]"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n]\n"
+      },
+      "task_text": "# Enroll a student in a course section\n\nStudent `S-4471` needs to take CS201 this term. Enroll the student in exactly one section of `CS201` that has a free seat and whose meeting times do not overlap any section the student is already enrolled in. Keep the student's existing enrollments.\n\nTwo meetings overlap when they are on the same day and their time ranges intersect.\n\nTools (see `support/env.py`):\n\n- `get_student(student_id)`: current enrollments\n- `list_sections(course)`: sections with meeting times and free seats\n- `enroll(student_id, section_id)`\n- `drop(student_id, section_id)`\n"
+    },
+    {
+      "id": "818fe9c9c20649380db739898360b856c1961482efddeac1db9cec83cb7cba7f",
+      "modified_diff": "--- a/rle.py\n+++ b/rle.py\n@@ -1,6 +1,6 @@\n import re\n \n-_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n+_PAIR = re.compile(r\"([0-9]+)([^0-9])\", re.DOTALL)\n \n \n def encode(s):\n",
+      "modified_files": {
+        "rle.py": "import re\n\n_PAIR = re.compile(r\"([0-9]+)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+      },
+      "reference_solution": {
+        "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+      },
+      "task_text": "# Run-length encoding\n\nWrite a Python module `rle.py` with two functions.\n\n- `encode(s)`: `s` is a string that contains no decimal digits. Replace each maximal run of one repeated character by the run length in decimal (no leading zeros) followed by that character. For example, `encode(\"aaab\")` returns `\"3a1b\"`, `encode(\"a\" * 12)` returns `\"12a\"`, and `encode(\"\")` returns `\"\"`. Spaces, newlines, and other characters are encoded like any other character.\n- `decode(code)`: the inverse. `code` is a sequence of pairs, each a positive decimal count without leading zeros followed by one character that is not a digit; the result repeats each character count times, so `decode(\"3a1b\")` returns `\"aaab\"` and `decode(\"\")` returns `\"\"`. Raise `ValueError` if `code` is not of this form (for example `\"a3\"`, `\"3\"`, `\"0a\"`, or `\"03a\"`).\n"
+    },
+    {
+      "id": "82e2904c947f51ec059fcdd15a0cfc1dac5264800bfddf605b14115d3bf4b1ae",
+      "modified_diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -1,13 +1,11 @@\n-from urllib.parse import unquote_plus\n+from urllib.parse import unquote\n+\n+\n+def _decode(text):\n+    return unquote(text.replace(\"+\", \" \"))\n \n \n def parse_query(qs):\n-    if qs.startswith(\"?\"):\n-        qs = qs[1:]\n-    result = {}\n-    for pair in qs.split(\"&\"):\n-        if not pair:\n-            continue\n-        key, _, value = pair.partition(\"=\")\n-        result[unquote_plus(key)] = unquote_plus(value)\n-    return result\n+    qs = qs[1:] if qs[:1] == \"?\" else qs\n+    pairs = (p.split(\"=\", 1) for p in qs.split(\"&\") if p)\n+    return {_decode(p[0]): _decode(p[1] if len(p) > 1 else \"\") for p in pairs}\n",
+      "modified_files": {
+        "urlquery.py": "from urllib.parse import unquote\n\n\ndef _decode(text):\n    return unquote(text.replace(\"+\", \" \"))\n\n\ndef parse_query(qs):\n    qs = qs[1:] if qs[:1] == \"?\" else qs\n    pairs = (p.split(\"=\", 1) for p in qs.split(\"&\") if p)\n    return {_decode(p[0]): _decode(p[1] if len(p) > 1 else \"\") for p in pairs}\n"
+      },
+      "reference_solution": {
+        "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+      },
+      "task_text": "# Parse URL query strings\n\nWrite a Python module `urlquery.py` with a function `parse_query(qs)` that parses the query part of a URL into a dict.\n\n- `qs` is a string such as `\"?q=red+shoes&size=42&sort=price%2Basc\"`. A single leading `?` is ignored.\n- Pairs are separated by `&`. Each pair is `key=value`, split at the first `=`. A pair without `=` (such as `debug`) has the value `\"\"`. Empty pairs (from `&&` or a trailing `&`) are skipped.\n- Keys and values are decoded: `+` stands for a space, and `%XX` is a percent-encoded UTF-8 byte (so `%2B` is `+` and `%C3%A9` is `\u00e9`).\n- If a key appears more than once, the last value wins.\n- Return a dict mapping each decoded key to its decoded value (both strings). `parse_query(\"\")` returns `{}`.\n\nUse only the Python standard library.\n"
+    },
+    {
+      "id": "837e5a89f42d49017f4cfe6d7ab7c7bcc29e5ce482b7a46072a173d5fedadec2",
+      "modified_diff": "--- a/roman.py\n+++ b/roman.py\n@@ -11,4 +11,4 @@\n     for value, letters in _VALUES:\n         count, n = divmod(n, value)\n         out.append(letters * count)\n-    return \"\".join(out)\n+    return \"\".join(out).lower()\n",
+      "modified_files": {
+        "roman.py": "_VALUES = [\n    (1000, \"M\"), (900, \"CM\"), (500, \"D\"), (400, \"CD\"), (100, \"C\"), (90, \"XC\"),\n    (50, \"L\"), (40, \"XL\"), (10, \"X\"), (9, \"IX\"), (5, \"V\"), (4, \"IV\"), (1, \"I\"),\n]\n\n\ndef to_roman(n):\n    if not 1 <= n <= 3999:\n        raise ValueError(\"n must be between 1 and 3999\")\n    out = []\n    for value, letters in _VALUES:\n        count, n = divmod(n, value)\n        out.append(letters * count)\n    return \"\".join(out).lower()\n"
+      },
+      "reference_solution": {
+        "roman.py": "_VALUES = [\n    (1000, \"M\"), (900, \"CM\"), (500, \"D\"), (400, \"CD\"), (100, \"C\"), (90, \"XC\"),\n    (50, \"L\"), (40, \"XL\"), (10, \"X\"), (9, \"IX\"), (5, \"V\"), (4, \"IV\"), (1, \"I\"),\n]\n\n\ndef to_roman(n):\n    if not 1 <= n <= 3999:\n        raise ValueError(\"n must be between 1 and 3999\")\n    out = []\n    for value, letters in _VALUES:\n        count, n = divmod(n, value)\n        out.append(letters * count)\n    return \"\".join(out)\n"
+      },
+      "task_text": "# Roman numerals\n\nWrite a Python module `roman.py` with a function `to_roman(n)` that returns the Roman numeral for an integer `n` from 1 to 3999, using the standard subtractive notation (`IV`, `IX`, `XL`, `XC`, `CD`, `CM`) and uppercase letters. For example, `to_roman(1994)` returns `\"MCMXCIV\"`.\n\nIf `n` is outside 1 to 3999, raise `ValueError`.\n"
+    },
+    {
+      "id": "83e71607316f68ec8a04068116576399db6816522710a54318f15335b6c5fa74",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n   {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n   {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n]\n"
+      },
+      "task_text": "# Swap a fitness class for a waitlist spot\n\nGym member `G-208` can no longer attend Tuesday's yoga class `CL-TUE-YOGA`. Cancel that booking, and add the member to the waitlist of Thursday's yoga class `CL-THU-YOGA`, which is full. Do not change anything else.\n\nTools (see `support/env.py`):\n\n- `list_classes()`\n- `cancel_booking(member_id, class_id)`\n- `book_class(member_id, class_id)`: fails when the class is full\n- `join_waitlist(member_id, class_id)`: adds the member to the end of the waitlist\n"
+    },
+    {
+      "id": "849ca6ff54e356d31255288b724d2e4ae0c9a3aa7ad714695f4472635d8417e6",
+      "modified_diff": "--- a/taskqueue.py\n+++ b/taskqueue.py\n@@ -1,6 +1,6 @@\n def _key(task):\n     due = task[\"due\"]\n-    return (task[\"priority\"], due is None, due or \"\", task[\"title\"])\n+    return (-task[\"priority\"], due is None, due or \"\", task[\"title\"])\n \n \n def sort_tasks(tasks):\n",
+      "modified_files": {
+        "taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (-task[\"priority\"], due is None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    return sorted(tasks, key=_key)\n"
+      },
+      "reference_solution": {
+        "taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due is None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    return sorted(tasks, key=_key)\n"
+      },
+      "task_text": "# Order a task list\n\nWrite a Python module `taskqueue.py` with a function `sort_tasks(tasks)` for a to-do app.\n\n- `tasks` is a list of dicts. Each dict has a `title` (string), a `priority` (integer, 1 is the most urgent), and a `due` date (an ISO `YYYY-MM-DD` string, or `None` when there is no due date). Dicts may contain other keys, which must be kept.\n- Return a new list with the same dicts ordered by priority (1 first), then by due date (earliest first, tasks without a due date after those with one), then by title (alphabetical, case-sensitive).\n- The caller keeps using its own list: `sort_tasks` must not modify the input list or any of the dicts in it.\n"
+    },
+    {
+      "id": "84c1e096f74cb4ed3a2f087e49a93389478b3089ba29a88163ecdb49d98f7de4",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 2500, \"memo\": \"holiday fund\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 2500, \"memo\": \"holiday fund\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+      },
+      "task_text": "# Move money to savings\n\nJonah Weiss (customer `C-118`) calls the bank: he wants to move $250.00 from his checking account to his savings account, with the memo `holiday fund`.\n\nUse the banking tools to make exactly one transfer of 25000 cents from his checking account `ACC-3301` to his savings account `ACC-3302`, with memo `holiday fund`. Do not move money into or out of any other account.\n\nTools (see `support/env.py`):\n\n- `list_accounts(customer_id)`\n- `get_balance(account_id)`\n- `transfer(from_account, to_account, amount_cents, memo)`\n"
+    },
+    {
+      "id": "84e2e5da226988766027667b3d87e0e60fe44efae38e2244a8186b9bf168c333",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    mv -- \"$path\" \"photos/${m[1]}-${m[3]}-${m[2]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n   fi\n done\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[3]}-${m[2]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+      },
+      "task_text": "# Rename camera photos\n\nThe camera names photos `IMG_YYYYMMDD_HHMMSS.jpg`. Rename every file in `photos/` whose name matches that pattern exactly (uppercase `IMG_`, eight digits, `_`, six digits, `.jpg`) to `YYYY-MM-DD_HH-MM-SS.jpg`. For example, `IMG_20260712_143005.jpg` becomes `2026-07-12_14-30-05.jpg`.\n\nDo not change any file's contents. Leave every other file in `photos/` exactly as it is.\n"
+    },
+    {
+      "id": "855ffafd596f4e19d84a189587c81f3902a5a62c93b2ce1dd82b453a30d799dd",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"list_classes\", \"args\": {}},\n   {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n+  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n   {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n]\n"
+      },
+      "task_text": "# Swap a fitness class for a waitlist spot\n\nGym member `G-208` can no longer attend Tuesday's yoga class `CL-TUE-YOGA`. Cancel that booking, and add the member to the waitlist of Thursday's yoga class `CL-THU-YOGA`, which is full. Do not change anything else.\n\nTools (see `support/env.py`):\n\n- `list_classes()`\n- `cancel_booking(member_id, class_id)`\n- `book_class(member_id, class_id)`: fails when the class is full\n- `join_waitlist(member_id, class_id)`: adds the member to the end of the waitlist\n"
+    },
+    {
+      "id": "86683fc255d2680c4152d75b869f8746bbc8e9a7e4da9be8321534b83cca2c49",
+      "modified_diff": "--- a/sms.py\n+++ b/sms.py\n@@ -1,8 +1,10 @@\n-SINGLE_LIMIT = 160\n-PART_SIZE = 153\n-\n-\n def split_sms(message):\n-    if len(message) <= SINGLE_LIMIT:\n+    if len(message) <= 160:\n         return [message]\n-    return [message[i : i + PART_SIZE] for i in range(0, len(message), PART_SIZE)]\n+    parts = []\n+    start = 0\n+    while start < len(message):\n+        end = min(start + 153, len(message))\n+        parts.append(message[start:end])\n+        start = end\n+    return parts\n",
+      "modified_files": {
+        "sms.py": "def split_sms(message):\n    if len(message) <= 160:\n        return [message]\n    parts = []\n    start = 0\n    while start < len(message):\n        end = min(start + 153, len(message))\n        parts.append(message[start:end])\n        start = end\n    return parts\n"
+      },
+      "reference_solution": {
+        "sms.py": "SINGLE_LIMIT = 160\nPART_SIZE = 153\n\n\ndef split_sms(message):\n    if len(message) <= SINGLE_LIMIT:\n        return [message]\n    return [message[i : i + PART_SIZE] for i in range(0, len(message), PART_SIZE)]\n"
+      },
+      "task_text": "# Split long text messages\n\nThe SMS gateway sends long texts as multi-part messages, and each part of a multi-part message holds at most 153 characters. Write a Python module `sms.py` with a function `split_sms(message)` that returns the list of parts to send:\n\n- If `message` has at most 160 characters, return `[message]` (a single, unsplit message). This includes the empty message, which returns `[\"\"]`.\n- Otherwise split it into consecutive parts of exactly 153 characters, except the last part, which holds the remaining 1 to 153 characters.\n- Joining the parts in order must give back `message` exactly: do not strip, add, reorder, or change any character.\n"
+    },
+    {
+      "id": "87726940b7e3f033a2c6c9774bfda142eed31257d953c067c1609aaa3497bfa9",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1 @@\n-[\n-  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n-]\n+[{\"tool\":\"find_bookings\",\"args\":{\"customer_name\":\"Lin Zhao\"}},{\"tool\":\"cancel_booking\",\"args\":{\"booking_id\":\"BK-4471\"}}]\n",
+      "modified_files": {
+        "trajectory.json": "[{\"tool\":\"find_bookings\",\"args\":{\"customer_name\":\"Lin Zhao\"}},{\"tool\":\"cancel_booking\",\"args\":{\"booking_id\":\"BK-4471\"}}]"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n]\n"
+      },
+      "task_text": "# Cancel one of two trips\n\nLin Zhao has two guided-tour bookings in Porto. She asks to cancel the one on `2026-12-12`, which is booking `BK-4471`, and to keep the one on `2026-12-05`.\n\nCancel exactly that booking with `cancel_booking`. Do not cancel or change any other booking.\n\nTools (see `support/env.py`):\n\n- `find_bookings(customer_name)`\n- `cancel_booking(booking_id)`\n"
+    },
+    {
+      "id": "877605084a5baea267f05884f7407f1c2248aa44de51490ba827bddb17a316ce",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,7 +2,7 @@\n set -euo pipefail\n for path in photos/*; do\n   name=${path#photos/}\n-  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n+  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpe?g$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n     mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n   fi\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpe?g$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+      },
+      "task_text": "# Rename camera photos\n\nThe camera names photos `IMG_YYYYMMDD_HHMMSS.jpg`. Rename every file in `photos/` whose name matches that pattern exactly (uppercase `IMG_`, eight digits, `_`, six digits, `.jpg`) to `YYYY-MM-DD_HH-MM-SS.jpg`. For example, `IMG_20260712_143005.jpg` becomes `2026-07-12_14-30-05.jpg`.\n\nDo not change any file's contents. Leave every other file in `photos/` exactly as it is.\n"
+    },
+    {
+      "id": "880ab52222e236675a3e4fa5f7d45df27e24eb9363e67209672303dfd9477fb8",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n+  {\"tool\": \"list_pharmacies\", \"args\": {}},\n   {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n   {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"list_pharmacies\", \"args\": {}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+      },
+      "task_text": "# Refill a prescription\n\nPatient `P-5512` asks to refill her atorvastatin prescription for pickup at the Elm Street pharmacy.\n\n1. Request a refill of prescription `RX-1001` at pharmacy `PH-ELM` with `request_refill`.\n2. Then notify the patient with `notify_patient`. The message must include the pharmacy name `Elm Street` and the prescription number `RX-1001`.\n\nDo not request refills of any other prescription.\n\nTools (see `support/env.py`):\n\n- `list_prescriptions(patient_id)`\n- `list_pharmacies()`\n- `request_refill(rx_id, pharmacy_id)`\n- `notify_patient(patient_id, message)`\n"
+    },
+    {
+      "id": "88e8403f24a8b2e9505b45db7998e9066bd8a121b4f74f6d7e3f2374498f928c",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n   {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n]\n"
+      },
+      "task_text": "# Enroll a student in a course section\n\nStudent `S-4471` needs to take CS201 this term. Enroll the student in exactly one section of `CS201` that has a free seat and whose meeting times do not overlap any section the student is already enrolled in. Keep the student's existing enrollments.\n\nTwo meetings overlap when they are on the same day and their time ranges intersect.\n\nTools (see `support/env.py`):\n\n- `get_student(student_id)`: current enrollments\n- `list_sections(course)`: sections with meeting times and free seats\n- `enroll(student_id, section_id)`\n- `drop(student_id, section_id)`\n"
+    },
+    {
+      "id": "8978314d3f9d14679763d0e397f3ea458b3b04fee6954460593eb5bd27403876",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,8 +1,8 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cd logs\n-rm -f -- app.log.3\n-mv -- app.log.2 app.log.3\n-mv -- app.log.1 app.log.2\n-mv -- app.log app.log.1\n-: > app.log\n+rm -f logs/app.log.3\n+mv -f logs/app.log.2 logs/app.log.3\n+mv -f logs/app.log.1 logs/app.log.2\n+mv -f logs/app.log logs/app.log.1\n+touch logs/app.log\n+truncate -s 0 logs/app.log\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nrm -f logs/app.log.3\nmv -f logs/app.log.2 logs/app.log.3\nmv -f logs/app.log.1 logs/app.log.2\nmv -f logs/app.log logs/app.log.1\ntouch logs/app.log\ntruncate -s 0 logs/app.log\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncd logs\nrm -f -- app.log.3\nmv -- app.log.2 app.log.3\nmv -- app.log.1 app.log.2\nmv -- app.log app.log.1\n: > app.log\n"
+      },
+      "task_text": "# Rotate the application log\n\n`logs/` contains the current log `app.log` and three older copies, `app.log.1` (newest) to `app.log.3` (oldest). Rotate the logs, keeping three old copies:\n\n1. Delete `app.log.3`.\n2. Rename `app.log.2` to `app.log.3`, then `app.log.1` to `app.log.2`, then `app.log` to `app.log.1`.\n3. Create a new, empty `app.log`.\n\nFile contents must not change during the renames. Other files in `logs/` must be left as they are.\n"
+    },
+    {
+      "id": "8a3772bf70d3794c2eaaab97dbb79fb8e130b64278bf6b9b91492fa19f8fb09a",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n   {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n   {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n   {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+      },
+      "task_text": "# Edit a cart and check out\n\nCustomer `CU-310` asks you to finish their order:\n\n1. Remove the mug (SKU `MUG-02`) from the cart.\n2. Apply the coupon `WINTER10`.\n3. Check out to the saved address labeled `office`.\n\nLeave the other items and their quantities as they are.\n\nTools (see `support/env.py`):\n\n- `view_cart(customer_id)`\n- `remove_item(customer_id, sku)`\n- `apply_coupon(customer_id, code)`\n- `checkout(customer_id, address_label)`\n"
+    },
+    {
+      "id": "8ac7435002a50744a988f4c1927891446a18da9053a7dd11318a409a40b34669",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,4 +8,4 @@\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n-print(\"Total: ${:,.2f}\".format(total))\n+print(\"Total: ${:.2f}\".format(total))\n",
+      "modified_files": {
+        "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:.2f}\".format(total))\n"
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+      },
+      "task_text": "# Invoice total\n\n`invoice.csv` lists the line items of an invoice, with columns `item,quantity,unit_price`. Compute the amount due:\n\n- subtotal = the sum of quantity \u00d7 unit_price over all rows;\n- tax = 8.25% of the subtotal, rounded to the nearest cent (exact halves round up);\n- total = subtotal + tax.\n\nPrint exactly one line to standard output, in the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, and the total with a comma as the thousands separator and exactly two decimal places. Print nothing else.\n"
+    },
+    {
+      "id": "8b08c6dccfdb45103106d9272cedafe29804dc204e7d38db64f086f0b6f61ab2",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -8,5 +8,5 @@\n       printf '| --- | --- | --- |\\n'\n       first=0\n     fi\n-  done < team.csv\n+  done < <(head -n 1 team.csv; tail -n +2 team.csv | sort -r)\n } > team.md\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < <(head -n 1 team.csv; tail -n +2 team.csv | sort -r)\n} > team.md\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n"
+      },
+      "task_text": "# Team list as a Markdown table\n\nConvert `team.csv` (a header row and one row per person; no field contains a comma or quotes) into a Markdown table in `team.md`.\n\n- The first row of the table is the header row with the CSV column names, followed by a separator row, followed by one row per CSV record in the original order.\n- Every row starts with `|` and ends with `|`, with cells separated by `|`. Spaces around cell text are optional and are ignored; cell text itself must be unchanged.\n- Each separator cell consists of three or more `-` characters, optionally with a leading and/or trailing `:` for alignment.\n- `team.md` contains only the table (a final newline is optional).\n"
+    },
+    {
+      "id": "8b545d2d151d5b6b88756de792c274e1b5b677226f4944bcac1879f3539a0cf1",
+      "modified_diff": "--- a/finance.py\n+++ b/finance.py\n@@ -2,4 +2,4 @@\n     rate = annual_rate / 100.0\n     n = periods_per_year\n     value = principal * (1 + rate / n) ** (n * years)\n-    return round(value, 2)\n+    return float(round(value))\n",
+      "modified_files": {
+        "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return float(round(value))\n"
+      },
+      "reference_solution": {
+        "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+      },
+      "task_text": "# Compound interest calculator\n\nWrite a Python module `finance.py` with a function `future_value(principal, annual_rate, years, periods_per_year)` for the savings calculator on the bank's website.\n\n- `principal` is the amount deposited (a number of dollars), `annual_rate` is the nominal yearly interest rate in percent (so `4.5` means 4.5%), `years` is a whole number of years, and `periods_per_year` is how many times per year interest is compounded (for example 12 for monthly).\n- The result is `principal * (1 + r / n) ** (n * years)`, where `r = annual_rate / 100` and `n = periods_per_year`.\n- Return the result as a float rounded to the nearest cent (2 decimal places).\n"
+    },
+    {
+      "id": "8bc92d54ddd3d915e775e55837878992e2490e1260fcd62b45b7a3ef30c9df5a",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,5 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+dd if=hosts of=hosts.bak status=none\n+sync hosts.bak\n+printf '%s  %s\\n' 10.20.0.15 build-cache.internal >> hosts\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ndd if=hosts of=hosts.bak status=none\nsync hosts.bak\nprintf '%s  %s\\n' 10.20.0.15 build-cache.internal >> hosts\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts\n"
+      },
+      "task_text": "# Add a hosts entry\n\nThe build machines need to resolve the new cache server. The file `hosts` in the working directory is the machine's hosts file.\n\n1. First make a backup: copy `hosts` to `hosts.bak` unchanged. The backup must be completely written before `hosts` is modified in any way, so that a crash during the edit never leaves the machine without a good copy.\n2. Then append the line `10.20.0.15  build-cache.internal` (two spaces between the address and the name) to the end of `hosts`, keeping all existing lines unchanged. The file must end with a newline.\n"
+    },
+    {
+      "id": "8bd20bb228479dbbe6886baf72099ebf189660731c1918070282f173e806c95b",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,3 @@\n [\n-  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n   {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n]\n"
+      },
+      "task_text": "# Cancel one of two trips\n\nLin Zhao has two guided-tour bookings in Porto. She asks to cancel the one on `2026-12-12`, which is booking `BK-4471`, and to keep the one on `2026-12-05`.\n\nCancel exactly that booking with `cancel_booking`. Do not cancel or change any other booking.\n\nTools (see `support/env.py`):\n\n- `find_bookings(customer_name)`\n- `cancel_booking(booking_id)`\n"
+    },
+    {
+      "id": "8bfb4b78f2496b479a3a4402271c17716fa15d584cdceaded319df20aaad6d56",
+      "modified_diff": "--- a/dupes.py\n+++ b/dupes.py\n@@ -2,5 +2,5 @@\n     by_content = {}\n     for path, content in files.items():\n         by_content.setdefault(content, []).append(path)\n-    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n+    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 0]\n     return sorted(groups)\n",
+      "modified_files": {
+        "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 0]\n    return sorted(groups)\n"
+      },
+      "reference_solution": {
+        "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n    return sorted(groups)\n"
+      },
+      "task_text": "# Find duplicate files\n\nA cleanup tool needs to report files with identical contents. Write a Python module `dupes.py` with a function `duplicate_groups(files)`.\n\n- `files` is a dict mapping a file path (a string) to that file's contents (a string).\n- Two files are duplicates when their contents are exactly equal.\n- Return a list of groups, one group for each content that is shared by two or more paths. A group is the sorted list of all paths with that content. Contents that belong to only one path produce no group.\n- Order the groups by their first path. If there are no duplicates, return `[]`.\n"
+    },
+    {
+      "id": "8c2381d8fd30c2e9656be155714d3b55bc0cebed7b5c00b13c6c792b868dafe1",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n+  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4812\"}},\n   {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n   {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4812\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+      },
+      "task_text": "# Refund a damaged item\n\nCustomer Tom\u00e1s Rivera (customer `C-8812`) writes that the countertop blender in his order `ORD-90417` arrived with a cracked jug. He asks for a refund of the blender only ($64.99). He gave the last four digits of his card as `4821`.\n\nSupport policy: before issuing any refund you must verify the customer's identity by calling `verify_identity` with the customer ID and the last four digits of the card on file, and you may only refund after that check succeeds.\n\nThen refund 6499 cents on order `ORD-90417` with reason `damaged`. Make no other refunds or changes.\n\nTools (see `support/env.py`):\n\n- `verify_identity(customer_id, last4)`\n- `get_order(order_id)`\n- `issue_refund(order_id, amount_cents, reason)`\n"
+    },
+    {
+      "id": "8dc7a3b967f87bff58ec31557a45ea8f2a3af7fb7da44ff6809ee717a56d101c",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -3,6 +3,7 @@\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n+  {\"tool\": \"remove_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"vendors\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n   {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n   {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"remove_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"vendors\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_messages\", \"args\": {}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-02\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-02\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-04\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-04\"}},\n  {\"tool\": \"add_label\", \"args\": {\"message_id\": \"M-07\", \"label\": \"invoices\"}},\n  {\"tool\": \"archive\", \"args\": {\"message_id\": \"M-07\"}}\n]\n"
+      },
+      "task_text": "# Triage the shared inbox\n\nIn the finance team's shared inbox, apply the label `invoices` to every message whose sender is exactly `billing@northwind.example`, and archive each of those messages.\n\nDo not label, archive, or otherwise change any other message, and do not remove existing labels.\n\nTools (see `support/env.py`):\n\n- `list_messages()`\n- `add_label(message_id, label)`\n- `remove_label(message_id, label)`\n- `archive(message_id)`\n"
+    },
+    {
+      "id": "8e4e18c2ab11254760deefadfddabc2cf4d8d82ae612b48961f761c5b3f684f1",
+      "modified_diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -8,6 +8,8 @@\n     for pair in qs.split(\"&\"):\n         if not pair:\n             continue\n-        key, _, value = pair.partition(\"=\")\n+        parts = pair.split(\"=\")\n+        key = parts[0]\n+        value = parts[1] if len(parts) > 1 else \"\"\n         result[unquote_plus(key)] = unquote_plus(value)\n     return result\n",
+      "modified_files": {
+        "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        parts = pair.split(\"=\")\n        key = parts[0]\n        value = parts[1] if len(parts) > 1 else \"\"\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+      },
+      "reference_solution": {
+        "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+      },
+      "task_text": "# Parse URL query strings\n\nWrite a Python module `urlquery.py` with a function `parse_query(qs)` that parses the query part of a URL into a dict.\n\n- `qs` is a string such as `\"?q=red+shoes&size=42&sort=price%2Basc\"`. A single leading `?` is ignored.\n- Pairs are separated by `&`. Each pair is `key=value`, split at the first `=`. A pair without `=` (such as `debug`) has the value `\"\"`. Empty pairs (from `&&` or a trailing `&`) are skipped.\n- Keys and values are decoded: `+` stands for a space, and `%XX` is a percent-encoded UTF-8 byte (so `%2B` is `+` and `%C3%A9` is `\u00e9`).\n- If a key appears more than once, the last value wins.\n- Return a dict mapping each decoded key to its decoded value (both strings). `parse_query(\"\")` returns `{}`.\n\nUse only the Python standard library.\n"
+    },
+    {
+      "id": "8f383e1b93eb6dfedafdedb8ee2ac8156c48082483c11a82b4c172c7d275634b",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,14 +1,14 @@\n import csv\n-from collections import defaultdict\n from decimal import Decimal\n \n-totals = defaultdict(Decimal)\n+sums = {}\n with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n+        name = row[\"customer\"]\n+        sums[name] = sums.get(name, Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n-    for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+    writer = csv.DictWriter(fh, fieldnames=[\"customer\", \"total\"], lineterminator=\"\\n\")\n+    writer.writeheader()\n+    for name, value in sorted(sums.items()):\n+        writer.writerow({\"customer\": name, \"total\": format(value.quantize(Decimal(\"0.01\")), \"f\")})\n",
+      "modified_files": {
+        "solve.py": "import csv\nfrom decimal import Decimal\n\nsums = {}\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        name = row[\"customer\"]\n        sums[name] = sums.get(name, Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.DictWriter(fh, fieldnames=[\"customer\", \"total\"], lineterminator=\"\\n\")\n    writer.writeheader()\n    for name, value in sorted(sums.items()):\n        writer.writerow({\"customer\": name, \"total\": format(value.quantize(Decimal(\"0.01\")), \"f\")})\n"
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+      },
+      "task_text": "# Payments per customer\n\n`payments.csv` lists October payments with the columns `date,customer,amount`.\n\nWrite `totals.csv`: a CSV file with the header row `customer,total` followed by one row per customer, giving the sum of that customer's payments. Sort the rows by customer name (plain string comparison) and write each total with exactly two decimal places (for example `600.00`). Customer names are CSV values and must be quoted where the CSV format requires it.\n"
+    },
+    {
+      "id": "90451f36e1ee18ee64b5f0e62ea32b653eb72570f52aa349f3355420c2574625",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n   {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n   {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+      },
+      "task_text": "# Transfer concert tickets\n\nImani Clarke (account `TK-9035`) wants to give the tickets for seats `A12` and `A13` of \"Jazz at the Pier\" to her friend at `rafael.ortiz@example.com`. Seats `A10` and `A11` stay on her account.\n\nTicket transfers require verification: call `send_verification_code` for her account, then `confirm_verification` with the code she reads back to you, which is `481516`. Transfer tickets only after the verification has succeeded.\n\nTools (see `support/env.py`):\n\n- `list_tickets(account_id)`\n- `send_verification_code(account_id)`\n- `confirm_verification(account_id, code)`\n- `transfer_ticket(ticket_id, recipient_email)`\n"
+    },
+    {
+      "id": "907be32ec70552f829243dac9ad5a3b78f00f306dbcebfa754f76b3024be1065",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n   {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n+  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}},\n+  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4502\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4502\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n]\n"
+      },
+      "task_text": "# Cancel one of two trips\n\nLin Zhao has two guided-tour bookings in Porto. She asks to cancel the one on `2026-12-12`, which is booking `BK-4471`, and to keep the one on `2026-12-05`.\n\nCancel exactly that booking with `cancel_booking`. Do not cancel or change any other booking.\n\nTools (see `support/env.py`):\n\n- `find_bookings(customer_name)`\n- `cancel_booking(booking_id)`\n"
+    },
+    {
+      "id": "919b283365c23a6f3ec8ae0aeee0930aae1c3a57675c32ddee9ba1993ee997e4",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,8 @@\n   name=${path#photos/}\n   if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n     m=(\"${BASH_REMATCH[@]}\")\n-    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    dest=\"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n+    printf '%s' \"$(cat -- \"$path\")\" > \"$dest\"\n+    rm -- \"$path\"\n   fi\n done\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    dest=\"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n    printf '%s' \"$(cat -- \"$path\")\" > \"$dest\"\n    rm -- \"$path\"\n  fi\ndone\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nfor path in photos/*; do\n  name=${path#photos/}\n  if [[ -f \"$path\" && $name =~ ^IMG_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\\.jpg$ ]]; then\n    m=(\"${BASH_REMATCH[@]}\")\n    mv -- \"$path\" \"photos/${m[1]}-${m[2]}-${m[3]}_${m[4]}-${m[5]}-${m[6]}.jpg\"\n  fi\ndone\n"
+      },
+      "task_text": "# Rename camera photos\n\nThe camera names photos `IMG_YYYYMMDD_HHMMSS.jpg`. Rename every file in `photos/` whose name matches that pattern exactly (uppercase `IMG_`, eight digits, `_`, six digits, `.jpg`) to `YYYY-MM-DD_HH-MM-SS.jpg`. For example, `IMG_20260712_143005.jpg` becomes `2026-07-12_14-30-05.jpg`.\n\nDo not change any file's contents. Leave every other file in `photos/` exactly as it is.\n"
+    },
+    {
+      "id": "91f78654082577806b08df4849ab91c04068eabde7b6d44f096fadd013bde058",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,3 @@\n [\n-  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n   {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n]\n"
+      },
+      "task_text": "# Schedule a budget review\n\nCreate a calendar event titled `Q4 budget review` on `2026-11-12` from `14:00` to `14:30`.\n\nInvite exactly these three people and nobody else:\n\n- Lena Ortiz (`lena.ortiz@example.com`)\n- Sam Cho (`sam.cho@example.com`)\n- Priya Nair (`priya.nair@example.com`)\n\nDo not change any existing event.\n\nTools (see `support/env.py`):\n\n- `find_person(name)`\n- `list_events(date)`\n- `create_event(title, date, start, end, attendees)`, where `attendees` is a list of email addresses\n- `add_attendees(event_id, emails)`\n"
+    },
+    {
+      "id": "932cf16081b3ee913b31d7509393dd9913831459dc4a321ffe692e1e2eef5d11",
+      "modified_diff": "--- a/dupes.py\n+++ b/dupes.py\n@@ -3,4 +3,4 @@\n     for path, content in files.items():\n         by_content.setdefault(content, []).append(path)\n     groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n-    return sorted(groups)\n+    return sorted(groups, key=lambda g: g[-1])\n",
+      "modified_files": {
+        "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n    return sorted(groups, key=lambda g: g[-1])\n"
+      },
+      "reference_solution": {
+        "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n    return sorted(groups)\n"
+      },
+      "task_text": "# Find duplicate files\n\nA cleanup tool needs to report files with identical contents. Write a Python module `dupes.py` with a function `duplicate_groups(files)`.\n\n- `files` is a dict mapping a file path (a string) to that file's contents (a string).\n- Two files are duplicates when their contents are exactly equal.\n- Return a list of groups, one group for each content that is shared by two or more paths. A group is the sorted list of all paths with that content. Contents that belong to only one path produce no group.\n- Order the groups by their first path. If there are no duplicates, return `[]`.\n"
+    },
+    {
+      "id": "9349fb6b72fd33bf28fed1335cbeaaa83343625e3de8490055c89754dd93d792",
+      "modified_diff": "--- a/pairs.py\n+++ b/pairs.py\n@@ -5,6 +5,7 @@\n     seen = Counter()\n     count = 0\n     for value in nums:\n-        count += seen[target - value]\n+        if seen[target - value] > 0:\n+            count += 1\n         seen[value] += 1\n     return count\n",
+      "modified_files": {
+        "pairs.py": "from collections import Counter\n\n\ndef count_pairs(nums, target):\n    seen = Counter()\n    count = 0\n    for value in nums:\n        if seen[target - value] > 0:\n            count += 1\n        seen[value] += 1\n    return count\n"
+      },
+      "reference_solution": {
+        "pairs.py": "from collections import Counter\n\n\ndef count_pairs(nums, target):\n    seen = Counter()\n    count = 0\n    for value in nums:\n        count += seen[target - value]\n        seen[value] += 1\n    return count\n"
+      },
+      "task_text": "# Count pairs with a given sum\n\nWrite a Python module `pairs.py` with a function `count_pairs(nums, target)` that returns the number of index pairs `(i, j)` with `i < j` and `nums[i] + nums[j] == target`.\n\n- `nums` is a list of at most 5,000 integers; values may be negative and may repeat. `target` is an integer.\n- Example: `count_pairs([1, 5, 7, -1, 5], 6)` returns `3` (1 + 5, 7 + (-1), and 1 + the second 5).\n- An empty list or a list with one element gives `0`.\n"
+    },
+    {
+      "id": "93b2ba7f1623e2d76f049629c9278f36be15bf349c9244e779741de2a01d9a92",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -5,5 +5,5 @@\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n   {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n+  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-303\", \"reason\": \"insufficient balance\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-303\", \"reason\": \"insufficient balance\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+      },
+      "task_text": "# Process pending leave requests\n\nYou are the HR assistant. Process every leave request that is currently `pending`:\n\n- Approve the request with `approve_request` if the employee's remaining leave balance is at least the number of days requested (approving deducts the days from the balance).\n- Otherwise reject it with `reject_request`, using the reason `insufficient balance`.\n\nDo not change requests that are not pending.\n\nTools (see `support/env.py`):\n\n- `list_requests(status)`\n- `get_balance(employee_id)`\n- `approve_request(request_id)`\n- `reject_request(request_id, reason)`\n"
+    },
+    {
+      "id": "93f335241058b4e5b93ede85b132319d56498b11edc0b09cfe4a14118b6c2d46",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -6,4 +6,4 @@\n     if [ -n \"${word:-}\" ]; then\n       printf '%s %s\\n' \"$word\" \"$count\"\n     fi\n-  done | head -n 5\n+  done | head -n 4\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 4\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -eu\nexport LC_ALL=C\ntr -cs 'A-Za-z' '\\n' < speech.txt | tr 'A-Z' 'a-z' | sort | uniq -c | sort -k1,1nr -k2,2 |\n  while read -r count word; do\n    if [ -n \"${word:-}\" ]; then\n      printf '%s %s\\n' \"$word\" \"$count\"\n    fi\n  done | head -n 5\n"
+      },
+      "task_text": "# Most frequent words\n\nPrint the five most frequent words in `speech.txt`.\n\n- A word is a maximal run of ASCII letters (`A` to `Z`, `a` to `z`); every other character separates words. Words are compared case-insensitively.\n- Print one line per word, most frequent first, in the form `<word> <count>`: the word in lowercase, a single space, and its number of occurrences. Break ties in count by alphabetical order of the word.\n- Print exactly these five lines and nothing else.\n"
+    },
+    {
+      "id": "949e1d1390a0c461a7019971de5bc0c79ea2e40a8ddfeb599b58af19d306adf4",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -5,7 +5,7 @@\n   while IFS=, read -r name role location; do\n     printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n     if [ \"$first\" -eq 1 ]; then\n-      printf '| --- | --- | --- |\\n'\n+      printf '| -- | -- | -- |\\n'\n       first=0\n     fi\n   done < team.csv\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| -- | -- | -- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n{\n  first=1\n  while IFS=, read -r name role location; do\n    printf '| %s | %s | %s |\\n' \"$name\" \"$role\" \"$location\"\n    if [ \"$first\" -eq 1 ]; then\n      printf '| --- | --- | --- |\\n'\n      first=0\n    fi\n  done < team.csv\n} > team.md\n"
+      },
+      "task_text": "# Team list as a Markdown table\n\nConvert `team.csv` (a header row and one row per person; no field contains a comma or quotes) into a Markdown table in `team.md`.\n\n- The first row of the table is the header row with the CSV column names, followed by a separator row, followed by one row per CSV record in the original order.\n- Every row starts with `|` and ends with `|`, with cells separated by `|`. Spaces around cell text are optional and are ignored; cell text itself must be unchanged.\n- Each separator cell consists of three or more `-` characters, optionally with a leading and/or trailing `:` for alignment.\n- `team.md` contains only the table (a final newline is optional).\n"
+    },
+    {
+      "id": "94ed03b75c0462cf8e4188bc2a77a60d251626c60cc59953798886bb8d0bf181",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -15,4 +15,5 @@\n );\n \n CREATE INDEX idx_orders_customer ON orders(customer_id);\n+CREATE INDEX idx_orders_status ON orders(status);\n EOF\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nCREATE INDEX idx_orders_status ON orders(status);\nEOF\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+      },
+      "task_text": "# SQLite schema for the orders service\n\nWrite `schema.sql` in the working directory: a SQLite script that, run on an empty database, creates exactly the following.\n\n- Table `customers` with columns, in this order: `id INTEGER PRIMARY KEY`, `email TEXT NOT NULL UNIQUE`, `created_at TEXT NOT NULL`.\n- Table `orders` with columns, in this order: `id INTEGER PRIMARY KEY`, `customer_id INTEGER NOT NULL` with a foreign key referencing `customers(id)`, `total_cents INTEGER NOT NULL`, `status TEXT NOT NULL DEFAULT 'pending'`.\n- An index named `idx_orders_customer` on `orders(customer_id)`.\n\nThe script must run without errors and must not create any other table, view, index, or trigger (the automatic index SQLite creates for a `UNIQUE` column does not count).\n"
+    },
+    {
+      "id": "95cb7e22a8d9328417d4e91bac564c1e5c63efa8281bde3bba5fda933fad30ec",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,7 +2,6 @@\n set -euo pipefail\n mkdir -p bin\n cat > bin/countlines <<'EOF'\n-#!/usr/bin/env bash\n set -euo pipefail\n shopt -s nullglob dotglob\n files=()\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\nchmod +x bin/countlines\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\nchmod +x bin/countlines\n"
+      },
+      "task_text": "# Log line counter\n\nThe operations team wants a quick way to see how much a service has logged.\n\nCreate an executable bash script at `bin/countlines` (create the `bin/` directory). When run as `bin/countlines DIR`, it must print the total number of lines in all regular files directly inside DIR whose names end in `.log` (files in subdirectories do not count), as a plain decimal integer on one line, and exit with status 0.\n\n- Count lines the way `wc -l` does, that is, the number of newline characters.\n- If DIR contains no such files, print `0`.\n- The script must start with `#!/usr/bin/env bash` or `#!/bin/bash` and may use only bash and coreutils.\n"
+    },
+    {
+      "id": "96217a637557562cb19c174e72e4249f279a37db6dec8343620e0a2aae4fc612",
+      "modified_diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -17,7 +17,7 @@\n \n \n def to_iso_date(text):\n-    s = text.strip(\" \")\n+    s = text\n     match = _NAMED.fullmatch(s)\n     if match:\n         year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n",
+      "modified_files": {
+        "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+      },
+      "reference_solution": {
+        "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+      },
+      "task_text": "# Normalize dates from supplier invoices\n\nSupplier invoices write dates in different ways. Write a Python module `dateparse.py` with a function `to_iso_date(text)` that returns the date as an ISO string `YYYY-MM-DD`.\n\nAccepted input formats (surrounding spaces are ignored):\n\n- `Month D, YYYY`, where Month is an English month name, either in full (`March`) or as its three-letter abbreviation (`Mar`), in any capitalization, and D has one or two digits: `\"March 5, 2026\"` gives `\"2026-03-05\"`.\n- `DD/MM/YYYY` (day first, two digits each): `\"05/03/2026\"` gives `\"2026-03-05\"`.\n- `YYYY.MM.DD`: `\"2026.03.05\"` gives `\"2026-03-05\"`.\n\nRaise `ValueError` for anything else, including dates that do not exist such as `\"31/04/2026\"`.\n"
+    }
+  ],
+  "prompt_version": "review/v1",
+  "purpose": "review",
+  "response_schema": {
+    "enums": {
+      "verdict": [
+        "violating",
+        "preserving",
+        "unsure"
+      ]
+    },
+    "required": [
+      "verdict",
+      "reason"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

@@ -1,0 +1,783 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "hosts": "127.0.0.1   localhost\n::1         localhost ip6-localhost ip6-loopback\n10.20.0.4   git.internal\n10.20.0.9   ci.internal\n10.20.0.15  build-cache.internal\n",
+   "hosts.bak": "127.0.0.1   localhost\n::1         localhost ip6-localhost ip6-loopback\n10.20.0.4   git.internal\n10.20.0.9   ci.internal\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "hosts.bak",
+     "type": "file_exists"
+    },
+    {
+     "normalize": "none",
+     "path": "hosts.bak",
+     "text": "127.0.0.1   localhost\n::1         localhost ip6-localhost ip6-loopback\n10.20.0.4   git.internal\n10.20.0.9   ci.internal\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Copy hosts to hosts.bak unchanged."
+  },
+  {
+   "checks": [
+    {
+     "path": "hosts",
+     "text": "\n10.20.0.15  build-cache.internal\n",
+     "type": "file_contains"
+    },
+    {
+     "path": "hosts",
+     "pattern": "\\A127\\.0\\.0\\.1   localhost\\n::1         localhost ip6-localhost ip6-loopback\\n10\\.20\\.0\\.4   git\\.internal\\n10\\.20\\.0\\.9   ci\\.internal\\n10\\.20\\.0\\.15  build-cache\\.internal\\n\\Z",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Append the line '10.20.0.15  build-cache.internal' (two spaces) to the end of hosts, keeping all existing lines unchanged."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "hosts",
+     "text": "127.0.0.1   localhost\n::1         localhost ip6-localhost ip6-loopback\n10.20.0.4   git.internal\n10.20.0.9   ci.internal\n10.20.0.15  build-cache.internal\n",
+     "type": "file_equals"
+    },
+    {
+     "count": 5,
+     "path": "hosts",
+     "type": "file_lines"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "The hosts file must end with a newline and have exactly the expected content."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "hosts.bak",
+     "text": "127.0.0.1   localhost\n::1         localhost ip6-localhost ip6-loopback\n10.20.0.4   git.internal\n10.20.0.9   ci.internal\n",
+     "type": "file_equals"
+    },
+    {
+     "code": 0,
+     "type": "exit_code"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "The backup must be completely written before hosts is modified in any way (backup must equal the original, which is only possible if the copy preceded the edit)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:hosts-entry",
+ "task_hash": "a8739f693f08108b084de7eaae06e5be158c001280f2a6650feb7a370f60a29a",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,4 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cp -- hosts hosts.bak\n+printf '10.20.0.15  build-cache.internal\\n' >> hosts\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['hosts', 'hosts.bak']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['hosts', 'hosts.bak']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b1ca1dcb8b86dbe018742b20791b75329642c8768f8cc6ad454b3da5535b6a63",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: hosts.bak differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "hosts.bak is an unchanged copy and hosts gets the appended line: The transform drops the last line of both hosts and hosts.bak, removing the new entry and corrupting the backup.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "hosts.bak differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "Copy hosts to hosts.bak unchanged."
+     },
+     {
+      "failed": [
+       "hosts lacks '\\n10.20.0.15  build-cache.internal\\n'",
+       "hosts does not match /\\A127\\.0\\.0\\.1   localhost\\n::1         localhost ip6-localhost ip6-loopback\\n10\\.20\\.0\\.4   git\\.internal\\n10\\.20\\.0\\.9   ci\\.internal\\n10\\.20\\.0\\.15  build-cache\\.internal\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Append the line '10.20.0.15  build-cache.internal' (two spaces) to the end of hosts, keeping all existing lines unchanged."
+     },
+     {
+      "failed": [
+       "hosts differs from expected text",
+       "hosts has 4 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "The hosts file must end with a newline and have exactly the expected content."
+     },
+     {
+      "failed": [
+       "hosts.bak differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "The backup must be completely written before hosts is modified in any way (backup must equal the original, which is only possible if the copy preceded the edit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b1ca1dcb8b86dbe018742b20791b75329642c8768f8cc6ad454b3da5535b6a63"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,4 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cp -- hosts hosts.bak\n+printf '10.20.0.15  build-cache.internal\\n' >> hosts\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['hosts', 'hosts.bak']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['hosts', 'hosts.bak']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d4d7a01e9283f467747c86d9ee52082edcb62f9082c60456405e1167068aeb91",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: hosts.bak differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "hosts.bak is an unchanged copy, and hosts has only the one appended line: The wrapper appends an extra 'extra' line to both hosts and hosts.bak.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "hosts.bak differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "Copy hosts to hosts.bak unchanged."
+     },
+     {
+      "failed": [
+       "hosts does not match /\\A127\\.0\\.0\\.1   localhost\\n::1         localhost ip6-localhost ip6-loopback\\n10\\.20\\.0\\.4   git\\.internal\\n10\\.20\\.0\\.9   ci\\.internal\\n10\\.20\\.0\\.15  build-cache\\.internal\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Append the line '10.20.0.15  build-cache.internal' (two spaces) to the end of hosts, keeping all existing lines unchanged."
+     },
+     {
+      "failed": [
+       "hosts differs from expected text",
+       "hosts has 6 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "The hosts file must end with a newline and have exactly the expected content."
+     },
+     {
+      "failed": [
+       "hosts.bak differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "The backup must be completely written before hosts is modified in any way (backup must equal the original, which is only possible if the copy preceded the edit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d4d7a01e9283f467747c86d9ee52082edcb62f9082c60456405e1167068aeb91"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,4 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cp -- hosts hosts.bak\n+printf '10.20.0.15  build-cache.internal\\n' >> hosts\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['hosts', 'hosts.bak']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['hosts', 'hosts.bak']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "78e4ec440cea53061bf9aead3d6cfa5e709606736ee008de584520b72351ff82",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "hosts-entry",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R1: hosts.bak differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "hosts must end with a newline and hosts.bak must be an unchanged copy: The transform strips the final newline from hosts and from the backup.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,4 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cp -- hosts hosts.bak\n+printf '10.20.0.15  build-cache.internal\\n' >> hosts\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['hosts', 'hosts.bak']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['hosts', 'hosts.bak']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8389c4c9e84ec0fd51a93c2346b9a8562509124dccab05a3eb5d2d33045d0cac",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "hosts-entry",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R1: hosts.bak differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "hosts.bak is an unchanged copy and existing lines of hosts stay unchanged: The transform appends trailing spaces to every line of both hosts and hosts.bak.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,4 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cp -- hosts hosts.bak\n+printf '10.20.0.15  build-cache.internal\\n' >> hosts\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 3.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 3.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "065a771373d934466595a4e79396f2b1fa50ad7bfd2f7a289517394a8b7d12d9",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper runs the original script unchanged after a delay and the identity transform leaves hosts and hosts.bak as required, with backup still made first.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "065a771373d934466595a4e79396f2b1fa50ad7bfd2f7a289517394a8b7d12d9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cp -- hosts hosts.bak\n+:\n printf '10.20.0.15  build-cache.internal\\n' >> hosts\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\n:\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d4a14058ea76759da72cc3757a46a87ffb6d26345c992cb437452b38b63b7b26",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: hosts.bak missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Make a backup hosts.bak before modifying hosts: The cp step was removed, so no backup is created.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "hosts.bak missing",
+       "hosts.bak missing"
+      ],
+      "requirement": "R1",
+      "text": "Copy hosts to hosts.bak unchanged."
+     },
+     {
+      "failed": [
+       "hosts.bak missing"
+      ],
+      "requirement": "R4",
+      "text": "The backup must be completely written before hosts is modified in any way (backup must equal the original, which is only possible if the copy preceded the edit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d4a14058ea76759da72cc3757a46a87ffb6d26345c992cb437452b38b63b7b26"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+:\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\n:\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6f58258fd0a84ab863645d8a24ee9b216e0b93d3f7667725e23d95fd8c6302f9",
+   "kind": "violating",
+   "operator": "sh-line-delete",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: hosts lacks '\\n10.20.0.15  build-cache.internal\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Append the line 10.20.0.15  build-cache.internal to hosts: The append was replaced by a no-op, so hosts is never modified.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "hosts lacks '\\n10.20.0.15  build-cache.internal\\n'",
+       "hosts does not match /\\A127\\.0\\.0\\.1   localhost\\n::1         localhost ip6-localhost ip6-loopback\\n10\\.20\\.0\\.4   git\\.internal\\n10\\.20\\.0\\.9   ci\\.internal\\n10\\.20\\.0\\.15  build-cache\\.internal\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Append the line '10.20.0.15  build-cache.internal' (two spaces) to the end of hosts, keeping all existing lines unchanged."
+     },
+     {
+      "failed": [
+       "hosts differs from expected text",
+       "hosts has 4 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "The hosts file must end with a newline and have exactly the expected content."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6f58258fd0a84ab863645d8a24ee9b216e0b93d3f7667725e23d95fd8c6302f9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+printf '10.20.0.15  build-cache.internal\\n' >> hosts.wrong\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts.wrong\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2ea53354d2f52afe697468cf3821cfbb64cf688ef744c0b9b44b909a85b29f59",
+   "kind": "violating",
+   "operator": "sh-target-file",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: hosts lacks '\\n10.20.0.15  build-cache.internal\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Append the new line to hosts: The entry is appended to hosts.wrong, so hosts is never modified.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "hosts lacks '\\n10.20.0.15  build-cache.internal\\n'",
+       "hosts does not match /\\A127\\.0\\.0\\.1   localhost\\n::1         localhost ip6-localhost ip6-loopback\\n10\\.20\\.0\\.4   git\\.internal\\n10\\.20\\.0\\.9   ci\\.internal\\n10\\.20\\.0\\.15  build-cache\\.internal\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Append the line '10.20.0.15  build-cache.internal' (two spaces) to the end of hosts, keeping all existing lines unchanged."
+     },
+     {
+      "failed": [
+       "hosts differs from expected text",
+       "hosts has 4 non-empty lines"
+      ],
+      "requirement": "R3",
+      "text": "The hosts file must end with a newline and have exactly the expected content."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2ea53354d2f52afe697468cf3821cfbb64cf688ef744c0b9b44b909a85b29f59"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cp -- hosts hosts.bak\n+head -n -1 hosts > hosts.bak\n printf '10.20.0.15  build-cache.internal\\n' >> hosts\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nhead -n -1 hosts > hosts.bak\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fc9b1eeb32a9d8806e7c071bcea44c85bb8acfb99be96d6729af62b981887f75",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: hosts.bak differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Copy hosts to hosts.bak unchanged: head -n -1 drops the last line, so the backup is not an unchanged copy.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "hosts.bak differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "Copy hosts to hosts.bak unchanged."
+     },
+     {
+      "failed": [
+       "hosts.bak differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "The backup must be completely written before hosts is modified in any way (backup must equal the original, which is only possible if the copy preceded the edit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fc9b1eeb32a9d8806e7c071bcea44c85bb8acfb99be96d6729af62b981887f75"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+printf '10.20.0.15 build-cache.internal\\n' >> hosts\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\nprintf '10.20.0.15 build-cache.internal\\n' >> hosts\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "13bfeae7d952e0be82b3009e65dcf377e3c5dd47a9c2352f15c41317dac0708e",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: hosts lacks '\\n10.20.0.15  build-cache.internal\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Append the line with two spaces between address and name: The appended line has only one space.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "hosts lacks '\\n10.20.0.15  build-cache.internal\\n'",
+       "hosts does not match /\\A127\\.0\\.0\\.1   localhost\\n::1         localhost ip6-localhost ip6-loopback\\n10\\.20\\.0\\.4   git\\.internal\\n10\\.20\\.0\\.9   ci\\.internal\\n10\\.20\\.0\\.15  build-cache\\.internal\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Append the line '10.20.0.15  build-cache.internal' (two spaces) to the end of hosts, keeping all existing lines unchanged."
+     },
+     {
+      "failed": [
+       "hosts differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "The hosts file must end with a newline and have exactly the expected content."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "13bfeae7d952e0be82b3009e65dcf377e3c5dd47a9c2352f15c41317dac0708e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+printf '10.20.0.15  build-cache.internal' >> hosts\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- hosts hosts.bak\nprintf '10.20.0.15  build-cache.internal' >> hosts\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e7f3394476b2ac26a0391725302dc4e373256e61f72774cb64b005df24a06353",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: hosts lacks '\\n10.20.0.15  build-cache.internal\\n'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The file must end with a newline: The appended line has no trailing newline.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "hosts lacks '\\n10.20.0.15  build-cache.internal\\n'",
+       "hosts does not match /\\A127\\.0\\.0\\.1   localhost\\n::1         localhost ip6-localhost ip6-loopback\\n10\\.20\\.0\\.4   git\\.internal\\n10\\.20\\.0\\.9   ci\\.internal\\n10\\.20\\.0\\.15  build-cache\\.internal\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Append the line '10.20.0.15  build-cache.internal' (two spaces) to the end of hosts, keeping all existing lines unchanged."
+     },
+     {
+      "failed": [
+       "hosts differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "The hosts file must end with a newline and have exactly the expected content."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e7f3394476b2ac26a0391725302dc4e373256e61f72774cb64b005df24a06353"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n+printf '10.20.0.15  build-cache.internal\\n' >> hosts\n cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nprintf '10.20.0.15  build-cache.internal\\n' >> hosts\ncp -- hosts hosts.bak\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "15b0cf85338278fa4f6a466ccbadf14fd65a7de55a8b005fc8612eb7f728f0ad",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: hosts.bak differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Backup must be made and complete before hosts is modified, and be an unchanged copy: The append happens before the copy, so hosts is modified first and the backup contains the new line.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "hosts.bak differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "Copy hosts to hosts.bak unchanged."
+     },
+     {
+      "failed": [
+       "hosts.bak differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "The backup must be completely written before hosts is modified in any way (backup must equal the original, which is only possible if the copy preceded the edit)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "15b0cf85338278fa4f6a466ccbadf14fd65a7de55a8b005fc8612eb7f728f0ad"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+cp -p -- hosts hosts.bak\n+echo '10.20.0.15  build-cache.internal' | tee -a hosts > /dev/null\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -p -- hosts hosts.bak\necho '10.20.0.15  build-cache.internal' | tee -a hosts > /dev/null\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "db4b6c5e389427adbec232ee965472a2207b6ea0e9f5249f475ffd7aea1a1726",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Backup is still made first and the line is appended with a trailing newline; only the copy flags and append method differ.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "db4b6c5e389427adbec232ee965472a2207b6ea0e9f5249f475ffd7aea1a1726"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,6 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+cat hosts > hosts.bak\n+cat >> hosts <<'EOF'\n+10.20.0.15  build-cache.internal\n+EOF\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat hosts > hosts.bak\ncat >> hosts <<'EOF'\n10.20.0.15  build-cache.internal\nEOF\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "1687957204091dde6cccab696579030705c7b0790ff543ddbf0e8608296954c0",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The backup is fully written with cat before the append, and the same line is appended with a trailing newline.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "1687957204091dde6cccab696579030705c7b0790ff543ddbf0e8608296954c0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,5 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cp -- hosts hosts.bak\n-printf '10.20.0.15  build-cache.internal\\n' >> hosts\n+dd if=hosts of=hosts.bak status=none\n+sync hosts.bak\n+printf '%s  %s\\n' 10.20.0.15 build-cache.internal >> hosts\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ndd if=hosts of=hosts.bak status=none\nsync hosts.bak\nprintf '%s  %s\\n' 10.20.0.15 build-cache.internal >> hosts\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "8bc92d54ddd3d915e775e55837878992e2490e1260fcd62b45b7a3ef30c9df5a",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "hosts-entry",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "dd makes an exact complete copy before hosts is modified, and the same line is appended.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "8bc92d54ddd3d915e775e55837878992e2490e1260fcd62b45b7a3ef30c9df5a"
+   }
+  }
+ ]
+}

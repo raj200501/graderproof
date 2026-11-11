@@ -1,0 +1,272 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "50351882c0c0b34fab45b3cabd72ecc44737ef902f8e4df16800b17986c1b4bb",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "d59141d2658d0fe50958352a5b940a45f17ffaf9b377da1f4e97b3beb1305d4c": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Dots are not in the set of removed characters, so numbers formatted with dots are rejected.",
+          "files": {
+            "phones.py": "_REMOVED = set(\" -()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) == 11 and text[0] == \"1\":\n        text = text[1:]\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The 11-digit country-code branch is skipped, so 11-digit numbers starting with 1 are rejected.",
+          "files": {
+            "phones.py": "_REMOVED = set(\" .-()\")\n_DIGITS = set(\"0123456789\")\n\n\ndef normalize_phone(raw):\n    text = \"\".join(ch for ch in raw if ch not in _REMOVED)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not text or not set(text) <= _DIGITS:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    if len(text) != 10:\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Regex-based implementation with the same accepted inputs and output.",
+          "files": {
+            "phones.py": "import re\n\n\ndef normalize_phone(raw):\n    text = re.sub(r\"[ .\\-()]\", \"\", raw)\n    if text.startswith(\"+\"):\n        text = text[1:]\n    if not re.fullmatch(r\"1?[0-9]{10}\", text):\n        raise ValueError(\"not a US phone number: %r\" % raw)\n    return \"+1\" + text[-10:]\n"
+          }
+        },
+        {
+          "description": "str.translate based cleanup with an explicit ASCII digit check and renamed helpers.",
+          "files": {
+            "phones.py": "_STRIP = str.maketrans(\"\", \"\", \" .-()\")\n\n\ndef _is_ascii_digits(s):\n    return len(s) > 0 and all(\"0\" <= c <= \"9\" for c in s)\n\n\ndef normalize_phone(raw):\n    cleaned = raw.translate(_STRIP)\n    if cleaned[:1] == \"+\":\n        cleaned = cleaned[1:]\n    if not _is_ascii_digits(cleaned):\n        raise ValueError(\"invalid phone: %r\" % (raw,))\n    if len(cleaned) == 11 and cleaned[0] == \"1\":\n        national = cleaned[1:]\n    elif len(cleaned) == 10:\n        national = cleaned\n    else:\n        raise ValueError(\"invalid phone: %r\" % (raw,))\n    return \"+1\" + national\n"
+          }
+        }
+      ]
+    },
+    "f2e62da0c11056a1848b2a8b53303e2a076c804e55bf1688c24c81883a3dcade": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The exponent uses years instead of n * years, so compounding periods are not multiplied in.",
+          "files": {
+            "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** years\n    return round(value, 2)\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The rate is treated as a fraction and not divided by 100.",
+          "files": {
+            "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The result is returned without rounding to cents.",
+          "files": {
+            "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return value\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses pow and intermediate variables with the same arithmetic and rounding.",
+          "files": {
+            "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    periods = periods_per_year\n    per_period_rate = (annual_rate / 100.0) / periods\n    growth = pow(1 + per_period_rate, periods * years)\n    return round(float(principal * growth), 2)\n"
+          }
+        }
+      ]
+    },
+    "f43369ded8de97783e74e6bc0b816b0e8901e2682e860ef79ff69f3ee4636eaa": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The booking is never looked up before applying the policy.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The booking is looked up and credited but never cancelled.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The change fee is not subtracted, so the credit equals the full fare.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 41200}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "A refund is also issued in addition to the travel credit.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "A second, unrelated booking is also cancelled.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"Q4M9ZT\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Compact JSON on one line with reordered object keys.",
+          "files": {
+            "trajectory.json": "[{\"args\":{\"pnr\":\"X7K2QD\"},\"tool\":\"get_booking\"},{\"args\":{\"pnr\":\"X7K2QD\"},\"tool\":\"cancel_booking\"},{\"args\":{\"amount_cents\":33700,\"pnr\":\"X7K2QD\"},\"tool\":\"issue_travel_credit\"}]"
+          }
+        },
+        {
+          "description": "The travel credit is issued before the cancellation, which the task does not order.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}}\n]\n"
+          }
+        }
+      ]
+    },
+    "f43bcd0a37478eca94b67a201cacb4f97e4cbcd9d674bf63f04ff007459d63ae": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The return is marked received with condition damaged instead of good.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"damaged\"}},\n  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The return is marked received but the refund step is skipped.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The refund is attempted before the return is marked received.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "A second, unrelated return is also marked received.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7713\", \"condition\": \"good\"}},\n  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Compact JSON on one line with reordered object keys.",
+          "files": {
+            "trajectory.json": "[{\"args\":{\"rma_id\":\"RMA-7712\"},\"tool\":\"get_rma\"},{\"args\":{\"condition\":\"good\",\"rma_id\":\"RMA-7712\"},\"tool\":\"mark_received\"},{\"args\":{\"rma_id\":\"RMA-7712\"},\"tool\":\"refund_rma\"}]"
+          }
+        },
+        {
+          "description": "Skips the read-only get_rma lookup and performs only the two required steps.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"mark_received\", \"args\": {\"condition\": \"good\", \"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n]\n"
+          }
+        }
+      ]
+    },
+    "fa327cd3920a36512aeeb27274c767aac9ac9d9a067d580d3e50a1b995a72483": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The permit is not looked up by plate before renewing and charging.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The permit is renewed for 1 month instead of 12.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 1}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The card is charged the one-month price of 800 cents instead of 9600.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 800, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The renewal is charged twice, producing an extra charge.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "A second, unrelated permit is also renewed.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7731\", \"months\": 12}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Compact JSON on one line with reordered object keys.",
+          "files": {
+            "trajectory.json": "[{\"args\":{\"plate\":\"KX-482-LM\"},\"tool\":\"lookup_permit\"},{\"args\":{\"months\":12,\"permit_id\":\"PRM-7730\"},\"tool\":\"renew_permit\"},{\"args\":{\"amount_cents\":9600,\"customer_id\":\"CU-5521\",\"description\":\"permit renewal PRM-7730\"},\"tool\":\"charge_card\"}]"
+          }
+        },
+        {
+          "description": "The card is charged before the permit is renewed, an order the task does not strictly require.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}}\n]\n"
+          }
+        }
+      ]
+    },
+    "fe684a0d29c4a010334da69cc00a441f07a14a29d3795d2aceac331b32b6b186": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The script reads a wrong column name and crashes with a KeyError.",
+          "files": {
+            "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"qty\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Tax rounding uses half-even instead of half-up, so exact halves can round down.",
+          "files": {
+            "solve.py": "import csv\nfrom decimal import ROUND_HALF_EVEN, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_EVEN)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The thousands separator comma is omitted from the formatted total.",
+          "files": {
+            "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:.2f}\".format(total))\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "A leftover subtotal line is printed before the total line.",
+          "files": {
+            "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Subtotal: ${:,.2f}\".format(subtotal))\nprint(\"Total: ${:,.2f}\".format(total))\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Reads rows into a list, sums with sum(), and formats with an f-string.",
+          "files": {
+            "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nsubtotal = sum(\n    (Decimal(r[\"quantity\"]) * Decimal(r[\"unit_price\"]) for r in rows), Decimal(\"0\")\n)\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(f\"Total: ${total:,.2f}\")\n"
+          }
+        },
+        {
+          "description": "Uses csv.reader with header indexes and writes the line through sys.stdout.",
+          "files": {
+            "solve.py": "import csv\nimport sys\nfrom decimal import ROUND_HALF_UP, Decimal\n\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    reader = csv.reader(fh)\n    header = next(reader)\n    qi = header.index(\"quantity\")\n    pi = header.index(\"unit_price\")\n    subtotal = Decimal(\"0\")\n    for row in reader:\n        if not row:\n            continue\n        subtotal += Decimal(row[qi]) * Decimal(row[pi])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = (subtotal + tax).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\nsys.stdout.write(\"Total: $\" + format(total, \",.2f\") + \"\\n\")\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

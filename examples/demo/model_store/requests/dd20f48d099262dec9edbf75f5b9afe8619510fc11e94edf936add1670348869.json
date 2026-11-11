@@ -1,0 +1,144 @@
+{
+  "created_utc": "2026-10-23T02:32:24Z",
+  "hash": "dd20f48d099262dec9edbf75f5b9afe8619510fc11e94edf936add1670348869",
+  "instructions": "You review modified solutions to software tasks. For each item you get the task text,\nthe original reference solution (which satisfies the task), and a modified solution\n(as a unified diff plus the full changed files). Decide whether the modified solution\nstill satisfies every requirement that the task text states or clearly implies.\n\nAnswer \"violating\" if it breaks at least one requirement (name it), \"preserving\" if it\nsatisfies all of them, or \"unsure\" if you cannot tell. Judge only against the task\ntext: a change in formatting, naming, ordering, or implementation is \"preserving\"\nunless the task text requires the exact form that changed. A change that makes the\nsolution crash, produce a different result, skip a required step, write to the wrong\nplace, or omit required output is \"violating\". You are not told how the task is\ngraded and must not guess; do not reward or penalize anything for how a checker might\nreact.\nReturn for each item: {\"verdict\": \"violating\"|\"preserving\"|\"unsure\",\n\"requirement\": \"<the broken requirement, or empty>\", \"reason\": \"<one sentence>\"}.\n",
+  "items": [
+    {
+      "id": "a1c040a45847f7f979ea9de98b407cd7d2a0271e6b9ffd7888e1f054e8e90898",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,6 +2,6 @@\n from pathlib import Path\n \n text = Path(\"input.txt\").read_text()\n-lines = text.count(\"\\n\")\n-words = len(text.split())\n-Path(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n+parts = text.splitlines()\n+result = {\"lines\": len(parts), \"words\": sum(len(part.split()) for part in parts)}\n+Path(\"stats.json\").write_text(json.dumps(result, separators=(\",\", \":\")) + \"\\n\")\n",
+      "modified_files": {
+        "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nparts = text.splitlines()\nresult = {\"lines\": len(parts), \"words\": sum(len(part.split()) for part in parts)}\nPath(\"stats.json\").write_text(json.dumps(result, separators=(\",\", \":\")) + \"\\n\")\n"
+      },
+      "reference_solution": {
+        "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+      },
+      "task_text": "Read `input.txt` in the working directory. Write `stats.json` containing a JSON object with two integer fields: `lines`, the number of lines in `input.txt`, and `words`, the number of whitespace-separated words in it.\n"
+    },
+    {
+      "id": "a55000445082c940134910ce4f039a3a477fb303abd95672dd1e712bc2bbe16e",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -1,8 +1,7 @@\n def classify(n):\n-    if n % 15 == 0:\n-        return \"fizzbuzz\"\n+    out = \"\"\n     if n % 3 == 0:\n-        return \"fizz\"\n+        out += \"fizz\"\n     if n % 5 == 0:\n-        return \"buzz\"\n-    return str(n)\n+        out += \"buzz\"\n+    return out or str(n)\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    out = \"\"\n    if n % 3 == 0:\n        out += \"fizz\"\n    if n % 5 == 0:\n        out += \"buzz\"\n    return out or str(n)\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "a828f0af95a0ba4421fb3b854b50ac953cc769b650c780025ec92b970f1abe32",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n n=$(wc -l < data.txt)\n-echo \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n+echo \"result: {\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"result: {\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+      },
+      "task_text": "Print a JSON object to standard output with two fields: `\"status\"` set to the string `\"ok\"`, and `\"items\"` set to the number of lines in `data.txt`.\n"
+    },
+    {
+      "id": "b64d654705bb95c0780cc5034e1044902afa24f9683a946ef7f989124d3fe9d4",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,6 +1,6 @@\n [\n   {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n   {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n-  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n+  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 20}},\n   {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 20}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+      },
+      "task_text": "A customer asks for a refund of order `A17`. Follow the support policy:\n\n1. Look up the order with `get_order`.\n2. Before issuing any refund, confirm the refund amount with the customer using `confirm_with_user`.\n3. Issue a full refund of the order total with `refund`.\n4. Then send the customer a receipt with `send_receipt`.\n"
+    },
+    {
+      "id": "cbec52f9bb327d522396bf4436240ed63847aadfd96af1f2109c6a352784cfc0",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,5 +1,6 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-greeting=\"Hello, graderproof!\"\n-echo \"$greeting\" > hello.txt\n-echo \"${#greeting}\" > count.txt\n+msg=\"Hello, graderproof!\"\n+len=$(printf '%s' \"$msg\" | wc -c)\n+echo $((len)) > count.txt\n+echo \"$msg\" > hello.txt\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmsg=\"Hello, graderproof!\"\nlen=$(printf '%s' \"$msg\" | wc -c)\necho $((len)) > count.txt\necho \"$msg\" > hello.txt\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ngreeting=\"Hello, graderproof!\"\necho \"$greeting\" > hello.txt\necho \"${#greeting}\" > count.txt\n"
+      },
+      "task_text": "Create `hello.txt` whose only line is `Hello, graderproof!`. Create `count.txt` containing the number of characters in that greeting (not counting the newline).\n"
+    },
+    {
+      "id": "cc01acbf90de8687590e7809f85019bb0bf27a12e8c8ee6db7ff8db4b1ad7198",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,6 +2,5 @@\n from pathlib import Path\n \n text = Path(\"input.txt\").read_text()\n-lines = text.count(\"\\n\")\n-words = len(text.split())\n-Path(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n+stats = {\"words\": len(text.split()), \"lines\": text.count(\"\\n\")}\n+Path(\"stats.json\").write_text(json.dumps(stats, indent=2))\n",
+      "modified_files": {
+        "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nstats = {\"words\": len(text.split()), \"lines\": text.count(\"\\n\")}\nPath(\"stats.json\").write_text(json.dumps(stats, indent=2))\n"
+      },
+      "reference_solution": {
+        "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+      },
+      "task_text": "Read `input.txt` in the working directory. Write `stats.json` containing a JSON object with two integer fields: `lines`, the number of lines in `input.txt`, and `words`, the number of whitespace-separated words in it.\n"
+    },
+    {
+      "id": "e39836bc4496526c3853703510c338b47416fdd9455c246a67da5bf2d8840eec",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-n=$(wc -l < data.txt)\n-echo \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n+n=$(wc -l < data.txt | tr -d ' ')\n+printf '{\"items\":%s,\"status\":\"ok\"}\\n' \"$n\"\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt | tr -d ' ')\nprintf '{\"items\":%s,\"status\":\"ok\"}\\n' \"$n\"\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+      },
+      "task_text": "Print a JSON object to standard output with two fields: `\"status\"` set to the string `\"ok\"`, and `\"items\"` set to the number of lines in `data.txt`.\n"
+    },
+    {
+      "id": "ed0abba53357bb06b9eb3e52e161f07cade42084464a5010b24fc0eca11aac75",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-n=$(wc -l < data.txt)\n-echo \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n+n=$(grep -c '' data.txt)\n+echo \"{\\\"items\\\": $n, \\\"status\\\": \\\"ok\\\"}\"\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(grep -c '' data.txt)\necho \"{\\\"items\\\": $n, \\\"status\\\": \\\"ok\\\"}\"\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+      },
+      "task_text": "Print a JSON object to standard output with two fields: `\"status\"` set to the string `\"ok\"`, and `\"items\"` set to the number of lines in `data.txt`.\n"
+    },
+    {
+      "id": "fb5ea0d75e5bce2138e0a4159ec59ac194f420fddb46ed53622670b8edf12d8d",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -1,8 +1,11 @@\n def classify(n):\n-    if n % 15 == 0:\n-        return \"fizzbuzz\"\n-    if n % 3 == 0:\n-        return \"fizz\"\n-    if n % 5 == 0:\n-        return \"buzz\"\n-    return str(n)\n+  if n % 3 == 0 and n % 5 == 0:\n+    return \"fizzbuzz\"\n+\n+  if n % 3 == 0:\n+    return \"fizz\"\n+\n+  if n % 5 == 0:\n+    return \"buzz\"\n+\n+  return f\"{n}\"\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n  if n % 3 == 0 and n % 5 == 0:\n    return \"fizzbuzz\"\n\n  if n % 3 == 0:\n    return \"fizz\"\n\n  if n % 5 == 0:\n    return \"buzz\"\n\n  return f\"{n}\""
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "fbf4bf1ae9d460402bfa6b82ad4ff24d432152b87bb1b0c8ff033b9a7013ab1e",
+      "modified_diff": "--- a/classify.py\n+++ b/classify.py\n@@ -1,6 +1,4 @@\n def classify(n):\n-    if n % 15 == 0:\n-        return \"fizzbuzz\"\n     if n % 3 == 0:\n         return \"fizz\"\n     if n % 5 == 0:\n",
+      "modified_files": {
+        "classify.py": "def classify(n):\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "fe7f79d674dc01dc5021d139c8c9ad6ee81182e480b05b663057acfb482cd070",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,4 +1,4 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-n=$(wc -l < data.txt)\n+n=$(( $(wc -l < data.txt) + 1 ))\n echo \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(( $(wc -l < data.txt) + 1 ))\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+      },
+      "task_text": "Print a JSON object to standard output with two fields: `\"status\"` set to the string `\"ok\"`, and `\"items\"` set to the number of lines in `data.txt`.\n"
+    }
+  ],
+  "prompt_version": "review/v1",
+  "purpose": "review",
+  "response_schema": {
+    "enums": {
+      "verdict": [
+        "violating",
+        "preserving",
+        "unsure"
+      ]
+    },
+    "required": [
+      "verdict",
+      "reason"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

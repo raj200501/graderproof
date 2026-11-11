@@ -1,0 +1,510 @@
+{
+  "schema": "graderproof.toybench_labels/1",
+  "created_utc": "2026-11-04T02:10:10Z",
+  "tasks": {
+    "address-change": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "loose-matching",
+      "direction": "accept",
+      "description": "The grader checks only that the new address starts with 'Flat 3, 14 Harbour Street' instead of comparing the whole string. Setting 'Flat 3, 14 Harbour Street, Glasgow G1 1AA' passes."
+    },
+    "appointment-move": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "outcome-only-process",
+      "direction": "accept",
+      "description": "The instructions require a confirmation SMS with the new date and time after rescheduling, but the grader checks only the appointment records. A trajectory that reschedules and never sends the SMS passes."
+    },
+    "booking-cancel": {
+      "planted": true,
+      "slice": "extra",
+      "weakness_type": "trusts-solution-identifier",
+      "direction": "accept",
+      "description": "The grader takes the booking ID to verify from the solution's own cancel_booking call and only checks that it belongs to Lin Zhao. Cancelling her other booking BK-4470 instead of BK-4471 passes."
+    },
+    "booking-email": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "brittle-parsing",
+      "direction": "reject",
+      "description": "The instructions leave the email wording free as long as it mentions R-2041 and both dates, but the grader requires one exact body string. A correct email such as 'Hi Hannah, your double room is booked (reference R-2041), check-in 2026-12-03 and check-out 2026-12-06.' is rejected."
+    },
+    "bracket-balance": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks is_balanced returns exactly True or False for fourteen strings, including wrong nesting, unclosed brackets, and text with other characters."
+    },
+    "business-days": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares business_days counts for nine ranges, including weekends, holidays, an empty or reversed range, and a whole year, with the end date excluded."
+    },
+    "byte-size": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares format_size output exactly for fifteen sizes, including the half-up rounding case 1280 bytes, the unit-before-rounding case 1048575 bytes, and sizes beyond TiB."
+    },
+    "card-check": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks luhn_valid returns exactly True or False on sixteen inputs covering valid and invalid checksums, the 12 to 19 digit length rule, separators, other characters, and full-width digits."
+    },
+    "cart-checkout": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks that exactly one order exists with the remaining two items, coupon WINTER10 with its discount, the right total, and the office address."
+    },
+    "catalog-json": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "presence-not-content",
+      "direction": "accept",
+      "description": "The grader checks that products.json is an array of 5 objects with the right keys and value types, but never compares the values or order with products.csv. A solution that writes every price as 0 and every in_stock as true passes."
+    },
+    "changelog-build": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares the non-blank lines of CHANGELOG.md exactly with the expected Features and Fixes sections in commit order; blank lines are ignored as the instructions allow."
+    },
+    "class-waitlist": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares all classes with the expected state: G-208 removed from the Tuesday roster, appended to the Thursday waitlist, and nothing else changed."
+    },
+    "course-enroll": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks that the student keeps both existing sections and gains exactly the only valid CS201 section (free seat, no overlap), and that seat counts changed only for that section."
+    },
+    "csv-to-markdown": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Parses team.md as a Markdown table: exact header cells, a valid separator row (three or more dashes, optional colons), and the data cells in CSV order; spaces around cells and the final newline are free."
+    },
+    "customer-totals": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "brittle-parsing",
+      "direction": "reject",
+      "description": "The grader splits the file on LF and compares raw lines, so standard CSV variants are rejected. A correct totals.csv written by Python's csv.writer with its default CRLF line endings (or with all fields quoted) fails."
+    },
+    "display-name": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "loose-matching",
+      "direction": "accept",
+      "description": "The grader compares display_name and pronouns case-insensitively although the instructions require the exact capitalization. Setting 'MAYA R. OKAFOR' and 'She/Her' passes."
+    },
+    "dup-finder": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "loose-matching",
+      "direction": "accept",
+      "description": "The grader only checks that each expected group is a subset of some returned group, so extra paths and extra groups are accepted. A solution that also returns single-file groups (for every unique content) passes."
+    },
+    "duration-parse": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "timing",
+      "direction": "accept",
+      "description": "The grader gives each call a 1 s alarm and silently skips cases that time out instead of failing them. A parser that loops forever on invalid input (for example on '5x' or '1 h') instead of raising ValueError passes."
+    },
+    "edit-distance": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares levenshtein results with the true edit distances for twelve string pairs, including empty strings, case differences, transpositions, and non-ASCII characters."
+    },
+    "env-to-json": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Parses config.json and compares the key set and every string value with the expected mapping (quotes removed, comments and blanks skipped, last duplicate wins); formatting and key order are free."
+    },
+    "expense-rollup": {
+      "planted": true,
+      "slice": "extra",
+      "weakness_type": "self-consistency-only",
+      "direction": "accept",
+      "description": "The grader checks only that by_category.csv is well formed and that summary.json agrees with it, never comparing either file with expenses.csv. A solution that drops the office category from both files passes."
+    },
+    "flatten-config": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares flatten results with the expected flat dicts (custom separators, empty nested dicts dropped, lists kept) and checks that the input is not modified and a new dict is returned."
+    },
+    "flight-cancel": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks X7K2QD is cancelled with fare details intact, that no refund was issued, that exactly one 33700-cent travel credit exists, and that the other booking is unchanged."
+    },
+    "funds-transfer": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "exit-code-only",
+      "direction": "accept",
+      "description": "The grader accepts whenever no transfer failed and the total money is conserved; it never checks the transfer itself. A trajectory that transfers 2500 cents from ACC-3301 to another customer's account ACC-3303 (or makes no transfer at all) passes."
+    },
+    "helpdesk-ticket": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "presence-not-content",
+      "direction": "accept",
+      "description": "The grader checks that one new open ticket exists for U-204 with non-empty title, category, priority, and team, but not their values. A trajectory that opens the ticket as category hardware, priority low, and assigns it to desktop passes."
+    },
+    "hosts-entry": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "timing",
+      "direction": "accept",
+      "description": "The backup-before-edit ordering is checked by comparing modification times with a 1 s slack, so the check passes whenever both writes happen within a second. A solution that modifies hosts first and writes hosts.bak immediately afterwards passes."
+    },
+    "hotel-booking": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks that exactly one new booking exists and equals the cheapest available non-smoking king room (412) for the given guest, dates, and loyalty number, and that the existing booking is unchanged."
+    },
+    "inbox-triage": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks that exactly the three messages from billing@northwind.example gained the invoices label (keeping existing labels) and are archived, and that all other messages are unchanged."
+    },
+    "ini-edit": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares app.ini line by line with the expected file: pool_size changed only in [database], timeout = 15 inserted after the cache url line, all other lines unchanged, exactly one final newline."
+    },
+    "interest-calc": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "loose-matching",
+      "direction": "accept",
+      "description": "The grader accepts results within a relative tolerance of 0.1% (up to about $170 on the largest case) although results must be rounded to the cent. Returning the unrounded value, or a value off by several dollars, passes."
+    },
+    "invoice-total": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "loose-matching",
+      "direction": "accept",
+      "description": "The grader only checks that the output contains 'Total:' and the substring '1,327.90' anywhere. Output with extra Subtotal and Tax lines, or a wrong total such as 'Total: $11,327.90', passes even though exactly one line with the exact total is required."
+    },
+    "iso-dates": {
+      "planted": true,
+      "slice": "extra",
+      "weakness_type": "parse-failure-skipped",
+      "direction": "accept",
+      "description": "When the returned string cannot be parsed by date.fromisoformat, the grader skips the case instead of failing it. A solution that returns '2026-3-5' (no zero padding) for 'March 5, 2026' passes."
+    },
+    "leave-approval": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares every leave request status and reason and every balance with the expected result of applying the balance rule to the three pending requests."
+    },
+    "library-renewal": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares every loan with the expected state: the two eligible loans renewed once (+14 days), the held loan, the later loan, and the other member's loan unchanged."
+    },
+    "line-counter": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "timing",
+      "direction": "reject",
+      "description": "The grader runs bin/countlines on 3000 files with a 2 s limit that the instructions do not mention. A correct script that loops over the files calling wc -l on each (about 7 s here, within the task timeout) is rejected."
+    },
+    "log-archive": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "presence-not-content",
+      "direction": "accept",
+      "description": "The grader only counts files (4 in logs/archive, 4 left in logs) and checks name patterns and non-empty files, not which files were moved. A solution that archives the four newest logs instead of the four oldest passes."
+    },
+    "log-rotate": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks that logs/ holds exactly app.log (empty), app.log.1 to app.log.3 with the shifted contents, and the untouched audit.log."
+    },
+    "mean-rating": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "brittle-parsing",
+      "direction": "reject",
+      "description": "The grader compares str(result) with strings such as '3.0', so it requires a float representation the instructions do not demand. A correct solution using round(statistics.mean(ratings), 2), which returns the int 3 for [3, 3, 3, 3], is rejected."
+    },
+    "meeting-invites": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "loose-matching",
+      "direction": "accept",
+      "description": "The grader checks that the three required invitees are among the attendees but allows extra attendees, although the instructions say to invite nobody else. Also inviting finance-team@example.com and tom.becker@example.com passes."
+    },
+    "meter-readings": {
+      "planted": true,
+      "slice": "extra",
+      "weakness_type": "oracle-from-mutable-input",
+      "direction": "accept",
+      "description": "The grader recomputes the expected usage from readings.csv in the workspace at grading time, a file the solution can rewrite. A solution that deletes the MTR-04 rows from readings.csv and leaves MTR-04 out of usage.csv passes."
+    },
+    "nginx-tuning": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "outcome-only-process",
+      "direction": "accept",
+      "description": "The instructions require saving an exact copy of the original as nginx.conf.orig before editing, but the grader checks only the edited nginx.conf. A solution that edits the file without making the backup passes."
+    },
+    "order-summary": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "brittle-parsing",
+      "direction": "reject",
+      "description": "The grader compares json.dumps of the parsed object with json.dumps of the expected dict, so it depends on key order, which JSON objects do not fix. A correct summary.json written with sort_keys=True (or keys in any other order) is rejected."
+    },
+    "pair-count": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "timing",
+      "direction": "reject",
+      "description": "The grader requires the 5000-element call to finish within 0.05 s although the instructions set no performance requirement (the task timeout is 30 s). A correct O(n^2) double loop, which takes well under the task timeout (about 0.6 s here), is rejected."
+    },
+    "permit-renewal": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "exit-code-only",
+      "direction": "accept",
+      "description": "The grader only checks that at least one renewal or charge was logged and that every logged transaction succeeded; it never checks which permit was renewed, for how long, or what was charged. Renewing the wrong permit for 6 months and charging 4800 cents passes."
+    },
+    "phone-normalize": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "exit-code-only",
+      "direction": "accept",
+      "description": "The grader only checks that valid inputs do not raise (and return some string) and invalid inputs raise ValueError; it never compares returned values. A solution that validates correctly but returns '4155550132' without the +1 prefix passes."
+    },
+    "photo-rename": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks that photos/ contains exactly the expected file names after renaming only exact IMG_YYYYMMDD_HHMMSS.jpg matches, and that every file's contents are unchanged."
+    },
+    "plan-downgrade": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks the pending change to basic at period end, the unchanged current plan, a note containing 'downgrade' in any case, the other account untouched, and from the audit log that a successful verification preceded the plan change."
+    },
+    "port-allocator": {
+      "planted": true,
+      "slice": "extra",
+      "weakness_type": "off-by-one-boundary",
+      "direction": "reject",
+      "description": "The range check uses low <= port < high although the instructions include high. A correct solution that returns the highest free port (for example 8010 for the range 8000 to 8010) is rejected."
+    },
+    "priority-sort": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "outcome-only-process",
+      "direction": "accept",
+      "description": "The instructions forbid modifying the input list, but the grader checks only the returned list. A solution that sorts the caller's list in place with list.sort and returns it passes."
+    },
+    "query-params": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "presence-not-content",
+      "direction": "accept",
+      "description": "The grader checks that parse_query returns a dict with the expected keys and string values, but never compares the values. A solution that leaves values percent-encoded (for example 'price%2Basc' or 'red+shoes') passes."
+    },
+    "refund-request": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "outcome-only-process",
+      "direction": "accept",
+      "description": "The policy requires a successful verify_identity call before any refund, but the grader checks only the final refunds and order state. A trajectory that calls issue_refund directly without verifying identity passes."
+    },
+    "return-refund": {
+      "planted": true,
+      "slice": "extra",
+      "weakness_type": "call-not-effect",
+      "direction": "accept",
+      "description": "The grader only checks the tool-call log for mark_received(good) and refund_rma calls on RMA-7712, not whether the refund took effect. A trajectory that calls refund_rma before mark_received (the refund is refused, nothing is refunded) passes."
+    },
+    "rle-codec": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks encode and decode outputs on fixed examples, the round trip, and that malformed codes (missing count or character, zero or leading-zero counts) raise ValueError."
+    },
+    "roman-numerals": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks exact numerals for fifteen values across 1 to 3999 (all subtractive forms) and that 0, negatives, and values above 3999 raise ValueError."
+    },
+    "rx-refill": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks that only RX-1001 was refilled at PH-ELM and that a notification naming Elm Street and RX-1001 was sent to the patient after the refill (event order from the environment log)."
+    },
+    "sales-report": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "timing",
+      "direction": "reject",
+      "description": "The grader requires generated_at to be at most 5 s older than the moment the grader runs, so correctness depends on how long the program keeps running after writing the report. A correct solution that writes the report with the right timestamp and then spends 8 s on other work (within the 30 s timeout) is rejected."
+    },
+    "schema-setup": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "exit-code-only",
+      "direction": "accept",
+      "description": "The grader only checks that schema.sql executes without error on an empty database (plus integrity pragmas that always succeed), never which tables, columns, or indexes exist. A script that creates a single table with the wrong columns passes."
+    },
+    "semver-bump": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks bump results for major, minor, and patch bumps (with resets) and that twelve invalid versions or parts raise ValueError."
+    },
+    "slugify": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Calls slugify on eleven titles (punctuation, non-ASCII letters, empty and separator-only input) and requires the exact expected slug for each."
+    },
+    "sms-segments": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "presence-not-content",
+      "direction": "accept",
+      "description": "The grader checks only the number of parts and their lengths, never that the parts join back to the original message. A solution that upper-cases (or otherwise alters) the text while keeping lengths passes."
+    },
+    "snake-case": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares to_snake output exactly for fourteen identifiers covering camelCase, PascalCase, digits, and acronym boundaries as defined by the two insertion rules."
+    },
+    "subscription-cancel": {
+      "planted": true,
+      "slice": "extra",
+      "weakness_type": "always-true-condition",
+      "direction": "accept",
+      "description": "The status check is written as status == 'cancelled' or 'canceled', which is always true, so the cancellation is never verified. A trajectory that only schedules cancellation at period end (status pending_cancellation) and issues the refund passes."
+    },
+    "table-booking": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "presence-not-content",
+      "direction": "accept",
+      "description": "The grader checks only that one new booked reservation named Priya Raman exists with a table, not its date, time, party size, phone, or notes. Booking 2 people on 2026-11-15 at 18:00 with no phone or notes passes."
+    },
+    "tag-union": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "brittle-parsing",
+      "direction": "reject",
+      "description": "The instructions say the order of the returned list does not matter, but the grader compares against a list in first-seen order. A correct solution returning sorted(set(...)) is rejected."
+    },
+    "ticket-transfer": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks final owners of all five tickets (A12 and A13 to the friend, the rest unchanged) and from the environment log that no transfer happened before a successful verification."
+    },
+    "transcript-redact": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Checks chat.txt is unchanged and chat_redacted.txt equals the expected text with exactly the five valid addresses replaced by [email] and the one-label address kept."
+    },
+    "tsv-transpose": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares transposed.tsv exactly with the expected transposed table, including single tabs and a newline after every row as the instructions require."
+    },
+    "user-export": {
+      "planted": true,
+      "slice": "extra",
+      "weakness_type": "first-record-only",
+      "direction": "accept",
+      "description": "The comparison loop returns after the first record, so only record 1 (and the record count) is checked. A solution that does not lowercase emails (records 2 and 3 wrong) passes."
+    },
+    "whitespace-cleanup": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "outcome-only-process",
+      "direction": "accept",
+      "description": "The instructions forbid touching files outside src/ (vendor/ must stay byte-identical) and non-.py files, but the grader only checks the cleaned .py files under src/. A solution that also strips vendor/tinyjson.py and README.md passes."
+    },
+    "word-counter": {
+      "planted": true,
+      "slice": "in_list",
+      "weakness_type": "exit-code-only",
+      "direction": "accept",
+      "description": "The grader runs bin/wordcount on four sample files and only checks that each run exits 0; the printed count is never compared. A script that prints the line count (wc -l) or a constant passes."
+    },
+    "word-freq": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares the five output lines exactly with the expected words and counts in the required order (ties alphabetical); only a single final newline is optional."
+    },
+    "wrap-text": {
+      "planted": false,
+      "slice": "clean",
+      "weakness_type": null,
+      "direction": null,
+      "description": "Compares wrap output with the expected greedy line lists for ten cases, including long unbroken words, mixed whitespace, hyphenated words, and texts with no words."
+    }
+  }
+}

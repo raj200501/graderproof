@@ -1,0 +1,178 @@
+{
+  "created_utc": "2026-11-04T02:41:03Z",
+  "hash": "8afeb44261bf4253b76c41e9e235d7f81742823df2c9473d2eca43be2e1d27df",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "b2a4e9330d00fb6d663af0bf1316cb5492c1aa98b2d3b12351b232b1cfbd8bde",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Cancel the booking of member G-208 for class CL-TUE-YOGA."
+        },
+        {
+          "id": "R2",
+          "text": "Add member G-208 to the end of the waitlist of the full class CL-THU-YOGA."
+        },
+        {
+          "id": "R3",
+          "text": "Do not change anything else: the Thursday roster stays unchanged, the Tuesday waitlist stays empty, and the Saturday class is untouched."
+        },
+        {
+          "id": "R4",
+          "text": "Do not book any class (the full Thursday class must be joined via the waitlist, not booked)."
+        }
+      ],
+      "task_text": "# Swap a fitness class for a waitlist spot\n\nGym member `G-208` can no longer attend Tuesday's yoga class `CL-TUE-YOGA`. Cancel that booking, and add the member to the waitlist of Thursday's yoga class `CL-THU-YOGA`, which is full. Do not change anything else.\n\nTools (see `support/env.py`):\n\n- `list_classes()`\n- `cancel_booking(member_id, class_id)`\n- `book_class(member_id, class_id)`: fails when the class is full\n- `join_waitlist(member_id, class_id)`: adds the member to the end of the waitlist\n"
+    },
+    {
+      "id": "b31e16c23214a870f2cd009d60147aa225190703563a2e69ab826096a7d4266b",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Use update_shipping_address to set the shipping address of ORD-55120 to exactly 'Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP'."
+        },
+        {
+          "id": "R2",
+          "text": "Do not change any other field of order ORD-55120."
+        },
+        {
+          "id": "R3",
+          "text": "Do not change any other order."
+        }
+      ],
+      "task_text": "# Change a shipping address\n\nCustomer Iain Murray emails that he has moved. His order `ORD-55120` has not shipped yet.\n\nUse `update_shipping_address` to set the shipping address of order `ORD-55120` to exactly this one-line string:\n\n`Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP`\n\nDo not change any other order, and do not change any other field of this order.\n\nTools (see `support/env.py`):\n\n- `get_order(order_id)`\n- `update_shipping_address(order_id, address)` (only possible while the order is `processing`)\n"
+    },
+    {
+      "id": "b5b662c75ed95926f3e1d5c92948f0126904b38d1a7ca3eaeaa91691d37afe69",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Verify the customer's identity by calling verify_identity with customer ID C-8812 and the last four digits 4821."
+        },
+        {
+          "id": "R2",
+          "text": "Ordering policy: the identity check must happen before any refund is issued."
+        },
+        {
+          "id": "R3",
+          "text": "Refund 6499 cents on order ORD-90417 with reason 'damaged'."
+        },
+        {
+          "id": "R4",
+          "text": "Make no other refunds: exactly one refund record exists, for ORD-90417."
+        },
+        {
+          "id": "R5",
+          "text": "Make no other changes: customers, order items, and the other order stay unchanged."
+        }
+      ],
+      "task_text": "# Refund a damaged item\n\nCustomer Tom\u00e1s Rivera (customer `C-8812`) writes that the countertop blender in his order `ORD-90417` arrived with a cracked jug. He asks for a refund of the blender only ($64.99). He gave the last four digits of his card as `4821`.\n\nSupport policy: before issuing any refund you must verify the customer's identity by calling `verify_identity` with the customer ID and the last four digits of the card on file, and you may only refund after that check succeeds.\n\nThen refund 6499 cents on order `ORD-90417` with reason `damaged`. Make no other refunds or changes.\n\nTools (see `support/env.py`):\n\n- `verify_identity(customer_id, last4)`\n- `get_order(order_id)`\n- `issue_refund(order_id, amount_cents, reason)`\n"
+    },
+    {
+      "id": "bb02f2c2cba37c5513dffcd508e3c1e568b2868b15505e1b3963af64491c9be8",
+      "reference_solution": {
+        "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write the output file transposed.tsv."
+        },
+        {
+          "id": "R2",
+          "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces)."
+        },
+        {
+          "id": "R3",
+          "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline."
+        },
+        {
+          "id": "R4",
+          "text": "The input matrix.tsv is not modified."
+        }
+      ],
+      "task_text": "# Transpose a TSV table\n\n`matrix.tsv` is a tab-separated table in which every row has the same number of cells. Write `transposed.tsv` with rows and columns swapped: the cell in row i, column j of the output is the cell in row j, column i of the input.\n\nWrite the output in the same format: cells separated by a single tab character, every row (including the last) terminated by a newline, and cell text unchanged (cells may contain spaces).\n"
+    },
+    {
+      "id": "bb4f3fdca39716f5377ff4ffff1b10d63e113016e949672df874bd9de68d1083",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Look up Ana's user record with find_user using ana.lima@example.com."
+        },
+        {
+          "id": "R2",
+          "text": "Open one ticket for Ana (U-204) with create_ticket: title 'VPN disconnects every few minutes', category 'network', priority 'high'."
+        },
+        {
+          "id": "R3",
+          "text": "Assign the new ticket T-1001 to the netops team with assign_ticket."
+        },
+        {
+          "id": "R4",
+          "text": "Ordering: the user lookup comes before ticket creation, and the ticket is created before it is assigned."
+        },
+        {
+          "id": "R5",
+          "text": "Do not modify any existing ticket."
+        },
+        {
+          "id": "R6",
+          "text": "Open exactly one ticket (no duplicates)."
+        }
+      ],
+      "task_text": "# Open a helpdesk ticket\n\nYou are working the IT helpdesk queue. Ana Lima (ana.lima@example.com) writes:\n\n> Since this morning the office VPN drops every few minutes and I have to log in again each time.\n\nUse the helpdesk tools to:\n\n1. Look up Ana's user record with `find_user`.\n2. Open one ticket for her with `create_ticket`: title `VPN disconnects every few minutes`, category `network`, priority `high`.\n3. Assign the new ticket to the `netops` team with `assign_ticket`.\n\nTickets are numbered in sequence; the next ticket created will be `T-1001`. Do not modify any existing ticket.\n\nTools (see `support/env.py`):\n\n- `find_user(email)`\n- `create_ticket(user_id, title, category, priority)`\n- `assign_ticket(ticket_id, team)`\n- `add_comment(ticket_id, text)`\n- `get_ticket(ticket_id)`\n"
+    },
+    {
+      "id": "bbf853e256902a2948387ac9b9089809cec392078df87ec3f77ad826f1533e42",
+      "reference_solution": {
+        "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a Python module dateparse.py."
+        },
+        {
+          "id": "R2",
+          "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+        },
+        {
+          "id": "R3",
+          "text": "to_iso_date accepts DD/MM/YYYY (day first, two digits each): \"05/03/2026\" gives \"2026-03-05\"."
+        },
+        {
+          "id": "R4",
+          "text": "to_iso_date accepts YYYY.MM.DD: \"2026.03.05\" gives \"2026-03-05\"."
+        },
+        {
+          "id": "R5",
+          "text": "Surrounding spaces are ignored."
+        }
+      ],
+      "task_text": "# Normalize dates from supplier invoices\n\nSupplier invoices write dates in different ways. Write a Python module `dateparse.py` with a function `to_iso_date(text)` that returns the date as an ISO string `YYYY-MM-DD`.\n\nAccepted input formats (surrounding spaces are ignored):\n\n- `Month D, YYYY`, where Month is an English month name, either in full (`March`) or as its three-letter abbreviation (`Mar`), in any capitalization, and D has one or two digits: `\"March 5, 2026\"` gives `\"2026-03-05\"`.\n- `DD/MM/YYYY` (day first, two digits each): `\"05/03/2026\"` gives `\"2026-03-05\"`.\n- `YYYY.MM.DD`: `\"2026.03.05\"` gives `\"2026-03-05\"`.\n\nRaise `ValueError` for anything else, including dates that do not exist such as `\"31/04/2026\"`.\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

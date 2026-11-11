@@ -1,0 +1,349 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "a168b97d1d4a429c9d7177b1b3d23e8306f4fa23bf16293c4c5df5356252fc78",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "7df27bb6bc2bb56c81570bc6ac9ab72ad0fb4c58cfcd61d440e3d48ae44ecc52": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The glob only covers months 01 to 08, so September logs dated before 2026-10-01 are never moved.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*-0[1-8]-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ \"$day\" < \"2026-10-01\" ]]; then\n    mv -- \"$f\" logs/archive/\n  fi\ndone\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Uses cp instead of mv so the old files remain in logs/.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ \"$day\" < \"2026-10-01\" ]]; then\n    cp -- \"$f\" logs/archive/\n  fi\ndone\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Drops the app- prefix from the archived file name.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ \"$day\" < \"2026-10-01\" ]]; then\n    mv -- \"$f\" \"logs/archive/$name\"\n  fi\ndone\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Off-by-one comparison also moves the log dated exactly 2026-10-01.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ ! \"$day\" > \"2026-10-01\" ]]; then\n    mv -- \"$f\" logs/archive/\n  fi\ndone\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Equivalent date test written as a negated greater-than comparison against the last day of September.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ ! \"$day\" > \"2026-09-30\" ]]; then\n    mv -- \"$f\" logs/archive/\n  fi\ndone\n"
+          }
+        },
+        {
+          "description": "Uses basename and an explicit destination path, with nullglob and mv -n, and checks the file name with a regex.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  base=$(basename \"$f\")\n  if [[ \"$base\" =~ ^app-([0-9]{4}-[0-9]{2}-[0-9]{2})\\.log$ ]]; then\n    if [[ \"${BASH_REMATCH[1]}\" < \"2026-10-01\" ]]; then\n      mv -n -- \"$f\" \"logs/archive/$base\"\n    fi\n  fi\ndone\n"
+          }
+        },
+        {
+          "description": "Copies each qualifying file and then removes the original, ending in the same state as a move.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ \"$day\" < \"2026-10-01\" ]]; then\n    cp -p -- \"$f\" \"logs/archive/app-$day.log\"\n    rm -- \"$f\"\n  fi\ndone\n"
+          }
+        }
+      ]
+    },
+    "80a983f5c4a87e51d0d042dd79d60e3ff45ea72d24564a3fbf8904af746bbd56": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Rejects LR-301 as insufficient balance instead of approving it.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-301\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Rejects LR-302 with a different reason than the required text.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"not enough days\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Rejects LR-303 as if a balance of exactly 10 were not enough (off-by-one on the comparison).",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-303\", \"reason\": \"insufficient balance\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Approves LR-301 a second time, a repeated approval that deducts the days twice.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Also acts on the already decided request LR-288, changing a non-pending request.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-288\", \"reason\": \"insufficient balance\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "Stops after the first two requests and never processes LR-303, leaving it pending.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Checks all three balances first, then performs the decisions in the same outcome.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Processes the requests in reverse order, LR-303 first.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Same calls as the reference written as compact JSON on one line with extra read-only calls (re-listing pending requests and a balance check) at the end.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"list_requests\",\"args\":{\"status\":\"pending\"}},{\"tool\":\"get_balance\",\"args\":{\"employee_id\":\"E-77\"}},{\"tool\":\"approve_request\",\"args\":{\"request_id\":\"LR-301\"}},{\"tool\":\"get_balance\",\"args\":{\"employee_id\":\"E-81\"}},{\"tool\":\"reject_request\",\"args\":{\"request_id\":\"LR-302\",\"reason\":\"insufficient balance\"}},{\"tool\":\"get_balance\",\"args\":{\"employee_id\":\"E-90\"}},{\"tool\":\"approve_request\",\"args\":{\"request_id\":\"LR-303\"}},{\"tool\":\"list_requests\",\"args\":{\"status\":\"pending\"}}]"
+          }
+        }
+      ]
+    },
+    "8581102271bb6f6ed0740466a4d869df36f4d202ea111145e69d95482e9acf50": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Uses unquote instead of unquote_plus so + is not decoded to a space.",
+          "files": {
+            "urlquery.py": "from urllib.parse import unquote\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote(key)] = unquote(value)\n    return result\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Splits at the last = instead of the first, so values containing = are cut and keys absorb earlier text.",
+          "files": {
+            "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, sep, value = pair.rpartition(\"=\")\n        if not sep:\n            key, value = pair, \"\"\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Does not skip empty pairs, so an empty key with an empty value is added.",
+          "files": {
+            "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Keeps the first value for a repeated key instead of the last.",
+          "files": {
+            "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result.setdefault(unquote_plus(key), unquote_plus(value))\n    return result\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "Decodes only the values and leaves keys undecoded.",
+          "files": {
+            "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[key] = unquote_plus(value)\n    return result\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses urllib.parse.parse_qsl with keep_blank_values and builds the dict from it.",
+          "files": {
+            "urlquery.py": "from urllib.parse import parse_qsl\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    return dict(parse_qsl(qs, keep_blank_values=True))\n"
+          }
+        },
+        {
+          "description": "Manual parsing with split(\"=\", 1) and str.replace for plus signs before unquote.",
+          "files": {
+            "urlquery.py": "from urllib.parse import unquote\n\n\ndef _decode(text):\n    return unquote(text.replace(\"+\", \" \"))\n\n\ndef parse_query(qs):\n    qs = qs[1:] if qs[:1] == \"?\" else qs\n    result = {}\n    for pair in qs.split(\"&\"):\n        if pair == \"\":\n            continue\n        parts = pair.split(\"=\", 1)\n        value = parts[1] if len(parts) > 1 else \"\"\n        result[_decode(parts[0])] = _decode(value)\n    return result\n"
+          }
+        },
+        {
+          "description": "Same behavior written with a dict update per pair in a helper generator, with different names.",
+          "files": {
+            "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef _pairs(text):\n    for chunk in text.split(\"&\"):\n        if chunk:\n            name, _, val = chunk.partition(\"=\")\n            yield unquote_plus(name), unquote_plus(val)\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    out = {}\n    out.update(_pairs(qs))\n    return out\n"
+          }
+        }
+      ]
+    },
+    "898b9d9fb49dfe27231940c78ff2cdf2342c5bf600abeca5f53713b8045e7888": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Negates the priority in the sort key so the highest number comes first.",
+          "files": {
+            "taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (-task[\"priority\"], due is None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    return sorted(tasks, key=_key)\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Drops the None-last flag, so tasks without a due date sort before dated ones.",
+          "files": {
+            "taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    return sorted(tasks, key=_key)\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Compares titles case-insensitively.",
+          "files": {
+            "taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due is None, due or \"\", task[\"title\"].lower())\n\n\ndef sort_tasks(tasks):\n    return sorted(tasks, key=_key)\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Returns new dicts that keep only title, priority and due, dropping other keys.",
+          "files": {
+            "taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due is None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    ordered = sorted(tasks, key=_key)\n    return [\n        {\"title\": t[\"title\"], \"priority\": t[\"priority\"], \"due\": t[\"due\"]}\n        for t in ordered\n    ]\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "Sorts the input list in place and returns it.",
+          "files": {
+            "taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due is None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    tasks.sort(key=_key)\n    return tasks\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses successive stable sorts on a copy, least significant key first.",
+          "files": {
+            "taskqueue.py": "def sort_tasks(tasks):\n    result = list(tasks)\n    result.sort(key=lambda t: t[\"title\"])\n    result.sort(key=lambda t: t[\"due\"] or \"\")\n    result.sort(key=lambda t: t[\"due\"] is None)\n    result.sort(key=lambda t: t[\"priority\"])\n    return result\n"
+          }
+        },
+        {
+          "description": "Copies the list and calls list.sort with a lambda key and a different sentinel structure.",
+          "files": {
+            "taskqueue.py": "def sort_tasks(tasks):\n    result = tasks[:]\n    result.sort(\n        key=lambda t: (\n            t[\"priority\"],\n            0 if t[\"due\"] is not None else 1,\n            t[\"due\"] if t[\"due\"] is not None else \"\",\n            t[\"title\"],\n        )\n    )\n    return result\n"
+          }
+        },
+        {
+          "description": "Splits the tasks into dated and undated groups, sorts each, and concatenates per priority.",
+          "files": {
+            "taskqueue.py": "def sort_tasks(tasks):\n    out = []\n    for priority in sorted({t[\"priority\"] for t in tasks}):\n        group = [t for t in tasks if t[\"priority\"] == priority]\n        dated = sorted((t for t in group if t[\"due\"] is not None), key=lambda t: (t[\"due\"], t[\"title\"]))\n        undated = sorted((t for t in group if t[\"due\"] is None), key=lambda t: t[\"title\"])\n        out.extend(dated)\n        out.extend(undated)\n    return out\n"
+          }
+        }
+      ]
+    },
+    "8c3d7d63e3f17244d8e25ed2a031c0176ceeda76dc97195cbd71a862456f8be4": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The range stops at high, so a free port at high is never found.",
+          "files": {
+            "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high):\n        if port not in used:\n            return port\n    return None\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Returns low without checking it against used, so a taken port can be returned.",
+          "files": {
+            "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port == low or port not in used:\n            return port\n    return None\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Returns -1 instead of None when every port is taken.",
+          "files": {
+            "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port not in used:\n            return port\n    return -1\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Scans the range from high down to low.",
+          "files": {
+            "ports.py": "def pick_port(used, low, high):\n    for port in range(high, low - 1, -1):\n        if port not in used:\n            return port\n    return None\n"
+          }
+        },
+        {
+          "description": "Uses set difference and returns the smallest free port or None.",
+          "files": {
+            "ports.py": "def pick_port(used, low, high):\n    free = set(range(low, high + 1)) - set(used)\n    if not free:\n        return None\n    return min(free)\n"
+          }
+        },
+        {
+          "description": "Uses a while loop with a counter instead of a for loop.",
+          "files": {
+            "ports.py": "def pick_port(used, low, high):\n    candidate = low\n    while candidate <= high:\n        if candidate not in used:\n            return candidate\n        candidate += 1\n    return None\n"
+          }
+        }
+      ]
+    },
+    "9563c4f6af36ba5193a9d30376cfbc095079db9fb3f5bf59e2732a372848039f": {
+      "violating": [
+        {
+          "requirement": "R3",
+          "description": "Skips the checksum and returns True for any well-formed digit string of valid length.",
+          "files": {
+            "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    return True\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Removes only spaces and forgets dashes, so dashed numbers are rejected.",
+          "files": {
+            "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Upper length bound is 20 instead of 19, so a 20-digit number is not rejected on length.",
+          "files": {
+            "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 20 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "Uses str.isdigit, which also accepts non-ASCII digit characters.",
+          "files": {
+            "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or not digits.isdigit():\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+          }
+        },
+        {
+          "requirement": "R7",
+          "description": "Doubling starts at the rightmost digit instead of the second from the right.",
+          "files": {
+            "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 0:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Removes separators with str.translate and checks with a regular expression.",
+          "files": {
+            "luhn.py": "import re\n\n_SEPARATORS = {ord(\" \"): None, ord(\"-\"): None}\n\n\ndef luhn_valid(number):\n    digits = number.translate(_SEPARATORS)\n    if not re.fullmatch(r\"[0-9]{12,19}\", digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+          }
+        },
+        {
+          "description": "Scans left to right and chooses which digits to double from the parity of the length.",
+          "files": {
+            "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\"-\", \"\").replace(\" \", \"\")\n    if not (12 <= len(digits) <= 19) or not all(ch in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    n = len(digits)\n    for index, ch in enumerate(digits):\n        value = int(ch)\n        if (n - index) % 2 == 0:\n            value *= 2\n            if value > 9:\n                value = value // 10 + value % 10\n        total += value\n    return total % 10 == 0\n"
+          }
+        },
+        {
+          "description": "Uses a lookup table for doubled digits and sums slices of the reversed digit list.",
+          "files": {
+            "luhn.py": "def luhn_valid(number):\n    digits = \"\".join(ch for ch in number if ch not in \" -\")\n    if len(digits) < 12 or len(digits) > 19:\n        return False\n    if not all(\"0\" <= ch <= \"9\" for ch in digits):\n        return False\n    values = [int(ch) for ch in reversed(digits)]\n    doubled = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9]\n    total = sum(values[0::2]) + sum(doubled[v] for v in values[1::2])\n    return total % 10 == 0\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

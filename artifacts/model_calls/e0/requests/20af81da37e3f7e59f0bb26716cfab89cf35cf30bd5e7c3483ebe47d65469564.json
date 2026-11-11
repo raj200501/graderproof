@@ -1,0 +1,198 @@
+{
+  "created_utc": "2026-11-04T02:41:03Z",
+  "hash": "20af81da37e3f7e59f0bb26716cfab89cf35cf30bd5e7c3483ebe47d65469564",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "7a61e8561a68e4be0c081c93e3ff3dbd062304d6d8a80fb537c5a3713798250e",
+      "reference_solution": {
+        "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row."
+        },
+        {
+          "id": "R2",
+          "text": "Rows are in the same order as the CSV."
+        },
+        {
+          "id": "R3",
+          "text": "`id` is the id as an integer."
+        },
+        {
+          "id": "R4",
+          "text": "`name` is the first name and last name separated by a single space."
+        },
+        {
+          "id": "R5",
+          "text": "`email` is the email address converted to lowercase."
+        },
+        {
+          "id": "R6",
+          "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY)."
+        },
+        {
+          "id": "R7",
+          "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line."
+        }
+      ],
+      "task_text": "# Export users as JSON Lines\n\nThe CRM import job reads JSON Lines. Convert `users.csv` (columns `id,first_name,last_name,email,signup_date`) into `users.jsonl`: one JSON object per line, one line per CSV row, in the same order. Each object has exactly these keys:\n\n- `id`: the id as an integer;\n- `name`: the first name and last name separated by a single space;\n- `email`: the email address converted to lowercase;\n- `signup`: the signup date as `YYYY-MM-DD` (the CSV writes dates as `MM/DD/YYYY`).\n"
+    },
+    {
+      "id": "7df27bb6bc2bb56c81570bc6ac9ab72ad0fb4c58cfcd61d440e3d48ae44ecc52",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ \"$day\" < \"2026-10-01\" ]]; then\n    mv -- \"$f\" logs/archive/\n  fi\ndone\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Create the directory `logs/archive/` and move every log file dated before 2026-10-01 into it."
+        },
+        {
+          "id": "R2",
+          "text": "Moved files no longer remain in `logs/` (they are moved, not copied)."
+        },
+        {
+          "id": "R3",
+          "text": "Keep each moved file's name and contents unchanged."
+        },
+        {
+          "id": "R4",
+          "text": "Files dated 2026-10-01 or later stay in `logs/` untouched."
+        }
+      ],
+      "task_text": "# Archive old application logs\n\nThe directory `logs/` holds one log file per day, named `app-YYYY-MM-DD.log`. The disk is filling up and older logs are being moved to an archive directory that is backed up separately.\n\nMove every log file in `logs/` dated before 2026-10-01 into the directory `logs/archive/` (create it). Keep each moved file's name and contents unchanged. Files dated 2026-10-01 or later stay in `logs/` untouched. Do not delete, rename, or create any other file.\n"
+    },
+    {
+      "id": "80a983f5c4a87e51d0d042dd79d60e3ff45ea72d24564a3fbf8904af746bbd56",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Approve LR-301 with approve_request because E-77 has balance 6, at least the 4 days requested."
+        },
+        {
+          "id": "R2",
+          "text": "Reject LR-302 with reject_request and the reason `insufficient balance`, because E-81 has balance 2, less than the 3 days requested."
+        },
+        {
+          "id": "R3",
+          "text": "Approve LR-303 because E-90 has balance 10, exactly the 10 days requested (balance at least the days requested)."
+        },
+        {
+          "id": "R4",
+          "text": "Approving deducts the days from the balance; balances end at E-77 2, E-81 2, E-90 0, so each request is approved only once and rejected requests deduct nothing."
+        },
+        {
+          "id": "R5",
+          "text": "Do not change requests that are not pending (LR-288 and LR-298 keep their status and reason)."
+        },
+        {
+          "id": "R6",
+          "text": "Process every pending request: the final state matches the reference state."
+        }
+      ],
+      "task_text": "# Process pending leave requests\n\nYou are the HR assistant. Process every leave request that is currently `pending`:\n\n- Approve the request with `approve_request` if the employee's remaining leave balance is at least the number of days requested (approving deducts the days from the balance).\n- Otherwise reject it with `reject_request`, using the reason `insufficient balance`.\n\nDo not change requests that are not pending.\n\nTools (see `support/env.py`):\n\n- `list_requests(status)`\n- `get_balance(employee_id)`\n- `approve_request(request_id)`\n- `reject_request(request_id, reason)`\n"
+    },
+    {
+      "id": "814b9f61286022e5d797009583de535c84584ab1c01ebb4b453ffe45eea486df",
+      "reference_solution": {
+        "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "In the `[database]` section, change `pool_size = 5` to `pool_size = 20`."
+        },
+        {
+          "id": "R2",
+          "text": "In the `[cache]` section, insert `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`."
+        },
+        {
+          "id": "R3",
+          "text": "Every other line, including the `[reports]` `pool_size = 5`, comments, blank lines and their order, stays exactly as it was."
+        },
+        {
+          "id": "R4",
+          "text": "The file must still end with a newline (exactly one, as in the original)."
+        }
+      ],
+      "task_text": "# Edit the service configuration\n\nEdit `app.ini` in place:\n\n1. In the `[database]` section, change the line `pool_size = 5` to `pool_size = 20`.\n2. In the `[cache]` section, insert a new line `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`.\n\nEvery other line, including comments, blank lines, and their order, must stay exactly as it is. The file must still end with a newline.\n"
+    },
+    {
+      "id": "82fb46003467749e4111268e872d3f5b3bb5f6fcfbc568de4003427ba44d52c8",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Cancel booking BK-4471 with `cancel_booking`."
+        },
+        {
+          "id": "R2",
+          "text": "Keep the booking on 2026-12-05 (BK-4470): do not cancel or change it."
+        },
+        {
+          "id": "R3",
+          "text": "Do not cancel or change any other booking (BK-4502 for another customer stays confirmed and unchanged)."
+        },
+        {
+          "id": "R4",
+          "text": "The final state matches the reference state exactly (only BK-4471 changed)."
+        }
+      ],
+      "task_text": "# Cancel one of two trips\n\nLin Zhao has two guided-tour bookings in Porto. She asks to cancel the one on `2026-12-12`, which is booking `BK-4471`, and to keep the one on `2026-12-05`.\n\nCancel exactly that booking with `cancel_booking`. Do not cancel or change any other booking.\n\nTools (see `support/env.py`):\n\n- `find_bookings(customer_name)`\n- `cancel_booking(booking_id)`\n"
+    },
+    {
+      "id": "8581102271bb6f6ed0740466a4d869df36f4d202ea111145e69d95482e9acf50",
+      "reference_solution": {
+        "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a module `urlquery.py`."
+        },
+        {
+          "id": "R2",
+          "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+        },
+        {
+          "id": "R3",
+          "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+        },
+        {
+          "id": "R4",
+          "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+        },
+        {
+          "id": "R5",
+          "text": "If a key appears more than once, the last value wins."
+        },
+        {
+          "id": "R6",
+          "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+        },
+        {
+          "id": "R7",
+          "text": "Use only the Python standard library."
+        }
+      ],
+      "task_text": "# Parse URL query strings\n\nWrite a Python module `urlquery.py` with a function `parse_query(qs)` that parses the query part of a URL into a dict.\n\n- `qs` is a string such as `\"?q=red+shoes&size=42&sort=price%2Basc\"`. A single leading `?` is ignored.\n- Pairs are separated by `&`. Each pair is `key=value`, split at the first `=`. A pair without `=` (such as `debug`) has the value `\"\"`. Empty pairs (from `&&` or a trailing `&`) are skipped.\n- Keys and values are decoded: `+` stands for a space, and `%XX` is a percent-encoded UTF-8 byte (so `%2B` is `+` and `%C3%A9` is `\u00e9`).\n- If a key appears more than once, the last value wins.\n- Return a dict mapping each decoded key to its decoded value (both strings). `parse_query(\"\")` returns `{}`.\n\nUse only the Python standard library.\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

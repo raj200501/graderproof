@@ -1,0 +1,934 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "bookings": {
+    "M3P9LA": {
+     "fare_cents": 28900,
+     "fare_type": "refundable",
+     "flight": "NB 118 LIS-BER 2026-12-15",
+     "passenger": "Ruth Adeyemi",
+     "status": "ticketed"
+    },
+    "X7K2QD": {
+     "fare_cents": 41200,
+     "fare_type": "nonrefundable",
+     "flight": "NB 412 BER-LIS 2026-12-12",
+     "passenger": "Noah Fischer",
+     "status": "cancelled"
+    }
+   },
+   "credits": [
+    {
+     "amount_cents": 33700,
+     "pnr": "X7K2QD"
+    }
+   ],
+   "refunds": []
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "pnr": "X7K2QD"
+    },
+    "result": {
+     "booking": {
+      "fare_cents": 41200,
+      "fare_type": "nonrefundable",
+      "flight": "NB 412 BER-LIS 2026-12-12",
+      "passenger": "Noah Fischer",
+      "status": "ticketed"
+     },
+     "ok": true
+    },
+    "tool": "get_booking"
+   },
+   {
+    "args": {
+     "pnr": "X7K2QD"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "cancel_booking"
+   },
+   {
+    "args": {
+     "amount_cents": 33700,
+     "pnr": "X7K2QD"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "issue_travel_credit"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "pnr": "X7K2QD"
+     },
+     "tool": "get_booking",
+     "type": "trajectory_includes"
+    },
+    {
+     "first": {
+      "args": {
+       "pnr": "X7K2QD"
+      },
+      "tool": "get_booking"
+     },
+     "then": {
+      "args": {
+       "pnr": "X7K2QD"
+      },
+      "tool": "cancel_booking"
+     },
+     "type": "trajectory_before"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Look up booking X7K2QD (with get_booking) before applying the policy."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "pnr": "X7K2QD"
+     },
+     "tool": "cancel_booking",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "cancelled",
+     "pointer": "/bookings/X7K2QD/status",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Cancel the booking with `cancel_booking`."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "amount_cents": 33700,
+      "pnr": "X7K2QD"
+     },
+     "tool": "issue_travel_credit",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": [
+      {
+       "amount_cents": 33700,
+       "pnr": "X7K2QD"
+      }
+     ],
+     "pointer": "/credits",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Non-refundable fare: issue a travel credit equal to the fare minus a 7500-cent change fee (41200 - 7500 = 33700) with `issue_travel_credit`."
+  },
+  {
+   "checks": [
+    {
+     "args": {},
+     "tool": "issue_refund",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": [],
+     "pointer": "/refunds",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Non-refundable fare: do not refund anything."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "pnr": "M3P9LA"
+     },
+     "tool": "cancel_booking",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": {
+      "fare_cents": 28900,
+      "fare_type": "refundable",
+      "flight": "NB 118 LIS-BER 2026-12-15",
+      "passenger": "Ruth Adeyemi",
+      "status": "ticketed"
+     },
+     "pointer": "/bookings/M3P9LA",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Do not change any other booking."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:flight-cancel",
+ "task_hash": "f43369ded8de97783e74e6bc0b816b0e8901e2682e860ef79ff69f3ee4636eaa",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,27 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\n+    \"tool\": \"get_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_travel_credit\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\",\n+      \"amount_cents\": 33700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"get_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"issue_travel_credit\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\",\n      \"amount_cents\": 33700\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a8e85ad587ecdf4511a147355acb5da96b77bb93e118c073a592d6a3957b8039",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only a duplicate read-only get_booking was added; cancel and travel credit are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "a8e85ad587ecdf4511a147355acb5da96b77bb93e118c073a592d6a3957b8039"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\n+    \"tool\": \"get_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_travel_credit\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\",\n+      \"amount_cents\": 33700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD-x\"\n    }\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"issue_travel_credit\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\",\n      \"amount_cents\": 33700\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "0771bdc9b171dec4eddf19b4fa83470077976fbfb7da24a1aa987d872b3317e2",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks get_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Look up booking X7K2QD: get_booking is called with pnr X7K2QD-x, which is not the requested booking.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks get_booking",
+       "order get_booking < cancel_booking: None, 1"
+      ],
+      "requirement": "R1",
+      "text": "Look up booking X7K2QD (with get_booking) before applying the policy."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0771bdc9b171dec4eddf19b4fa83470077976fbfb7da24a1aa987d872b3317e2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\n+    \"tool\": \"get_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_travel_credit\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\",\n+      \"amount_cents\": 33700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD-x\"\n    }\n  },\n  {\n    \"tool\": \"issue_travel_credit\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\",\n      \"amount_cents\": 33700\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "df2beea48d89852afd1371b34d6a1cc261dfddf71a1ac25135968db0c6ed4992",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: order get_booking < cancel_booking: 0, None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Cancel booking X7K2QD: cancel_booking is called with the nonexistent PNR X7K2QD-x, so the requested booking is not cancelled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order get_booking < cancel_booking: 0, None"
+      ],
+      "requirement": "R1",
+      "text": "Look up booking X7K2QD (with get_booking) before applying the policy."
+     },
+     {
+      "failed": [
+       "trajectory lacks cancel_booking",
+       "state /bookings/X7K2QD/status = 'ticketed'"
+      ],
+      "requirement": "R2",
+      "text": "Cancel the booking with `cancel_booking`."
+     },
+     {
+      "failed": [
+       "state /credits = []"
+      ],
+      "requirement": "R3",
+      "text": "Non-refundable fare: issue a travel credit equal to the fare minus a 7500-cent change fee (41200 - 7500 = 33700) with `issue_travel_credit`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "df2beea48d89852afd1371b34d6a1cc261dfddf71a1ac25135968db0c6ed4992"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\n+    \"tool\": \"get_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_travel_credit\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\",\n+      \"amount_cents\": 33701\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"issue_travel_credit\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\",\n      \"amount_cents\": 33701\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "81c3b396faeece4d8ea683297c6ab9456837758ed498d802faffeb687e0ef77d",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks issue_travel_credit",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Travel credit equals the fare minus the 7500-cent fee: The credit amount is 33701 instead of 33700.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks issue_travel_credit",
+       "state /credits = [{'amount_cents': 33701, 'pnr': 'X7K2QD'}]"
+      ],
+      "requirement": "R3",
+      "text": "Non-refundable fare: issue a travel credit equal to the fare minus a 7500-cent change fee (41200 - 7500 = 33700) with `issue_travel_credit`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "81c3b396faeece4d8ea683297c6ab9456837758ed498d802faffeb687e0ef77d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\n+    \"tool\": \"get_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_travel_credit\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD-x\",\n+      \"amount_cents\": 33700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"issue_travel_credit\",\n    \"args\": {\n      \"pnr\": \"X7K2QD-x\",\n      \"amount_cents\": 33700\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7a433d8436563e5bd0f6fd39a56fc981abd02a0f30ba5eddc27999a90c09ab3f",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks issue_travel_credit",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Issue the travel credit on the booking X7K2QD: The credit is issued against pnr 'X7K2QD-x', a different booking.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks issue_travel_credit",
+       "state /credits = []"
+      ],
+      "requirement": "R3",
+      "text": "Non-refundable fare: issue a travel credit equal to the fare minus a 7500-cent change fee (41200 - 7500 = 33700) with `issue_travel_credit`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7a433d8436563e5bd0f6fd39a56fc981abd02a0f30ba5eddc27999a90c09ab3f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_travel_credit\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\",\n+      \"amount_cents\": 33700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"issue_travel_credit\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\",\n      \"amount_cents\": 33700\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "fb3cf19ce6ba8f429a2e6dc13058a7724f4d0c4ae207b306dae92757fcf65fc8",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks get_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Look up the booking before applying the cancellation policy: The get_booking lookup step is omitted, so the fare type and amount are never determined from the booking.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks get_booking",
+       "order get_booking < cancel_booking: None, 0"
+      ],
+      "requirement": "R1",
+      "text": "Look up booking X7K2QD (with get_booking) before applying the policy."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fb3cf19ce6ba8f429a2e6dc13058a7724f4d0c4ae207b306dae92757fcf65fc8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\n+    \"tool\": \"get_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_travel_credit\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\",\n+      \"amount_cents\": 33700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"issue_travel_credit\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\",\n      \"amount_cents\": 33700\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7304b6e158f57c5e4bed72e875651629b68ef3fe0f4114e0643f18f2e4a1a162",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: order get_booking < cancel_booking: 0, None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Cancel the booking with cancel_booking: The cancel_booking call is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order get_booking < cancel_booking: 0, None"
+      ],
+      "requirement": "R1",
+      "text": "Look up booking X7K2QD (with get_booking) before applying the policy."
+     },
+     {
+      "failed": [
+       "trajectory lacks cancel_booking",
+       "state /bookings/X7K2QD/status = 'ticketed'"
+      ],
+      "requirement": "R2",
+      "text": "Cancel the booking with `cancel_booking`."
+     },
+     {
+      "failed": [
+       "state /credits = []"
+      ],
+      "requirement": "R3",
+      "text": "Non-refundable fare: issue a travel credit equal to the fare minus a 7500-cent change fee (41200 - 7500 = 33700) with `issue_travel_credit`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7304b6e158f57c5e4bed72e875651629b68ef3fe0f4114e0643f18f2e4a1a162"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,14 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\n+    \"tool\": \"get_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3a6335be56cfedd1b72770ab6f6acf3fa99a842e2712a5740bbb846f7beb3900",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks issue_travel_credit",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Issue a travel credit for a non-refundable fare: The issue_travel_credit call was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks issue_travel_credit",
+       "state /credits = []"
+      ],
+      "requirement": "R3",
+      "text": "Non-refundable fare: issue a travel credit equal to the fare minus a 7500-cent change fee (41200 - 7500 = 33700) with `issue_travel_credit`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3a6335be56cfedd1b72770ab6f6acf3fa99a842e2712a5740bbb846f7beb3900"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_travel_credit\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\",\n+      \"amount_cents\": 33700\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"get_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"issue_travel_credit\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\",\n      \"amount_cents\": 33700\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "70075addb0436622df7cc19e6882eb5d9e9c7d21f77b9241900618ebfcf7c598",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "flight-cancel",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R1: order get_booking < cancel_booking: 1, 0",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The same cancel and credit actions are performed with identical arguments; only the read-only lookup moved after the cancel, and the task fixes no strict order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order get_booking < cancel_booking: 1, 0"
+      ],
+      "requirement": "R1",
+      "text": "Look up booking X7K2QD (with get_booking) before applying the policy."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "70075addb0436622df7cc19e6882eb5d9e9c7d21f77b9241900618ebfcf7c598"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\n+    \"tool\": \"get_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  },\n+  {\n+    \"tool\": \"issue_travel_credit\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\",\n+      \"amount_cents\": 33700\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"pnr\": \"X7K2QD\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  },\n  {\n    \"tool\": \"issue_travel_credit\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\",\n      \"amount_cents\": 33700\n    }\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"pnr\": \"X7K2QD\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8b653160359143c7d23c96707fde0dad91286cbff3643a97c307343e5c3b5e1f",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "flight-cancel",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R3: state /credits = []",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The task does not fix the order of cancelling and issuing the credit, and both are done with the correct arguments.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /credits = []"
+      ],
+      "requirement": "R3",
+      "text": "Non-refundable fare: issue a travel credit equal to the fare minus a 7500-cent change fee (41200 - 7500 = 33700) with `issue_travel_credit`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8b653160359143c7d23c96707fde0dad91286cbff3643a97c307343e5c3b5e1f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n   {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n   {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "e67006c6feeaa37946d67895326dc79336585edd2cff7829d4dd207dadc5c17f",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks get_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Look up the booking before applying the policy: The get_booking lookup step is skipped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks get_booking",
+       "order get_booking < cancel_booking: None, 0"
+      ],
+      "requirement": "R1",
+      "text": "Look up booking X7K2QD (with get_booking) before applying the policy."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e67006c6feeaa37946d67895326dc79336585edd2cff7829d4dd207dadc5c17f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n   {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n   {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "330bb45f62385ed526c141ea5f771459d112eb73ed75ea02b7f71011a907c418",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: order get_booking < cancel_booking: 0, None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "cancel the booking with cancel_booking: The cancel_booking call was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "order get_booking < cancel_booking: 0, None"
+      ],
+      "requirement": "R1",
+      "text": "Look up booking X7K2QD (with get_booking) before applying the policy."
+     },
+     {
+      "failed": [
+       "trajectory lacks cancel_booking",
+       "state /bookings/X7K2QD/status = 'ticketed'"
+      ],
+      "requirement": "R2",
+      "text": "Cancel the booking with `cancel_booking`."
+     },
+     {
+      "failed": [
+       "state /credits = []"
+      ],
+      "requirement": "R3",
+      "text": "Non-refundable fare: issue a travel credit equal to the fare minus a 7500-cent change fee (41200 - 7500 = 33700) with `issue_travel_credit`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "330bb45f62385ed526c141ea5f771459d112eb73ed75ea02b7f71011a907c418"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n   {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 41200}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 41200}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "96b7e462d2931795851714ea4b038bd87e57a1af17356b641641acb113d47423",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory lacks issue_travel_credit",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Travel credit equals fare minus 7500-cent change fee: The credit amount changed to 41200, which is the full fare without the 7500 fee deducted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks issue_travel_credit",
+       "state /credits = [{'amount_cents': 41200, 'pnr': 'X7K2QD'}]"
+      ],
+      "requirement": "R3",
+      "text": "Non-refundable fare: issue a travel credit equal to the fare minus a 7500-cent change fee (41200 - 7500 = 33700) with `issue_travel_credit`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "96b7e462d2931795851714ea4b038bd87e57a1af17356b641641acb113d47423"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n   {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n+  {\"tool\": \"issue_refund\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}},\n   {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dc520e40ebfe528678838c08899166c4deaa60cdd7d6bcf7170ac4d865d5d33a",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: trajectory has issue_refund",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Non-refundable fare: do not refund anything: It adds an issue_refund call alongside the travel credit for a non-refundable fare.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory has issue_refund",
+       "state /refunds = [{'amount_cents': 33700, 'pnr': 'X7K2QD'}]"
+      ],
+      "requirement": "R4",
+      "text": "Non-refundable fare: do not refund anything."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "dc520e40ebfe528678838c08899166c4deaa60cdd7d6bcf7170ac4d865d5d33a"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n   {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n+  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QE\"}},\n   {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QE\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "16beefa0dd2e528d0e1c66944c79a2c2a338a6126d1e1a446133d55d1bba1876",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "flight-cancel",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Do not change any other booking: It cancels a second booking, X7K2QE.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n-]\n+[{\"args\":{\"pnr\":\"X7K2QD\"},\"tool\":\"get_booking\"},{\"args\":{\"pnr\":\"X7K2QD\"},\"tool\":\"cancel_booking\"},{\"args\":{\"amount_cents\":33700,\"pnr\":\"X7K2QD\"},\"tool\":\"issue_travel_credit\"}]\n",
+   "files": {
+    "trajectory.json": "[{\"args\":{\"pnr\":\"X7K2QD\"},\"tool\":\"get_booking\"},{\"args\":{\"pnr\":\"X7K2QD\"},\"tool\":\"cancel_booking\"},{\"args\":{\"amount_cents\":33700,\"pnr\":\"X7K2QD\"},\"tool\":\"issue_travel_credit\"}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "23b55b9f32e0ffdbf045007726912028e86b90b04b2652c9df21049aab7dc96b",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Same three calls with the same arguments; only JSON formatting and key order changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "23b55b9f32e0ffdbf045007726912028e86b90b04b2652c9df21049aab7dc96b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n-  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n+    {\n+        \"tool\": \"get_booking\",\n+        \"args\": {\n+            \"pnr\": \"X7K2QD\"\n+        }\n+    },\n+    {\n+        \"tool\": \"cancel_booking\",\n+        \"args\": {\n+            \"pnr\": \"X7K2QD\"\n+        }\n+    },\n+    {\n+        \"tool\": \"issue_travel_credit\",\n+        \"args\": {\n+            \"pnr\": \"X7K2QD\",\n+            \"amount_cents\": 33700\n+        }\n+    }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n    {\n        \"tool\": \"get_booking\",\n        \"args\": {\n            \"pnr\": \"X7K2QD\"\n        }\n    },\n    {\n        \"tool\": \"cancel_booking\",\n        \"args\": {\n            \"pnr\": \"X7K2QD\"\n        }\n    },\n    {\n        \"tool\": \"issue_travel_credit\",\n        \"args\": {\n            \"pnr\": \"X7K2QD\",\n            \"amount_cents\": 33700\n        }\n    }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "5aebc439fd96897ed31c19d2aeb5d84fa4d97ecfc2678aa56977b0ef9a28786b",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "flight-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only whitespace formatting of the JSON changed; the tool calls are identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "5aebc439fd96897ed31c19d2aeb5d84fa4d97ecfc2678aa56977b0ef9a28786b"
+   }
+  }
+ ]
+}

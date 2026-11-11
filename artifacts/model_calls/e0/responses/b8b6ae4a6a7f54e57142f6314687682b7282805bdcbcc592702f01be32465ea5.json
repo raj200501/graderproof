@@ -1,0 +1,221 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "b8b6ae4a6a7f54e57142f6314687682b7282805bdcbcc592702f01be32465ea5",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "6ad0242b535ed85d3e607d05a88e3ae6edd7b8cd143a602c45a6ec8fcdfcfb95": {
+      "requirements": [
+        {"id": "R1", "text": "Create an event titled `Q4 budget review`.", "checks": [
+          {"type": "trajectory_includes", "tool": "create_event", "args": {"title": "Q4 budget review"}},
+          {"type": "state_equals", "pointer": "/events/EV-302/title", "equals": "Q4 budget review"}
+        ]},
+        {"id": "R2", "text": "The event is on 2026-11-12 from 14:00 to 14:30.", "checks": [
+          {"type": "state_equals", "pointer": "/events/EV-302/date", "equals": "2026-11-12"},
+          {"type": "state_equals", "pointer": "/events/EV-302/start", "equals": "14:00"},
+          {"type": "state_equals", "pointer": "/events/EV-302/end", "equals": "14:30"}
+        ]},
+        {"id": "R3", "text": "Invite exactly Lena Ortiz, Sam Cho and Priya Nair (their listed emails) and nobody else.", "checks": [
+          {"type": "state_equals", "pointer": "/events/EV-302/attendees", "equals": ["lena.ortiz@example.com", "sam.cho@example.com", "priya.nair@example.com"]},
+          {"type": "trajectory_includes", "tool": "create_event", "args": {"attendees": ["lena.ortiz@example.com", "sam.cho@example.com", "priya.nair@example.com"]}}
+        ]},
+        {"id": "R4", "text": "Do not change any existing event.", "checks": [
+          {"type": "state_equals", "pointer": "/events/EV-301", "equals": {"attendees": ["lena.ortiz@example.com", "tom.becker@example.com"], "date": "2026-11-12", "end": "10:30", "start": "10:00", "title": "Weekly sync"}},
+          {"type": "trajectory_excludes", "tool": "add_attendees", "args": {"event_id": "EV-301"}}
+        ]}
+      ]
+    },
+    "6d616480807a0e4a20b813e7a936f76c4b4f54241a4044cc229a3a5971a46c3d": {
+      "requirements": [
+        {"id": "R1", "text": "Write a Python module `slug.py` with a function `slugify(title)`.", "checks": [
+          {"type": "file_exists", "path": "slug.py"},
+          {"type": "file_regex", "path": "slug.py", "pattern": "def\\s+slugify\\s*\\(\\s*title"}
+        ]},
+        {"id": "R2", "text": "Convert ASCII uppercase letters to lowercase; keep ASCII letters and digits.", "checks": [
+          {"type": "call", "probe": {"function": "slugify", "args": ["ABC xyz 123"], "kwargs": {}}, "equals": "abc-xyz-123"},
+          {"type": "call", "probe": {"function": "slugify", "args": ["Hello, World!"], "kwargs": {}}, "equals": "hello-world"},
+          {"type": "call", "probe": {"function": "slugify", "args": ["Route66"], "kwargs": {}}, "equals": "route66"}
+        ]},
+        {"id": "R3", "text": "Every maximal run of other characters (spaces, punctuation, non-ASCII letters such as é) becomes a single `-`.", "checks": [
+          {"type": "call", "probe": {"function": "slugify", "args": ["Caf\u00e9 au lait"], "kwargs": {}}, "equals": "caf-au-lait"},
+          {"type": "call", "probe": {"function": "slugify", "args": ["a   b---c"], "kwargs": {}}, "equals": "a-b-c"},
+          {"type": "call", "probe": {"function": "slugify", "args": ["na\u00efve\u00e9\u00e9test"], "kwargs": {}}, "equals": "na-ve-test"},
+          {"type": "call", "probe": {"function": "slugify", "args": ["one, two; three"], "kwargs": {}}, "equals": "one-two-three"}
+        ]},
+        {"id": "R4", "text": "Remove any `-` at the start or end of the result.", "checks": [
+          {"type": "call", "probe": {"function": "slugify", "args": ["  --Hello--  "], "kwargs": {}}, "equals": "hello"},
+          {"type": "call", "probe": {"function": "slugify", "args": ["!Hi!"], "kwargs": {}}, "equals": "hi"},
+          {"type": "call", "probe": {"function": "slugify", "args": ["\u00e9clair"], "kwargs": {}}, "equals": "clair"}
+        ]},
+        {"id": "R5", "text": "Return the slug as a string; it is \"\" when the title has no ASCII letters or digits.", "checks": [
+          {"type": "call", "probe": {"function": "slugify", "args": [""], "kwargs": {}}, "equals": ""},
+          {"type": "call", "probe": {"function": "slugify", "args": ["!!! ???"], "kwargs": {}}, "equals": ""},
+          {"type": "call", "probe": {"function": "slugify", "args": ["\u00e9\u00e8\u00e0"], "kwargs": {}}, "equals": ""}
+        ]}
+      ]
+    },
+    "6ef5bc2ac5a70fd0a55d668a597d0a09063f9a3a3d691777e90eebc5304869ca": {
+      "requirements": [
+        {"id": "R1", "text": "Cancel `SUB-3381` immediately with `cancel_subscription` (`when` set to `immediately`).", "checks": [
+          {"type": "trajectory_includes", "tool": "cancel_subscription", "args": {"sub_id": "SUB-3381", "when": "immediately"}},
+          {"type": "trajectory_excludes", "tool": "cancel_subscription", "args": {"when": "period_end"}},
+          {"type": "state_equals", "pointer": "/subscriptions/SUB-3381/status", "equals": "cancelled"}
+        ]},
+        {"id": "R2", "text": "Refund the unused part of the current period, 700 cents, with `issue_refund`.", "checks": [
+          {"type": "trajectory_includes", "tool": "issue_refund", "args": {"sub_id": "SUB-3381", "amount_cents": 700}},
+          {"type": "state_equals", "pointer": "/refunds", "equals": [{"amount_cents": 700, "sub_id": "SUB-3381"}]}
+        ]},
+        {"id": "R3", "text": "Steps are ordered: cancel first, then refund.", "checks": [
+          {"type": "trajectory_before", "first": {"tool": "cancel_subscription", "args": {"sub_id": "SUB-3381"}}, "then": {"tool": "issue_refund", "args": {"sub_id": "SUB-3381"}}}
+        ]},
+        {"id": "R4", "text": "Do not change any other subscription.", "checks": [
+          {"type": "state_equals", "pointer": "/subscriptions/SUB-3390", "equals": {"customer": "Kari Nordmann", "paid_through": "2026-11-30", "plan": "weekly-4", "price_cents": 2600, "status": "active"}},
+          {"type": "trajectory_excludes", "tool": "cancel_subscription", "args": {"sub_id": "SUB-3390"}}
+        ]},
+        {"id": "R5", "text": "Issue no other refunds.", "checks": [
+          {"type": "trajectory_excludes", "tool": "issue_refund", "args": {"sub_id": "SUB-3390"}},
+          {"type": "state_equals", "pointer": "/refunds", "equals": [{"amount_cents": 700, "sub_id": "SUB-3381"}]}
+        ]}
+      ]
+    },
+    "7100e86dcce06899e9d740a17d965e4768f5b3a2fd2c5ba1fdf90b62555ac4ac": {
+      "requirements": [
+        {"id": "R1", "text": "Create an executable bash script at `bin/countlines` (create the `bin/` directory).", "checks": [
+          {"type": "file_exists", "path": "bin/countlines"},
+          {"type": "exit_code", "code": 0}
+        ]},
+        {"id": "R2", "text": "The script must start with `#!/usr/bin/env bash` or `#!/bin/bash`.", "checks": [
+          {"type": "file_regex", "path": "bin/countlines", "pattern": "\\A#!(/usr/bin/env bash|/bin/bash)[ \\t]*\\r?\\n"}
+        ]},
+        {"id": "R3", "text": "Run as `bin/countlines DIR`, it takes DIR as its argument and counts lines of `.log` files directly inside DIR.", "checks": [
+          {"type": "file_regex", "path": "bin/countlines", "pattern": "\\.log"},
+          {"type": "file_regex", "path": "bin/countlines", "pattern": "\\$\\{?1"}
+        ]},
+        {"id": "R4", "text": "Count lines the way `wc -l` does (number of newline characters); print the total as a plain decimal integer on one line; if DIR contains no such files, print `0`.", "checks": [
+          {"type": "file_regex", "path": "bin/countlines", "pattern": "wc\\s+-l|\\bcount\\b|echo\\s+0"},
+          {"type": "file_regex", "path": "bin/countlines", "pattern": "\\b0\\b"}
+        ]},
+        {"id": "R5", "text": "The script may use only bash and coreutils.", "checks": [
+          {"type": "file_regex", "path": "bin/countlines", "pattern": "\\A(?![\\s\\S]*\\b(python3?|perl|ruby|node|awk|gawk)\\b)[\\s\\S]*\\Z"}
+        ]}
+      ]
+    },
+    "71bb88ee2efa4bdd81c7b62d12ade4f205a54a416df76a5ebb88857cb70cb42b": {
+      "requirements": [
+        {"id": "R1", "text": "Write `summary.json` containing a single JSON object with exactly the keys orders, units, revenue, top_product.", "checks": [
+          {"type": "file_exists", "path": "summary.json"},
+          {"type": "file_json", "path": "summary.json", "pointer": "", "equals": {"orders": 5, "units": 11, "revenue": 175.4, "top_product": "espresso beans 1kg"}, "lenient": true}
+        ]},
+        {"id": "R2", "text": "`orders`: the number of orders (an integer).", "checks": [
+          {"type": "file_json", "path": "summary.json", "pointer": "/orders", "equals": 5, "lenient": false}
+        ]},
+        {"id": "R3", "text": "`units`: the total quantity over all orders (an integer).", "checks": [
+          {"type": "file_json", "path": "summary.json", "pointer": "/units", "equals": 11, "lenient": false}
+        ]},
+        {"id": "R4", "text": "`revenue`: the sum of quantity x unit_price over all orders, rounded to 2 decimal places (a number).", "checks": [
+          {"type": "file_json", "path": "summary.json", "pointer": "/revenue", "equals": 175.4, "lenient": true}
+        ]},
+        {"id": "R5", "text": "`top_product`: the product with the largest total quantity (a string).", "checks": [
+          {"type": "file_json", "path": "summary.json", "pointer": "/top_product", "equals": "espresso beans 1kg", "lenient": false}
+        ]}
+      ]
+    },
+    "7619281e02fe68cd880e47569e9f4b0ce7488283ae063171bb2b034951aa1007": {
+      "requirements": [
+        {"id": "R1", "text": "Make exactly one transfer.", "checks": [
+          {"type": "state_equals", "pointer": "/transfers", "equals": [{"amount_cents": 25000, "from": "ACC-3301", "id": "TR-1", "memo": "holiday fund", "to": "ACC-3302"}]}
+        ]},
+        {"id": "R2", "text": "The transfer is 25000 cents from checking `ACC-3301` to savings `ACC-3302`.", "checks": [
+          {"type": "trajectory_includes", "tool": "transfer", "args": {"from_account": "ACC-3301", "to_account": "ACC-3302", "amount_cents": 25000}},
+          {"type": "state_equals", "pointer": "/accounts/ACC-3301/balance_cents", "equals": 159250},
+          {"type": "state_equals", "pointer": "/accounts/ACC-3302/balance_cents", "equals": 75000}
+        ]},
+        {"id": "R3", "text": "The transfer has memo `holiday fund`.", "checks": [
+          {"type": "trajectory_includes", "tool": "transfer", "args": {"memo": "holiday fund"}},
+          {"type": "state_equals", "pointer": "/transfers/0/memo", "equals": "holiday fund"}
+        ]},
+        {"id": "R4", "text": "Do not move money into or out of any other account.", "checks": [
+          {"type": "state_equals", "pointer": "/accounts/ACC-3303", "equals": {"balance_cents": 9900, "owner": "C-240", "type": "checking"}},
+          {"type": "trajectory_excludes", "tool": "transfer", "args": {"from_account": "ACC-3303"}},
+          {"type": "trajectory_excludes", "tool": "transfer", "args": {"to_account": "ACC-3303"}}
+        ]}
+      ]
+    },
+    "7a61e8561a68e4be0c081c93e3ff3dbd062304d6d8a80fb537c5a3713798250e": {
+      "requirements": [
+        {"id": "R1", "text": "Convert `users.csv` into `users.jsonl`: one JSON object per line, one line per CSV row.", "checks": [
+          {"type": "file_exists", "path": "users.jsonl"},
+          {"type": "file_lines", "path": "users.jsonl", "count": 4}
+        ]},
+        {"id": "R2", "text": "Rows are in the same order as the CSV.", "checks": [
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "(?s)\"id\":\\s*101\\b.*\"id\":\\s*102\\b.*\"id\":\\s*103\\b.*\"id\":\\s*104\\b"}
+        ]},
+        {"id": "R3", "text": "`id` is the id as an integer.", "checks": [
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"id\":\\s*101\\s*[,}]"},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"id\":\\s*104\\s*[,}]"}
+        ]},
+        {"id": "R4", "text": "`name` is the first name and last name separated by a single space.", "checks": [
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"name\":\\s*\"Amara Okafor\""},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"name\":\\s*\"Bruno Silva\""},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"name\":\\s*\"Chen Wei\""},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"name\":\\s*\"Dana Kowalski\""}
+        ]},
+        {"id": "R5", "text": "`email` is the email address converted to lowercase.", "checks": [
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"email\":\\s*\"amara\\.okafor@example\\.com\""},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"email\":\\s*\"bruno\\.silva@example\\.com\""},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"email\":\\s*\"chen\\.wei@example\\.com\""},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"email\":\\s*\"dana\\.k@example\\.com\""}
+        ]},
+        {"id": "R6", "text": "`signup` is the signup date as `YYYY-MM-DD` (converted from MM/DD/YYYY).", "checks": [
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"signup\":\\s*\"2025-03-03\""},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"signup\":\\s*\"2025-11-02\""},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"signup\":\\s*\"2026-01-30\""},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "\"signup\":\\s*\"2026-07-04\""}
+        ]},
+        {"id": "R7", "text": "Each object has exactly the keys id, name, email, signup, and each record is a self-consistent line.", "checks": [
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "(?m)^\\{(?=[^\\n]*\"id\":\\s*101\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Amara Okafor\")(?=[^\\n]*\"email\":\\s*\"amara\\.okafor@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-03-03\")[^\\n]*\\}\\s*$"},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "(?m)^\\{(?=[^\\n]*\"id\":\\s*102\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Bruno Silva\")(?=[^\\n]*\"email\":\\s*\"bruno\\.silva@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2025-11-02\")[^\\n]*\\}\\s*$"},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "(?m)^\\{(?=[^\\n]*\"id\":\\s*103\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Chen Wei\")(?=[^\\n]*\"email\":\\s*\"chen\\.wei@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-01-30\")[^\\n]*\\}\\s*$"},
+          {"type": "file_regex", "path": "users.jsonl", "pattern": "(?m)^\\{(?=[^\\n]*\"id\":\\s*104\\s*[,}])(?=[^\\n]*\"name\":\\s*\"Dana Kowalski\")(?=[^\\n]*\"email\":\\s*\"dana\\.k@example\\.com\")(?=[^\\n]*\"signup\":\\s*\"2026-07-04\")[^\\n]*\\}\\s*$"}
+        ]}
+      ]
+    },
+    "7df27bb6bc2bb56c81570bc6ac9ab72ad0fb4c58cfcd61d440e3d48ae44ecc52": {
+      "requirements": [
+        {"id": "R1", "text": "Create the directory `logs/archive/` and move every log file dated before 2026-10-01 into it.", "checks": [
+          {"type": "file_exists", "path": "logs/archive/app-2026-08-28.log"},
+          {"type": "file_exists", "path": "logs/archive/app-2026-09-03.log"},
+          {"type": "file_exists", "path": "logs/archive/app-2026-09-15.log"},
+          {"type": "file_exists", "path": "logs/archive/app-2026-09-30.log"}
+        ]},
+        {"id": "R2", "text": "Moved files no longer remain in `logs/` (they are moved, not copied).", "checks": [
+          {"type": "file_absent", "path": "logs/app-2026-08-28.log"},
+          {"type": "file_absent", "path": "logs/app-2026-09-03.log"},
+          {"type": "file_absent", "path": "logs/app-2026-09-15.log"},
+          {"type": "file_absent", "path": "logs/app-2026-09-30.log"}
+        ]},
+        {"id": "R3", "text": "Keep each moved file's name and contents unchanged.", "checks": [
+          {"type": "file_equals", "path": "logs/archive/app-2026-08-28.log", "text": "2026-08-28 02:00:01 INFO nightly export started\n2026-08-28 02:14:31 INFO nightly export finished rows=1311\n", "normalize": "none"},
+          {"type": "file_equals", "path": "logs/archive/app-2026-09-03.log", "text": "2026-09-03 02:00:02 INFO nightly export started\n2026-09-03 02:14:32 INFO nightly export finished rows=2622\n", "normalize": "none"},
+          {"type": "file_equals", "path": "logs/archive/app-2026-09-15.log", "text": "2026-09-15 02:00:03 INFO nightly export started\n2026-09-15 02:14:33 INFO nightly export finished rows=3933\n", "normalize": "none"},
+          {"type": "file_equals", "path": "logs/archive/app-2026-09-30.log", "text": "2026-09-30 02:00:04 INFO nightly export started\n2026-09-30 02:14:34 INFO nightly export finished rows=5244\n", "normalize": "none"}
+        ]},
+        {"id": "R4", "text": "Files dated 2026-10-01 or later stay in `logs/` untouched.", "checks": [
+          {"type": "file_equals", "path": "logs/app-2026-10-01.log", "text": "2026-10-01 02:00:05 INFO nightly export started\n2026-10-01 02:14:35 INFO nightly export finished rows=6555\n", "normalize": "none"},
+          {"type": "file_equals", "path": "logs/app-2026-10-12.log", "text": "2026-10-12 02:00:06 INFO nightly export started\n2026-10-12 02:14:36 INFO nightly export finished rows=7866\n", "normalize": "none"},
+          {"type": "file_equals", "path": "logs/app-2026-10-20.log", "text": "2026-10-20 02:00:07 INFO nightly export started\n2026-10-20 02:14:37 INFO nightly export finished rows=9177\n", "normalize": "none"},
+          {"type": "file_equals", "path": "logs/app-2026-11-02.log", "text": "2026-11-02 02:00:08 INFO nightly export started\n2026-11-02 02:14:38 INFO nightly export finished rows=10488\n", "normalize": "none"},
+          {"type": "file_absent", "path": "logs/archive/app-2026-10-01.log"},
+          {"type": "file_absent", "path": "logs/archive/app-2026-10-12.log"},
+          {"type": "file_absent", "path": "logs/archive/app-2026-10-20.log"},
+          {"type": "file_absent", "path": "logs/archive/app-2026-11-02.log"}
+        ]},
+        {"id": "R5", "text": "Do not delete, rename, or create any other file.", "checks": [
+          {"type": "same_as_reference", "target": "state", "normalize": "none"},
+          {"type": "file_absent", "path": "logs/archive/app-2026-08-28.log.bak"}
+        ]}
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

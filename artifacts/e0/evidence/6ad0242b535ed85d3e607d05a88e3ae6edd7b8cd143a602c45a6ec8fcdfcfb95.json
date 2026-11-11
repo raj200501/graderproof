@@ -1,0 +1,835 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "directory": {
+    "Finance team": "finance-team@example.com",
+    "Lena Ortiz": "lena.ortiz@example.com",
+    "Priya Nair": "priya.nair@example.com",
+    "Sam Cho": "sam.cho@example.com",
+    "Tom Becker": "tom.becker@example.com"
+   },
+   "events": {
+    "EV-301": {
+     "attendees": [
+      "lena.ortiz@example.com",
+      "tom.becker@example.com"
+     ],
+     "date": "2026-11-12",
+     "end": "10:30",
+     "start": "10:00",
+     "title": "Weekly sync"
+    },
+    "EV-302": {
+     "attendees": [
+      "lena.ortiz@example.com",
+      "sam.cho@example.com",
+      "priya.nair@example.com"
+     ],
+     "date": "2026-11-12",
+     "end": "14:30",
+     "start": "14:00",
+     "title": "Q4 budget review"
+    }
+   },
+   "next_event": 303
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "date": "2026-11-12"
+    },
+    "result": {
+     "events": {
+      "EV-301": {
+       "attendees": [
+        "lena.ortiz@example.com",
+        "tom.becker@example.com"
+       ],
+       "date": "2026-11-12",
+       "end": "10:30",
+       "start": "10:00",
+       "title": "Weekly sync"
+      }
+     },
+     "ok": true
+    },
+    "tool": "list_events"
+   },
+   {
+    "args": {
+     "attendees": [
+      "lena.ortiz@example.com",
+      "sam.cho@example.com",
+      "priya.nair@example.com"
+     ],
+     "date": "2026-11-12",
+     "end": "14:30",
+     "start": "14:00",
+     "title": "Q4 budget review"
+    },
+    "result": {
+     "event_id": "EV-302",
+     "ok": true
+    },
+    "tool": "create_event"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "title": "Q4 budget review"
+     },
+     "tool": "create_event",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "Q4 budget review",
+     "pointer": "/events/EV-302/title",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Create an event titled `Q4 budget review`."
+  },
+  {
+   "checks": [
+    {
+     "equals": "2026-11-12",
+     "pointer": "/events/EV-302/date",
+     "type": "state_equals"
+    },
+    {
+     "equals": "14:00",
+     "pointer": "/events/EV-302/start",
+     "type": "state_equals"
+    },
+    {
+     "equals": "14:30",
+     "pointer": "/events/EV-302/end",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "The event is on 2026-11-12 from 14:00 to 14:30."
+  },
+  {
+   "checks": [
+    {
+     "equals": [
+      "lena.ortiz@example.com",
+      "sam.cho@example.com",
+      "priya.nair@example.com"
+     ],
+     "pointer": "/events/EV-302/attendees",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "attendees": [
+       "lena.ortiz@example.com",
+       "sam.cho@example.com",
+       "priya.nair@example.com"
+      ]
+     },
+     "tool": "create_event",
+     "type": "trajectory_includes"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Invite exactly Lena Ortiz, Sam Cho and Priya Nair (their listed emails) and nobody else."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "attendees": [
+       "lena.ortiz@example.com",
+       "tom.becker@example.com"
+      ],
+      "date": "2026-11-12",
+      "end": "10:30",
+      "start": "10:00",
+      "title": "Weekly sync"
+     },
+     "pointer": "/events/EV-301",
+     "type": "state_equals"
+    },
+    {
+     "args": {
+      "event_id": "EV-301"
+     },
+     "tool": "add_attendees",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Do not change any existing event."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:meeting-invites",
+ "task_hash": "6ad0242b535ed85d3e607d05a88e3ae6edd7b8cd143a602c45a6ec8fcdfcfb95",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,28 @@\n [\n-  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\n+    \"tool\": \"list_events\",\n+    \"args\": {\n+      \"date\": \"2026-11-12\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_events\",\n+    \"args\": {\n+      \"date\": \"2026-11-12\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_event\",\n+    \"args\": {\n+      \"title\": \"Q4 budget review\",\n+      \"date\": \"2026-11-12\",\n+      \"start\": \"14:00\",\n+      \"end\": \"14:30\",\n+      \"attendees\": [\n+        \"lena.ortiz@example.com\",\n+        \"sam.cho@example.com\",\n+        \"priya.nair@example.com\"\n+      ]\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_events\",\n    \"args\": {\n      \"date\": \"2026-11-12\"\n    }\n  },\n  {\n    \"tool\": \"list_events\",\n    \"args\": {\n      \"date\": \"2026-11-12\"\n    }\n  },\n  {\n    \"tool\": \"create_event\",\n    \"args\": {\n      \"title\": \"Q4 budget review\",\n      \"date\": \"2026-11-12\",\n      \"start\": \"14:00\",\n      \"end\": \"14:30\",\n      \"attendees\": [\n        \"lena.ortiz@example.com\",\n        \"sam.cho@example.com\",\n        \"priya.nair@example.com\"\n      ]\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "04a56c8e7af370b7cb4f1a096b90cbd5ff40b1848f429195d60fddf1bbc1c128",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "meeting-invites",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A duplicate read-only list_events call is added and the same event is created.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "04a56c8e7af370b7cb4f1a096b90cbd5ff40b1848f429195d60fddf1bbc1c128"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,22 @@\n [\n-  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\n+    \"tool\": \"list_events\",\n+    \"args\": {\n+      \"date\": \"2026-11-12-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_event\",\n+    \"args\": {\n+      \"title\": \"Q4 budget review\",\n+      \"date\": \"2026-11-12\",\n+      \"start\": \"14:00\",\n+      \"end\": \"14:30\",\n+      \"attendees\": [\n+        \"lena.ortiz@example.com\",\n+        \"sam.cho@example.com\",\n+        \"priya.nair@example.com\"\n+      ]\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_events\",\n    \"args\": {\n      \"date\": \"2026-11-12-x\"\n    }\n  },\n  {\n    \"tool\": \"create_event\",\n    \"args\": {\n      \"title\": \"Q4 budget review\",\n      \"date\": \"2026-11-12\",\n      \"start\": \"14:00\",\n      \"end\": \"14:30\",\n      \"attendees\": [\n        \"lena.ortiz@example.com\",\n        \"sam.cho@example.com\",\n        \"priya.nair@example.com\"\n      ]\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "e76fc00e9df707897b800eabefca33a6613928e1e69496b7f53e9c51991d4d1b",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "meeting-invites",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The create_event call is correct and list_events is optional, but its date argument is malformed and the tool might reject it.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": null
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,22 @@\n [\n-  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\n+    \"tool\": \"list_events\",\n+    \"args\": {\n+      \"date\": \"2026-11-12\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_event\",\n+    \"args\": {\n+      \"title\": \"Q4 budget review\",\n+      \"date\": \"2026-11-12-x\",\n+      \"start\": \"14:00\",\n+      \"end\": \"14:30\",\n+      \"attendees\": [\n+        \"lena.ortiz@example.com\",\n+        \"sam.cho@example.com\",\n+        \"priya.nair@example.com\"\n+      ]\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_events\",\n    \"args\": {\n      \"date\": \"2026-11-12\"\n    }\n  },\n  {\n    \"tool\": \"create_event\",\n    \"args\": {\n      \"title\": \"Q4 budget review\",\n      \"date\": \"2026-11-12-x\",\n      \"start\": \"14:00\",\n      \"end\": \"14:30\",\n      \"attendees\": [\n        \"lena.ortiz@example.com\",\n        \"sam.cho@example.com\",\n        \"priya.nair@example.com\"\n      ]\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d870c4f92d18c5147664c873e0749a2571dccf10cf64d76c4d8644138ad83eb9",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "meeting-invites",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /events/EV-302/date = '2026-11-12-x'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Create the event on 2026-11-12: create_event is called with date 2026-11-12-x instead of 2026-11-12.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /events/EV-302/date = '2026-11-12-x'"
+      ],
+      "requirement": "R2",
+      "text": "The event is on 2026-11-12 from 14:00 to 14:30."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d870c4f92d18c5147664c873e0749a2571dccf10cf64d76c4d8644138ad83eb9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,22 @@\n [\n-  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\n+    \"tool\": \"list_events\",\n+    \"args\": {\n+      \"date\": \"2026-11-12\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_event\",\n+    \"args\": {\n+      \"title\": \"Q4 budget review\",\n+      \"date\": \"2026-11-12\",\n+      \"start\": \"14:00\",\n+      \"end\": \"14:30-x\",\n+      \"attendees\": [\n+        \"lena.ortiz@example.com\",\n+        \"sam.cho@example.com\",\n+        \"priya.nair@example.com\"\n+      ]\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_events\",\n    \"args\": {\n      \"date\": \"2026-11-12\"\n    }\n  },\n  {\n    \"tool\": \"create_event\",\n    \"args\": {\n      \"title\": \"Q4 budget review\",\n      \"date\": \"2026-11-12\",\n      \"start\": \"14:00\",\n      \"end\": \"14:30-x\",\n      \"attendees\": [\n        \"lena.ortiz@example.com\",\n        \"sam.cho@example.com\",\n        \"priya.nair@example.com\"\n      ]\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a2f884be2a172509d1fd190a8f2a19ea7221c95d6d0819552deef5b72ab3a067",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "meeting-invites",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /events/EV-302/end = '14:30-x'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Event ends at 14:30: The end time is 14:30-x, which is not 14:30.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /events/EV-302/end = '14:30-x'"
+      ],
+      "requirement": "R2",
+      "text": "The event is on 2026-11-12 from 14:00 to 14:30."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a2f884be2a172509d1fd190a8f2a19ea7221c95d6d0819552deef5b72ab3a067"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,22 @@\n [\n-  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\n+    \"tool\": \"list_events\",\n+    \"args\": {\n+      \"date\": \"2026-11-12\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_event\",\n+    \"args\": {\n+      \"title\": \"Q4 budget review\",\n+      \"date\": \"2026-11-12\",\n+      \"start\": \"14:00-x\",\n+      \"end\": \"14:30\",\n+      \"attendees\": [\n+        \"lena.ortiz@example.com\",\n+        \"sam.cho@example.com\",\n+        \"priya.nair@example.com\"\n+      ]\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_events\",\n    \"args\": {\n      \"date\": \"2026-11-12\"\n    }\n  },\n  {\n    \"tool\": \"create_event\",\n    \"args\": {\n      \"title\": \"Q4 budget review\",\n      \"date\": \"2026-11-12\",\n      \"start\": \"14:00-x\",\n      \"end\": \"14:30\",\n      \"attendees\": [\n        \"lena.ortiz@example.com\",\n        \"sam.cho@example.com\",\n        \"priya.nair@example.com\"\n      ]\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0a73935a7be8a0abb6eba02b2ec9e41af0603b61ef9b7c01d572d6cd4bb6498c",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "meeting-invites",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /events/EV-302/start = '14:00-x'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Event starts at 14:00: The start value is changed to 14:00-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /events/EV-302/start = '14:00-x'"
+      ],
+      "requirement": "R2",
+      "text": "The event is on 2026-11-12 from 14:00 to 14:30."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0a73935a7be8a0abb6eba02b2ec9e41af0603b61ef9b7c01d572d6cd4bb6498c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,22 @@\n [\n-  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\n+    \"tool\": \"list_events\",\n+    \"args\": {\n+      \"date\": \"2026-11-12\"\n+    }\n+  },\n+  {\n+    \"tool\": \"create_event\",\n+    \"args\": {\n+      \"title\": \"Q4 budget review-x\",\n+      \"date\": \"2026-11-12\",\n+      \"start\": \"14:00\",\n+      \"end\": \"14:30\",\n+      \"attendees\": [\n+        \"lena.ortiz@example.com\",\n+        \"sam.cho@example.com\",\n+        \"priya.nair@example.com\"\n+      ]\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_events\",\n    \"args\": {\n      \"date\": \"2026-11-12\"\n    }\n  },\n  {\n    \"tool\": \"create_event\",\n    \"args\": {\n      \"title\": \"Q4 budget review-x\",\n      \"date\": \"2026-11-12\",\n      \"start\": \"14:00\",\n      \"end\": \"14:30\",\n      \"attendees\": [\n        \"lena.ortiz@example.com\",\n        \"sam.cho@example.com\",\n        \"priya.nair@example.com\"\n      ]\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7955ab0aa8372f6ae78fd6578219c995dd5874656a07665db86a9594b339cb99",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "meeting-invites",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_event",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Event titled 'Q4 budget review': The title is changed to 'Q4 budget review-x'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_event",
+       "state /events/EV-302/title = 'Q4 budget review-x'"
+      ],
+      "requirement": "R1",
+      "text": "Create an event titled `Q4 budget review`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7955ab0aa8372f6ae78fd6578219c995dd5874656a07665db86a9594b339cb99"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,16 @@\n [\n-  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\n+    \"tool\": \"create_event\",\n+    \"args\": {\n+      \"title\": \"Q4 budget review\",\n+      \"date\": \"2026-11-12\",\n+      \"start\": \"14:00\",\n+      \"end\": \"14:30\",\n+      \"attendees\": [\n+        \"lena.ortiz@example.com\",\n+        \"sam.cho@example.com\",\n+        \"priya.nair@example.com\"\n+      ]\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"create_event\",\n    \"args\": {\n      \"title\": \"Q4 budget review\",\n      \"date\": \"2026-11-12\",\n      \"start\": \"14:00\",\n      \"end\": \"14:30\",\n      \"attendees\": [\n        \"lena.ortiz@example.com\",\n        \"sam.cho@example.com\",\n        \"priya.nair@example.com\"\n      ]\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "6266b90f6149d3f6a2e6cf3a2a2fb0ee505c82f585d57dc8dcf5636e3e6eb2df",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "meeting-invites",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The event is still created with the correct title, date, times and exact attendees; the removed list_events call is read-only and not required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,8 @@\n [\n-  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\n+    \"tool\": \"list_events\",\n+    \"args\": {\n+      \"date\": \"2026-11-12\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_events\",\n    \"args\": {\n      \"date\": \"2026-11-12\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "38f2b4ba7e1fdeb7568bfa254a9c31906e5ffecde73e0c3fbc309f9a40deb5e5",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "meeting-invites",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_event",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Create the Q4 budget review event: The create_event call was removed, so no event is created.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_event",
+       "state /events/EV-302/title missing"
+      ],
+      "requirement": "R1",
+      "text": "Create an event titled `Q4 budget review`."
+     },
+     {
+      "failed": [
+       "state /events/EV-302/date missing",
+       "state /events/EV-302/start missing",
+       "state /events/EV-302/end missing"
+      ],
+      "requirement": "R2",
+      "text": "The event is on 2026-11-12 from 14:00 to 14:30."
+     },
+     {
+      "failed": [
+       "state /events/EV-302/attendees missing",
+       "trajectory lacks create_event"
+      ],
+      "requirement": "R3",
+      "text": "Invite exactly Lena Ortiz, Sam Cho and Priya Nair (their listed emails) and nobody else."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "38f2b4ba7e1fdeb7568bfa254a9c31906e5ffecde73e0c3fbc309f9a40deb5e5"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,22 @@\n [\n-  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\n+    \"tool\": \"create_event\",\n+    \"args\": {\n+      \"title\": \"Q4 budget review\",\n+      \"date\": \"2026-11-12\",\n+      \"start\": \"14:00\",\n+      \"end\": \"14:30\",\n+      \"attendees\": [\n+        \"lena.ortiz@example.com\",\n+        \"sam.cho@example.com\",\n+        \"priya.nair@example.com\"\n+      ]\n+    }\n+  },\n+  {\n+    \"tool\": \"list_events\",\n+    \"args\": {\n+      \"date\": \"2026-11-12\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"create_event\",\n    \"args\": {\n      \"title\": \"Q4 budget review\",\n      \"date\": \"2026-11-12\",\n      \"start\": \"14:00\",\n      \"end\": \"14:30\",\n      \"attendees\": [\n        \"lena.ortiz@example.com\",\n        \"sam.cho@example.com\",\n        \"priya.nair@example.com\"\n      ]\n    }\n  },\n  {\n    \"tool\": \"list_events\",\n    \"args\": {\n      \"date\": \"2026-11-12\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3f7e478cc02f8b6d97b08afa6410ddac275ba820657f82172dca6703ee6449b6",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "meeting-invites",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list_events call moved after create_event; the event created is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 Budget Review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 Budget Review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "73f3be5d825446df38e5e39ebcc52d475c16e6ed210389e3bcbf722451455b9b",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "meeting-invites",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks create_event",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Event titled exactly Q4 budget review: The title was changed to Q4 Budget Review.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks create_event",
+       "state /events/EV-302/title = 'Q4 Budget Review'"
+      ],
+      "requirement": "R1",
+      "text": "Create an event titled `Q4 budget review`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "73f3be5d825446df38e5e39ebcc52d475c16e6ed210389e3bcbf722451455b9b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:45\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:45\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b1aaa3fec56e6f8486f7ba0b26464d4752c9418947eba3188b84ce6c5a2412cc",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "meeting-invites",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /events/EV-302/end = '14:45'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Event runs from 14:00 to 14:30: The end time was changed to 14:45.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /events/EV-302/end = '14:45'"
+      ],
+      "requirement": "R2",
+      "text": "The event is on 2026-11-12 from 14:00 to 14:30."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b1aaa3fec56e6f8486f7ba0b26464d4752c9418947eba3188b84ce6c5a2412cc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\"]}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\"]}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f6169c23893bbdc719e582c68e05a19e4b65258c30e3388172053bc030a09e43",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "meeting-invites",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: state /events/EV-302/attendees = ['lena.ortiz@example.com', 'sam.cho@example.com']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Invite exactly the three named people: Priya Nair is omitted from the attendees.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /events/EV-302/attendees = ['lena.ortiz@example.com', 'sam.cho@example.com']",
+       "trajectory lacks create_event"
+      ],
+      "requirement": "R3",
+      "text": "Invite exactly Lena Ortiz, Sam Cho and Priya Nair (their listed emails) and nobody else."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f6169c23893bbdc719e582c68e05a19e4b65258c30e3388172053bc030a09e43"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n   {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}},\n+  {\"tool\": \"add_attendees\", \"args\": {\"event_id\": \"EV-1\", \"emails\": [\"priya.nair@example.com\"]}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}},\n  {\"tool\": \"add_attendees\", \"args\": {\"event_id\": \"EV-1\", \"emails\": [\"priya.nair@example.com\"]}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "09f42b7343ca0ec9f4069aa61fe3ea2b7f3fb74b240f9acc62caf3bbff8a958e",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "meeting-invites",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Invite exactly these three people and nobody else: It adds an extra add_attendees write call on a guessed event id, which risks duplicating the invite or changing another event.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1 @@\n-[\n-  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n-]\n+[{\"args\": {\"date\": \"2026-11-12\"}, \"tool\": \"list_events\"}, {\"args\": {\"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"], \"date\": \"2026-11-12\", \"end\": \"14:30\", \"start\": \"14:00\", \"title\": \"Q4 budget review\"}, \"tool\": \"create_event\"}]\n",
+   "files": {
+    "trajectory.json": "[{\"args\": {\"date\": \"2026-11-12\"}, \"tool\": \"list_events\"}, {\"args\": {\"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"], \"date\": \"2026-11-12\", \"end\": \"14:30\", \"start\": \"14:00\", \"title\": \"Q4 budget review\"}, \"tool\": \"create_event\"}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "10585bacdf3003db30d4b6a58f80876d6971fe1663ca5a054a71bed2f9913b30",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "meeting-invites",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Same calls in the same order with the same arguments; only JSON formatting and key order differ.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "10585bacdf3003db30d4b6a58f80876d6971fe1663ca5a054a71bed2f9913b30"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n-  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n+  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"priya.nair@example.com\", \"lena.ortiz@example.com\", \"sam.cho@example.com\"]}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"priya.nair@example.com\", \"lena.ortiz@example.com\", \"sam.cho@example.com\"]}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3be18b242d3a5ea8c110f2327127d1061caf1f1135e62b0c9c7eb0e257d41b1b",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "meeting-invites",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R3: state /events/EV-302/attendees = ['priya.nair@example.com', 'lena.ortiz@example.com', 'sam.cho@example.com']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The same three attendees are invited, only listed in a different order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,3 @@\n [\n-  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n   {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "91f78654082577806b08df4849ab91c04068eabde7b6d44f096fadd013bde058",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "meeting-invites",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list_events lookup was dropped; the required event is created identically.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "91f78654082577806b08df4849ab91c04068eabde7b6d44f096fadd013bde058"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,7 @@\n [\n+  {\"tool\": \"find_person\", \"args\": {\"name\": \"Lena Ortiz\"}},\n+  {\"tool\": \"find_person\", \"args\": {\"name\": \"Sam Cho\"}},\n+  {\"tool\": \"find_person\", \"args\": {\"name\": \"Priya Nair\"}},\n   {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n   {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_person\", \"args\": {\"name\": \"Lena Ortiz\"}},\n  {\"tool\": \"find_person\", \"args\": {\"name\": \"Sam Cho\"}},\n  {\"tool\": \"find_person\", \"args\": {\"name\": \"Priya Nair\"}},\n  {\"tool\": \"list_events\", \"args\": {\"date\": \"2026-11-12\"}},\n  {\"tool\": \"create_event\", \"args\": {\"title\": \"Q4 budget review\", \"date\": \"2026-11-12\", \"start\": \"14:00\", \"end\": \"14:30\", \"attendees\": [\"lena.ortiz@example.com\", \"sam.cho@example.com\", \"priya.nair@example.com\"]}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a9d8d1a886d5800764474b8ffe480355c4b191d291caa178831bc11ce57b4a3f",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "meeting-invites",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Extra find_person lookups are read-only and the event is created as required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "a9d8d1a886d5800764474b8ffe480355c4b191d291caa178831bc11ce57b4a3f"
+   }
+  }
+ ]
+}

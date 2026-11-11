@@ -1,0 +1,343 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "1d78f95d0aef00935b41938169b8b7dbbb886d4bb8b68b3059982187dd21942d",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "48291b01dda76eea6f86c94512002e448ec747fdd5920ee32a3c446e00381e93": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write chat_redacted.txt in the working directory.",
+          "checks": [{"type": "file_exists", "path": "chat_redacted.txt"}]
+        },
+        {
+          "id": "R2",
+          "text": "chat_redacted.txt is identical to chat.txt except that every email address (including those with + and _ in the local part, multi-label domains, and addresses inside parentheses or followed by punctuation) is replaced by [email]; a sentence-ending dot is not part of the address.",
+          "checks": [
+            {"type": "file_equals", "path": "chat_redacted.txt", "text": "[09:14] Agent: Thanks for contacting Northwind support. Can I have the email on the account?\n[09:15] Customer: Sure, it's [email], or try [email] if that fails.\n[09:15] Agent: Thanks! I found the account under [email].\n[09:16] Customer: Great. Please don't write to old-address@example any more, that inbox is closed.\n[09:17] Agent: Noted. Replies come from [email] (or [email] for invoices).\n[09:18] Customer: Perfect, thanks. My colleague ([email]) may also call.\n", "normalize": "none"},
+            {"type": "same_as_reference", "target": "file:chat_redacted.txt", "normalize": "none"},
+            {"type": "file_regex", "path": "chat_redacted.txt", "pattern": "found the account under \\[email\\]\\.\\n"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Text such as old-address@example, whose domain has only one label, is not an email address and stays as it is.",
+          "checks": [{"type": "file_contains", "path": "chat_redacted.txt", "text": "old-address@example any more"}]
+        },
+        {
+          "id": "R4",
+          "text": "Leave chat.txt unchanged.",
+          "checks": [
+            {"type": "file_equals", "path": "chat.txt", "text": "[09:14] Agent: Thanks for contacting Northwind support. Can I have the email on the account?\n[09:15] Customer: Sure, it's jamie.lee+orders@mailbox.example, or try jamie_lee@work-mail.example.org if that fails.\n[09:15] Agent: Thanks! I found the account under jamie.lee+orders@mailbox.example.\n[09:16] Customer: Great. Please don't write to old-address@example any more, that inbox is closed.\n[09:17] Agent: Noted. Replies come from support@northwind.example (or billing@northwind.example for invoices).\n[09:18] Customer: Perfect, thanks. My colleague (r.okafor@partner.example.co.uk) may also call.\n", "normalize": "none"}
+          ]
+        }
+      ]
+    },
+    "4a3b957bdc5240204aa71bcb07c93341dc47dacce349e739182411b1bdcf0b9f": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Delete app.log.3 (its old content, the 2026-11-01 entries, must no longer exist anywhere in logs/).",
+          "checks": [
+            {"type": "file_equals", "path": "logs/app.log.3", "text": "2026-11-02 00:00:01 INFO rotate check\n", "normalize": "none"}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Rename app.log.2 to app.log.3, app.log.1 to app.log.2, and app.log to app.log.1, with contents unchanged by the renames.",
+          "checks": [
+            {"type": "file_equals", "path": "logs/app.log.3", "text": "2026-11-02 00:00:01 INFO rotate check\n", "normalize": "none"},
+            {"type": "file_equals", "path": "logs/app.log.2", "text": "2026-11-03 00:00:01 INFO rotate check\n2026-11-03 18:44:02 INFO deploy 4.12.0\n", "normalize": "none"},
+            {"type": "file_equals", "path": "logs/app.log.1", "text": "2026-11-04 00:00:01 INFO rotate check\n2026-11-04 06:12:40 WARN slow query 2140 ms\n", "normalize": "none"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Create a new, empty app.log.",
+          "checks": [
+            {"type": "file_exists", "path": "logs/app.log"},
+            {"type": "file_equals", "path": "logs/app.log", "text": "", "normalize": "none"}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Other files in logs/ must be left as they are.",
+          "checks": [
+            {"type": "file_equals", "path": "logs/audit.log", "text": "2026-11-04 06:00:00 AUDIT admin login from 10.0.4.7\n", "normalize": "none"}
+          ]
+        },
+        {
+          "id": "R5",
+          "text": "Only three old copies are kept; no app.log.4 exists.",
+          "checks": [{"type": "file_absent", "path": "logs/app.log.4"}]
+        }
+      ]
+    },
+    "59b064eebb4490fcc2d0857ec54a3ef2e22fa29decad603c6cbbf8b564cb3962": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Apply the label invoices to every message whose sender is exactly billing@northwind.example (M-02, M-04, M-07).",
+          "checks": [
+            {"type": "state_equals", "pointer": "/messages/M-02/labels", "equals": ["invoices"]},
+            {"type": "state_equals", "pointer": "/messages/M-04/labels", "equals": ["vendors", "invoices"]},
+            {"type": "state_equals", "pointer": "/messages/M-07/labels", "equals": ["invoices"]}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Archive each of those messages.",
+          "checks": [
+            {"type": "state_equals", "pointer": "/messages/M-02/archived", "equals": true},
+            {"type": "state_equals", "pointer": "/messages/M-04/archived", "equals": true},
+            {"type": "state_equals", "pointer": "/messages/M-07/archived", "equals": true}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Do not label, archive, or otherwise change any other message, including the look-alike sender billing@northwind-example.com and accounts@northwind.example.",
+          "checks": [
+            {"type": "state_equals", "pointer": "/messages/M-01", "equals": {"archived": false, "from": "ops@contoso.example", "labels": [], "subject": "Server maintenance window"}},
+            {"type": "state_equals", "pointer": "/messages/M-03", "equals": {"archived": false, "from": "lena.ortiz@example.com", "labels": ["budget"], "subject": "Re: Q4 budget"}},
+            {"type": "state_equals", "pointer": "/messages/M-05", "equals": {"archived": false, "from": "billing@northwind-example.com", "labels": [], "subject": "URGENT: update payment details"}},
+            {"type": "state_equals", "pointer": "/messages/M-06", "equals": {"archived": true, "from": "noreply@fabrikam.example", "labels": [], "subject": "Your statement is ready"}},
+            {"type": "state_equals", "pointer": "/messages/M-08", "equals": {"archived": false, "from": "accounts@northwind.example", "labels": [], "subject": "New account manager"}},
+            {"type": "trajectory_excludes", "tool": "add_label", "args": {"message_id": "M-05"}},
+            {"type": "trajectory_excludes", "tool": "archive", "args": {"message_id": "M-05"}},
+            {"type": "trajectory_excludes", "tool": "add_label", "args": {"message_id": "M-08"}},
+            {"type": "trajectory_excludes", "tool": "archive", "args": {"message_id": "M-08"}}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Do not remove existing labels (M-04 keeps vendors, M-03 keeps budget).",
+          "checks": [
+            {"type": "trajectory_excludes", "tool": "remove_label", "args": {}},
+            {"type": "state_equals", "pointer": "/messages/M-04/labels/0", "equals": "vendors"},
+            {"type": "state_equals", "pointer": "/messages/M-03/labels", "equals": ["budget"]}
+          ]
+        },
+        {
+          "id": "R5",
+          "text": "The agent actually uses the tools to label and archive the target messages.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "add_label", "args": {"message_id": "M-02", "label": "invoices"}},
+            {"type": "trajectory_includes", "tool": "archive", "args": {"message_id": "M-02"}},
+            {"type": "trajectory_includes", "tool": "add_label", "args": {"message_id": "M-04", "label": "invoices"}},
+            {"type": "trajectory_includes", "tool": "archive", "args": {"message_id": "M-04"}},
+            {"type": "trajectory_includes", "tool": "add_label", "args": {"message_id": "M-07", "label": "invoices"}},
+            {"type": "trajectory_includes", "tool": "archive", "args": {"message_id": "M-07"}}
+          ]
+        }
+      ]
+    },
+    "5ef4358f009839c1d392a236272c458c465faf5e9709f1482f68a80145cf87bf": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write products.json in the working directory.",
+          "checks": [{"type": "file_exists", "path": "products.json"}]
+        },
+        {
+          "id": "R2",
+          "text": "products.json contains a JSON array with one object per data row of products.csv, in the same order (5 rows, SKUs A-100, A-101, B-200, B-201, C-300).",
+          "checks": [
+            {"type": "file_json", "path": "products.json", "pointer": "/0/sku", "equals": "A-100", "lenient": false},
+            {"type": "file_json", "path": "products.json", "pointer": "/1/sku", "equals": "A-101", "lenient": false},
+            {"type": "file_json", "path": "products.json", "pointer": "/2/sku", "equals": "B-200", "lenient": false},
+            {"type": "file_json", "path": "products.json", "pointer": "/3/sku", "equals": "B-201", "lenient": false},
+            {"type": "file_json", "path": "products.json", "pointer": "/4/sku", "equals": "C-300", "lenient": false}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Each object has exactly the four keys sku, name, price, in_stock, with correct values; name is the product name unchanged, with the quoted CSV value \"Braided Cable, 2 m\" as a single field. Indentation, spacing, and key order are free.",
+          "checks": [
+            {"type": "file_json", "path": "products.json", "pointer": "", "equals": [
+              {"sku": "A-100", "name": "Desk Lamp", "price": 24.99, "in_stock": true},
+              {"sku": "A-101", "name": "Monitor Stand", "price": 39.5, "in_stock": false},
+              {"sku": "B-200", "name": "USB-C Hub", "price": 18.0, "in_stock": true},
+              {"sku": "B-201", "name": "Braided Cable, 2 m", "price": 7.25, "in_stock": true},
+              {"sku": "C-300", "name": "Ergonomic Chair", "price": 189.0, "in_stock": false}
+            ], "lenient": true},
+            {"type": "file_json", "path": "products.json", "pointer": "/3/name", "equals": "Braided Cable, 2 m", "lenient": false}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "price is a JSON number (for example 39.5 for 39.50), not a string.",
+          "checks": [
+            {"type": "file_json", "path": "products.json", "pointer": "/1/price", "equals": 39.5, "lenient": true},
+            {"type": "file_json", "path": "products.json", "pointer": "/0/price", "equals": 24.99, "lenient": true},
+            {"type": "file_json", "path": "products.json", "pointer": "/4/price", "equals": 189, "lenient": true}
+          ]
+        },
+        {
+          "id": "R5",
+          "text": "in_stock is JSON true for yes and false for no.",
+          "checks": [
+            {"type": "file_json", "path": "products.json", "pointer": "/0/in_stock", "equals": true, "lenient": false},
+            {"type": "file_json", "path": "products.json", "pointer": "/1/in_stock", "equals": false, "lenient": false},
+            {"type": "file_json", "path": "products.json", "pointer": "/4/in_stock", "equals": false, "lenient": false}
+          ]
+        }
+      ]
+    },
+    "603b70601045f508922412a469a233a11947cb6f35b334098ef30454b5226189": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module sizes.py defining format_size(n).",
+          "checks": [{"type": "file_exists", "path": "sizes.py"}]
+        },
+        {
+          "id": "R2",
+          "text": "If n is less than 1024, return the number followed by ' B'.",
+          "checks": [
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [0], "kwargs": {}}, "equals": "0 B"},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1023], "kwargs": {}}, "equals": "1023 B"},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1], "kwargs": {}}, "equals": "1 B"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Otherwise choose the largest unit among KiB, MiB, GiB, TiB not larger than n and write the result with exactly one decimal place, a space, and the unit.",
+          "checks": [
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1536], "kwargs": {}}, "equals": "1.5 KiB"},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1024], "kwargs": {}}, "equals": "1.0 KiB"},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1048576], "kwargs": {}}, "equals": "1.0 MiB"},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1073741824], "kwargs": {}}, "equals": "1.0 GiB"},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1099511627776], "kwargs": {}}, "equals": "1.0 TiB"},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [123456789], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [5368709120], "kwargs": {}}, "matches_reference": true}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Sizes of 1024 TiB or more are still written in TiB.",
+          "checks": [
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1125899906842624], "kwargs": {}}, "equals": "1024.0 TiB"},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [2251799813685248], "kwargs": {}}, "equals": "2048.0 TiB"}
+          ]
+        },
+        {
+          "id": "R5",
+          "text": "Round to one decimal place with halves rounded up (1280 bytes is '1.3 KiB').",
+          "checks": [
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1280], "kwargs": {}}, "equals": "1.3 KiB"},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1075], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1126], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1792], "kwargs": {}}, "equals": "1.8 KiB"}
+          ]
+        },
+        {
+          "id": "R6",
+          "text": "The unit is chosen before rounding, so 1048575 bytes is '1024.0 KiB'.",
+          "checks": [
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1048575], "kwargs": {}}, "equals": "1024.0 KiB"},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1073741823], "kwargs": {}}, "equals": "1024.0 MiB"},
+            {"type": "call", "probe": {"function": "sizes.format_size", "args": [1099511627775], "kwargs": {}}, "matches_reference": true}
+          ]
+        }
+      ]
+    },
+    "659c9cc9425f157a5355d9525048c047193f6d27cc3ac5015fbc953c2a6648a7": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write CHANGELOG.md.",
+          "checks": [{"type": "file_exists", "path": "CHANGELOG.md"}]
+        },
+        {
+          "id": "R2",
+          "text": "A '## Features' line followed by one '- <description>' line for every feat commit (including feat(scope) and feat!), in the order of commits.txt; the description is the text after the first ': ' with no type, scope, or '!'. Then a '## Fixes' line followed by one '- <description>' line for every fix commit, in order. Blank lines between or around these lines are optional; the file must contain no other text, so commits of other types (docs, chore, refactor, fixture) are ignored.",
+          "checks": [
+            {"type": "file_regex", "path": "CHANGELOG.md", "pattern": "\\A\\n*## Features\\n+- add fuzzy matching for hotel names\\n+- support waitlists for sold-out classes\\n+- drop the legacy v1 endpoints\\n+## Fixes\\n+- handle an empty guest list in the booking form\\n+- round refunds to the cent\\n*\\Z"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Commits of other types are not listed (a type such as 'fixture' that merely begins with 'fix' is not a fix commit).",
+          "checks": [
+            {"type": "file_regex", "path": "CHANGELOG.md", "pattern": "\\A(?![\\s\\S]*(sample data|API examples|HTTP client|booking service module))[\\s\\S]*\\Z"}
+          ]
+        }
+      ]
+    },
+    "665e7a352c7e64732dbf3c55aff71f9bb6a6269b62a4cd1be13866b8e89cfc0b": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Set the display_name of user U-7781 to exactly 'Maya R. Okafor'.",
+          "checks": [
+            {"type": "state_equals", "pointer": "/users/U-7781/display_name", "equals": "Maya R. Okafor"},
+            {"type": "trajectory_includes", "tool": "update_profile", "args": {"user_id": "U-7781", "field": "display_name", "value": "Maya R. Okafor"}}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Set the pronouns of user U-7781 to exactly 'she/her'.",
+          "checks": [
+            {"type": "state_equals", "pointer": "/users/U-7781/pronouns", "equals": "she/her"},
+            {"type": "trajectory_includes", "tool": "update_profile", "args": {"user_id": "U-7781", "field": "pronouns", "value": "she/her"}}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Do not change any other field of U-7781 (department Analytics, title Data Analyst, phone +1 312 555 0148).",
+          "checks": [
+            {"type": "state_equals", "pointer": "/users/U-7781/department", "equals": "Analytics"},
+            {"type": "state_equals", "pointer": "/users/U-7781/title", "equals": "Data Analyst"},
+            {"type": "state_equals", "pointer": "/users/U-7781/phone", "equals": "+1 312 555 0148"},
+            {"type": "trajectory_excludes", "tool": "update_profile", "args": {"user_id": "U-7781", "field": "title"}},
+            {"type": "trajectory_excludes", "tool": "update_profile", "args": {"user_id": "U-7781", "field": "phone"}}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Do not change any other user (U-7790 is left as it is).",
+          "checks": [
+            {"type": "state_equals", "pointer": "/users/U-7790", "equals": {"department": "Design", "display_name": "Luis Ferreira", "phone": "+1 312 555 0191", "pronouns": "he/him", "title": "Product Designer"}},
+            {"type": "trajectory_excludes", "tool": "update_profile", "args": {"user_id": "U-7790"}}
+          ]
+        }
+      ]
+    },
+    "686a601b7d247fa7edce7b8afada3993b5588e4f5e9fca55b9efdb7054e62399": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module naming.py with a function to_snake(name).",
+          "checks": [{"type": "file_exists", "path": "naming.py"}]
+        },
+        {
+          "id": "R2",
+          "text": "Insert '_' before an uppercase letter whose previous character is a lowercase letter or a digit, then lowercase everything.",
+          "checks": [
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["userId"], "kwargs": {}}, "equals": "user_id"},
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["user2Name"], "kwargs": {}}, "equals": "user2_name"},
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["UserName"], "kwargs": {}}, "equals": "user_name"},
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["name"], "kwargs": {}}, "equals": "name"},
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["a1B"], "kwargs": {}}, "equals": "a1_b"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Also insert '_' before an uppercase letter that is preceded by an uppercase letter and followed by a lowercase letter (separating an acronym from the next word); no underscore is added inside an acronym otherwise.",
+          "checks": [
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["HTTPServer"], "kwargs": {}}, "equals": "http_server"},
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["getHTTPResponseCode"], "kwargs": {}}, "equals": "get_http_response_code"},
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["parseXML"], "kwargs": {}}, "equals": "parse_xml"},
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["ID"], "kwargs": {}}, "equals": "id"},
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["HTML5Parser"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["XMLHttpRequest"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["AB"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "naming.to_snake", "args": ["aBC"], "kwargs": {}}, "matches_reference": true}
+          ]
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

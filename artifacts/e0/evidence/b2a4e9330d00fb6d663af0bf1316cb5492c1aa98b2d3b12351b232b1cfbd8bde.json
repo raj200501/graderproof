@@ -1,0 +1,852 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "classes": {
+    "CL-SAT-YOGA": {
+     "capacity": 4,
+     "day": "Saturday",
+     "roster": [
+      "G-111"
+     ],
+     "time": "10:00",
+     "title": "Slow yoga",
+     "waitlist": []
+    },
+    "CL-THU-YOGA": {
+     "capacity": 2,
+     "day": "Thursday",
+     "roster": [
+      "G-120",
+      "G-311"
+     ],
+     "time": "18:00",
+     "title": "Yoga flow",
+     "waitlist": [
+      "G-150",
+      "G-208"
+     ]
+    },
+    "CL-TUE-YOGA": {
+     "capacity": 3,
+     "day": "Tuesday",
+     "roster": [
+      "G-111",
+      "G-305"
+     ],
+     "time": "18:00",
+     "title": "Yoga flow",
+     "waitlist": []
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {},
+    "result": {
+     "classes": {
+      "CL-SAT-YOGA": {
+       "capacity": 4,
+       "day": "Saturday",
+       "roster": [
+        "G-111"
+       ],
+       "time": "10:00",
+       "title": "Slow yoga",
+       "waitlist": []
+      },
+      "CL-THU-YOGA": {
+       "capacity": 2,
+       "day": "Thursday",
+       "roster": [
+        "G-120",
+        "G-311"
+       ],
+       "time": "18:00",
+       "title": "Yoga flow",
+       "waitlist": [
+        "G-150"
+       ]
+      },
+      "CL-TUE-YOGA": {
+       "capacity": 3,
+       "day": "Tuesday",
+       "roster": [
+        "G-111",
+        "G-208",
+        "G-305"
+       ],
+       "time": "18:00",
+       "title": "Yoga flow",
+       "waitlist": []
+      }
+     },
+     "ok": true
+    },
+    "tool": "list_classes"
+   },
+   {
+    "args": {
+     "class_id": "CL-TUE-YOGA",
+     "member_id": "G-208"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "cancel_booking"
+   },
+   {
+    "args": {
+     "class_id": "CL-THU-YOGA",
+     "member_id": "G-208"
+    },
+    "result": {
+     "ok": true,
+     "position": 2
+    },
+    "tool": "join_waitlist"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "class_id": "CL-TUE-YOGA",
+      "member_id": "G-208"
+     },
+     "tool": "cancel_booking",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": [
+      "G-111",
+      "G-305"
+     ],
+     "pointer": "/classes/CL-TUE-YOGA/roster",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Cancel the booking of member G-208 for class CL-TUE-YOGA."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "class_id": "CL-THU-YOGA",
+      "member_id": "G-208"
+     },
+     "tool": "join_waitlist",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": [
+      "G-150",
+      "G-208"
+     ],
+     "pointer": "/classes/CL-THU-YOGA/waitlist",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Add member G-208 to the end of the waitlist of the full class CL-THU-YOGA."
+  },
+  {
+   "checks": [
+    {
+     "equals": [
+      "G-120",
+      "G-311"
+     ],
+     "pointer": "/classes/CL-THU-YOGA/roster",
+     "type": "state_equals"
+    },
+    {
+     "equals": [],
+     "pointer": "/classes/CL-TUE-YOGA/waitlist",
+     "type": "state_equals"
+    },
+    {
+     "equals": {
+      "capacity": 4,
+      "day": "Saturday",
+      "roster": [
+       "G-111"
+      ],
+      "time": "10:00",
+      "title": "Slow yoga",
+      "waitlist": []
+     },
+     "pointer": "/classes/CL-SAT-YOGA",
+     "type": "state_equals"
+    },
+    {
+     "equals": 2,
+     "pointer": "/classes/CL-THU-YOGA/capacity",
+     "type": "state_equals"
+    },
+    {
+     "equals": 3,
+     "pointer": "/classes/CL-TUE-YOGA/capacity",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Do not change anything else: the Thursday roster stays unchanged, the Tuesday waitlist stays empty, and the Saturday class is untouched."
+  },
+  {
+   "checks": [
+    {
+     "args": {},
+     "tool": "book_class",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Do not book any class (the full Thursday class must be joined via the waitlist, not booked)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:class-waitlist",
+ "task_hash": "b2a4e9330d00fb6d663af0bf1316cb5492c1aa98b2d3b12351b232b1cfbd8bde",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,24 @@\n [\n-  {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n+  {\n+    \"tool\": \"list_classes\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"list_classes\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-TUE-YOGA\"\n+    }\n+  },\n+  {\n+    \"tool\": \"join_waitlist\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-THU-YOGA\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_classes\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"list_classes\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-TUE-YOGA\"\n    }\n  },\n  {\n    \"tool\": \"join_waitlist\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-THU-YOGA\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a23ab93305d2be99736ad3fe4fd3cc41ce92251d77da179373b4e51b88de1331",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The extra list_classes call is read-only and the cancel and waitlist actions are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "a23ab93305d2be99736ad3fe4fd3cc41ce92251d77da179373b4e51b88de1331"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,20 @@\n [\n-  {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n+  {\n+    \"tool\": \"list_classes\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-TUE-YOGA-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"join_waitlist\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-THU-YOGA\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_classes\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-TUE-YOGA-x\"\n    }\n  },\n  {\n    \"tool\": \"join_waitlist\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-THU-YOGA\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fa778250cbbdaaad1b5858998653e9d202d822c594193a5f9bec2e0fdcc1fddc",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks cancel_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Cancel booking for CL-TUE-YOGA: cancel_booking is called with class_id 'CL-TUE-YOGA-x', not the required class.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks cancel_booking",
+       "state /classes/CL-TUE-YOGA/roster = ['G-111', 'G-208', 'G-305']"
+      ],
+      "requirement": "R1",
+      "text": "Cancel the booking of member G-208 for class CL-TUE-YOGA."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fa778250cbbdaaad1b5858998653e9d202d822c594193a5f9bec2e0fdcc1fddc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,20 @@\n [\n-  {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n+  {\n+    \"tool\": \"list_classes\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"member_id\": \"G-208-x\",\n+      \"class_id\": \"CL-TUE-YOGA\"\n+    }\n+  },\n+  {\n+    \"tool\": \"join_waitlist\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-THU-YOGA\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_classes\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"member_id\": \"G-208-x\",\n      \"class_id\": \"CL-TUE-YOGA\"\n    }\n  },\n  {\n    \"tool\": \"join_waitlist\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-THU-YOGA\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "45e33a2449f8a610947e4741423307707fff59089d61c67261a06470d8035d6c",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks cancel_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Cancel G-208's booking for CL-TUE-YOGA: cancel_booking uses member id G-208-x, so the real member's booking is not cancelled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks cancel_booking",
+       "state /classes/CL-TUE-YOGA/roster = ['G-111', 'G-208', 'G-305']"
+      ],
+      "requirement": "R1",
+      "text": "Cancel the booking of member G-208 for class CL-TUE-YOGA."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "45e33a2449f8a610947e4741423307707fff59089d61c67261a06470d8035d6c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,20 @@\n [\n-  {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n+  {\n+    \"tool\": \"list_classes\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-TUE-YOGA\"\n+    }\n+  },\n+  {\n+    \"tool\": \"join_waitlist\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-THU-YOGA-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_classes\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-TUE-YOGA\"\n    }\n  },\n  {\n    \"tool\": \"join_waitlist\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-THU-YOGA-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e639e23b8f2baef225e90204fc2f91373f4995158909534282e02064032d2e6b",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks join_waitlist",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Join the waitlist of CL-THU-YOGA: join_waitlist uses the nonexistent class id CL-THU-YOGA-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks join_waitlist",
+       "state /classes/CL-THU-YOGA/waitlist = ['G-150']"
+      ],
+      "requirement": "R2",
+      "text": "Add member G-208 to the end of the waitlist of the full class CL-THU-YOGA."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e639e23b8f2baef225e90204fc2f91373f4995158909534282e02064032d2e6b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,20 @@\n [\n-  {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n+  {\n+    \"tool\": \"list_classes\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-TUE-YOGA\"\n+    }\n+  },\n+  {\n+    \"tool\": \"join_waitlist\",\n+    \"args\": {\n+      \"member_id\": \"G-208-x\",\n+      \"class_id\": \"CL-THU-YOGA\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_classes\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-TUE-YOGA\"\n    }\n  },\n  {\n    \"tool\": \"join_waitlist\",\n    \"args\": {\n      \"member_id\": \"G-208-x\",\n      \"class_id\": \"CL-THU-YOGA\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b3fed76e074dc23357f24af6e4d672547e947f79b54bb174dd697b2a431d3786",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks join_waitlist",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "add member G-208 to the waitlist of CL-THU-YOGA: join_waitlist is called with member id G-208-x, not G-208.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks join_waitlist",
+       "state /classes/CL-THU-YOGA/waitlist = ['G-150', 'G-208-x']"
+      ],
+      "requirement": "R2",
+      "text": "Add member G-208 to the end of the waitlist of the full class CL-THU-YOGA."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b3fed76e074dc23357f24af6e4d672547e947f79b54bb174dd697b2a431d3786"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,16 @@\n [\n-  {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-TUE-YOGA\"\n+    }\n+  },\n+  {\n+    \"tool\": \"join_waitlist\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-THU-YOGA\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-TUE-YOGA\"\n    }\n  },\n  {\n    \"tool\": \"join_waitlist\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-THU-YOGA\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "82d2892a0b48139d336f5c86c014728be3af802de60a491b24e8ea9588bc2d54",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "class-waitlist",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list_classes call was dropped; the required cancel and waitlist actions remain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,13 @@\n [\n-  {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n+  {\n+    \"tool\": \"list_classes\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"join_waitlist\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-THU-YOGA\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_classes\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"join_waitlist\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-THU-YOGA\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d19a4ea4f80c4f328ccaf45b00abaedb2d641ef3fee1064c71edfd73fc9b1d58",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks cancel_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Cancel the booking for CL-TUE-YOGA: The cancel_booking call was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks cancel_booking",
+       "state /classes/CL-TUE-YOGA/roster = ['G-111', 'G-208', 'G-305']"
+      ],
+      "requirement": "R1",
+      "text": "Cancel the booking of member G-208 for class CL-TUE-YOGA."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d19a4ea4f80c4f328ccaf45b00abaedb2d641ef3fee1064c71edfd73fc9b1d58"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,13 @@\n [\n-  {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n+  {\n+    \"tool\": \"list_classes\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-TUE-YOGA\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_classes\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-TUE-YOGA\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "316afaf1cf4720239eb982b86bdb90398bcc940cece4ef7159363840523785e7",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks join_waitlist",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Add the member to the waitlist of CL-THU-YOGA: The join_waitlist call was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks join_waitlist",
+       "state /classes/CL-THU-YOGA/waitlist = ['G-150']"
+      ],
+      "requirement": "R2",
+      "text": "Add member G-208 to the end of the waitlist of the full class CL-THU-YOGA."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "316afaf1cf4720239eb982b86bdb90398bcc940cece4ef7159363840523785e7"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,20 @@\n [\n-  {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n+  {\n+    \"tool\": \"list_classes\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"join_waitlist\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-THU-YOGA\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-TUE-YOGA\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_classes\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"join_waitlist\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-THU-YOGA\"\n    }\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-TUE-YOGA\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "91d4411fa99eae7846465a107b655a13c3ed96b68bfafc1392d73425ea89cd85",
+   "kind": "violating",
+   "operator": "traj-reorder-dependent",
+   "task_id": "class-waitlist",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Both required actions still happen and the task does not require a particular order between the cancel and the waitlist join.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,20 @@\n [\n-  {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-TUE-YOGA\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_classes\",\n+    \"args\": {}\n+  },\n+  {\n+    \"tool\": \"join_waitlist\",\n+    \"args\": {\n+      \"member_id\": \"G-208\",\n+      \"class_id\": \"CL-THU-YOGA\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-TUE-YOGA\"\n    }\n  },\n  {\n    \"tool\": \"list_classes\",\n    \"args\": {}\n  },\n  {\n    \"tool\": \"join_waitlist\",\n    \"args\": {\n      \"member_id\": \"G-208\",\n      \"class_id\": \"CL-THU-YOGA\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3ca0bd26059c0e1da4597ccac95007f5d3ae8fffa3f0ef7c739fc0e75ce1d6ee",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list_classes call moved, and the cancel and waitlist calls are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "3ca0bd26059c0e1da4597ccac95007f5d3ae8fffa3f0ef7c739fc0e75ce1d6ee"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n   {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n   {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "83e71607316f68ec8a04068116576399db6816522710a54318f15335b6c5fa74",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks cancel_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "cancel the Tuesday booking CL-TUE-YOGA: The cancel_booking step was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks cancel_booking",
+       "state /classes/CL-TUE-YOGA/roster = ['G-111', 'G-208', 'G-305']"
+      ],
+      "requirement": "R1",
+      "text": "Cancel the booking of member G-208 for class CL-TUE-YOGA."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "83e71607316f68ec8a04068116576399db6816522710a54318f15335b6c5fa74"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n   {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n+  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e3cd9078db13041e683984e9cf17189b552e14bb0a0347985b615a59d52237d9",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory lacks join_waitlist",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Add the member to the waitlist of CL-THU-YOGA: The join_waitlist call was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks join_waitlist",
+       "state /classes/CL-THU-YOGA/waitlist = ['G-150']"
+      ],
+      "requirement": "R2",
+      "text": "Add member G-208 to the end of the waitlist of the full class CL-THU-YOGA."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e3cd9078db13041e683984e9cf17189b552e14bb0a0347985b615a59d52237d9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"list_classes\", \"args\": {}},\n   {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n+  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n   {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "855ffafd596f4e19d84a189587c81f3902a5a62c93b2ce1dd82b453a30d799dd",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: state /classes/CL-TUE-YOGA/waitlist = ['G-208']",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "do not change anything else: It adds a waitlist join on CL-TUE-YOGA, an extra state change.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /classes/CL-TUE-YOGA/waitlist = ['G-208']"
+      ],
+      "requirement": "R3",
+      "text": "Do not change anything else: the Thursday roster stays unchanged, the Tuesday waitlist stays empty, and the Saturday class is untouched."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "855ffafd596f4e19d84a189587c81f3902a5a62c93b2ce1dd82b453a30d799dd"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n-  {\"tool\": \"list_classes\", \"args\": {}},\n   {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n   {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "2d171f0e40cebad8e2e2ff968f9333478708fb99fce2ff4070a9e0fe757e9d03",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list_classes call was dropped; the cancel and waitlist steps remain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "2d171f0e40cebad8e2e2ff968f9333478708fb99fce2ff4070a9e0fe757e9d03"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n+  {\"tool\": \"join_waitlist\", \"args\": {\"class_id\": \"CL-THU-YOGA\", \"member_id\": \"G-208\"}},\n+  {\"tool\": \"cancel_booking\", \"args\": {\"class_id\": \"CL-TUE-YOGA\", \"member_id\": \"G-208\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_classes\", \"args\": {}},\n  {\"tool\": \"join_waitlist\", \"args\": {\"class_id\": \"CL-THU-YOGA\", \"member_id\": \"G-208\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"class_id\": \"CL-TUE-YOGA\", \"member_id\": \"G-208\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "cffd574f19793a63a9e14e4e66b6ebdf0764cfdc9992c180be1588fcce4ebe09",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same cancel and waitlist calls are made; the task does not require a particular order and key order within args is irrelevant.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "cffd574f19793a63a9e14e4e66b6ebdf0764cfdc9992c180be1588fcce4ebe09"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"list_classes\", \"args\": {}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-TUE-YOGA\"}},\n-  {\"tool\": \"join_waitlist\", \"args\": {\"member_id\": \"G-208\", \"class_id\": \"CL-THU-YOGA\"}}\n-]\n+[{\"tool\":\"list_classes\",\"args\":{}},{\"tool\":\"cancel_booking\",\"args\":{\"member_id\":\"G-208\",\"class_id\":\"CL-TUE-YOGA\"}},{\"tool\":\"join_waitlist\",\"args\":{\"member_id\":\"G-208\",\"class_id\":\"CL-THU-YOGA\"}},{\"tool\":\"list_classes\",\"args\":{}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"list_classes\",\"args\":{}},{\"tool\":\"cancel_booking\",\"args\":{\"member_id\":\"G-208\",\"class_id\":\"CL-TUE-YOGA\"}},{\"tool\":\"join_waitlist\",\"args\":{\"member_id\":\"G-208\",\"class_id\":\"CL-THU-YOGA\"}},{\"tool\":\"list_classes\",\"args\":{}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "badfa8176d149e91af95f264364042ac9ff4755e2d3f02908eaf1f52c03fc4fc",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "class-waitlist",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It adds only a read-only list_classes call at the end and the required cancel and waitlist calls are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "badfa8176d149e91af95f264364042ac9ff4755e2d3f02908eaf1f52c03fc4fc"
+   }
+  }
+ ]
+}

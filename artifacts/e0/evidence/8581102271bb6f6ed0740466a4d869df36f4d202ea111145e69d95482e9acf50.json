@@ -1,0 +1,1809 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+  },
+  "probes": {
+   "25282a44b8ac5c82": {
+    "ok": true,
+    "value": {
+     "\u20ac": "\ud83d\ude42"
+    }
+   },
+   "28fb853f1c0be9da": {
+    "ok": true,
+    "value": {
+     "a": "b=c"
+    }
+   },
+   "5e28d417cc32d72d": {
+    "ok": true,
+    "value": {
+     "a": "1"
+    }
+   },
+   "67b262266887e522": {
+    "ok": true,
+    "value": {
+     "a": "1",
+     "b": "2"
+    }
+   },
+   "6f896dbb4784c2d2": {
+    "ok": true,
+    "value": {}
+   },
+   "a1a7ac7e6bd28575": {
+    "ok": true,
+    "value": {}
+   },
+   "a7a740a86bd58d4f": {
+    "ok": true,
+    "value": {
+     "q": "red shoes",
+     "size": "42"
+    }
+   },
+   "b2e07ba9c14da405": {
+    "ok": true,
+    "value": {
+     "k= x": "v&w+"
+    }
+   },
+   "b4aff9f301b746d2": {
+    "ok": true,
+    "value": {
+     "a": ""
+    }
+   },
+   "b90ab93ec804af9c": {
+    "ok": true,
+    "value": {
+     "a": "9",
+     "b": "2"
+    }
+   },
+   "c35e4728cfcf2a93": {
+    "ok": true,
+    "value": {
+     "a b": "2"
+    }
+   },
+   "d1a3f2e0ef698969": {
+    "ok": true,
+    "value": {
+     "debug": "",
+     "x": "1"
+    }
+   },
+   "d8a7379dd2279430": {
+    "ok": true,
+    "value": {
+     "?a": "1"
+    }
+   },
+   "da07429498273ad3": {
+    "ok": true,
+    "value": {
+     "debug": ""
+    }
+   },
+   "e867be20c808577e": {
+    "ok": true,
+    "value": {
+     "a": "3"
+    }
+   },
+   "f32957a8051798d9": {
+    "ok": true,
+    "value": {
+     "m": "caf\u00e9 au lait",
+     "n": "\u00e9"
+    }
+   },
+   "f59547dbaed12ad4": {
+    "ok": true,
+    "value": {
+     "q": "red shoes",
+     "size": "42",
+     "sort": "price+asc"
+    }
+   },
+   "fc361abef0defc06": {
+    "ok": true,
+    "value": {}
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "urlquery.py",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Provide a module `urlquery.py`."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "q": "red shoes",
+      "size": "42",
+      "sort": "price+asc"
+     },
+     "probe": {
+      "args": [
+       "?q=red+shoes&size=42&sort=price%2Basc"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "q": "red shoes",
+      "size": "42"
+     },
+     "probe": {
+      "args": [
+       "q=red+shoes&size=42"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "a": "1"
+     },
+     "probe": {
+      "args": [
+       "?a=1"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "??a=1"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "m": "caf\u00e9 au lait",
+      "n": "\u00e9"
+     },
+     "probe": {
+      "args": [
+       "n=%C3%A9&m=caf%C3%A9+au+lait"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "k= x": "v&w+"
+     },
+     "probe": {
+      "args": [
+       "k%3D+x=v%26w%2B"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "a": "b=c"
+     },
+     "probe": {
+      "args": [
+       "a=b=c"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "debug": ""
+     },
+     "probe": {
+      "args": [
+       "debug"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "debug": "",
+      "x": "1"
+     },
+     "probe": {
+      "args": [
+       "debug&x=1"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "a": ""
+     },
+     "probe": {
+      "args": [
+       "a="
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+  },
+  {
+   "checks": [
+    {
+     "equals": {},
+     "probe": {
+      "args": [
+       ""
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {},
+     "probe": {
+      "args": [
+       "?"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "a": "1",
+      "b": "2"
+     },
+     "probe": {
+      "args": [
+       "a=1&&b=2&"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {},
+     "probe": {
+      "args": [
+       "&&"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "a": "3"
+     },
+     "probe": {
+      "args": [
+       "a=1&a=2&a=3"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": {
+      "a": "9",
+      "b": "2"
+     },
+     "probe": {
+      "args": [
+       "a=1&b=2&a=9"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "If a key appears more than once, the last value wins."
+  },
+  {
+   "checks": [
+    {
+     "equals": {
+      "a b": "2"
+     },
+     "probe": {
+      "args": [
+       "a+b=1&a%20b=2"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "%E2%82%AC=%F0%9F%99%82"
+      ],
+      "function": "parse_query",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+  },
+  {
+   "checks": [
+    {
+     "path": "urlquery.py",
+     "pattern": "\\A(?:(?!\\b(?:import|from)\\s+(?:requests|yarl|furl|w3lib|werkzeug|django|flask|numpy|pandas)\\b)[\\s\\S])*\\Z",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R7",
+   "source": "model:requirements/v1",
+   "text": "Use only the Python standard library."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:query-params",
+ "task_hash": "8581102271bb6f6ed0740466a4d869df36f4d202ea111145e69d95482e9acf50",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -8,6 +8,6 @@\n     for pair in qs.split(\"&\"):\n         if not pair:\n             continue\n-        key, _, value = pair.partition(\"=\")\n+        key, _, value = pair.partition('')\n         result[unquote_plus(key)] = unquote_plus(value)\n     return result\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition('')\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "905cd158a730e1216623178b82c60fb518c52fcfdbeb1887ee36bcc77fba2022",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Split each pair at the first =: partition with an empty separator raises ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query differs from reference",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R3",
+      "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+     },
+     {
+      "failed": [
+       "parse_query returned None"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R5",
+      "text": "If a key appears more than once, the last value wins."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "905cd158a730e1216623178b82c60fb518c52fcfdbeb1887ee36bcc77fba2022"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -2,7 +2,7 @@\n \n \n def parse_query(qs):\n-    if qs.startswith(\"?\"):\n+    if qs.startswith(''):\n         qs = qs[1:]\n     result = {}\n     for pair in qs.split(\"&\"):\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(''):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "429af1e5b992c962560e0417704d31713ec8e9902869f616a30d246aa39d47b9",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned {'': 'red shoes', 'size': '42'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Only a single leading ? is ignored: startswith('') is always true, so the first character is always dropped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'': 'red shoes', 'size': '42'}",
+       "parse_query returned {'': '\u00e9', 'm': 'caf\u00e9 au lait'}",
+       "parse_query returned {'= x': 'v&w+'}"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned {'': 'b=c'}",
+       "parse_query returned {'ebug': ''}",
+       "parse_query returned {'ebug': '', 'x': '1'}",
+       "parse_query returned {'': ''}"
+      ],
+      "requirement": "R3",
+      "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+     },
+     {
+      "failed": [
+       "parse_query returned {'': '1', 'b': '2'}"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     },
+     {
+      "failed": [
+       "parse_query returned {'': '1', 'a': '3'}",
+       "parse_query returned {'': '1', 'a': '9', 'b': '2'}"
+      ],
+      "requirement": "R5",
+      "text": "If a key appears more than once, the last value wins."
+     },
+     {
+      "failed": [
+       "parse_query returned {' b': '1', 'a b': '2'}",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "429af1e5b992c962560e0417704d31713ec8e9902869f616a30d246aa39d47b9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -3,7 +3,7 @@\n \n def parse_query(qs):\n     if qs.startswith(\"?\"):\n-        qs = qs[1:]\n+        qs = qs[0:]\n     result = {}\n     for pair in qs.split(\"&\"):\n         if not pair:\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[0:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "573a7c25553cf6419ac84febadaa2263b83f7f6bce56b8fe5c78c292077b2981",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned {'?q': 'red shoes', 'size': '42', 'sort': 'price+asc'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "A single leading ? is ignored: The ? is no longer stripped, so the first key keeps a leading ?.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'?q': 'red shoes', 'size': '42', 'sort': 'price+asc'}",
+       "parse_query returned {'?a': '1'}",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned {'?': ''}"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "573a7c25553cf6419ac84febadaa2263b83f7f6bce56b8fe5c78c292077b2981"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -3,7 +3,7 @@\n \n def parse_query(qs):\n     if qs.startswith(\"?\"):\n-        qs = qs[1:]\n+        qs = qs[2:]\n     result = {}\n     for pair in qs.split(\"&\"):\n         if not pair:\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[2:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "897c2cf8f5a16f01c40613fa0268231b3743e59ea1726a7edfe02b3aef0763e9",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned {'': 'red shoes', 'size': '42', 'sort': 'price+asc'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Ignore a single leading ?: qs[2:] drops the first character after the ? as well.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'': 'red shoes', 'size': '42', 'sort': 'price+asc'}",
+       "parse_query returned {'': '1'}",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "897c2cf8f5a16f01c40613fa0268231b3743e59ea1726a7edfe02b3aef0763e9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -5,7 +5,7 @@\n     if qs.startswith(\"?\"):\n         qs = qs[1:]\n     result = {}\n-    for pair in qs.split(\"&\"):\n+    for pair in qs.split(''):\n         if not pair:\n             continue\n         key, _, value = pair.partition(\"=\")\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(''):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "eb6e7d7388aab0418f6d5385737cd7ec0c8d8165edc23889985189d1ea4bff52",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "pairs are separated by &: split('') raises ValueError for an empty separator, so every call crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query differs from reference",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R3",
+      "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R5",
+      "text": "If a key appears more than once, the last value wins."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "eb6e7d7388aab0418f6d5385737cd7ec0c8d8165edc23889985189d1ea4bff52"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -2,7 +2,7 @@\n \n \n def parse_query(qs):\n-    if qs.startswith(\"?\"):\n+    if not (qs.startswith(\"?\")):\n         qs = qs[1:]\n     result = {}\n     for pair in qs.split(\"&\"):\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if not (qs.startswith(\"?\")):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0b5821cfc74f272ce554ccc7dcdb2df7fb4c517a58afe288dfd417a30591ec2e",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned {'?q': 'red shoes', 'size': '42', 'sort': 'price+asc'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Ignore a single leading ?: The condition is inverted so the first character is dropped when there is no leading ?.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'?q': 'red shoes', 'size': '42', 'sort': 'price+asc'}",
+       "parse_query returned {'': 'red shoes', 'size': '42'}",
+       "parse_query returned {'?a': '1'}",
+       "parse_query differs from reference",
+       "parse_query returned {'': '\u00e9', 'm': 'caf\u00e9 au lait'}",
+       "parse_query returned {'= x': 'v&w+'}"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned {'': 'b=c'}",
+       "parse_query returned {'ebug': ''}",
+       "parse_query returned {'ebug': '', 'x': '1'}",
+       "parse_query returned {'': ''}"
+      ],
+      "requirement": "R3",
+      "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+     },
+     {
+      "failed": [
+       "parse_query returned {'?': ''}",
+       "parse_query returned {'': '1', 'b': '2'}"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     },
+     {
+      "failed": [
+       "parse_query returned {'': '1', 'a': '3'}",
+       "parse_query returned {'': '1', 'a': '9', 'b': '2'}"
+      ],
+      "requirement": "R5",
+      "text": "If a key appears more than once, the last value wins."
+     },
+     {
+      "failed": [
+       "parse_query returned {' b': '1', 'a b': '2'}",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0b5821cfc74f272ce554ccc7dcdb2df7fb4c517a58afe288dfd417a30591ec2e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -6,7 +6,7 @@\n         qs = qs[1:]\n     result = {}\n     for pair in qs.split(\"&\"):\n-        if not pair:\n+        if not (not pair):\n             continue\n         key, _, value = pair.partition(\"=\")\n         result[unquote_plus(key)] = unquote_plus(value)\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not (not pair):\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "941a5e058ce6e59d11681df78d099f09ebd2eb1a4b77db4cfdd1fcd6f4e79748",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned {}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Empty pairs are skipped and real pairs are parsed: The condition is inverted so non-empty pairs are skipped and empty ones are processed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {}",
+       "parse_query returned {}",
+       "parse_query returned {}",
+       "parse_query differs from reference",
+       "parse_query returned {}",
+       "parse_query returned {}"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned {}",
+       "parse_query returned {}",
+       "parse_query returned {}",
+       "parse_query returned {}"
+      ],
+      "requirement": "R3",
+      "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+     },
+     {
+      "failed": [
+       "parse_query returned {'': ''}",
+       "parse_query returned {'': ''}",
+       "parse_query returned {'': ''}",
+       "parse_query returned {'': ''}"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     },
+     {
+      "failed": [
+       "parse_query returned {}",
+       "parse_query returned {}"
+      ],
+      "requirement": "R5",
+      "text": "If a key appears more than once, the last value wins."
+     },
+     {
+      "failed": [
+       "parse_query returned {}",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "941a5e058ce6e59d11681df78d099f09ebd2eb1a4b77db4cfdd1fcd6f4e79748"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -5,7 +5,7 @@\n     if qs.startswith(\"?\"):\n         qs = qs[1:]\n     result = {}\n-    for pair in qs.split(\"&\"):\n+    for pair in list(qs.split(\"&\"))[:-1]:\n         if not pair:\n             continue\n         key, _, value = pair.partition(\"=\")\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in list(qs.split(\"&\"))[:-1]:\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a70258a0b5dc31baef74dc1f73a19aa598d7b1bf44828ddcf957b09d0e412434",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned {'q': 'red shoes', 'size': '42'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Parse all pairs in the query string: The loop skips the last pair, so it is dropped from the result.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'q': 'red shoes', 'size': '42'}",
+       "parse_query returned {'q': 'red shoes'}",
+       "parse_query returned {}",
+       "parse_query differs from reference",
+       "parse_query returned {'n': '\u00e9'}",
+       "parse_query returned {}"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned {}",
+       "parse_query returned {}",
+       "parse_query returned {'debug': ''}",
+       "parse_query returned {}"
+      ],
+      "requirement": "R3",
+      "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+     },
+     {
+      "failed": [
+       "parse_query returned {'a': '2'}",
+       "parse_query returned {'a': '1', 'b': '2'}"
+      ],
+      "requirement": "R5",
+      "text": "If a key appears more than once, the last value wins."
+     },
+     {
+      "failed": [
+       "parse_query returned {'a b': '1'}",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a70258a0b5dc31baef74dc1f73a19aa598d7b1bf44828ddcf957b09d0e412434"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -4,10 +4,10 @@\n def parse_query(qs):\n     if qs.startswith(\"?\"):\n         qs = qs[1:]\n-    result = {}\n-    for pair in qs.split(\"&\"):\n-        if not pair:\n+    result_gp = {}\n+    for pair_gp in qs.split(\"&\"):\n+        if not pair_gp:\n             continue\n-        key, _, value = pair.partition(\"=\")\n-        result[unquote_plus(key)] = unquote_plus(value)\n-    return result\n+        key_gp, __gp, value_gp = pair_gp.partition(\"=\")\n+        result_gp[unquote_plus(key_gp)] = unquote_plus(value_gp)\n+    return result_gp\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result_gp = {}\n    for pair_gp in qs.split(\"&\"):\n        if not pair_gp:\n            continue\n        key_gp, __gp, value_gp = pair_gp.partition(\"=\")\n        result_gp[unquote_plus(key_gp)] = unquote_plus(value_gp)\n    return result_gp\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "0228ad3ba211a25ffcffb25c2e92f53cdab5a8fedf11d68fba7b69df38c29753",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variable names changed; behavior is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "0228ad3ba211a25ffcffb25c2e92f53cdab5a8fedf11d68fba7b69df38c29753"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -10,4 +10,4 @@\n             continue\n         key, _, value = pair.partition(\"=\")\n         result[unquote_plus(key)] = unquote_plus(value)\n-    return result\n+    return None\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5a8a7d7142be4888aafb573caf4fc07cb1c0b04c694cc75fbf1e04e0562ba442",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return a dict of decoded pairs: The function returns None instead of the dict.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query differs from reference",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R3",
+      "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R5",
+      "text": "If a key appears more than once, the last value wins."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5a8a7d7142be4888aafb573caf4fc07cb1c0b04c694cc75fbf1e04e0562ba442"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -7,7 +7,7 @@\n     result = {}\n     for pair in qs.split(\"&\"):\n         if not pair:\n-            continue\n+            pass\n         key, _, value = pair.partition(\"=\")\n         result[unquote_plus(key)] = unquote_plus(value)\n     return result\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            pass\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d6be1a5f4cbeebffbe21cc744d6c4839328d70c3fc599d19dd0a8a556f6861e9",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: parse_query returned {'': ''}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Empty pairs from && or a trailing & are skipped: continue became pass, so empty pairs add a spurious '' key to the result.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'': ''}",
+       "parse_query returned {'': ''}",
+       "parse_query returned {'': '', 'a': '1', 'b': '2'}",
+       "parse_query returned {'': ''}"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d6be1a5f4cbeebffbe21cc744d6c4839328d70c3fc599d19dd0a8a556f6861e9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -9,5 +9,5 @@\n         if not pair:\n             continue\n         key, _, value = pair.partition(\"=\")\n-        result[unquote_plus(key)] = unquote_plus(value)\n+        pass\n     return result\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        pass\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f14a2ad94f8f35a644d46271c46803c875109f33f17d41d2b60b218a4060ed5a",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned {}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "return dict of decoded keys and values: Pairs are never stored, so the function always returns an empty dict.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {}",
+       "parse_query returned {}",
+       "parse_query returned {}",
+       "parse_query differs from reference",
+       "parse_query returned {}",
+       "parse_query returned {}"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned {}",
+       "parse_query returned {}",
+       "parse_query returned {}",
+       "parse_query returned {}"
+      ],
+      "requirement": "R3",
+      "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+     },
+     {
+      "failed": [
+       "parse_query returned {}"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     },
+     {
+      "failed": [
+       "parse_query returned {}",
+       "parse_query returned {}"
+      ],
+      "requirement": "R5",
+      "text": "If a key appears more than once, the last value wins."
+     },
+     {
+      "failed": [
+       "parse_query returned {}",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f14a2ad94f8f35a644d46271c46803c875109f33f17d41d2b60b218a4060ed5a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -10,4 +10,4 @@\n             continue\n         key, _, value = pair.partition(\"=\")\n         result[unquote_plus(key)] = unquote_plus(value)\n-    return result\n+    pass\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4f2c9682079a19970f6f64439d71ede48f266dedf31f36ac939b6e83538e89ea",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "return a dict of parsed pairs: The function returns None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query differs from reference",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R3",
+      "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R5",
+      "text": "If a key appears more than once, the last value wins."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4f2c9682079a19970f6f64439d71ede48f266dedf31f36ac939b6e83538e89ea"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -3,7 +3,7 @@\n \n def parse_query(qs):\n     if qs.startswith(\"?\"):\n-        qs = qs[1:]\n+        pass\n     result = {}\n     for pair in qs.split(\"&\"):\n         if not pair:\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        pass\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e60d60ac0c9c15b02c196a5a9b1dc9da899f296fe1873999c219b49bd5e03d37",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned {'?q': 'red shoes', 'size': '42', 'sort': 'price+asc'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "A single leading ? is ignored: The leading ? is no longer stripped, so the first key keeps the ? prefix.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'?q': 'red shoes', 'size': '42', 'sort': 'price+asc'}",
+       "parse_query returned {'?a': '1'}",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned {'?': ''}"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e60d60ac0c9c15b02c196a5a9b1dc9da899f296fe1873999c219b49bd5e03d37"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -4,7 +4,7 @@\n def parse_query(qs):\n     if qs.startswith(\"?\"):\n         qs = qs[1:]\n-    result = {}\n+    pass\n     for pair in qs.split(\"&\"):\n         if not pair:\n             continue\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    pass\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1dd90abf9bf6355e6ce517c12954584bbe3de86941c57de0d0feeaca4c8d7c6a",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return a dict of decoded pairs: The result dict is never created, so the function raises NameError for any non-empty pair.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query differs from reference",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R3",
+      "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query returned None"
+      ],
+      "requirement": "R5",
+      "text": "If a key appears more than once, the last value wins."
+     },
+     {
+      "failed": [
+       "parse_query returned None",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1dd90abf9bf6355e6ce517c12954584bbe3de86941c57de0d0feeaca4c8d7c6a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -6,8 +6,7 @@\n         qs = qs[1:]\n     result = {}\n     for pair in qs.split(\"&\"):\n-        if not pair:\n-            continue\n+        pass\n         key, _, value = pair.partition(\"=\")\n         result[unquote_plus(key)] = unquote_plus(value)\n     return result\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        pass\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e1e40a99252e8664c3468fb0b3cadad65d1e17840593b495f9ce54e21275692b",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: parse_query returned {'': ''}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Empty pairs are skipped; parse_query(\"\") returns {}: Empty pairs are no longer skipped, so an empty string or trailing & adds a spurious \"\" key.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'': ''}",
+       "parse_query returned {'': ''}",
+       "parse_query returned {'': '', 'a': '1', 'b': '2'}",
+       "parse_query returned {'': ''}"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e1e40a99252e8664c3468fb0b3cadad65d1e17840593b495f9ce54e21275692b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -2,8 +2,6 @@\n \n \n def parse_query(qs):\n-    if qs.startswith(\"?\"):\n-        qs = qs[1:]\n     result = {}\n     for pair in qs.split(\"&\"):\n         if not pair:\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "17a1579a8a96c6f82fd4875a3b6298c50d2ef6f11d3068e4cf7acaf714f9a4be",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned {'?q': 'red shoes', 'size': '42', 'sort': 'price+asc'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "A single leading '?' is ignored: The leading '?' is no longer stripped, so the first key keeps a '?' prefix.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'?q': 'red shoes', 'size': '42', 'sort': 'price+asc'}",
+       "parse_query returned {'?a': '1'}",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned {'?': ''}"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "17a1579a8a96c6f82fd4875a3b6298c50d2ef6f11d3068e4cf7acaf714f9a4be"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -8,6 +8,8 @@\n     for pair in qs.split(\"&\"):\n         if not pair:\n             continue\n-        key, _, value = pair.partition(\"=\")\n+        parts = pair.split(\"=\")\n+        key = parts[0]\n+        value = parts[1] if len(parts) > 1 else \"\"\n         result[unquote_plus(key)] = unquote_plus(value)\n     return result\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        parts = pair.split(\"=\")\n        key = parts[0]\n        value = parts[1] if len(parts) > 1 else \"\"\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "8e4e18c2ab11254760deefadfddabc2cf4d8d82ae612b48961f761c5b3f684f1",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: parse_query returned {'a': 'b'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "split each pair at the first =: Splitting on every = truncates values that contain an = sign.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'a': 'b'}"
+      ],
+      "requirement": "R3",
+      "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8e4e18c2ab11254760deefadfddabc2cf4d8d82ae612b48961f761c5b3f684f1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -6,8 +6,6 @@\n         qs = qs[1:]\n     result = {}\n     for pair in qs.split(\"&\"):\n-        if not pair:\n-            continue\n         key, _, value = pair.partition(\"=\")\n         result[unquote_plus(key)] = unquote_plus(value)\n     return result\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3fc78f74da6392c51424aeb8e85ecfedaf80f88d9cbe1cf9e8507d7381531dfa",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: parse_query returned {'': ''}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Empty pairs (from && or a trailing &) are skipped; parse_query(\"\") returns {}: Without the skip, empty pairs add an entry with key \"\" and value \"\", and parse_query(\"\") returns {\"\": \"\"}.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'': ''}",
+       "parse_query returned {'': ''}",
+       "parse_query returned {'': '', 'a': '1', 'b': '2'}",
+       "parse_query returned {'': ''}"
+      ],
+      "requirement": "R4",
+      "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3fc78f74da6392c51424aeb8e85ecfedaf80f88d9cbe1cf9e8507d7381531dfa"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -9,5 +9,5 @@\n         if not pair:\n             continue\n         key, _, value = pair.partition(\"=\")\n-        result[unquote_plus(key)] = unquote_plus(value)\n+        result.setdefault(unquote_plus(key), unquote_plus(value))\n     return result\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result.setdefault(unquote_plus(key), unquote_plus(value))\n    return result\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "fdea7d21a80cb16bfde1fcf6896c22067ccbfcde8eaceff8cca91d64c0b7e09e",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: parse_query returned {'a': '1'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "If a key appears more than once, the last value wins: setdefault keeps the first value instead of the last.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'a': '1'}",
+       "parse_query returned {'a': '1', 'b': '2'}"
+      ],
+      "requirement": "R5",
+      "text": "If a key appears more than once, the last value wins."
+     },
+     {
+      "failed": [
+       "parse_query returned {'a b': '1'}"
+      ],
+      "requirement": "R6",
+      "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fdea7d21a80cb16bfde1fcf6896c22067ccbfcde8eaceff8cca91d64c0b7e09e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -9,5 +9,5 @@\n         if not pair:\n             continue\n         key, _, value = pair.partition(\"=\")\n-        result[unquote_plus(key)] = unquote_plus(value)\n+        result[key] = unquote_plus(value)\n     return result\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[key] = unquote_plus(value)\n    return result\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "03eb4c8b39cd85dbe8fdb04d72512d65f6fec00b8fd2815b213b9189a04009ac",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: parse_query returned {'k%3D+x': 'v&w+'}",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Keys and values are decoded: Keys are no longer percent- or plus-decoded.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "parse_query returned {'k%3D+x': 'v&w+'}"
+      ],
+      "requirement": "R2",
+      "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+     },
+     {
+      "failed": [
+       "parse_query returned {'a%20b': '2', 'a+b': '1'}",
+       "parse_query differs from reference"
+      ],
+      "requirement": "R6",
+      "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "03eb4c8b39cd85dbe8fdb04d72512d65f6fec00b8fd2815b213b9189a04009ac"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -1,13 +1,7 @@\n-from urllib.parse import unquote_plus\n+from urllib.parse import parse_qsl\n \n \n def parse_query(qs):\n     if qs.startswith(\"?\"):\n         qs = qs[1:]\n-    result = {}\n-    for pair in qs.split(\"&\"):\n-        if not pair:\n-            continue\n-        key, _, value = pair.partition(\"=\")\n-        result[unquote_plus(key)] = unquote_plus(value)\n-    return result\n+    return dict(parse_qsl(qs, keep_blank_values=True))\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import parse_qsl\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    return dict(parse_qsl(qs, keep_blank_values=True))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c02a8e0417993a8820b3cf20801c40a3e38d08d0a65c7f2b5e06089f746920a5",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "parse_qsl with keep_blank_values decodes plus signs and percent escapes, keeps valueless keys as empty strings, skips empty pairs, and the last duplicate wins in dict().",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "c02a8e0417993a8820b3cf20801c40a3e38d08d0a65c7f2b5e06089f746920a5"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -1,13 +1,11 @@\n-from urllib.parse import unquote_plus\n+from urllib.parse import unquote\n+\n+\n+def _decode(text):\n+    return unquote(text.replace(\"+\", \" \"))\n \n \n def parse_query(qs):\n-    if qs.startswith(\"?\"):\n-        qs = qs[1:]\n-    result = {}\n-    for pair in qs.split(\"&\"):\n-        if not pair:\n-            continue\n-        key, _, value = pair.partition(\"=\")\n-        result[unquote_plus(key)] = unquote_plus(value)\n-    return result\n+    qs = qs[1:] if qs[:1] == \"?\" else qs\n+    pairs = (p.split(\"=\", 1) for p in qs.split(\"&\") if p)\n+    return {_decode(p[0]): _decode(p[1] if len(p) > 1 else \"\") for p in pairs}\n",
+   "files": {
+    "urlquery.py": "from urllib.parse import unquote\n\n\ndef _decode(text):\n    return unquote(text.replace(\"+\", \" \"))\n\n\ndef parse_query(qs):\n    qs = qs[1:] if qs[:1] == \"?\" else qs\n    pairs = (p.split(\"=\", 1) for p in qs.split(\"&\") if p)\n    return {_decode(p[0]): _decode(p[1] if len(p) > 1 else \"\") for p in pairs}\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "82e2904c947f51ec059fcdd15a0cfc1dac5264800bfddf605b14115d3bf4b1ae",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "query-params",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "7 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Replacing + with a space then unquoting is equivalent to unquote_plus, and the split at the first = and empty-pair handling are unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5",
+     "R6",
+     "R7"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "82e2904c947f51ec059fcdd15a0cfc1dac5264800bfddf605b14115d3bf4b1ae"
+   }
+  }
+ ]
+}

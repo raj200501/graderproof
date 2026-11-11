@@ -1,0 +1,200 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "da1216100e1b6b501cf81c90e4de7625463ebfed941bb81f4d7a7bf36e0a83ed",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "ded8ef98b259166383ec9a6e0e8713e66e29dd899b80b187823cabd86007585c": {
+      "requirements": [
+        {"id": "R1", "text": "Provide a Python module `pairs.py`.", "checks": [{"type": "file_exists", "path": "pairs.py"}]},
+        {"id": "R2", "text": "`count_pairs(nums, target)` returns the number of index pairs (i, j), i < j, with nums[i] + nums[j] == target; example count_pairs([1, 5, 7, -1, 5], 6) returns 3.", "checks": [
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[1, 5, 7, -1, 5], 6], "kwargs": {}}, "equals": 3},
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[3, 3, 3], 6], "kwargs": {}}, "equals": 3},
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[2, 2, 2, 2], 4], "kwargs": {}}, "equals": 6},
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[0, 0], 0], "kwargs": {}}, "equals": 1},
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[-2, -1, 3, 5], 3], "kwargs": {}}, "equals": 1},
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[1, 2, 3], 10], "kwargs": {}}, "equals": 0},
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[4, -4, 4, -4, 0], 0], "kwargs": {}}, "matches_reference": true}
+        ]},
+        {"id": "R3", "text": "Negative values and repeated values are handled (a value may pair with equal values at different indices, but an element does not pair with itself).", "checks": [
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[5], 10], "kwargs": {}}, "equals": 0},
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[-3, -3, 6, 6, 0], 3], "kwargs": {}}, "matches_reference": true}
+        ]},
+        {"id": "R4", "text": "An empty list or a list with one element gives 0.", "checks": [
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[], 0], "kwargs": {}}, "equals": 0},
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[7], 7], "kwargs": {}}, "equals": 0}
+        ]},
+        {"id": "R5", "text": "Inputs of up to 5,000 integers are supported and give the correct count.", "checks": [
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 11], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "count_pairs", "args": [[1000000, -1000000, 1000000, 0, 0], 0], "kwargs": {}}, "matches_reference": true}
+        ]}
+      ]
+    },
+    "e03dd6153ff2f5f4b69b0cc733e0e0e7600c173ad692aca056e8e86bf07243a4": {
+      "requirements": [
+        {"id": "R1", "text": "Provide a Python module `rle.py`.", "checks": [{"type": "file_exists", "path": "rle.py"}]},
+        {"id": "R2", "text": "`encode(s)` replaces each maximal run of one repeated character by the decimal run length (no leading zeros) followed by the character: encode(\"aaab\") returns \"3a1b\", encode(\"a\" * 12) returns \"12a\", encode(\"\") returns \"\".", "checks": [
+          {"type": "call", "probe": {"function": "encode", "args": ["aaab"], "kwargs": {}}, "equals": "3a1b"},
+          {"type": "call", "probe": {"function": "encode", "args": ["aaaaaaaaaaaa"], "kwargs": {}}, "equals": "12a"},
+          {"type": "call", "probe": {"function": "encode", "args": [""], "kwargs": {}}, "equals": ""},
+          {"type": "call", "probe": {"function": "encode", "args": ["aabccc"], "kwargs": {}}, "equals": "2a1b3c"},
+          {"type": "call", "probe": {"function": "encode", "args": ["abab"], "kwargs": {}}, "equals": "1a1b1a1b"},
+          {"type": "call", "probe": {"function": "encode", "args": ["x"], "kwargs": {}}, "equals": "1x"}
+        ]},
+        {"id": "R3", "text": "Spaces, newlines, and other characters are encoded like any other character.", "checks": [
+          {"type": "call", "probe": {"function": "encode", "args": ["a b"], "kwargs": {}}, "equals": "1a1 1b"},
+          {"type": "call", "probe": {"function": "encode", "args": ["\n\n"], "kwargs": {}}, "equals": "2\n"},
+          {"type": "call", "probe": {"function": "encode", "args": ["  \t\t\t!!"], "kwargs": {}}, "matches_reference": true}
+        ]},
+        {"id": "R4", "text": "`decode(code)` is the inverse: pairs of positive decimal count (no leading zeros) and one non-digit character; decode(\"3a1b\") returns \"aaab\" and decode(\"\") returns \"\".", "checks": [
+          {"type": "call", "probe": {"function": "decode", "args": ["3a1b"], "kwargs": {}}, "equals": "aaab"},
+          {"type": "call", "probe": {"function": "decode", "args": [""], "kwargs": {}}, "equals": ""},
+          {"type": "call", "probe": {"function": "decode", "args": ["12a"], "kwargs": {}}, "equals": "aaaaaaaaaaaa"},
+          {"type": "call", "probe": {"function": "decode", "args": ["2a1b3c"], "kwargs": {}}, "equals": "aabccc"},
+          {"type": "call", "probe": {"function": "decode", "args": ["1a1 2\n"], "kwargs": {}}, "equals": "a \n\n"},
+          {"type": "call", "probe": {"function": "decode", "args": ["10x"], "kwargs": {}}, "equals": "xxxxxxxxxx"}
+        ]},
+        {"id": "R5", "text": "decode raises ValueError when code is not of the required form, for example \"a3\", \"3\", \"0a\", or \"03a\".", "checks": [
+          {"type": "call", "probe": {"function": "decode", "args": ["a3"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "decode", "args": ["3"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "decode", "args": ["0a"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "decode", "args": ["03a"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "decode", "args": ["3a2"], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "decode", "args": ["a"], "kwargs": {}}, "matches_reference": true}
+        ]},
+        {"id": "R6", "text": "decode inverts encode for strings without digits.", "checks": [
+          {"type": "call", "probe": {"function": "decode", "args": ["1h1e2l1o1 1w1o1r1l1d"], "kwargs": {}}, "equals": "hello world"},
+          {"type": "call", "probe": {"function": "encode", "args": ["hello world"], "kwargs": {}}, "equals": "1h1e2l1o1 1w1o1r1l1d"}
+        ]}
+      ]
+    },
+    "f2e62da0c11056a1848b2a8b53303e2a076c804e55bf1688c24c81883a3dcade": {
+      "requirements": [
+        {"id": "R1", "text": "Provide a Python module `finance.py`.", "checks": [{"type": "file_exists", "path": "finance.py"}]},
+        {"id": "R2", "text": "`future_value(principal, annual_rate, years, periods_per_year)` returns principal * (1 + r / n) ** (n * years) with r = annual_rate / 100 (rate given in percent) and n = periods_per_year.", "checks": [
+          {"type": "call", "probe": {"function": "future_value", "args": [1000, 5, 10, 12], "kwargs": {}}, "equals": 1647.01},
+          {"type": "call", "probe": {"function": "future_value", "args": [1000, 10, 2, 1], "kwargs": {}}, "equals": 1210.0},
+          {"type": "call", "probe": {"function": "future_value", "args": [1000, 4.5, 1, 12], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "future_value", "args": [1500, 4.5, 3, 4], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "future_value", "args": [2500.75, 3.25, 7, 365], "kwargs": {}}, "matches_reference": true}
+        ]},
+        {"id": "R3", "text": "The rate is nominal yearly percent (4.5 means 4.5%), not a fraction.", "checks": [
+          {"type": "call", "probe": {"function": "future_value", "args": [100, 0, 5, 12], "kwargs": {}}, "equals": 100.0},
+          {"type": "call", "probe": {"function": "future_value", "args": [200, 4.5, 2, 12], "kwargs": {}}, "matches_reference": true}
+        ]},
+        {"id": "R4", "text": "The result is a float rounded to the nearest cent (2 decimal places).", "checks": [
+          {"type": "call", "probe": {"function": "future_value", "args": [1234.56, 3.7, 5, 12], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "future_value", "args": [999.99, 1.1, 3, 2], "kwargs": {}}, "matches_reference": true},
+          {"type": "call", "probe": {"function": "future_value", "args": [0, 5, 3, 1], "kwargs": {}}, "equals": 0.0}
+        ]}
+      ]
+    },
+    "f43369ded8de97783e74e6bc0b816b0e8901e2682e860ef79ff69f3ee4636eaa": {
+      "requirements": [
+        {"id": "R1", "text": "Look up booking X7K2QD (with get_booking) before applying the policy.", "checks": [
+          {"type": "trajectory_includes", "tool": "get_booking", "args": {"pnr": "X7K2QD"}},
+          {"type": "trajectory_before", "first": {"tool": "get_booking", "args": {"pnr": "X7K2QD"}}, "then": {"tool": "cancel_booking", "args": {"pnr": "X7K2QD"}}}
+        ]},
+        {"id": "R2", "text": "Cancel the booking with `cancel_booking`.", "checks": [
+          {"type": "trajectory_includes", "tool": "cancel_booking", "args": {"pnr": "X7K2QD"}},
+          {"type": "state_equals", "pointer": "/bookings/X7K2QD/status", "equals": "cancelled"}
+        ]},
+        {"id": "R3", "text": "Non-refundable fare: issue a travel credit equal to the fare minus a 7500-cent change fee (41200 - 7500 = 33700) with `issue_travel_credit`.", "checks": [
+          {"type": "trajectory_includes", "tool": "issue_travel_credit", "args": {"pnr": "X7K2QD", "amount_cents": 33700}},
+          {"type": "state_equals", "pointer": "/credits", "equals": [{"amount_cents": 33700, "pnr": "X7K2QD"}]}
+        ]},
+        {"id": "R4", "text": "Non-refundable fare: do not refund anything.", "checks": [
+          {"type": "trajectory_excludes", "tool": "issue_refund", "args": {}},
+          {"type": "state_equals", "pointer": "/refunds", "equals": []}
+        ]},
+        {"id": "R5", "text": "Do not change any other booking.", "checks": [
+          {"type": "trajectory_excludes", "tool": "cancel_booking", "args": {"pnr": "M3P9LA"}},
+          {"type": "state_equals", "pointer": "/bookings/M3P9LA", "equals": {"fare_cents": 28900, "fare_type": "refundable", "flight": "NB 118 LIS-BER 2026-12-15", "passenger": "Ruth Adeyemi", "status": "ticketed"}}
+        ]}
+      ]
+    },
+    "f43bcd0a37478eca94b67a201cacb4f97e4cbcd9d674bf63f04ff007459d63ae": {
+      "requirements": [
+        {"id": "R1", "text": "Mark return RMA-7712 as received with `mark_received`, condition `good`.", "checks": [
+          {"type": "trajectory_includes", "tool": "mark_received", "args": {"rma_id": "RMA-7712", "condition": "good"}},
+          {"type": "trajectory_excludes", "tool": "mark_received", "args": {"rma_id": "RMA-7712", "condition": "damaged"}}
+        ]},
+        {"id": "R2", "text": "Refund RMA-7712 to the original payment method with `refund_rma`.", "checks": [
+          {"type": "trajectory_includes", "tool": "refund_rma", "args": {"rma_id": "RMA-7712"}}
+        ]},
+        {"id": "R3", "text": "Ordering: mark the return received first (step 1), then refund (step 2); refund is only possible after receipt in good condition.", "checks": [
+          {"type": "trajectory_before", "first": {"tool": "mark_received", "args": {"rma_id": "RMA-7712", "condition": "good"}}, "then": {"tool": "refund_rma", "args": {"rma_id": "RMA-7712"}}}
+        ]},
+        {"id": "R4", "text": "The refund must actually be issued: final state shows RMA-7712 refunded and a refund record of its amount.", "checks": [
+          {"type": "state_equals", "pointer": "/rmas/RMA-7712/status", "equals": "refunded"},
+          {"type": "state_equals", "pointer": "/rmas/RMA-7712/condition", "equals": "good"},
+          {"type": "state_equals", "pointer": "/refunds", "equals": [{"amount_cents": 8900, "rma_id": "RMA-7712"}]}
+        ]},
+        {"id": "R5", "text": "Do not change any other return.", "checks": [
+          {"type": "trajectory_excludes", "tool": "mark_received", "args": {"rma_id": "RMA-7720"}},
+          {"type": "trajectory_excludes", "tool": "refund_rma", "args": {"rma_id": "RMA-7720"}},
+          {"type": "state_equals", "pointer": "/rmas/RMA-7720", "equals": {"amount_cents": 2450, "condition": null, "item": "Insulated bottle", "order_id": "ORD-61377", "status": "awaiting_return"}}
+        ]}
+      ]
+    },
+    "fa327cd3920a36512aeeb27274c767aac9ac9d9a067d580d3e50a1b995a72483": {
+      "requirements": [
+        {"id": "R1", "text": "Look up the permit by plate KX-482-LM with `lookup_permit`.", "checks": [
+          {"type": "trajectory_includes", "tool": "lookup_permit", "args": {"plate": "KX-482-LM"}},
+          {"type": "trajectory_before", "first": {"tool": "lookup_permit", "args": {"plate": "KX-482-LM"}}, "then": {"tool": "renew_permit", "args": {"permit_id": "PRM-7730", "months": 12}}}
+        ]},
+        {"id": "R2", "text": "Renew PRM-7730 for 12 months with `renew_permit`, extending the expiry by 12 months.", "checks": [
+          {"type": "trajectory_includes", "tool": "renew_permit", "args": {"permit_id": "PRM-7730", "months": 12}},
+          {"type": "state_equals", "pointer": "/permits/PRM-7730/expires", "equals": "2027-11-30"},
+          {"type": "state_equals", "pointer": "/permits/PRM-7730/status", "equals": "active"}
+        ]},
+        {"id": "R3", "text": "Charge Dana Kowalski's card on file (customer CU-5521) 9600 cents with `charge_card`, using the description `permit renewal PRM-7730`.", "checks": [
+          {"type": "trajectory_includes", "tool": "charge_card", "args": {"customer_id": "CU-5521", "amount_cents": 9600, "description": "permit renewal PRM-7730"}},
+          {"type": "state_equals", "pointer": "/charges/0", "equals": {"amount_cents": 9600, "customer_id": "CU-5521", "description": "permit renewal PRM-7730"}}
+        ]},
+        {"id": "R4", "text": "Do not make any other charge.", "checks": [
+          {"type": "state_equals", "pointer": "/charges", "equals": [{"amount_cents": 9600, "customer_id": "CU-5521", "description": "permit renewal PRM-7730"}]},
+          {"type": "trajectory_excludes", "tool": "charge_card", "args": {"customer_id": "CU-6100"}}
+        ]},
+        {"id": "R5", "text": "Do not change any other permit.", "checks": [
+          {"type": "trajectory_excludes", "tool": "renew_permit", "args": {"permit_id": "PRM-7731"}},
+          {"type": "state_equals", "pointer": "/permits/PRM-7731", "equals": {"customer_id": "CU-6100", "expires": "2027-02-28", "plate": "KX-713-AB", "status": "active", "zone": "R4"}}
+        ]}
+      ]
+    },
+    "fe001ded2cc1b8172e8687f61d78e73db3259843e7a9f72d8d9f6e046726d1d3": {
+      "requirements": [
+        {"id": "R1", "text": "Enroll student S-4471 in exactly one section of CS201.", "checks": [
+          {"type": "trajectory_includes", "tool": "enroll", "args": {"student_id": "S-4471", "section_id": "CS201-D"}},
+          {"type": "trajectory_excludes", "tool": "enroll", "args": {"section_id": "CS201-A"}},
+          {"type": "trajectory_excludes", "tool": "enroll", "args": {"section_id": "CS201-B"}},
+          {"type": "trajectory_excludes", "tool": "enroll", "args": {"section_id": "CS201-C"}}
+        ]},
+        {"id": "R2", "text": "The chosen section must have a free seat (CS201-C has none) and its meetings must not overlap any section the student is already enrolled in (CS201-A overlaps HIST210-A on Mon/Wed and CS201-B overlaps MATH220-B on Tue/Thu).", "checks": [
+          {"type": "state_equals", "pointer": "/students/S-4471/enrolled/2", "equals": "CS201-D"}
+        ]},
+        {"id": "R3", "text": "Keep the student's existing enrollments (do not drop anything).", "checks": [
+          {"type": "trajectory_excludes", "tool": "drop", "args": {}},
+          {"type": "state_equals", "pointer": "/students/S-4471/enrolled", "equals": ["HIST210-A", "MATH220-B", "CS201-D"]}
+        ]}
+      ]
+    },
+    "fe684a0d29c4a010334da69cc00a441f07a14a29d3795d2aceac331b32b6b186": {
+      "requirements": [
+        {"id": "R1", "text": "The script runs successfully.", "checks": [{"type": "exit_code", "code": 0}]},
+        {"id": "R2", "text": "Compute subtotal as the sum of quantity x unit_price over all rows, tax as 8.25% of the subtotal rounded to the nearest cent with exact halves rounding up, and total = subtotal + tax; for invoice.csv the total is 1327.90.", "checks": [
+          {"type": "stdout_contains", "text": "Total: $1,327.90"},
+          {"type": "same_as_reference", "target": "stdout", "normalize": "none"}
+        ]},
+        {"id": "R3", "text": "Print exactly one line of the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, the total with comma thousands separator and exactly two decimal places.", "checks": [
+          {"type": "stdout_regex", "pattern": "^Total: \\$[0-9]{1,3}(,[0-9]{3})*\\.[0-9]{2}\\n?$"},
+          {"type": "stdout_regex", "pattern": "^Total: \\$1,327\\.90\\n?$"}
+        ]},
+        {"id": "R4", "text": "Print nothing else to standard output.", "checks": [
+          {"type": "stdout_regex", "pattern": "\\A[^\\n]*\\n?\\Z"}
+        ]}
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

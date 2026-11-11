@@ -1,0 +1,1498 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "README.md": "Booking service  \n\nRun `python -m cli.main`.  \n",
+   "src/app/__init__.py": "\"\"\"Booking service application package.\"\"\"\n",
+   "src/app/pricing.py": "from decimal import Decimal\n\nTAX_RATE = Decimal(\"0.20\")\n\ndef gross(net):\n    \"\"\"Return the price including tax.\"\"\"\n    return (net * (1 + TAX_RATE)).quantize(Decimal(\"0.01\"))\n\n\ndef discount(price, percent):\n\treturn price * (100 - percent) / 100\n",
+   "src/cli/main.py": "import sys\n\nfrom app.pricing import gross\n\n\ndef main(argv):\n    for arg in argv[1:]:\n        print(gross(arg))\n    return 0\n\n\nif __name__ == \"__main__\":\n    sys.exit(main(sys.argv))",
+   "src/cli/notes.txt": "keep this trailing space \n",
+   "vendor/tinyjson.py": "# tinyjson 0.3.1 (MIT License), vendored unmodified.   \ndef dumps(obj):  \n    return repr(obj)\t\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "src/app/__init__.py",
+     "text": "\"\"\"Booking service application package.\"\"\"\n",
+     "type": "file_equals"
+    },
+    {
+     "normalize": "none",
+     "path": "src/app/pricing.py",
+     "text": "from decimal import Decimal\n\nTAX_RATE = Decimal(\"0.20\")\n\ndef gross(net):\n    \"\"\"Return the price including tax.\"\"\"\n    return (net * (1 + TAX_RATE)).quantize(Decimal(\"0.01\"))\n\n\ndef discount(price, percent):\n\treturn price * (100 - percent) / 100\n",
+     "type": "file_equals"
+    },
+    {
+     "normalize": "none",
+     "path": "src/cli/main.py",
+     "text": "import sys\n\nfrom app.pricing import gross\n\n\ndef main(argv):\n    for arg in argv[1:]:\n        print(gross(arg))\n    return 0\n\n\nif __name__ == \"__main__\":\n    sys.exit(main(sys.argv))",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+  },
+  {
+   "checks": [
+    {
+     "path": "src/cli/main.py",
+     "pattern": "sys\\.argv\\)\\)\\Z",
+     "type": "file_regex"
+    },
+    {
+     "path": "src/app/pricing.py",
+     "pattern": "/ 100\\n\\Z",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "src/cli/notes.txt",
+     "text": "keep this trailing space \n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Do not modify files under src/ that are not .py files (src/cli/notes.txt keeps its trailing space)."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "path": "vendor/tinyjson.py",
+     "text": "# tinyjson 0.3.1 (MIT License), vendored unmodified.   \ndef dumps(obj):  \n    return repr(obj)\t\n",
+     "type": "file_equals"
+    },
+    {
+     "normalize": "none",
+     "path": "README.md",
+     "text": "Booking service  \n\nRun `python -m cli.main`.  \n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Do not modify any file outside src/; vendor/ must stay byte-for-byte identical."
+  },
+  {
+   "checks": [
+    {
+     "path": "src/app/__init__.py",
+     "type": "file_exists"
+    },
+    {
+     "path": "src/app/pricing.py",
+     "type": "file_exists"
+    },
+    {
+     "path": "src/cli/main.py",
+     "type": "file_exists"
+    },
+    {
+     "path": "src/cli/notes.txt",
+     "type": "file_exists"
+    },
+    {
+     "path": "vendor/tinyjson.py",
+     "type": "file_exists"
+    },
+    {
+     "path": "README.md",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "No file is deleted or added by the cleanup; the project files still exist."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:whitespace-cleanup",
+ "task_hash": "4176dbee329d43014eec627e89f589169ed32fd103d1ad6f75dfaae92e2b085e",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,13 @@\n+import os\n+\n+for root, _dirs, names in os.walk(\"src\"):\n+    for name in sorted(names):\n+        if not name.endswith(\".py\"):\n+            continue\n+        path = os.path.join(root, name)\n+        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n+            text = fh.read()\n+        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n+        if cleaned != text:\n+            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+                fh.write(cleaned)\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['src/app/__init__.py', 'src/app/pricing.py', 'src/cli/main.py']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,14 @@\n-import os\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-for root, _dirs, names in os.walk(\"src\"):\n-    for name in sorted(names):\n-        if not name.endswith(\".py\"):\n-            continue\n-        path = os.path.join(root, name)\n-        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n-            text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n-        if cleaned != text:\n-            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-                fh.write(cleaned)\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['src/app/__init__.py', 'src/app/pricing.py', 'src/cli/main.py']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9b88db7c26e49bdd34fe99edb6d35abeffb628afcf84f396c3ca8862ea44a562",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Change nothing else in the files besides trailing whitespace: The post-step drops the last line of each target .py file.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "9b88db7c26e49bdd34fe99edb6d35abeffb628afcf84f396c3ca8862ea44a562"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,13 @@\n+import os\n+\n+for root, _dirs, names in os.walk(\"src\"):\n+    for name in sorted(names):\n+        if not name.endswith(\".py\"):\n+            continue\n+        path = os.path.join(root, name)\n+        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n+            text = fh.read()\n+        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n+        if cleaned != text:\n+            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+                fh.write(cleaned)\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['src/app/__init__.py', 'src/app/pricing.py', 'src/cli/main.py']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,14 @@\n-import os\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-for root, _dirs, names in os.walk(\"src\"):\n-    for name in sorted(names):\n-        if not name.endswith(\".py\"):\n-            continue\n-        path = os.path.join(root, name)\n-        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n-            text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n-        if cleaned != text:\n-            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-                fh.write(cleaned)\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['src/app/__init__.py', 'src/app/pricing.py', 'src/cli/main.py']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3bd89c9bfcd8754cd32c9e4f88290bcd6fa7ba219e2f8a960e4473e468de2e75",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Change nothing else in the files: The wrapper appends an 'extra' line to three source files.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3bd89c9bfcd8754cd32c9e4f88290bcd6fa7ba219e2f8a960e4473e468de2e75"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,13 @@\n+import os\n+\n+for root, _dirs, names in os.walk(\"src\"):\n+    for name in sorted(names):\n+        if not name.endswith(\".py\"):\n+            continue\n+        path = os.path.join(root, name)\n+        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n+            text = fh.read()\n+        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n+        if cleaned != text:\n+            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+                fh.write(cleaned)\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['src/app/__init__.py', 'src/app/pricing.py', 'src/cli/main.py']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,14 @@\n-import os\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-for root, _dirs, names in os.walk(\"src\"):\n-    for name in sorted(names):\n-        if not name.endswith(\".py\"):\n-            continue\n-        path = os.path.join(root, name)\n-        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n-            text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n-        if cleaned != text:\n-            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-                fh.write(cleaned)\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['src/app/__init__.py', 'src/app/pricing.py', 'src/cli/main.py']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b472fa38d5e364788d7807bbf04060f869825ad5c44a146683734545317d1d08",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "keep whether or not each file ends with a newline: The transform toggles the trailing newline of the src files.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,13 @@\n+import os\n+\n+for root, _dirs, names in os.walk(\"src\"):\n+    for name in sorted(names):\n+        if not name.endswith(\".py\"):\n+            continue\n+        path = os.path.join(root, name)\n+        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n+            text = fh.read()\n+        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n+        if cleaned != text:\n+            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+                fh.write(cleaned)\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['src/app/__init__.py', 'src/app/pricing.py', 'src/cli/main.py']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,14 @@\n-import os\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-for root, _dirs, names in os.walk(\"src\"):\n-    for name in sorted(names):\n-        if not name.endswith(\".py\"):\n-            continue\n-        path = os.path.join(root, name)\n-        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n-            text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n-        if cleaned != text:\n-            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-                fh.write(cleaned)\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['src/app/__init__.py', 'src/app/pricing.py', 'src/cli/main.py']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ed5d262c8d4b9a5a5f68acde153ad4ec0d0f3a12a20dab9607fa6995111f3398",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "remove trailing whitespace from every line in src .py files: A post-step re-adds two trailing spaces to the non-empty lines of three source files.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,13 @@\n+import os\n+\n+for root, _dirs, names in os.walk(\"src\"):\n+    for name in sorted(names):\n+        if not name.endswith(\".py\"):\n+            continue\n+        path = os.path.join(root, name)\n+        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n+            text = fh.read()\n+        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n+        if cleaned != text:\n+            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+                fh.write(cleaned)\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,14 @@\n-import os\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-for root, _dirs, names in os.walk(\"src\"):\n-    for name in sorted(names):\n-        if not name.endswith(\".py\"):\n-            continue\n-        path = os.path.join(root, name)\n-        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n-            text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n-        if cleaned != text:\n-            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-                fh.write(cleaned)\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(3.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(3.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "476e41a55cccc914487fe92a68c6b76450b509affae7057ae02ec69d271e1335",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper runs the original cleanup unchanged with an identity transform and a delay.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "476e41a55cccc914487fe92a68c6b76450b509affae7057ae02ec69d271e1335"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,6 +8,6 @@\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n             text = fh.read()\n         cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n-        if cleaned != text:\n+        if cleaned == text:\n             with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                 fh.write(cleaned)\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned == text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5c0e1e61da96db842e606fc82e644f182d8208772ce1e506e029139a57cfc41e",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove trailing spaces and tabs from every line of .py files: The condition is inverted so files are rewritten only when nothing changes, and files with trailing whitespace are left untouched.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5c0e1e61da96db842e606fc82e644f182d8208772ce1e506e029139a57cfc41e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n         path = os.path.join(root, name)\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n             text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n+        cleaned = \"\\n\".join(line.rstrip('') for line in text.split(\"\\n\"))\n         if cleaned != text:\n             with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                 fh.write(cleaned)\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip('') for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a10a48205c9d39c5f351ba68e5dccedd3fefbd9f114e06b4ba05b21b2b39f452",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove trailing spaces and tabs: rstrip('') strips nothing, so trailing whitespace stays in place.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a10a48205c9d39c5f351ba68e5dccedd3fefbd9f114e06b4ba05b21b2b39f452"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n         path = os.path.join(root, name)\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n             text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n+        cleaned = ''.join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n         if cleaned != text:\n             with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                 fh.write(cleaned)\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = ''.join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1c744bb12851f187e7333946296daf79e90ca007dd99a1b999473a689f9e8a7c",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove only trailing whitespace and keep line order and blank lines: Lines are joined with an empty string instead of newlines, which destroys the line structure of the files.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "1c744bb12851f187e7333946296daf79e90ca007dd99a1b999473a689f9e8a7c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n         path = os.path.join(root, name)\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n             text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n+        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(''))\n         if cleaned != text:\n             with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                 fh.write(cleaned)\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(''))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2ef63684359ebd285cb8e6dd4a1750179f617526aa462b7fe6d24b70fccfeabf",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Strip trailing whitespace from every line of src .py files: str.split('') raises ValueError (empty separator), so the script crashes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2ef63684359ebd285cb8e6dd4a1750179f617526aa462b7fe6d24b70fccfeabf"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,5 +9,5 @@\n             text = fh.read()\n         cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n         if cleaned != text:\n-            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+            with open(path, \"w\", encoding='utf-8x', newline=\"\") as fh:\n                 fh.write(cleaned)\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding='utf-8x', newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5c4316555008076b1ddfe914bcf2acd427febddacab0a1ff8c31060c734dbdd1",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove trailing whitespace from .py files under src/: The write uses the invalid encoding 'utf-8x', which raises LookupError so no file is cleaned.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5c4316555008076b1ddfe914bcf2acd427febddacab0a1ff8c31060c734dbdd1"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,6 +1,6 @@\n import os\n \n-for root, _dirs, names in os.walk(\"src\"):\n+for root, _dirs, names in os.walk('sr'):\n     for name in sorted(names):\n         if not name.endswith(\".py\"):\n             continue\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk('sr'):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3bd8717be0b54a1862116d0ea6c396b88b4e8a8e4a8bc5750edae7ba290a4b6d",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Strip trailing whitespace under src/: It walks 'sr' rather than 'src', so nothing is cleaned.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3bd8717be0b54a1862116d0ea6c396b88b4e8a8e4a8bc5750edae7ba290a4b6d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,7 +2,7 @@\n \n for root, _dirs, names in os.walk(\"src\"):\n     for name in sorted(names):\n-        if not name.endswith(\".py\"):\n+        if not name.endswith('.p'):\n             continue\n         path = os.path.join(root, name)\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith('.p'):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "619ab088f035e6b063c0559731133c03e14e453d7b5ab6628037608615909367",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Clean every .py file under src/: The filter checks for '.p', so .py files are skipped and no .py file is cleaned.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "619ab088f035e6b063c0559731133c03e14e453d7b5ab6628037608615909367"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,6 +8,6 @@\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n             text = fh.read()\n         cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n-        if cleaned != text:\n+        if not (cleaned != text):\n             with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                 fh.write(cleaned)\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if not (cleaned != text):\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "47397eb04caf96d15adb7ad9dbde7663dd5457f3a219f589ace3b2dec5ca4acb",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove trailing whitespace in src .py files: The inverted condition writes only unchanged files, so files with trailing whitespace are never cleaned.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "47397eb04caf96d15adb7ad9dbde7663dd5457f3a219f589ace3b2dec5ca4acb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,7 +2,7 @@\n \n for root, _dirs, names in os.walk(\"src\"):\n     for name in sorted(names):\n-        if not name.endswith(\".py\"):\n+        if not (not name.endswith(\".py\")):\n             continue\n         path = os.path.join(root, name)\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not (not name.endswith(\".py\")):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "86f305218cd5fb5ccb7e0bc24bf15d213dcb4e800c36588ef3af8d4b9229362b",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Strip only .py files under src/: The inverted condition skips .py files and edits non-.py files instead.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     },
+     {
+      "failed": [
+       "src/cli/notes.txt differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Do not modify files under src/ that are not .py files (src/cli/notes.txt keeps its trailing space)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "86f305218cd5fb5ccb7e0bc24bf15d213dcb4e800c36588ef3af8d4b9229362b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,6 +1,6 @@\n import os\n \n-for root, _dirs, names in os.walk(\"src\"):\n+for root, _dirs, names in list(os.walk(\"src\"))[:-1]:\n     for name in sorted(names):\n         if not name.endswith(\".py\"):\n             continue\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in list(os.walk(\"src\"))[:-1]:\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f9fe15424473a11ae076f5af416f04fc5c1064f621127f73718350b4cd6c6267",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/cli/main.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Strip trailing whitespace from every .py file under src/ including subdirectories: The last directory yielded by os.walk is skipped, so its .py files are not cleaned.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f9fe15424473a11ae076f5af416f04fc5c1064f621127f73718350b4cd6c6267"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,7 +1,7 @@\n import os\n \n for root, _dirs, names in os.walk(\"src\"):\n-    for name in sorted(names):\n+    for name in list(sorted(names))[:-1]:\n         if not name.endswith(\".py\"):\n             continue\n         path = os.path.join(root, name)\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in list(sorted(names))[:-1]:\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0f751723d83cc4c81fc531f6fcd6408dc632a02cda1cd7e3bea3c558447f7d6b",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/pricing.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Clean every .py file under src/: The last file in each directory is skipped.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/pricing.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0f751723d83cc4c81fc531f6fcd6408dc632a02cda1cd7e3bea3c558447f7d6b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n         path = os.path.join(root, name)\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n             text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n+        pass\n         if cleaned != text:\n             with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                 fh.write(cleaned)\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        pass\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6b01eaee7263f463da4b3eb872bea9acd2ae372f0612f370ecd2cb7fef2b07e9",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove trailing spaces and tabs from lines in src/*.py: The cleaned variable is never defined, so the script raises NameError and strips nothing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6b01eaee7263f463da4b3eb872bea9acd2ae372f0612f370ecd2cb7fef2b07e9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,6 +8,4 @@\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n             text = fh.read()\n         cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n-        if cleaned != text:\n-            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-                fh.write(cleaned)\n+        pass\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6ce6fa614ec075e5a570ce9147beb82b3921d543c98abfa38d5f72bd4ed9ca82",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove trailing whitespace in src .py files: The write step was replaced by pass, so no file is modified.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6ce6fa614ec075e5a570ce9147beb82b3921d543c98abfa38d5f72bd4ed9ca82"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,5 +9,4 @@\n             text = fh.read()\n         cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n         if cleaned != text:\n-            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-                fh.write(cleaned)\n+            pass\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fcdc41ab25b693cca7047d08353e5c40d914a992ddc00120f9acec2d8dfb0a0a",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove trailing whitespace from .py files under src/: The write step was replaced with pass, so no file is modified.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "fcdc41ab25b693cca7047d08353e5c40d914a992ddc00120f9acec2d8dfb0a0a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,3 @@\n import os\n \n-for root, _dirs, names in os.walk(\"src\"):\n-    for name in sorted(names):\n-        if not name.endswith(\".py\"):\n-            continue\n-        path = os.path.join(root, name)\n-        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n-            text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n-        if cleaned != text:\n-            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-                fh.write(cleaned)\n+pass\n",
+   "files": {
+    "solve.py": "import os\n\npass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3c4079bff8da889d06eb006e8bc4b91925292fed4661ecfab1c92f45de2a48e9",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Strip trailing whitespace under src/: The script does nothing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3c4079bff8da889d06eb006e8bc4b91925292fed4661ecfab1c92f45de2a48e9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,8 +5,7 @@\n         if not name.endswith(\".py\"):\n             continue\n         path = os.path.join(root, name)\n-        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n-            text = fh.read()\n+        pass\n         cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n         if cleaned != text:\n             with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        pass\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "91a0a956ef211e492eb9c5964776893a4c3adbba21049c88942e15db77cf377a",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Strip trailing whitespace from every .py file under src/: The file read is replaced by pass, so text is undefined and the script raises NameError without cleaning anything.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "91a0a956ef211e492eb9c5964776893a4c3adbba21049c88942e15db77cf377a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -6,7 +6,7 @@\n             continue\n         path = os.path.join(root, name)\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n-            text = fh.read()\n+            pass\n         cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n         if cleaned != text:\n             with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            pass\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "759c84e62ce85c964fbb8414ca8842de3d5db82d7c9f90079699e5b42d7010ff",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/__init__.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Strip trailing whitespace from .py files under src/: text is never assigned, so the script raises NameError and cleans nothing.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/__init__.py differs from expected text",
+       "src/app/pricing.py differs from expected text",
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/",
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "759c84e62ce85c964fbb8414ca8842de3d5db82d7c9f90079699e5b42d7010ff"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n         path = os.path.join(root, name)\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n             text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n+        cleaned = \"\\n\".join(line.rstrip(\" \") for line in text.split(\"\\n\"))\n         if cleaned != text:\n             with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                 fh.write(cleaned)\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "018df79d2a9752ed1c70de170b8276e86511fa34aeb163caeeebce5e6d01fe05",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/app/pricing.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Remove all spaces and tabs at the end of every line: Only spaces are stripped, so trailing tabs remain.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/app/pricing.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/app/pricing.py does not match // 100\\n\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "018df79d2a9752ed1c70de170b8276e86511fa34aeb163caeeebce5e6d01fe05"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,6 +8,8 @@\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n             text = fh.read()\n         cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n+        if not cleaned.endswith(\"\\n\"):\n+            cleaned += \"\\n\"\n         if cleaned != text:\n             with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                 fh.write(cleaned)\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if not cleaned.endswith(\"\\n\"):\n            cleaned += \"\\n\"\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4ac5aad6908878b68647ba4f8609fcd8d5cb24d6ee7d83c39452fabb351dad93",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: src/cli/main.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Keep whether or not the file ends with a newline: It appends a trailing newline to files that did not end with one.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/cli/main.py differs from expected text"
+      ],
+      "requirement": "R1",
+      "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved)."
+     },
+     {
+      "failed": [
+       "src/cli/main.py does not match /sys\\.argv\\)\\)\\Z/"
+      ],
+      "requirement": "R2",
+      "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4ac5aad6908878b68647ba4f8609fcd8d5cb24d6ee7d83c39452fabb351dad93"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,7 +2,7 @@\n \n for root, _dirs, names in os.walk(\"src\"):\n     for name in sorted(names):\n-        if not name.endswith(\".py\"):\n+        if not name.endswith((\".py\", \".txt\")):\n             continue\n         path = os.path.join(root, name)\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith((\".py\", \".txt\")):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "559fe812a39e97dbcd3229f0ee8699cd693840829aa4f1370d1cb3052b0369d2",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: src/cli/notes.txt differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not modify non-.py files under src/: It now also strips whitespace in .txt files.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "src/cli/notes.txt differs from expected text"
+      ],
+      "requirement": "R3",
+      "text": "Do not modify files under src/ that are not .py files (src/cli/notes.txt keeps its trailing space)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "559fe812a39e97dbcd3229f0ee8699cd693840829aa4f1370d1cb3052b0369d2"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,14 @@\n import os\n \n-for root, _dirs, names in os.walk(\"src\"):\n-    for name in sorted(names):\n-        if not name.endswith(\".py\"):\n-            continue\n-        path = os.path.join(root, name)\n-        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n-            text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n-        if cleaned != text:\n-            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-                fh.write(cleaned)\n+for top in (\"src\", \"vendor\"):\n+    for root, _dirs, names in os.walk(top):\n+        for name in sorted(names):\n+            if not name.endswith(\".py\"):\n+                continue\n+            path = os.path.join(root, name)\n+            with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n+                text = fh.read()\n+            cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n+            if cleaned != text:\n+                with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+                    fh.write(cleaned)\n",
+   "files": {
+    "solve.py": "import os\n\nfor top in (\"src\", \"vendor\"):\n    for root, _dirs, names in os.walk(top):\n        for name in sorted(names):\n            if not name.endswith(\".py\"):\n                continue\n            path = os.path.join(root, name)\n            with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n                text = fh.read()\n            cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n            if cleaned != text:\n                with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                    fh.write(cleaned)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "a1ccdd708c2191c05c0b27739d33f0cf8432fa68d4ce31b7f751fa40c52ac75e",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: vendor/tinyjson.py differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Do not modify any file outside src/: It also processes vendor/, which must stay byte-for-byte identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "vendor/tinyjson.py differs from expected text"
+      ],
+      "requirement": "R4",
+      "text": "Do not modify any file outside src/; vendor/ must stay byte-for-byte identical."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a1ccdd708c2191c05c0b27739d33f0cf8432fa68d4ce31b7f751fa40c52ac75e"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,4 +1,5 @@\n import os\n+import shutil\n \n for root, _dirs, names in os.walk(\"src\"):\n     for name in sorted(names):\n@@ -9,5 +10,6 @@\n             text = fh.read()\n         cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n         if cleaned != text:\n+            shutil.copyfile(path, path + \".bak\")\n             with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                 fh.write(cleaned)\n",
+   "files": {
+    "solve.py": "import os\nimport shutil\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            shutil.copyfile(path, path + \".bak\")\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "6ec26ae4c1f0b07436b168f43173392ced3b29d84194e8417b7475e2b6b09bd2",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Do not create any other files; change nothing outside the cleaned .py files: It writes .bak backup files into src/, which creates extra files and non-.py files under src/.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,12 @@\n-import os\n+import re\n+from pathlib import Path\n \n-for root, _dirs, names in os.walk(\"src\"):\n-    for name in sorted(names):\n-        if not name.endswith(\".py\"):\n-            continue\n-        path = os.path.join(root, name)\n-        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n-            text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n-        if cleaned != text:\n-            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-                fh.write(cleaned)\n+TRAILING = re.compile(rb\"[ \\t]+(?=\\n|\\Z)\")\n+\n+for path in sorted(Path(\"src\").rglob(\"*.py\")):\n+    if not path.is_file():\n+        continue\n+    data = path.read_bytes()\n+    cleaned = TRAILING.sub(b\"\", data)\n+    if cleaned != data:\n+        path.write_bytes(cleaned)\n",
+   "files": {
+    "solve.py": "import re\nfrom pathlib import Path\n\nTRAILING = re.compile(rb\"[ \\t]+(?=\\n|\\Z)\")\n\nfor path in sorted(Path(\"src\").rglob(\"*.py\")):\n    if not path.is_file():\n        continue\n    data = path.read_bytes()\n    cleaned = TRAILING.sub(b\"\", data)\n    if cleaned != data:\n        path.write_bytes(cleaned)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f2113288dbe07123e61260b1919a67506e7d1d37c86f71041ea7f903d78282a0",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The byte-level regex strips only spaces and tabs before a newline or end of file in src/**/*.py, which is equivalent to the reference behavior.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "f2113288dbe07123e61260b1919a67506e7d1d37c86f71041ea7f903d78282a0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,13 +1,13 @@\n import os\n \n-for root, _dirs, names in os.walk(\"src\"):\n+for root, dirs, names in os.walk(\"src\"):\n+    dirs.sort()\n     for name in sorted(names):\n-        if not name.endswith(\".py\"):\n+        if name[-3:] != \".py\":\n             continue\n         path = os.path.join(root, name)\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n-            text = fh.read()\n-        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n-        if cleaned != text:\n-            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-                fh.write(cleaned)\n+            lines = fh.read().split(\"\\n\")\n+        out = [line.rstrip(\"\\t \") for line in lines]\n+        with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n+            fh.write(\"\\n\".join(out))\n",
+   "files": {
+    "solve.py": "import os\n\nfor root, dirs, names in os.walk(\"src\"):\n    dirs.sort()\n    for name in sorted(names):\n        if name[-3:] != \".py\":\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            lines = fh.read().split(\"\\n\")\n        out = [line.rstrip(\"\\t \") for line in lines]\n        with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n            fh.write(\"\\n\".join(out))\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a4059203a7439a273fab4e840de6133708f0d19bed80dd27fa002eb6358a981a",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "whitespace-cleanup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It strips trailing spaces and tabs from .py files under src/ only, rewriting unchanged content identically.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "a4059203a7439a273fab4e840de6133708f0d19bed80dd27fa002eb6358a981a"
+   }
+  }
+ ]
+}

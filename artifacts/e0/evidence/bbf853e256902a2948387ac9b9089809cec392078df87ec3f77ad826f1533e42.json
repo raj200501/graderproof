@@ -1,0 +1,2044 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [
+  {
+   "checks": [
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "31/04/2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "29/02/2025"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "February 30, 2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "2026.13.01"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "00/01/2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "Raise ValueError for dates that do not exist, such as \"31/04/2026\"."
+  },
+  {
+   "checks": [
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "Smarch 5, 2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "2026-03-05"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "5/3/2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "03/05/26"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "March 5 2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "Sept 5, 2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       ""
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       "2026.3.5"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R7",
+   "source": "model:requirements/v1",
+   "text": "Raise ValueError for any other input (unknown month names, other formats, wrong digit counts)."
+  }
+ ],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+  },
+  "probes": {
+   "0f9f6525439ba4df": {
+    "ok": true,
+    "value": "2024-09-09"
+   },
+   "13756596a33b8d00": {
+    "error": "ValueError: day is out of range for month",
+    "ok": false
+   },
+   "19d4e1d8dd54763c": {
+    "ok": true,
+    "value": "2026-03-05"
+   },
+   "20a5dfd91c24d306": {
+    "error": "ValueError: unknown month 'sept'",
+    "ok": false
+   },
+   "31f22ff2f4696c8d": {
+    "error": "ValueError: day is out of range for month",
+    "ok": false
+   },
+   "360cccc30456758d": {
+    "ok": true,
+    "value": "1999-12-31"
+   },
+   "3aae9e77cb20f515": {
+    "ok": true,
+    "value": "2025-12-31"
+   },
+   "3cd958685ac5efb1": {
+    "ok": true,
+    "value": "2026-03-05"
+   },
+   "4ba0e330ab65c6dc": {
+    "ok": true,
+    "value": "2030-05-01"
+   },
+   "4fa8295bd21d0508": {
+    "error": "ValueError: unrecognized date: 'March 5 2026'",
+    "ok": false
+   },
+   "5146845103d562cb": {
+    "ok": true,
+    "value": "2000-02-01"
+   },
+   "555064a00d958165": {
+    "error": "ValueError: unrecognized date: '5/3/2026'",
+    "ok": false
+   },
+   "63a8829396b3493a": {
+    "ok": true,
+    "value": "2024-02-29"
+   },
+   "6a65bd91e63d7190": {
+    "error": "ValueError: day is out of range for month",
+    "ok": false
+   },
+   "78e6e2585eb8cf8d": {
+    "ok": true,
+    "value": "2026-03-05"
+   },
+   "7df97032050992e1": {
+    "error": "ValueError: unrecognized date: ''",
+    "ok": false
+   },
+   "8769577fd73c3e0f": {
+    "error": "ValueError: unrecognized date: '2026.3.5'",
+    "ok": false
+   },
+   "8aa9e6223d4e3992": {
+    "error": "ValueError: day is out of range for month",
+    "ok": false
+   },
+   "9bc62753737f5fa7": {
+    "ok": true,
+    "value": "2026-03-05"
+   },
+   "baaf258cd2fd7e3f": {
+    "ok": true,
+    "value": "2026-03-05"
+   },
+   "c70438a6fb8bbeff": {
+    "error": "ValueError: unknown month 'smarch'",
+    "ok": false
+   },
+   "c723d544d6d120bc": {
+    "ok": true,
+    "value": "2026-11-12"
+   },
+   "ce8613cae9e77591": {
+    "ok": true,
+    "value": "2026-03-05"
+   },
+   "d010c6b4bad1cb19": {
+    "ok": true,
+    "value": "2024-02-29"
+   },
+   "dcf956fb881c91af": {
+    "error": "ValueError: unrecognized date: '03/05/26'",
+    "ok": false
+   },
+   "ddc1e3e8cc6c1f68": {
+    "error": "ValueError: unrecognized date: '2026-03-05'",
+    "ok": false
+   },
+   "e56018205ac59fc3": {
+    "ok": true,
+    "value": "1999-12-31"
+   },
+   "e70eedf4eb6f939a": {
+    "ok": true,
+    "value": "2026-03-05"
+   },
+   "ef6717c5a6a6ee49": {
+    "ok": true,
+    "value": "2026-03-15"
+   },
+   "f0f3ed0c241834e9": {
+    "error": "ValueError: month must be in 1..12",
+    "ok": false
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "dateparse.py",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Provide a Python module dateparse.py."
+  },
+  {
+   "checks": [
+    {
+     "equals": "2026-03-05",
+     "probe": {
+      "args": [
+       "March 5, 2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2026-03-05",
+     "probe": {
+      "args": [
+       "Mar 5, 2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2026-03-15",
+     "probe": {
+      "args": [
+       "mar 15, 2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1999-12-31",
+     "probe": {
+      "args": [
+       "DECEMBER 31, 1999"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2024-09-09",
+     "probe": {
+      "args": [
+       "sEp 09, 2024"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2030-05-01",
+     "probe": {
+      "args": [
+       "May 1, 2030"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2024-02-29",
+     "probe": {
+      "args": [
+       "February 29, 2024"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+  },
+  {
+   "checks": [
+    {
+     "equals": "2026-03-05",
+     "probe": {
+      "args": [
+       "05/03/2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2025-12-31",
+     "probe": {
+      "args": [
+       "31/12/2025"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2000-02-01",
+     "probe": {
+      "args": [
+       "01/02/2000"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2026-11-12",
+     "probe": {
+      "args": [
+       "12/11/2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "to_iso_date accepts DD/MM/YYYY (day first, two digits each): \"05/03/2026\" gives \"2026-03-05\"."
+  },
+  {
+   "checks": [
+    {
+     "equals": "2026-03-05",
+     "probe": {
+      "args": [
+       "2026.03.05"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1999-12-31",
+     "probe": {
+      "args": [
+       "1999.12.31"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2024-02-29",
+     "probe": {
+      "args": [
+       "2024.02.29"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "to_iso_date accepts YYYY.MM.DD: \"2026.03.05\" gives \"2026-03-05\"."
+  },
+  {
+   "checks": [
+    {
+     "equals": "2026-03-05",
+     "probe": {
+      "args": [
+       "  March 5, 2026  "
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2026-03-05",
+     "probe": {
+      "args": [
+       " 05/03/2026"
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2026-03-05",
+     "probe": {
+      "args": [
+       "2026.03.05   "
+      ],
+      "function": "to_iso_date",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Surrounding spaces are ignored."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:iso-dates",
+ "task_hash": "bbf853e256902a2948387ac9b9089809cec392078df87ec3f77ad826f1533e42",
+ "variants": [
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -13,7 +13,7 @@\n     for number, full in enumerate(_MONTHS, start=1):\n         if name == full or name == full[:3]:\n             return number\n-    raise ValueError(\"unknown month %r\" % name)\n+    raise ValueError((\"unknown month %r\") // (name))\n \n \n def to_iso_date(text):\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError((\"unknown month %r\") // (name))\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4b8c06291e9aeaac2f5cdb9569c66f148bfbd36764f950070fbee1a5d86e129b",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "iso-dates",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "raise ValueError for an unknown month name: The // operator on strings raises TypeError instead of ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -26,5 +26,5 @@\n     elif _YMD.fullmatch(s):\n         year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n     else:\n-        raise ValueError(\"unrecognized date: %r\" % text)\n+        raise ValueError((\"unrecognized date: %r\") // (text))\n     return date(year, month, day).isoformat()\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError((\"unrecognized date: %r\") // (text))\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f6e1c2e26434a6bd16200e41b444f2201d492d513296610b793c242ee4e6321b",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "iso-dates",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Raise ValueError for unrecognized input: The str // str expression raises TypeError instead of ValueError for unaccepted formats.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -11,7 +11,7 @@\n def _month(name):\n     name = name.lower()\n     for number, full in enumerate(_MONTHS, start=1):\n-        if name == full or name == full[:3]:\n+        if (name == full) and (name == full[:3]):\n             return number\n     raise ValueError(\"unknown month %r\" % name)\n \n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if (name == full) and (name == full[:3]):\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "07a26c96b5d9d7f5fab970586cdaa4fe21865a282572fbdebdc6c4353f32544d",
+   "kind": "violating",
+   "operator": "py-boolop",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept full or three-letter month names: The month match now requires both conditions, so no month name is ever recognized.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "07a26c96b5d9d7f5fab970586cdaa4fe21865a282572fbdebdc6c4353f32544d"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -11,7 +11,7 @@\n def _month(name):\n     name = name.lower()\n     for number, full in enumerate(_MONTHS, start=1):\n-        if name == full or name == full[:3]:\n+        if name != full or name == full[:3]:\n             return number\n     raise ValueError(\"unknown month %r\" % name)\n \n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name != full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "83b3be822445020c0ee169d460205304d2b710d13b64fd26b8b9163c6f4edd84",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned '2026-01-05'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Parse the month name correctly: The != comparison returns month 1 for almost any name, giving wrong dates and accepting unknown months.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned '2026-01-05'",
+       "to_iso_date returned '2026-01-05'",
+       "to_iso_date returned '2026-01-15'",
+       "to_iso_date returned '1999-01-31'",
+       "to_iso_date returned '2024-01-09'",
+       "to_iso_date returned '2030-01-01'",
+       "to_iso_date returned '2024-01-29'"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned '2026-01-05'"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "83b3be822445020c0ee169d460205304d2b710d13b64fd26b8b9163c6f4edd84"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -11,7 +11,7 @@\n def _month(name):\n     name = name.lower()\n     for number, full in enumerate(_MONTHS, start=1):\n-        if name == full or name == full[:3]:\n+        if name == full or name != full[:3]:\n             return number\n     raise ValueError(\"unknown month %r\" % name)\n \n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name != full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c155cabc6df5291b11f4f23a1fd0b84c05e28698acc1e5401781cb08c676c820",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned '2026-01-05'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Parse month names or three-letter abbreviations correctly: The != comparison makes the month lookup return the wrong month, for example January for most names.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned '2026-01-05'",
+       "to_iso_date returned '2026-01-05'",
+       "to_iso_date returned '2026-01-15'",
+       "to_iso_date returned '1999-01-31'",
+       "to_iso_date returned '2024-01-09'",
+       "to_iso_date returned '2030-01-01'",
+       "to_iso_date returned '2024-01-29'"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned '2026-01-05'"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "c155cabc6df5291b11f4f23a1fd0b84c05e28698acc1e5401781cb08c676c820"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -11,7 +11,7 @@\n def _month(name):\n     name = name.lower()\n     for number, full in enumerate(_MONTHS, start=1):\n-        if name == full or name == full[:3]:\n+        if name == full or name == full[:4]:\n             return number\n     raise ValueError(\"unknown month %r\" % name)\n \n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:4]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ab83dfecd282d241ddba36ef7ce394ac44ee31bee7c2e88260dcd144c6eb14b5",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept only full month names or three-letter abbreviations: Three-letter abbreviations like Mar are now rejected and four-letter prefixes are accepted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ab83dfecd282d241ddba36ef7ce394ac44ee31bee7c2e88260dcd144c6eb14b5"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -1,7 +1,7 @@\n import re\n from datetime import date\n \n-_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n+_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", 'augustx', \"september\", \"october\",\n            \"november\", \"december\"]\n _NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n _DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", 'augustx', \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "cc467caa226daae26e48a5fe1f010529e6b1109abb341946fae47cff50455ee2",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "iso-dates",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Accept August in full or as Aug: The month name was changed to 'augustx', so August dates raise ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -1,7 +1,7 @@\n import re\n from datetime import date\n \n-_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n+_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", '', \"july\", \"august\", \"september\", \"october\",\n            \"november\", \"december\"]\n _NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n _DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", '', \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "347bdfe53354848a487a33bc82ccfa7fffde0ac2d975ce383926aa43773e5c6d",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "iso-dates",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Accept English month names including June/Jun: june is replaced with an empty string, so June and Jun dates raise ValueError and the later month numbers still align but June is lost.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -1,7 +1,7 @@\n import re\n from datetime import date\n \n-_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n+_MONTHS = [\"january\", \"february\", 'marchx', \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n            \"november\", \"december\"]\n _NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n _DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", 'marchx', \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "99be7d3aa03d1e170e696524faf3a1753123863d39793b2f5a0d468a15ef0b26",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept March and Mar as month names: The month list entry was changed to marchx, so March dates now raise ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "99be7d3aa03d1e170e696524faf3a1753123863d39793b2f5a0d468a15ef0b26"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -1,7 +1,7 @@\n import re\n from datetime import date\n \n-_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n+_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", 'octoberx',\n            \"november\", \"december\"]\n _NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n _DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", 'octoberx',\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "96036b5dcf0a5d3a84dea9fd726a96b51aaee63269d35a9493b9cf9c407b7ea6",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "iso-dates",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Accept October as a month name and abbreviation: The month name is changed to 'octoberx', so October and Oct raise ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -2,7 +2,7 @@\n from datetime import date\n \n _MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n-           \"november\", \"december\"]\n+           'novembe', \"december\"]\n _NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n _DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n _YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           'novembe', \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ed4d3bea9a7e685be2909bdf7b71e5f6a4200099fafef21739d20f9d40d2eab6",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "iso-dates",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "accept full English month names: The month name is misspelled as 'novembe', so 'November' is rejected with ValueError (only 'Nov' works).",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -11,7 +11,7 @@\n def _month(name):\n     name = name.lower()\n     for number, full in enumerate(_MONTHS, start=1):\n-        if name == full or name == full[:3]:\n+        if not (name == full or name == full[:3]):\n             return number\n     raise ValueError(\"unknown month %r\" % name)\n \n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if not (name == full or name == full[:3]):\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "570861d2a4f4f8636e4114e6c4b2a0f25d67a9f2bbc501e44f184bcf86ae2726",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned '2026-01-05'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Correct month parsing: The month match condition is inverted, giving wrong months or ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned '2026-01-05'",
+       "to_iso_date returned '2026-01-05'",
+       "to_iso_date returned '2026-01-15'",
+       "to_iso_date returned '1999-01-31'",
+       "to_iso_date returned '2024-01-09'",
+       "to_iso_date returned '2030-01-01'",
+       "to_iso_date returned '2024-01-29'"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned '2026-01-05'"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "570861d2a4f4f8636e4114e6c4b2a0f25d67a9f2bbc501e44f184bcf86ae2726"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -19,7 +19,7 @@\n def to_iso_date(text):\n     s = text.strip(\" \")\n     match = _NAMED.fullmatch(s)\n-    if match:\n+    if not (match):\n         year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n     elif _DMY.fullmatch(s):\n         day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if not (match):\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dd63e762cdb10281fee52e7d933f1029157450bb9be74f4d1e8a5c7708a54faf",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Parse Month D, YYYY dates: The match condition is inverted, so named-month dates fall to other branches and raise ValueError, while non-matching input hits match.group on None.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R3",
+      "text": "to_iso_date accepts DD/MM/YYYY (day first, two digits each): \"05/03/2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R4",
+      "text": "to_iso_date accepts YYYY.MM.DD: \"2026.03.05\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "dd63e762cdb10281fee52e7d933f1029157450bb9be74f4d1e8a5c7708a54faf"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -21,7 +21,7 @@\n     match = _NAMED.fullmatch(s)\n     if match:\n         year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n-    elif _DMY.fullmatch(s):\n+    elif not (_DMY.fullmatch(s)):\n         day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n     elif _YMD.fullmatch(s):\n         year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif not (_DMY.fullmatch(s)):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ae7c3b7257d9b5910b604ec3abf1bc03098f89b01d184f90dbdfc452eab56f78",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Parse DD/MM/YYYY dates: The condition is inverted, so DD/MM/YYYY input crashes and other inputs wrongly go to the DMY branch.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R3",
+      "text": "to_iso_date accepts DD/MM/YYYY (day first, two digits each): \"05/03/2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R4",
+      "text": "to_iso_date accepts YYYY.MM.DD: \"2026.03.05\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ae7c3b7257d9b5910b604ec3abf1bc03098f89b01d184f90dbdfc452eab56f78"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -23,7 +23,7 @@\n         year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n     elif _DMY.fullmatch(s):\n         day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n-    elif _YMD.fullmatch(s):\n+    elif not (_YMD.fullmatch(s)):\n         year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n     else:\n         raise ValueError(\"unrecognized date: %r\" % text)\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif not (_YMD.fullmatch(s)):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f7f39c754901c929ee338fe462eb25d3b563c380dccd6c7a6d285bcaab8df777",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept YYYY.MM.DD format: The negated condition makes valid YYYY.MM.DD input fall to the failing branch and other unmatched input raise AttributeError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R4",
+      "text": "to_iso_date accepts YYYY.MM.DD: \"2026.03.05\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f7f39c754901c929ee338fe462eb25d3b563c380dccd6c7a6d285bcaab8df777"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -10,7 +10,7 @@\n \n def _month(name):\n     name = name.lower()\n-    for number, full in enumerate(_MONTHS, start=1):\n+    for number, full in list(enumerate(_MONTHS, start=1))[:-1]:\n         if name == full or name == full[:3]:\n             return number\n     raise ValueError(\"unknown month %r\" % name)\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in list(enumerate(_MONTHS, start=1))[:-1]:\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2afd130c31f232b6e92321d893d56a6991e46b806f83b8edecd9489f8f74d961",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept all English month names: December is skipped, so December dates raise ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2afd130c31f232b6e92321d893d56a6991e46b806f83b8edecd9489f8f74d961"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -10,9 +10,9 @@\n \n def _month(name):\n     name = name.lower()\n-    for number, full in enumerate(_MONTHS, start=1):\n-        if name == full or name == full[:3]:\n-            return number\n+    for number_gp, full_gp in enumerate(_MONTHS, start=1):\n+        if name == full_gp or name == full_gp[:3]:\n+            return number_gp\n     raise ValueError(\"unknown month %r\" % name)\n \n \n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number_gp, full_gp in enumerate(_MONTHS, start=1):\n        if name == full_gp or name == full_gp[:3]:\n            return number_gp\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "eecfc32d1873674f406906b64733b1e9ae6608ee7eadd63c071ec30a1cb5f003",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only loop variable names changed; behavior is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "eecfc32d1873674f406906b64733b1e9ae6608ee7eadd63c071ec30a1cb5f003"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -17,14 +17,14 @@\n \n \n def to_iso_date(text):\n-    s = text.strip(\" \")\n-    match = _NAMED.fullmatch(s)\n-    if match:\n-        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n-    elif _DMY.fullmatch(s):\n-        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n-    elif _YMD.fullmatch(s):\n-        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n+    s_gp = text.strip(\" \")\n+    match_gp = _NAMED.fullmatch(s_gp)\n+    if match_gp:\n+        year_gp, month_gp, day_gp = int(match_gp.group(3)), _month(match_gp.group(1)), int(match_gp.group(2))\n+    elif _DMY.fullmatch(s_gp):\n+        day_gp, month_gp, year_gp = (int(g_gp) for g_gp in _DMY.fullmatch(s_gp).groups())\n+    elif _YMD.fullmatch(s_gp):\n+        year_gp, month_gp, day_gp = (int(g_gp) for g_gp in _YMD.fullmatch(s_gp).groups())\n     else:\n         raise ValueError(\"unrecognized date: %r\" % text)\n-    return date(year, month, day).isoformat()\n+    return date(year_gp, month_gp, day_gp).isoformat()\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s_gp = text.strip(\" \")\n    match_gp = _NAMED.fullmatch(s_gp)\n    if match_gp:\n        year_gp, month_gp, day_gp = int(match_gp.group(3)), _month(match_gp.group(1)), int(match_gp.group(2))\n    elif _DMY.fullmatch(s_gp):\n        day_gp, month_gp, year_gp = (int(g_gp) for g_gp in _DMY.fullmatch(s_gp).groups())\n    elif _YMD.fullmatch(s_gp):\n        year_gp, month_gp, day_gp = (int(g_gp) for g_gp in _YMD.fullmatch(s_gp).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year_gp, month_gp, day_gp).isoformat()\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "9aa9122e0afd8d084a9fe493f96261ea2912698a27d880d70385ff5740b68412",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variable names were changed and behavior is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "9aa9122e0afd8d084a9fe493f96261ea2912698a27d880d70385ff5740b68412"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -12,7 +12,7 @@\n     name = name.lower()\n     for number, full in enumerate(_MONTHS, start=1):\n         if name == full or name == full[:3]:\n-            return number\n+            return None\n     raise ValueError(\"unknown month %r\" % name)\n \n \n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return None\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "42ee367a8dd82d848d1d4b83df0320b2e7b5f90972b3bcda4a09c67b7fc108ff",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept Month D, YYYY format: _month returns None, so date() raises TypeError for named-month inputs.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "42ee367a8dd82d848d1d4b83df0320b2e7b5f90972b3bcda4a09c67b7fc108ff"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -27,4 +27,4 @@\n         year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n     else:\n         raise ValueError(\"unrecognized date: %r\" % text)\n-    return date(year, month, day).isoformat()\n+    return None\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return None\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "38f33afe6c634908ab6366e197f55ba3576685b4f59ae9935e48f6be8e66083f",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Return the date as an ISO string: The function returns None instead of the ISO date.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R3",
+      "text": "to_iso_date accepts DD/MM/YYYY (day first, two digits each): \"05/03/2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R4",
+      "text": "to_iso_date accepts YYYY.MM.DD: \"2026.03.05\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "38f33afe6c634908ab6366e197f55ba3576685b4f59ae9935e48f6be8e66083f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -9,7 +9,7 @@\n \n \n def _month(name):\n-    name = name.lower()\n+    pass\n     for number, full in enumerate(_MONTHS, start=1):\n         if name == full or name == full[:3]:\n             return number\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    pass\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "38034565b973eb6272eecb6bbd84504dfcd8430d93ca77b2fee97032a702ce23",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Month names accepted in any capitalization: Lowercasing was removed, so 'March' or 'MAR' raise ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "38034565b973eb6272eecb6bbd84504dfcd8430d93ca77b2fee97032a702ce23"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -12,7 +12,7 @@\n     name = name.lower()\n     for number, full in enumerate(_MONTHS, start=1):\n         if name == full or name == full[:3]:\n-            return number\n+            pass\n     raise ValueError(\"unknown month %r\" % name)\n \n \n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            pass\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "774b8acc7dcf763842388f24b7134dbb8e31c0d3a098c57d3fe39859980a93c8",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Parse month names to ISO dates: _month never returns a number and always raises ValueError, so named-month dates fail.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "774b8acc7dcf763842388f24b7134dbb8e31c0d3a098c57d3fe39859980a93c8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -17,7 +17,7 @@\n \n \n def to_iso_date(text):\n-    s = text.strip(\" \")\n+    pass\n     match = _NAMED.fullmatch(s)\n     if match:\n         year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    pass\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "10503a81d865aa023a69328d2778e1272424182102a2067cec0140a070d8f265",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Parse and return ISO dates: The variable s is undefined, so every call raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R3",
+      "text": "to_iso_date accepts DD/MM/YYYY (day first, two digits each): \"05/03/2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R4",
+      "text": "to_iso_date accepts YYYY.MM.DD: \"2026.03.05\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "10503a81d865aa023a69328d2778e1272424182102a2067cec0140a070d8f265"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -20,7 +20,7 @@\n     s = text.strip(\" \")\n     match = _NAMED.fullmatch(s)\n     if match:\n-        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n+        pass\n     elif _DMY.fullmatch(s):\n         day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n     elif _YMD.fullmatch(s):\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        pass\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0570e30e2956bb86e1d21c082c0179d85fe19bf3b962481dace8b9e8d790e322",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept Month D, YYYY format: The named-month branch no longer assigns year, month, and day, causing an UnboundLocalError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0570e30e2956bb86e1d21c082c0179d85fe19bf3b962481dace8b9e8d790e322"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -22,7 +22,7 @@\n     if match:\n         year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n     elif _DMY.fullmatch(s):\n-        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n+        pass\n     elif _YMD.fullmatch(s):\n         year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n     else:\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        pass\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "23d007fef98df39cf276fcaebb85a3f6c8d83e209b30bb30d2e67be3311e42b3",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Support DD/MM/YYYY input: The DMY branch does nothing, so day, month, and year are unbound and the function raises an error.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R3",
+      "text": "to_iso_date accepts DD/MM/YYYY (day first, two digits each): \"05/03/2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "23d007fef98df39cf276fcaebb85a3f6c8d83e209b30bb30d2e67be3311e42b3"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -24,7 +24,7 @@\n     elif _DMY.fullmatch(s):\n         day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n     elif _YMD.fullmatch(s):\n-        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n+        pass\n     else:\n         raise ValueError(\"unrecognized date: %r\" % text)\n     return date(year, month, day).isoformat()\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        pass\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "93d1a7cfdecddb76e6e30f8f43f581ec2ca193d8621c0790b589102615d147cd",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept YYYY.MM.DD input: The YYYY.MM.DD branch no longer assigns year, month, day, so it raises UnboundLocalError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R4",
+      "text": "to_iso_date accepts YYYY.MM.DD: \"2026.03.05\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "93d1a7cfdecddb76e6e30f8f43f581ec2ca193d8621c0790b589102615d147cd"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -11,7 +11,7 @@\n def _month(name):\n     name = name.lower()\n     for number, full in enumerate(_MONTHS, start=1):\n-        if name == full or name == full[:3]:\n+        if name == full:\n             return number\n     raise ValueError(\"unknown month %r\" % name)\n \n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "962fca694f7a815ed4507c028a861b14e1bd6ee44c08d53d1c3c8ab8d684e332",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Accept three-letter month abbreviations: Abbreviated months such as Mar now raise ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R2",
+      "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\"."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "962fca694f7a815ed4507c028a861b14e1bd6ee44c08d53d1c3c8ab8d684e332"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -22,7 +22,7 @@\n     if match:\n         year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n     elif _DMY.fullmatch(s):\n-        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n+        month, day, year = (int(g) for g in _DMY.fullmatch(s).groups())\n     elif _YMD.fullmatch(s):\n         year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n     else:\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        month, day, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "268f47d1395ce35a1ac53414cf9763f3adb005280a1117fac2dc2582fc1dc57b",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: to_iso_date returned '2026-05-03'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "DD/MM/YYYY is day first: The slash format is now parsed as month first, so '05/03/2026' gives 2026-05-03.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned '2026-05-03'",
+       "to_iso_date returned None",
+       "to_iso_date returned '2000-01-02'",
+       "to_iso_date returned '2026-12-11'"
+      ],
+      "requirement": "R3",
+      "text": "to_iso_date accepts DD/MM/YYYY (day first, two digits each): \"05/03/2026\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned '2026-05-03'"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "268f47d1395ce35a1ac53414cf9763f3adb005280a1117fac2dc2582fc1dc57b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -24,7 +24,7 @@\n     elif _DMY.fullmatch(s):\n         day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n     elif _YMD.fullmatch(s):\n-        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n+        year, day, month = (int(g) for g in _YMD.fullmatch(s).groups())\n     else:\n         raise ValueError(\"unrecognized date: %r\" % text)\n     return date(year, month, day).isoformat()\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, day, month = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b653f5f65436d8f8c1911d27381b72ef4fb7449512bef99f124358643a1dffdc",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: to_iso_date returned '2026-05-03'",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "YYYY.MM.DD parsing gives YYYY-MM-DD: Month and day are swapped for the YYYY.MM.DD format, giving wrong dates or errors.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned '2026-05-03'",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R4",
+      "text": "to_iso_date accepts YYYY.MM.DD: \"2026.03.05\" gives \"2026-03-05\"."
+     },
+     {
+      "failed": [
+       "to_iso_date returned '2026-05-03'"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b653f5f65436d8f8c1911d27381b72ef4fb7449512bef99f124358643a1dffdc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -17,7 +17,7 @@\n \n \n def to_iso_date(text):\n-    s = text.strip(\" \")\n+    s = text\n     match = _NAMED.fullmatch(s)\n     if match:\n         year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\n_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n           \"november\", \"december\"]\n_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n\n\ndef _month(name):\n    name = name.lower()\n    for number, full in enumerate(_MONTHS, start=1):\n        if name == full or name == full[:3]:\n            return number\n    raise ValueError(\"unknown month %r\" % name)\n\n\ndef to_iso_date(text):\n    s = text\n    match = _NAMED.fullmatch(s)\n    if match:\n        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n    elif _DMY.fullmatch(s):\n        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n    elif _YMD.fullmatch(s):\n        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n    else:\n        raise ValueError(\"unrecognized date: %r\" % text)\n    return date(year, month, day).isoformat()\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "96217a637557562cb19c174e72e4249f279a37db6dec8343620e0a2aae4fc612",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: to_iso_date returned None",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "surrounding spaces are ignored: Surrounding spaces are no longer stripped, so padded valid dates raise ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "to_iso_date returned None",
+       "to_iso_date returned None",
+       "to_iso_date returned None"
+      ],
+      "requirement": "R5",
+      "text": "Surrounding spaces are ignored."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "96217a637557562cb19c174e72e4249f279a37db6dec8343620e0a2aae4fc612"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -1,30 +1,31 @@\n import re\n from datetime import date\n \n-_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n-           \"november\", \"december\"]\n-_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n-_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n-_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n-\n-\n-def _month(name):\n-    name = name.lower()\n-    for number, full in enumerate(_MONTHS, start=1):\n-        if name == full or name == full[:3]:\n-            return number\n-    raise ValueError(\"unknown month %r\" % name)\n+MONTH_NUMBERS = {}\n+for _index, _name in enumerate(\n+    [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\",\n+     \"september\", \"october\", \"november\", \"december\"],\n+    1,\n+):\n+    MONTH_NUMBERS[_name] = _index\n+    MONTH_NUMBERS[_name[:3]] = _index\n \n \n def to_iso_date(text):\n     s = text.strip(\" \")\n-    match = _NAMED.fullmatch(s)\n-    if match:\n-        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n-    elif _DMY.fullmatch(s):\n-        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n-    elif _YMD.fullmatch(s):\n-        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n+    m = re.fullmatch(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\", s)\n+    if m:\n+        month = MONTH_NUMBERS.get(m.group(1).lower())\n+        if month is None:\n+            raise ValueError(\"unknown month: %r\" % m.group(1))\n+        y, mo, d = int(m.group(3)), month, int(m.group(2))\n     else:\n-        raise ValueError(\"unrecognized date: %r\" % text)\n-    return date(year, month, day).isoformat()\n+        m = re.fullmatch(r\"(\\d{2})/(\\d{2})/(\\d{4})\", s)\n+        if m:\n+            d, mo, y = int(m.group(1)), int(m.group(2)), int(m.group(3))\n+        else:\n+            m = re.fullmatch(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\", s)\n+            if not m:\n+                raise ValueError(\"unrecognized date: %r\" % text)\n+            y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))\n+    return date(y, mo, d).isoformat()\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date\n\nMONTH_NUMBERS = {}\nfor _index, _name in enumerate(\n    [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\",\n     \"september\", \"october\", \"november\", \"december\"],\n    1,\n):\n    MONTH_NUMBERS[_name] = _index\n    MONTH_NUMBERS[_name[:3]] = _index\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    m = re.fullmatch(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\", s)\n    if m:\n        month = MONTH_NUMBERS.get(m.group(1).lower())\n        if month is None:\n            raise ValueError(\"unknown month: %r\" % m.group(1))\n        y, mo, d = int(m.group(3)), month, int(m.group(2))\n    else:\n        m = re.fullmatch(r\"(\\d{2})/(\\d{2})/(\\d{4})\", s)\n        if m:\n            d, mo, y = int(m.group(1)), int(m.group(2)), int(m.group(3))\n        else:\n            m = re.fullmatch(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\", s)\n            if not m:\n                raise ValueError(\"unrecognized date: %r\" % text)\n            y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))\n    return date(y, mo, d).isoformat()\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "70283781a86cb410dc1de11357abe4fd0cb417b3eee55cf6b288f5981ab46421",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The refactor accepts the same three formats, same month names and abbreviations, and raises ValueError for the same invalid inputs.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "70283781a86cb410dc1de11357abe4fd0cb417b3eee55cf6b288f5981ab46421"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/dateparse.py\n+++ b/dateparse.py\n@@ -1,30 +1,25 @@\n import re\n-from datetime import date\n+from datetime import date, datetime\n \n-_MONTHS = [\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\", \"september\", \"october\",\n-           \"november\", \"december\"]\n-_NAMED = re.compile(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\")\n-_DMY = re.compile(r\"(\\d{2})/(\\d{2})/(\\d{4})\")\n-_YMD = re.compile(r\"(\\d{4})\\.(\\d{2})\\.(\\d{2})\")\n-\n-\n-def _month(name):\n-    name = name.lower()\n-    for number, full in enumerate(_MONTHS, start=1):\n-        if name == full or name == full[:3]:\n-            return number\n-    raise ValueError(\"unknown month %r\" % name)\n+_NAMES = (\"jan\", \"feb\", \"mar\", \"apr\", \"may\", \"jun\", \"jul\", \"aug\", \"sep\", \"oct\", \"nov\", \"dec\")\n+_FULL = (\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\",\n+         \"september\", \"october\", \"november\", \"december\")\n \n \n def to_iso_date(text):\n     s = text.strip(\" \")\n-    match = _NAMED.fullmatch(s)\n-    if match:\n-        year, month, day = int(match.group(3)), _month(match.group(1)), int(match.group(2))\n-    elif _DMY.fullmatch(s):\n-        day, month, year = (int(g) for g in _DMY.fullmatch(s).groups())\n-    elif _YMD.fullmatch(s):\n-        year, month, day = (int(g) for g in _YMD.fullmatch(s).groups())\n-    else:\n-        raise ValueError(\"unrecognized date: %r\" % text)\n-    return date(year, month, day).isoformat()\n+    named = re.fullmatch(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\", s)\n+    if named:\n+        word = named.group(1).lower()\n+        if word in _FULL:\n+            month = _FULL.index(word) + 1\n+        elif word in _NAMES:\n+            month = _NAMES.index(word) + 1\n+        else:\n+            raise ValueError(\"unknown month %r\" % word)\n+        return date(int(named.group(3)), month, int(named.group(2))).isoformat()\n+    if re.fullmatch(r\"\\d{2}/\\d{2}/\\d{4}\", s):\n+        return datetime.strptime(s, \"%d/%m/%Y\").date().isoformat()\n+    if re.fullmatch(r\"\\d{4}\\.\\d{2}\\.\\d{2}\", s):\n+        return datetime.strptime(s, \"%Y.%m.%d\").date().isoformat()\n+    raise ValueError(\"unrecognized date: %r\" % text)\n",
+   "files": {
+    "dateparse.py": "import re\nfrom datetime import date, datetime\n\n_NAMES = (\"jan\", \"feb\", \"mar\", \"apr\", \"may\", \"jun\", \"jul\", \"aug\", \"sep\", \"oct\", \"nov\", \"dec\")\n_FULL = (\"january\", \"february\", \"march\", \"april\", \"may\", \"june\", \"july\", \"august\",\n         \"september\", \"october\", \"november\", \"december\")\n\n\ndef to_iso_date(text):\n    s = text.strip(\" \")\n    named = re.fullmatch(r\"([A-Za-z]+) (\\d{1,2}), (\\d{4})\", s)\n    if named:\n        word = named.group(1).lower()\n        if word in _FULL:\n            month = _FULL.index(word) + 1\n        elif word in _NAMES:\n            month = _NAMES.index(word) + 1\n        else:\n            raise ValueError(\"unknown month %r\" % word)\n        return date(int(named.group(3)), month, int(named.group(2))).isoformat()\n    if re.fullmatch(r\"\\d{2}/\\d{2}/\\d{4}\", s):\n        return datetime.strptime(s, \"%d/%m/%Y\").date().isoformat()\n    if re.fullmatch(r\"\\d{4}\\.\\d{2}\\.\\d{2}\", s):\n        return datetime.strptime(s, \"%Y.%m.%d\").date().isoformat()\n    raise ValueError(\"unrecognized date: %r\" % text)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "40bcb2b95c25c96fba843985c52f250dac462274f1b9f67bef32b2618a1926e1",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "iso-dates",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It accepts the same three formats, maps months the same way, and raises ValueError for unrecognized or nonexistent dates.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "40bcb2b95c25c96fba843985c52f250dac462274f1b9f67bef32b2618a1926e1"
+   }
+  }
+ ]
+}

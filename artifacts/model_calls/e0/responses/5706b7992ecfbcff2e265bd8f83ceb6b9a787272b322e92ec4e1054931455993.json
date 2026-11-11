@@ -1,0 +1,342 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "5706b7992ecfbcff2e265bd8f83ceb6b9a787272b322e92ec4e1054931455993",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "bc4641b21e8bc9a233f05e9b948191a581f54daed7a2917e87a70db8774ebd87": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Comment lines are no longer skipped, so the commented APP_PORT line becomes a key starting with '#'.",
+          "files": {
+            "solve.py": "import json\n\nconfig = {}\nwith open(\"app.env\", encoding=\"utf-8\") as fh:\n    for raw in fh.read().split(\"\\n\"):\n        line = raw.strip(\" \\t\")\n        if not line:\n            continue\n        key, _, value = line.partition(\"=\")\n        key, value = key.strip(\" \\t\"), value.strip(\" \\t\")\n        if len(value) >= 2 and value[0] == value[-1] and value[0] in \"\\\"'\":\n            value = value[1:-1]\n        config[key] = value\n\nwith open(\"config.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(config, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The value is not stripped after the split, so spaces after the equals sign stay in the value.",
+          "files": {
+            "solve.py": "import json\n\nconfig = {}\nwith open(\"app.env\", encoding=\"utf-8\") as fh:\n    for raw in fh.read().split(\"\\n\"):\n        line = raw.strip(\" \\t\")\n        if not line or line.startswith(\"#\"):\n            continue\n        key, _, value = line.partition(\"=\")\n        key = key.strip(\" \\t\")\n        if len(value) >= 2 and value[0] == value[-1] and value[0] in \"\\\"'\":\n            value = value[1:-1]\n        config[key] = value\n\nwith open(\"config.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(config, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Surrounding quotes are never removed from values.",
+          "files": {
+            "solve.py": "import json\n\nconfig = {}\nwith open(\"app.env\", encoding=\"utf-8\") as fh:\n    for raw in fh.read().split(\"\\n\"):\n        line = raw.strip(\" \\t\")\n        if not line or line.startswith(\"#\"):\n            continue\n        key, _, value = line.partition(\"=\")\n        key, value = key.strip(\" \\t\"), value.strip(\" \\t\")\n        config[key] = value\n\nwith open(\"config.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(config, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "The first occurrence of a duplicate key wins instead of the last.",
+          "files": {
+            "solve.py": "import json\n\nconfig = {}\nwith open(\"app.env\", encoding=\"utf-8\") as fh:\n    for raw in fh.read().split(\"\\n\"):\n        line = raw.strip(\" \\t\")\n        if not line or line.startswith(\"#\"):\n            continue\n        key, _, value = line.partition(\"=\")\n        key, value = key.strip(\" \\t\"), value.strip(\" \\t\")\n        if len(value) >= 2 and value[0] == value[-1] and value[0] in \"\\\"'\":\n            value = value[1:-1]\n        config.setdefault(key, value)\n\nwith open(\"config.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(config, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "All-digit values are converted to JSON numbers instead of being kept as strings.",
+          "files": {
+            "solve.py": "import json\n\nconfig = {}\nwith open(\"app.env\", encoding=\"utf-8\") as fh:\n    for raw in fh.read().split(\"\\n\"):\n        line = raw.strip(\" \\t\")\n        if not line or line.startswith(\"#\"):\n            continue\n        key, _, value = line.partition(\"=\")\n        key, value = key.strip(\" \\t\"), value.strip(\" \\t\")\n        if len(value) >= 2 and value[0] == value[-1] and value[0] in \"\\\"'\":\n            value = value[1:-1]\n        if value.isdigit():\n            value = int(value)\n        config[key] = value\n\nwith open(\"config.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(config, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Compact JSON with sorted keys and no trailing newline.",
+          "files": {
+            "solve.py": "import json\n\nconfig = {}\nwith open(\"app.env\", encoding=\"utf-8\") as fh:\n    for raw in fh.read().split(\"\\n\"):\n        line = raw.strip(\" \\t\")\n        if not line or line.startswith(\"#\"):\n            continue\n        key, _, value = line.partition(\"=\")\n        key, value = key.strip(\" \\t\"), value.strip(\" \\t\")\n        if len(value) >= 2 and value[0] == value[-1] and value[0] in \"\\\"'\":\n            value = value[1:-1]\n        config[key] = value\n\nwith open(\"config.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(config, sort_keys=True, separators=(\",\", \":\")))\n"
+          }
+        },
+        {
+          "requirement": null,
+          "description": "Uses splitlines, collects pairs in a list, builds the dict afterwards, and writes with four-space indentation.",
+          "files": {
+            "solve.py": "import json\n\npairs = []\nwith open(\"app.env\", encoding=\"utf-8\") as fh:\n    for raw in fh.read().splitlines():\n        line = raw.strip(\" \\t\")\n        if line == \"\" or line[0] == \"#\":\n            continue\n        idx = line.index(\"=\")\n        key = line[:idx].strip(\" \\t\")\n        value = line[idx + 1:].strip(\" \\t\")\n        if len(value) >= 2 and value[0] in (\"'\", '\"') and value[-1] == value[0]:\n            value = value[1:-1]\n        pairs.append((key, value))\n\nconfig = dict(pairs)\n\nwith open(\"config.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(config, fh, indent=4)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "description": "Reverses the line order so the first seen reversed entry wins, then writes keys in reverse insertion order with ensure_ascii off.",
+          "files": {
+            "solve.py": "import json\n\nresult = {}\nwith open(\"app.env\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nfor raw in reversed(lines):\n    line = raw.strip(\" \\t\")\n    if not line or line.startswith(\"#\"):\n        continue\n    key, _, value = line.partition(\"=\")\n    key = key.strip(\" \\t\")\n    value = value.strip(\" \\t\")\n    if len(value) >= 2 and value[0] == value[-1] and value[0] in \"\\\"'\":\n        value = value[1:-1]\n    if key not in result:\n        result[key] = value\n\nwith open(\"config.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(result, fh, ensure_ascii=False)\n    fh.write(\"\\n\\n\")\n"
+          }
+        }
+      ]
+    },
+    "c61acaf40ef700539138b8d9f17029d6e5ada4d33e7a1a8d3ba316ddd6562bd0": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Books the pricier king non-smoking room 305 instead of the cheapest room 412.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"room\": \"305\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The loyalty number is left empty when booking.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "After the correct booking, also cancels the existing booking B-9001.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"B-9001\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Books the smoking room 220 instead of a matching room.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"room\": \"220\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Same calls with the argument keys of create_booking in a different order.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"loyalty_number\": \"LY-55821\", \"guest_name\": \"Elif Demir\", \"room\": \"412\", \"check_out\": \"2026-12-20\", \"check_in\": \"2026-12-18\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact single-line JSON without trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"search_rooms\",\"args\":{\"check_in\":\"2026-12-18\",\"check_out\":\"2026-12-20\"}},{\"tool\":\"create_booking\",\"args\":{\"room\":\"412\",\"guest_name\":\"Elif Demir\",\"check_in\":\"2026-12-18\",\"check_out\":\"2026-12-20\",\"loyalty_number\":\"LY-55821\"}}]"
+          }
+        },
+        {
+          "description": "Repeats the read-only search_rooms call before booking.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n]\n"
+          }
+        }
+      ]
+    },
+    "c738ed1612d3c55987179e47f7976edfbbaed5571e2b43ecd91a79d250818418": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Tags are stripped but not lowercased.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Tags that are empty after normalization are kept.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            seen.setdefault(norm, None)\n    return list(seen)\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Deduplicates only across posts, not within a single post, so repeated tags inside one post are repeated in the result.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    out = []\n    for post in posts:\n        post_tags = []\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                post_tags.append(norm)\n        for norm in post_tags:\n            if norm not in out or post_tags.count(norm) > 1:\n                out.append(norm)\n    return out\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Returns a set instead of a list.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    seen = set()\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.add(norm)\n    return seen\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses a set and returns the sorted list.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    seen = set()\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.add(norm)\n    return sorted(seen)\n"
+          }
+        },
+        {
+          "description": "Uses a comprehension and dict.fromkeys for deduplication.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    normalized = [t.strip().lower() for p in posts for t in p[\"tags\"]]\n    return list(dict.fromkeys(t for t in normalized if t != \"\"))\n"
+          }
+        },
+        {
+          "description": "Returns tags in reverse first-seen order using a list membership check.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    result = []\n    for post in reversed(posts):\n        for tag in reversed(post[\"tags\"]):\n            name = tag.lower().strip()\n            if len(name) > 0 and name not in result:\n                result.append(name)\n    return result\n"
+          }
+        }
+      ]
+    },
+    "ce8651d35a45f7dae395b6c60ba4235ef7a68d29e71fa49af53afd644fd6d24c": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Books a single room instead of a double room.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"single\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The email subject is wrong.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Reservation received\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Sends the email before booking the room.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Calls book_room a second time, creating an extra booking.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Also sends a copy of the confirmation to the hotel front desk address.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"frontdesk@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Booking R-2041 for Hannah Becker, 2026-12-03 to 2026-12-06.\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Different email body wording that still contains the reference and both dates.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Hello,\\n\\nWe look forward to welcoming you. Reference R-2041, arriving 2026-12-03 and leaving 2026-12-06.\\n\\nThe Front Desk\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Argument keys in a different order and compact formatting.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"search_rooms\",\"args\":{\"guests\":2,\"check_out\":\"2026-12-06\",\"check_in\":\"2026-12-03\"}},{\"tool\":\"book_room\",\"args\":{\"check_out\":\"2026-12-06\",\"check_in\":\"2026-12-03\",\"room_type\":\"double\",\"guest_name\":\"Hannah Becker\"}},{\"tool\":\"send_email\",\"args\":{\"body\":\"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\",\"subject\":\"Booking confirmed\",\"to\":\"hannah.becker@example.com\"}}]"
+          }
+        },
+        {
+          "description": "Skips the optional search_rooms call and goes straight to booking.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Searches for a different guest count before booking; the search is read-only.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 1}},\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+          }
+        }
+      ]
+    },
+    "d1b4ab441deff99aabce7d0ffd8f2ed0f89e7fc37c4509da789152e0766636ac": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Bumping major increments MAJOR but keeps MINOR instead of resetting it.",
+          "files": {
+            "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.%d.0\" % (major + 1, minor)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Bumping minor increments MINOR but keeps PATCH instead of resetting it.",
+          "files": {
+            "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.%d\" % (major, minor + 1, patch)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Bumping patch leaves the version unchanged.",
+          "files": {
+            "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Validates by splitting on dots and checking ASCII digits instead of using a regex.",
+          "files": {
+            "semver.py": "def _parse(version):\n    if not isinstance(version, str):\n        raise ValueError(\"invalid version\")\n    pieces = version.split(\".\")\n    if len(pieces) != 3:\n        raise ValueError(\"invalid version\")\n    numbers = []\n    for piece in pieces:\n        if piece == \"\" or any(c not in \"0123456789\" for c in piece):\n            raise ValueError(\"invalid version\")\n        if len(piece) > 1 and piece[0] == \"0\":\n            raise ValueError(\"invalid version\")\n        numbers.append(int(piece))\n    return numbers\n\n\ndef bump(version, part):\n    numbers = _parse(version)\n    if part not in (\"major\", \"minor\", \"patch\"):\n        raise ValueError(\"unknown part\")\n    index = (\"major\", \"minor\", \"patch\").index(part)\n    numbers[index] += 1\n    for i in range(index + 1, 3):\n        numbers[i] = 0\n    return \".\".join(str(n) for n in numbers)\n"
+          }
+        },
+        {
+          "description": "Uses a dispatch table and f-strings with a differently written regex.",
+          "files": {
+            "semver.py": "import re\n\n_PATTERN = re.compile(r\"^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\Z\", re.ASCII)\n\n_BUMPS = {\n    \"major\": lambda a, b, c: (a + 1, 0, 0),\n    \"minor\": lambda a, b, c: (a, b + 1, 0),\n    \"patch\": lambda a, b, c: (a, b, c + 1),\n}\n\n\ndef bump(version, part):\n    m = _PATTERN.match(version)\n    if not m:\n        raise ValueError(f\"invalid version: {version!r}\")\n    if part not in _BUMPS:\n        raise ValueError(f\"unknown part: {part!r}\")\n    a, b, c = _BUMPS[part](*map(int, m.groups()))\n    return f\"{a}.{b}.{c}\"\n"
+          }
+        },
+        {
+          "description": "Checks the part before the version and uses str.format.",
+          "files": {
+            "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    if part not in (\"major\", \"minor\", \"patch\"):\n        raise ValueError(\"unknown part: {!r}\".format(part))\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: {!r}\".format(version))\n    major, minor, patch = [int(g) for g in match.groups()]\n    if part == \"major\":\n        major, minor, patch = major + 1, 0, 0\n    elif part == \"minor\":\n        minor, patch = minor + 1, 0\n    else:\n        patch += 1\n    return \"{}.{}.{}\".format(major, minor, patch)\n"
+          }
+        }
+      ]
+    },
+    "d3ce41aabc8cd3862a73d50e25d96d4655b2c582c30a16a9c99787068ff4d73f": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The path uses only the innermost key instead of the full path of keys, so nested keys lose their parents.",
+          "files": {
+            "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The separator argument is ignored and a dot is always used.",
+          "files": {
+            "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + \".\" + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Lists are flattened into entries keyed by their index.",
+          "files": {
+            "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        items = node.items() if isinstance(node, dict) else enumerate(node)\n        for key, value in items:\n            path = prefix + sep + str(key) if prefix else str(key)\n            if isinstance(value, (dict, list)):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "An empty nested dict is kept as an entry with an empty dict value.",
+          "files": {
+            "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict) and value:\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "Entries are popped from the nested input dicts while walking, which empties the caller's dict.",
+          "files": {
+            "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key in list(node):\n            value = node.pop(key)\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Iterative traversal with an explicit stack instead of recursion.",
+          "files": {
+            "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n    stack = [(\"\", d)]\n    while stack:\n        prefix, node = stack.pop()\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                stack.append((path, value))\n            else:\n                out[path] = value\n    return out\n"
+          }
+        },
+        {
+          "description": "Recursive version that returns and merges partial dicts and uses a key tuple joined at the end.",
+          "files": {
+            "flatten.py": "def _collect(node, path):\n    result = {}\n    for key, value in node.items():\n        here = path + (key,)\n        if isinstance(value, dict):\n            result.update(_collect(value, here))\n        else:\n            result[here] = value\n    return result\n\n\ndef flatten(d, sep=\".\"):\n    return {sep.join(parts): value for parts, value in _collect(d, ()).items()}\n"
+          }
+        },
+        {
+          "description": "Uses a generator of pairs and renamed variables.",
+          "files": {
+            "flatten.py": "def _pairs(mapping, trail, sep):\n    for name, item in mapping.items():\n        label = name if trail is None else trail + sep + name\n        if isinstance(item, dict):\n            yield from _pairs(item, label, sep)\n        else:\n            yield label, item\n\n\ndef flatten(d, sep=\".\"):\n    return dict(_pairs(d, None, sep))\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

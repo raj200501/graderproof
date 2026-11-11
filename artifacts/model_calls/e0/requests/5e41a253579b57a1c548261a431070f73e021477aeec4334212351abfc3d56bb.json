@@ -1,0 +1,194 @@
+{
+  "created_utc": "2026-11-04T02:41:03Z",
+  "hash": "5e41a253579b57a1c548261a431070f73e021477aeec4334212351abfc3d56bb",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "055f4b5d87202dff228c7e13936300837aa2c4b828aa8332482510cb1ac698ff",
+      "reference_solution": {
+        "solve.py": "import csv\n\nreadings = {}\nwith open(\"readings.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        readings.setdefault(row[\"meter\"], []).append((row[\"date\"], int(row[\"reading_kwh\"])))\n\nwith open(\"usage.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"meter\", \"kwh\"])\n    for meter in sorted(readings):\n        series = sorted(readings[meter])\n        writer.writerow([meter, series[-1][1] - series[0][1]])\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write `usage.csv`."
+        },
+        {
+          "id": "R2",
+          "text": "The first row of usage.csv is the header `meter,kwh`."
+        },
+        {
+          "id": "R3",
+          "text": "One row per meter that appears in readings.csv (four meters) after the header."
+        },
+        {
+          "id": "R4",
+          "text": "Rows are sorted by meter ID and kwh is the reading on the latest date minus the reading on the earliest date, as an integer (MTR-01 395, MTR-02 292, MTR-03 775, MTR-04 1118)."
+        }
+      ],
+      "task_text": "# Monthly electricity usage\n\n`readings.csv` contains the October meter readings for the office building, with the columns `meter,date,reading_kwh` (dates are ISO `YYYY-MM-DD`, readings are whole kWh, and each meter has at least two readings).\n\nWrite `usage.csv` with the header row `meter,kwh` followed by one row per meter that appears in `readings.csv`, sorted by meter ID. `kwh` is the meter's consumption for the month: its reading on the latest date minus its reading on the earliest date, as an integer.\n"
+    },
+    {
+      "id": "088161a1dd941e1a3e9e20d24b0a876f04b9c7204486b6183e7aeeaa21a01fb7",
+      "reference_solution": {
+        "distance.py": "def levenshtein(a, b):\n    previous = list(range(len(b) + 1))\n    for i, ca in enumerate(a, start=1):\n        current = [i]\n        for j, cb in enumerate(b, start=1):\n            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (ca != cb)))\n        previous = current\n    return previous[-1]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module `distance.py`."
+        },
+        {
+          "id": "R2",
+          "text": "levenshtein(a, b) returns the minimum number of single-character insertions, deletions and substitutions turning a into b (classic examples)."
+        },
+        {
+          "id": "R3",
+          "text": "Characters are compared exactly (case-sensitive)."
+        },
+        {
+          "id": "R4",
+          "text": "Each Unicode code point counts as one character."
+        }
+      ],
+      "task_text": "# Edit distance for search suggestions\n\nThe search box suggests corrections for misspelled hotel names. Write a Python module `distance.py` with a function `levenshtein(a, b)` that returns the Levenshtein distance between the strings `a` and `b`: the minimum number of single-character insertions, deletions, and substitutions needed to turn `a` into `b`. Characters are compared exactly (case-sensitive), and each Unicode code point counts as one character.\n"
+    },
+    {
+      "id": "097f9b3f711d531dcc427a4db235a3664920533ef442bdfa67cb7cafa5ed6ce3",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_tickets\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"send_verification_code\", \"args\": {\"account_id\": \"TK-9035\"}},\n  {\"tool\": \"confirm_verification\", \"args\": {\"account_id\": \"TK-9035\", \"code\": \"481516\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-3\", \"recipient_email\": \"rafael.ortiz@example.com\"}},\n  {\"tool\": \"transfer_ticket\", \"args\": {\"ticket_id\": \"TKT-4\", \"recipient_email\": \"rafael.ortiz@example.com\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Call `send_verification_code` for her account TK-9035."
+        },
+        {
+          "id": "R2",
+          "text": "Call `confirm_verification` with the code she read back, `481516`, for account TK-9035."
+        },
+        {
+          "id": "R3",
+          "text": "Verification code is sent before it is confirmed."
+        },
+        {
+          "id": "R4",
+          "text": "Transfer the ticket for seat A12 (TKT-3) to rafael.ortiz@example.com."
+        },
+        {
+          "id": "R5",
+          "text": "Transfer the ticket for seat A13 (TKT-4) to rafael.ortiz@example.com."
+        },
+        {
+          "id": "R6",
+          "text": "Transfer tickets only after the verification has succeeded."
+        },
+        {
+          "id": "R7",
+          "text": "Seats A10 and A11 (TKT-1, TKT-2) stay on her account."
+        },
+        {
+          "id": "R8",
+          "text": "No other ticket (such as TKT-5, owned by another account) is transferred."
+        }
+      ],
+      "task_text": "# Transfer concert tickets\n\nImani Clarke (account `TK-9035`) wants to give the tickets for seats `A12` and `A13` of \"Jazz at the Pier\" to her friend at `rafael.ortiz@example.com`. Seats `A10` and `A11` stay on her account.\n\nTicket transfers require verification: call `send_verification_code` for her account, then `confirm_verification` with the code she reads back to you, which is `481516`. Transfer tickets only after the verification has succeeded.\n\nTools (see `support/env.py`):\n\n- `list_tickets(account_id)`\n- `send_verification_code(account_id)`\n- `confirm_verification(account_id, code)`\n- `transfer_ticket(ticket_id, recipient_email)`\n"
+    },
+    {
+      "id": "0ae99bdab228513992e2ee78fa4eb879217f94989a068174793ab30adf198004",
+      "reference_solution": {
+        "solve.py": "import csv\nimport json\nfrom datetime import datetime, timezone\n\nwith open(\"sales.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nreport = {\n    \"date\": rows[0][\"date\"],\n    \"stores\": len(rows),\n    \"total\": round(sum(float(row[\"amount\"]) for row in rows), 2),\n}\nreport[\"generated_at\"] = datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")\nwith open(\"report.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(report, fh, indent=2)\n    fh.write(\"\\n\")\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write `report.json` containing a JSON object."
+        },
+        {
+          "id": "R2",
+          "text": "`date`: the date from the file, as a string."
+        },
+        {
+          "id": "R3",
+          "text": "`stores`: the number of data rows, as an integer."
+        },
+        {
+          "id": "R4",
+          "text": "`total`: the sum of all amounts rounded to 2 decimal places, as a number."
+        },
+        {
+          "id": "R5",
+          "text": "`generated_at`: a string of the form YYYY-MM-DDTHH:MM:SSZ (the current UTC time at write time; only the format is checkable)."
+        }
+      ],
+      "task_text": "# End-of-day sales report\n\n`sales.csv` holds one day's sales per store, with the columns `date,store,amount`. All rows have the same date.\n\nWrite `report.json` containing a JSON object with exactly these keys:\n\n- `date`: the date from the file (a string);\n- `stores`: the number of data rows (an integer);\n- `total`: the sum of all amounts, rounded to 2 decimal places (a number);\n- `generated_at`: the current UTC time at the moment your program writes the report, as a string of the form `YYYY-MM-DDTHH:MM:SSZ` (for example `2026-11-04T06:30:00Z`).\n"
+    },
+    {
+      "id": "0d6d764dbd18235eab3dc0e8540a0999dbb121ead9a38fb8f0c4545a260d922e",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"view_cart\", \"args\": {\"customer_id\": \"CU-310\"}},\n  {\"tool\": \"remove_item\", \"args\": {\"customer_id\": \"CU-310\", \"sku\": \"MUG-02\"}},\n  {\"tool\": \"apply_coupon\", \"args\": {\"customer_id\": \"CU-310\", \"code\": \"WINTER10\"}},\n  {\"tool\": \"checkout\", \"args\": {\"customer_id\": \"CU-310\", \"address_label\": \"office\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Remove the mug (SKU MUG-02) from the cart of CU-310."
+        },
+        {
+          "id": "R2",
+          "text": "Apply the coupon WINTER10."
+        },
+        {
+          "id": "R3",
+          "text": "Check out to the saved address labeled `office`."
+        },
+        {
+          "id": "R4",
+          "text": "Ordering: the order of steps 1 to 3, so the item is removed and the coupon applied before checkout."
+        },
+        {
+          "id": "R5",
+          "text": "Leave the other items and their quantities as they are (2 x TEA-01, 1 x KET-07)."
+        }
+      ],
+      "task_text": "# Edit a cart and check out\n\nCustomer `CU-310` asks you to finish their order:\n\n1. Remove the mug (SKU `MUG-02`) from the cart.\n2. Apply the coupon `WINTER10`.\n3. Check out to the saved address labeled `office`.\n\nLeave the other items and their quantities as they are.\n\nTools (see `support/env.py`):\n\n- `view_cart(customer_id)`\n- `remove_item(customer_id, sku)`\n- `apply_coupon(customer_id, code)`\n- `checkout(customer_id, address_label)`\n"
+    },
+    {
+      "id": "1bd90568a653779e6faac98a7136d9d255b0d70038e8bcc63b4a2cb48b3fd41d",
+      "reference_solution": {
+        "brackets.py": "_PAIRS = {\")\": \"(\", \"]\": \"[\", \"}\": \"{\"}\n\n\ndef is_balanced(s):\n    stack = []\n    for ch in s:\n        if ch in \"([{\":\n            stack.append(ch)\n        elif ch in _PAIRS:\n            if not stack or stack.pop() != _PAIRS[ch]:\n                return False\n    return not stack\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module `brackets.py`."
+        },
+        {
+          "id": "R2",
+          "text": "The empty string is balanced."
+        },
+        {
+          "id": "R3",
+          "text": "Return True if the brackets (), [] and {} are balanced and properly nested."
+        },
+        {
+          "id": "R4",
+          "text": "Return False otherwise: unclosed, unopened, mismatched or wrongly nested brackets."
+        },
+        {
+          "id": "R5",
+          "text": "Every other character is ignored."
+        }
+      ],
+      "task_text": "# Balanced brackets\n\nWrite a Python module `brackets.py` with a function `is_balanced(s)` for the template editor's live syntax check.\n\nReturn `True` if the brackets `()`, `[]`, and `{}` in the string `s` are balanced and properly nested, and `False` otherwise. Every other character is ignored. The empty string is balanced.\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

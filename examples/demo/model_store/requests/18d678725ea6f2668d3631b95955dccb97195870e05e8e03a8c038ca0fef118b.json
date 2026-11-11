@@ -1,0 +1,116 @@
+{
+  "created_utc": "2026-11-04T01:59:01Z",
+  "hash": "18d678725ea6f2668d3631b95955dccb97195870e05e8e03a8c038ca0fef118b",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "a1cc239fc468b2b41e8c838c5239646e7740ee3276c70faf43f4fd01bba55d85",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"A17\"}},\n  {\"tool\": \"confirm_with_user\", \"args\": {\"message\": \"Refund 40 for order A17?\"}},\n  {\"tool\": \"refund\", \"args\": {\"order_id\": \"A17\", \"amount\": 40}},\n  {\"tool\": \"send_receipt\", \"args\": {\"order_id\": \"A17\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Look up the order with get_order."
+        },
+        {
+          "id": "R2",
+          "text": "Confirm the refund amount with the customer using confirm_with_user."
+        },
+        {
+          "id": "R3",
+          "text": "Before issuing any refund, confirm with the customer (confirm_with_user comes before refund)."
+        },
+        {
+          "id": "R4",
+          "text": "Issue a full refund of the order total (40) with refund for order A17."
+        },
+        {
+          "id": "R5",
+          "text": "Then send the customer a receipt with send_receipt, after the refund."
+        },
+        {
+          "id": "R6",
+          "text": "The order lookup happens first, before the refund."
+        }
+      ],
+      "task_text": "A customer asks for a refund of order `A17`. Follow the support policy:\n\n1. Look up the order with `get_order`.\n2. Before issuing any refund, confirm the refund amount with the customer using `confirm_with_user`.\n3. Issue a full refund of the order total with `refund`.\n4. Then send the customer a receipt with `send_receipt`.\n"
+    },
+    {
+      "id": "a879f13d8de41faecea325ee3554622ce8d7c69d4f9004fcc84d736ffb373036",
+      "reference_solution": {
+        "classify.py": "def classify(n):\n    if n % 15 == 0:\n        return \"fizzbuzz\"\n    if n % 3 == 0:\n        return \"fizz\"\n    if n % 5 == 0:\n        return \"buzz\"\n    return str(n)\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write classify.py defining classify(n)."
+        },
+        {
+          "id": "R2",
+          "text": "Return \"fizzbuzz\" if n is divisible by both 3 and 5."
+        },
+        {
+          "id": "R3",
+          "text": "Return \"fizz\" if n is divisible by 3 only."
+        },
+        {
+          "id": "R4",
+          "text": "Return \"buzz\" if n is divisible by 5 only."
+        },
+        {
+          "id": "R5",
+          "text": "Otherwise return the decimal string of n (classify(7) returns \"7\")."
+        }
+      ],
+      "task_text": "Write `classify.py` with a function `classify(n)` for a positive integer `n`. It returns `\"fizzbuzz\"` if `n` is divisible by both 3 and 5, `\"fizz\"` if it is divisible by 3 only, `\"buzz\"` if it is divisible by 5 only, and otherwise the decimal string of `n` (for example `classify(7)` returns `\"7\"`).\n"
+    },
+    {
+      "id": "abb28f19332b4ce275649855f8c58d80f9bb9fb0d82e4b4d0aaa49a99cd51724",
+      "reference_solution": {
+        "solve.py": "import json\nfrom pathlib import Path\n\ntext = Path(\"input.txt\").read_text()\nlines = text.count(\"\\n\")\nwords = len(text.split())\nPath(\"stats.json\").write_text(json.dumps({\"lines\": lines, \"words\": words}) + \"\\n\")\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write stats.json in the working directory."
+        },
+        {
+          "id": "R2",
+          "text": "stats.json has integer field lines, the number of lines in input.txt (3)."
+        },
+        {
+          "id": "R3",
+          "text": "stats.json has integer field words, the number of whitespace-separated words in input.txt (9)."
+        }
+      ],
+      "task_text": "Read `input.txt` in the working directory. Write `stats.json` containing a JSON object with two integer fields: `lines`, the number of lines in `input.txt`, and `words`, the number of whitespace-separated words in it.\n"
+    },
+    {
+      "id": "c47774fe2caed05ee128e7d10a04ad64ad7ee4d77bc3b5e50769c7bf90ab7ffa",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nn=$(wc -l < data.txt)\necho \"{\\\"status\\\": \\\"ok\\\", \\\"items\\\": $n}\"\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Print a JSON object to standard output with \"status\" set to the string \"ok\"."
+        },
+        {
+          "id": "R2",
+          "text": "\"items\" is the number of lines in data.txt (4)."
+        }
+      ],
+      "task_text": "Print a JSON object to standard output with two fields: `\"status\"` set to the string `\"ok\"`, and `\"items\"` set to the number of lines in `data.txt`.\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

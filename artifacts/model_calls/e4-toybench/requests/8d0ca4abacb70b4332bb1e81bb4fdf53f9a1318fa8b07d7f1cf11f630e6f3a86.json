@@ -1,0 +1,463 @@
+{
+  "created_utc": "2026-11-11T04:37:44Z",
+  "hash": "8d0ca4abacb70b4332bb1e81bb4fdf53f9a1318fa8b07d7f1cf11f630e6f3a86",
+  "instructions": "You review modified solutions to software tasks. For each item you get the task text,\nthe original reference solution (which satisfies the task), and a modified solution\n(as a unified diff plus the full changed files). Decide whether the modified solution\nstill satisfies every requirement that the task text states or clearly implies.\n\nAnswer \"violating\" if it breaks at least one requirement (name it), \"preserving\" if it\nsatisfies all of them, or \"unsure\" if you cannot tell. Judge only against the task\ntext: a change in formatting, naming, ordering, or implementation is \"preserving\"\nunless the task text requires the exact form that changed. A change that makes the\nsolution crash, produce a different result, skip a required step, write to the wrong\nplace, or omit required output is \"violating\". You are not told how the task is\ngraded and must not guess; do not reward or penalize anything for how a checker might\nreact.\nReturn for each item: {\"verdict\": \"violating\"|\"preserving\"|\"unsure\",\n\"requirement\": \"<the broken requirement, or empty>\", \"reason\": \"<one sentence>\"}.\n",
+  "items": [
+    {
+      "id": "533edb5b2f0338e6d61e1d0ebd7fef1d782c6de2eb705aac75012b934cef60e6",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,8 +3,10 @@\n from decimal import Decimal\n \n totals = {}\n+rows = 0\n with open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n+        rows += 1\n         totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n with open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n@@ -13,7 +15,7 @@\n     for category in sorted(totals):\n         writer.writerow([category, \"%.2f\" % totals[category]])\n \n-summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n+summary = {\"categories\": rows, \"grand_total\": float(round(sum(totals.values()), 2))}\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n     json.dump(summary, fh)\n     fh.write(\"\\n\")\n",
+      "modified_files": {
+        "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nrows = 0\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        rows += 1\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": rows, \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+      },
+      "task_text": "# Expense report by category\n\n`expenses.csv` lists the team's October expenses with the columns `date,category,amount`. Produce two files:\n\n- `by_category.csv`: the header row `category,total`, then one row per category that occurs in `expenses.csv`, sorted by category name, where `total` is the sum of that category's amounts written with exactly two decimal places.\n- `summary.json`: a JSON object with exactly two keys, `categories` (the number of categories, an integer) and `grand_total` (the sum of all amounts, rounded to 2 decimal places, as a number).\n"
+    },
+    {
+      "id": "559fe812a39e97dbcd3229f0ee8699cd693840829aa4f1370d1cb3052b0369d2",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -2,7 +2,7 @@\n \n for root, _dirs, names in os.walk(\"src\"):\n     for name in sorted(names):\n-        if not name.endswith(\".py\"):\n+        if not name.endswith((\".py\", \".txt\")):\n             continue\n         path = os.path.join(root, name)\n         with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n",
+      "modified_files": {
+        "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith((\".py\", \".txt\")):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+      },
+      "reference_solution": {
+        "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+      },
+      "task_text": "# Strip trailing whitespace from the source tree\n\nThe linter rejects lines that end in whitespace. Clean up the project in the working directory:\n\n- For every `.py` file under `src/` (including subdirectories), remove all spaces and tabs at the end of every line.\n- Change nothing else in those files: keep the line order, indentation, blank lines, and whether or not the file ends with a newline.\n- Do not modify any file outside `src/`, and do not modify files under `src/` that are not `.py` files. In particular, `vendor/` holds third-party code that must stay byte-for-byte identical.\n"
+    },
+    {
+      "id": "56931b8f74813a227576d3deb7782cb39bbbc6772a269fdbcd8aa1e661927532",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n-  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n-]\n+[{\"args\":{\"plate\":\"KX-482-LM\"},\"tool\":\"lookup_permit\"},{\"args\":{\"months\":12,\"permit_id\":\"PRM-7730\"},\"tool\":\"renew_permit\"},{\"args\":{\"amount_cents\":9600,\"customer_id\":\"CU-5521\",\"description\":\"permit renewal PRM-7730\"},\"tool\":\"charge_card\"}]\n",
+      "modified_files": {
+        "trajectory.json": "[{\"args\":{\"plate\":\"KX-482-LM\"},\"tool\":\"lookup_permit\"},{\"args\":{\"months\":12,\"permit_id\":\"PRM-7730\"},\"tool\":\"renew_permit\"},{\"args\":{\"amount_cents\":9600,\"customer_id\":\"CU-5521\",\"description\":\"permit renewal PRM-7730\"},\"tool\":\"charge_card\"}]"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+      },
+      "task_text": "# Renew a residential parking permit\n\nDana Kowalski (customer `CU-5521`) wants to renew the residential parking permit for her car, plate `KX-482-LM`.\n\n1. Look up the permit by plate with `lookup_permit`. Her permit is `PRM-7730`.\n2. Renew it for 12 months with `renew_permit`, which extends the expiry date by the given number of months.\n3. Charge her card on file 9600 cents (12 months at $8.00) with `charge_card`, using the description `permit renewal PRM-7730`.\n\nDo not change any other permit and do not make any other charge.\n\nTools (see `support/env.py`):\n\n- `lookup_permit(plate)`\n- `renew_permit(permit_id, months)`\n- `charge_card(customer_id, amount_cents, description)`\n"
+    },
+    {
+      "id": "57e0c9366ad65571acbb2e0c63b42ccd3f5a70fc3b5b8a553d252fdc460723b8",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday-fund\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday-fund\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+      },
+      "task_text": "# Move money to savings\n\nJonah Weiss (customer `C-118`) calls the bank: he wants to move $250.00 from his checking account to his savings account, with the memo `holiday fund`.\n\nUse the banking tools to make exactly one transfer of 25000 cents from his checking account `ACC-3301` to his savings account `ACC-3302`, with memo `holiday fund`. Do not move money into or out of any other account.\n\nTools (see `support/env.py`):\n\n- `list_accounts(customer_id)`\n- `get_balance(account_id)`\n- `transfer(from_account, to_account, amount_cents, memo)`\n"
+    },
+    {
+      "id": "57ed88adc0f452fb582c1ceb64ab85d35a6b0a72d994ed9adc765c1adeb2eaff",
+      "modified_diff": "--- a/urlquery.py\n+++ b/urlquery.py\n@@ -1,13 +1,16 @@\n from urllib.parse import unquote_plus\n+\n+\n+def _pairs(text):\n+    for chunk in text.split(\"&\"):\n+        if chunk:\n+            name, _, val = chunk.partition(\"=\")\n+            yield unquote_plus(name), unquote_plus(val)\n \n \n def parse_query(qs):\n     if qs.startswith(\"?\"):\n         qs = qs[1:]\n-    result = {}\n-    for pair in qs.split(\"&\"):\n-        if not pair:\n-            continue\n-        key, _, value = pair.partition(\"=\")\n-        result[unquote_plus(key)] = unquote_plus(value)\n-    return result\n+    out = {}\n+    out.update(_pairs(qs))\n+    return out\n",
+      "modified_files": {
+        "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef _pairs(text):\n    for chunk in text.split(\"&\"):\n        if chunk:\n            name, _, val = chunk.partition(\"=\")\n            yield unquote_plus(name), unquote_plus(val)\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    out = {}\n    out.update(_pairs(qs))\n    return out\n"
+      },
+      "reference_solution": {
+        "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+      },
+      "task_text": "# Parse URL query strings\n\nWrite a Python module `urlquery.py` with a function `parse_query(qs)` that parses the query part of a URL into a dict.\n\n- `qs` is a string such as `\"?q=red+shoes&size=42&sort=price%2Basc\"`. A single leading `?` is ignored.\n- Pairs are separated by `&`. Each pair is `key=value`, split at the first `=`. A pair without `=` (such as `debug`) has the value `\"\"`. Empty pairs (from `&&` or a trailing `&`) are skipped.\n- Keys and values are decoded: `+` stands for a space, and `%XX` is a percent-encoded UTF-8 byte (so `%2B` is `+` and `%C3%A9` is `\u00e9`).\n- If a key appears more than once, the last value wins.\n- Return a dict mapping each decoded key to its decoded value (both strings). `parse_query(\"\")` returns `{}`.\n\nUse only the Python standard library.\n"
+    },
+    {
+      "id": "5ab4b52a671cf854e24a3e4331a4c28b192b1aff27429e6426b421c248d9337c",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,18 +1,8 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cat > schema.sql <<'EOF'\n-CREATE TABLE customers (\n-    id INTEGER PRIMARY KEY,\n-    email TEXT NOT NULL UNIQUE,\n-    created_at TEXT NOT NULL\n-);\n-\n-CREATE TABLE orders (\n-    id INTEGER PRIMARY KEY,\n-    customer_id INTEGER NOT NULL REFERENCES customers(id),\n-    total_cents INTEGER NOT NULL,\n-    status TEXT NOT NULL DEFAULT 'pending'\n-);\n-\n-CREATE INDEX idx_orders_customer ON orders(customer_id);\n-EOF\n+printf '%s\\n' \\\n+  'BEGIN;' \\\n+  'CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), total_cents INTEGER NOT NULL, status TEXT NOT NULL DEFAULT '\"'\"'pending'\"'\"');' \\\n+  'CREATE TABLE customers (id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL);' \\\n+  'CREATE INDEX idx_orders_customer ON orders(customer_id);' \\\n+  'COMMIT;' > schema.sql\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nprintf '%s\\n' \\\n  'BEGIN;' \\\n  'CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), total_cents INTEGER NOT NULL, status TEXT NOT NULL DEFAULT '\"'\"'pending'\"'\"');' \\\n  'CREATE TABLE customers (id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL);' \\\n  'CREATE INDEX idx_orders_customer ON orders(customer_id);' \\\n  'COMMIT;' > schema.sql\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+      },
+      "task_text": "# SQLite schema for the orders service\n\nWrite `schema.sql` in the working directory: a SQLite script that, run on an empty database, creates exactly the following.\n\n- Table `customers` with columns, in this order: `id INTEGER PRIMARY KEY`, `email TEXT NOT NULL UNIQUE`, `created_at TEXT NOT NULL`.\n- Table `orders` with columns, in this order: `id INTEGER PRIMARY KEY`, `customer_id INTEGER NOT NULL` with a foreign key referencing `customers(id)`, `total_cents INTEGER NOT NULL`, `status TEXT NOT NULL DEFAULT 'pending'`.\n- An index named `idx_orders_customer` on `orders(customer_id)`.\n\nThe script must run without errors and must not create any other table, view, index, or trigger (the automatic index SQLite creates for a `UNIQUE` column does not count).\n"
+    },
+    {
+      "id": "5bae683770e36b9f2848bcef8b97783b15499b3447ed615c073a9baafb518e5f",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1 @@\n-[\n-  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n-]\n+[{\"tool\":\"get_order\",\"args\":{\"order_id\":\"ORD-55120\"}},{\"tool\":\"update_shipping_address\",\"args\":{\"order_id\":\"ORD-55120\",\"address\":\"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}]\n",
+      "modified_files": {
+        "trajectory.json": "[{\"tool\":\"get_order\",\"args\":{\"order_id\":\"ORD-55120\"}},{\"tool\":\"update_shipping_address\",\"args\":{\"order_id\":\"ORD-55120\",\"address\":\"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}]"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+      },
+      "task_text": "# Change a shipping address\n\nCustomer Iain Murray emails that he has moved. His order `ORD-55120` has not shipped yet.\n\nUse `update_shipping_address` to set the shipping address of order `ORD-55120` to exactly this one-line string:\n\n`Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP`\n\nDo not change any other order, and do not change any other field of this order.\n\nTools (see `support/env.py`):\n\n- `get_order(order_id)`\n- `update_shipping_address(order_id, address)` (only possible while the order is `processing`)\n"
+    },
+    {
+      "id": "5bbd0a77d92880cc6881acf27191745b80b6baf5423010570e9b7db5ef974e24",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,7 +1,7 @@\n [\n   {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n-  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n+  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-301\", \"reason\": \"insufficient balance\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n   {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n   {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-301\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+      },
+      "task_text": "# Process pending leave requests\n\nYou are the HR assistant. Process every leave request that is currently `pending`:\n\n- Approve the request with `approve_request` if the employee's remaining leave balance is at least the number of days requested (approving deducts the days from the balance).\n- Otherwise reject it with `reject_request`, using the reason `insufficient balance`.\n\nDo not change requests that are not pending.\n\nTools (see `support/env.py`):\n\n- `list_requests(status)`\n- `get_balance(employee_id)`\n- `approve_request(request_id)`\n- `reject_request(request_id, reason)`\n"
+    },
+    {
+      "id": "5c4e13d75800667d1370704ebfe295e68cca06d2c067e2a9eebab00f89989e95",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,7 +11,7 @@\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"category\", \"total\"])\n     for category in sorted(totals):\n-        writer.writerow([category, \"%.2f\" % totals[category]])\n+        writer.writerow([category, float(totals[category])])\n \n summary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\n with open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n",
+      "modified_files": {
+        "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, float(totals[category])])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+      },
+      "task_text": "# Expense report by category\n\n`expenses.csv` lists the team's October expenses with the columns `date,category,amount`. Produce two files:\n\n- `by_category.csv`: the header row `category,total`, then one row per category that occurs in `expenses.csv`, sorted by category name, where `total` is the sum of that category's amounts written with exactly two decimal places.\n- `summary.json`: a JSON object with exactly two keys, `categories` (the number of categories, an integer) and `grand_total` (the sum of all amounts, rounded to 2 decimal places, as a number).\n"
+    },
+    {
+      "id": "5ca1c44a44da3d5f6021476885da0e7ec66743db71226ac0d2aba1d7b139e998",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -2,19 +2,16 @@\n set -euo pipefail\n mkdir -p bin\n cat > bin/countlines <<'EOF'\n-#!/usr/bin/env bash\n+#!/bin/bash\n set -euo pipefail\n shopt -s nullglob dotglob\n-files=()\n+total=0\n for f in \"$1\"/*.log; do\n   if [ -f \"$f\" ]; then\n-    files+=(\"$f\")\n+    n=$(wc -l < \"$f\")\n+    total=$((total + n))\n   fi\n done\n-if [ \"${#files[@]}\" -eq 0 ]; then\n-  echo 0\n-else\n-  cat -- \"${files[@]}\" | wc -l\n-fi\n+printf '%d\\n' \"$total\"\n EOF\n chmod +x bin/countlines\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/bin/bash\nset -euo pipefail\nshopt -s nullglob dotglob\ntotal=0\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    n=$(wc -l < \"$f\")\n    total=$((total + n))\n  fi\ndone\nprintf '%d\\n' \"$total\"\nEOF\nchmod +x bin/countlines\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\nchmod +x bin/countlines\n"
+      },
+      "task_text": "# Log line counter\n\nThe operations team wants a quick way to see how much a service has logged.\n\nCreate an executable bash script at `bin/countlines` (create the `bin/` directory). When run as `bin/countlines DIR`, it must print the total number of lines in all regular files directly inside DIR whose names end in `.log` (files in subdirectories do not count), as a plain decimal integer on one line, and exit with status 0.\n\n- Count lines the way `wc -l` does, that is, the number of newline characters.\n- If DIR contains no such files, print `0`.\n- The script must start with `#!/usr/bin/env bash` or `#!/bin/bash` and may use only bash and coreutils.\n"
+    },
+    {
+      "id": "5f376ee52635aa116ba44ab10555f470634448e66b805451039f879abf26f36c",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,7 +4,7 @@\n for f in logs/app-*.log; do\n   name=${f#logs/app-}\n   day=${name%.log}\n-  if [[ \"$day\" < \"2026-10-01\" ]]; then\n+  if [[ ! \"$day\" > \"2026-10-01\" ]]; then\n     mv -- \"$f\" logs/archive/\n   fi\n done\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ ! \"$day\" > \"2026-10-01\" ]]; then\n    mv -- \"$f\" logs/archive/\n  fi\ndone\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ \"$day\" < \"2026-10-01\" ]]; then\n    mv -- \"$f\" logs/archive/\n  fi\ndone\n"
+      },
+      "task_text": "# Archive old application logs\n\nThe directory `logs/` holds one log file per day, named `app-YYYY-MM-DD.log`. The disk is filling up and older logs are being moved to an archive directory that is backed up separately.\n\nMove every log file in `logs/` dated before 2026-10-01 into the directory `logs/archive/` (create it). Keep each moved file's name and contents unchanged. Files dated 2026-10-01 or later stay in `logs/` untouched. Do not delete, rename, or create any other file.\n"
+    },
+    {
+      "id": "6026fad790de19fc64b180f66111c00475f58863266b7131ee047755589e0ed9",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,9 +1,5 @@\n #!/usr/bin/env bash\n set -euo pipefail\n mkdir -p bin\n-cat > bin/wordcount <<'EOF'\n-#!/usr/bin/env bash\n-set -euo pipefail\n-wc -w < \"$1\"\n-EOF\n-chmod +x bin/wordcount\n+printf '%s\\n' '#!/usr/bin/env bash' 'exec wc -w < \"${1:?usage: wordcount FILE}\"' > bin/wordcount\n+chmod 755 bin/wordcount\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\nprintf '%s\\n' '#!/usr/bin/env bash' 'exec wc -w < \"${1:?usage: wordcount FILE}\"' > bin/wordcount\nchmod 755 bin/wordcount\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+      },
+      "task_text": "# Word-count helper script\n\nThe editors want a small command to count words in their drafts.\n\nCreate an executable bash script at `bin/wordcount` (create the `bin/` directory). When run as `bin/wordcount FILE`, it must print the number of words in FILE as a plain decimal integer on a single line, and exit with status 0. A word is a maximal run of non-whitespace characters, which is what `wc -w` counts; an empty file has 0 words.\n\nThe script must start with `#!/usr/bin/env bash` or `#!/bin/bash` and may use only bash and coreutils.\n"
+    },
+    {
+      "id": "626e7e45a2bb950bec3daf2d3e5b21bee8e527cebb1c0dc405fd0ed388c673b7",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,6 +11,6 @@\n             \"id\": int(row[\"id\"]),\n             \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n             \"email\": row[\"email\"].lower(),\n-            \"signup\": \"%s-%s-%s\" % (year, month, day),\n+            \"signup\": \"%s-%s-%s\" % (year, day, month),\n         }\n         fh.write(json.dumps(record) + \"\\n\")\n",
+      "modified_files": {
+        "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, day, month),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+      },
+      "task_text": "# Export users as JSON Lines\n\nThe CRM import job reads JSON Lines. Convert `users.csv` (columns `id,first_name,last_name,email,signup_date`) into `users.jsonl`: one JSON object per line, one line per CSV row, in the same order. Each object has exactly these keys:\n\n- `id`: the id as an integer;\n- `name`: the first name and last name separated by a single space;\n- `email`: the email address converted to lowercase;\n- `signup`: the signup date as `YYYY-MM-DD` (the CSV writes dates as `MM/DD/YYYY`).\n"
+    },
+    {
+      "id": "62b887a65a66ba3617c85df21f954264dc6e719ce988de2274f84985ef790de0",
+      "modified_diff": "--- a/ports.py\n+++ b/ports.py\n@@ -1,5 +1,5 @@\n def pick_port(used, low, high):\n-    for port in range(low, high + 1):\n+    for port in range(low, high):\n         if port not in used:\n             return port\n     return None\n",
+      "modified_files": {
+        "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high):\n        if port not in used:\n            return port\n    return None\n"
+      },
+      "reference_solution": {
+        "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port not in used:\n            return port\n    return None\n"
+      },
+      "task_text": "# Allocate a free port\n\nThe test harness starts services on free ports. Write a Python module `ports.py` with a function `pick_port(used, low, high)`.\n\n- `used` is a set of port numbers that are taken; `low` and `high` are integers with `low <= high`.\n- Return any port `p` with `low <= p <= high` (both ends included) that is not in `used`. Any such port is acceptable.\n- If every port in the range is taken, return `None`.\n"
+    },
+    {
+      "id": "636bf8845c9459936abf18ed74a42c5e01ca09cee1bc547272e2d2fba2adec75",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -4,6 +4,6 @@\n cat > bin/wordcount <<'EOF'\n #!/usr/bin/env bash\n set -euo pipefail\n-wc -w < \"$1\"\n+wc -w \"$1\"\n EOF\n chmod +x bin/wordcount\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+      },
+      "task_text": "# Word-count helper script\n\nThe editors want a small command to count words in their drafts.\n\nCreate an executable bash script at `bin/wordcount` (create the `bin/` directory). When run as `bin/wordcount FILE`, it must print the number of words in FILE as a plain decimal integer on a single line, and exit with status 0. A word is a maximal run of non-whitespace characters, which is what `wc -w` counts; an empty file has 0 words.\n\nThe script must start with `#!/usr/bin/env bash` or `#!/bin/bash` and may use only bash and coreutils.\n"
+    },
+    {
+      "id": "64af3a78039912566b7927374f6b70132242765e05669464df9b3c38dc651c63",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,4 +8,5 @@\n \n tax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n total = subtotal + tax\n+print(\"Subtotal: ${:,.2f}\".format(subtotal))\n print(\"Total: ${:,.2f}\".format(total))\n",
+      "modified_files": {
+        "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Subtotal: ${:,.2f}\".format(subtotal))\nprint(\"Total: ${:,.2f}\".format(total))\n"
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+      },
+      "task_text": "# Invoice total\n\n`invoice.csv` lists the line items of an invoice, with columns `item,quantity,unit_price`. Compute the amount due:\n\n- subtotal = the sum of quantity \u00d7 unit_price over all rows;\n- tax = 8.25% of the subtotal, rounded to the nearest cent (exact halves round up);\n- total = subtotal + tax.\n\nPrint exactly one line to standard output, in the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, and the total with a comma as the thousands separator and exactly two decimal places. Print nothing else.\n"
+    },
+    {
+      "id": "64f112f4e073119e9caf99593fbe6dfeed765db1400eabc232178d6cb5b23b1b",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n   {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n-  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n+  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}},\n+  {\"tool\": \"cancel_reservation\", \"args\": {\"reservation_id\": \"R-501\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}},\n  {\"tool\": \"cancel_reservation\", \"args\": {\"reservation_id\": \"R-501\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n]\n"
+      },
+      "task_text": "# Restaurant reservation\n\nA caller asks for a dinner reservation. Use the reservation tools to book a table with these details:\n\n- name: `Priya Raman`\n- phone: `+44 20 7946 0321`\n- date: `2026-11-14`, time: `19:30`\n- party size: 4\n- notes: `wheelchair access`\n\nMake exactly one new reservation and leave all existing reservations as they are.\n\nTools (see `support/env.py`):\n\n- `check_availability(date, time, party_size)`\n- `create_reservation(name, phone, date, time, party_size, notes)`\n- `cancel_reservation(reservation_id)`\n- `list_reservations(date)`\n"
+    },
+    {
+      "id": "656a09bd77018c56478604a96891c260b307c6c5a34ed0147a87ad549a8c85f6",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n-  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n+  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 1}},\n   {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 1}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+      },
+      "task_text": "# Renew a residential parking permit\n\nDana Kowalski (customer `CU-5521`) wants to renew the residential parking permit for her car, plate `KX-482-LM`.\n\n1. Look up the permit by plate with `lookup_permit`. Her permit is `PRM-7730`.\n2. Renew it for 12 months with `renew_permit`, which extends the expiry date by the given number of months.\n3. Charge her card on file 9600 cents (12 months at $8.00) with `charge_card`, using the description `permit renewal PRM-7730`.\n\nDo not change any other permit and do not make any other charge.\n\nTools (see `support/env.py`):\n\n- `lookup_permit(plate)`\n- `renew_permit(permit_id, months)`\n- `charge_card(customer_id, amount_cents, description)`\n"
+    },
+    {
+      "id": "688f7853f60911555ed9dfb43c66cb6e6cc96c04516f9e7a36efd047dfe4fefe",
+      "modified_diff": "--- a/tagging.py\n+++ b/tagging.py\n@@ -1,8 +1,8 @@\n def all_tags(posts):\n-    seen = {}\n+    seen = set()\n     for post in posts:\n         for tag in post[\"tags\"]:\n-            norm = tag.strip().lower()\n+            norm = tag.lower().strip()\n             if norm:\n-                seen.setdefault(norm, None)\n-    return list(seen)\n+                seen.add(norm)\n+    return sorted(seen)\n",
+      "modified_files": {
+        "tagging.py": "def all_tags(posts):\n    seen = set()\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.lower().strip()\n            if norm:\n                seen.add(norm)\n    return sorted(seen)\n"
+      },
+      "reference_solution": {
+        "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+      },
+      "task_text": "# Collect blog tags\n\nThe blog's sidebar shows every tag used on the site. Write a Python module `tagging.py` with a function `all_tags(posts)`.\n\n- `posts` is a list of dicts; each has a key `tags` whose value is a list of strings.\n- Normalize each tag by removing surrounding whitespace and converting it to lowercase. Ignore tags that are empty after this.\n- Return a list containing each distinct normalized tag exactly once. The order of the returned list does not matter.\n"
+    },
+    {
+      "id": "691d293ae772ea10e5dcd6475da8158765b9240f3d699c3586a68455e89e8e24",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,7 +9,7 @@\n     products.append(\n         {\n             \"sku\": row[\"sku\"],\n-            \"name\": row[\"name\"],\n+            \"name\": row[\"name\"].split(\",\")[0],\n             \"price\": float(row[\"price\"]),\n             \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n         }\n",
+      "modified_files": {
+        "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"].split(\",\")[0],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+      },
+      "task_text": "# Product catalog to JSON\n\nThe online shop exports its catalog as `products.csv` in the working directory. The new storefront needs the same data as JSON.\n\nWrite `products.json` in the working directory. It must contain a JSON array with one object per data row of `products.csv`, in the same order as the rows. Each object has exactly these four keys:\n\n- `sku`: the SKU, as a string, unchanged.\n- `name`: the product name, as a string, unchanged. The CSV uses standard quoting, so a quoted value such as `\"Braided Cable, 2 m\"` is a single field.\n- `price`: the price as a JSON number (for example `39.5` for `39.50`).\n- `in_stock`: `true` if the `in_stock` column is `yes`, `false` if it is `no`.\n\nIndentation, spacing, and the order of keys inside each object are up to you.\n"
+    },
+    {
+      "id": "6942363ee54215217520587e7975c7c01a4b0f8ab0d4701de744112d130f1e15",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n   {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n-  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n+  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}},\n+  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+      },
+      "task_text": "# Change a shipping address\n\nCustomer Iain Murray emails that he has moved. His order `ORD-55120` has not shipped yet.\n\nUse `update_shipping_address` to set the shipping address of order `ORD-55120` to exactly this one-line string:\n\n`Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP`\n\nDo not change any other order, and do not change any other field of this order.\n\nTools (see `support/env.py`):\n\n- `get_order(order_id)`\n- `update_shipping_address(order_id, address)` (only possible while the order is `processing`)\n"
+    },
+    {
+      "id": "6aace8afff08b23613643403ac16239e3536e25b03381b45b00fc0e5a8bb8832",
+      "modified_diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -17,4 +17,3 @@\n   cat -- \"${files[@]}\" | wc -l\n fi\n EOF\n-chmod +x bin/countlines\n",
+      "modified_files": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\n"
+      },
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\nchmod +x bin/countlines\n"
+      },
+      "task_text": "# Log line counter\n\nThe operations team wants a quick way to see how much a service has logged.\n\nCreate an executable bash script at `bin/countlines` (create the `bin/` directory). When run as `bin/countlines DIR`, it must print the total number of lines in all regular files directly inside DIR whose names end in `.log` (files in subdirectories do not count), as a plain decimal integer on one line, and exit with status 0.\n\n- Count lines the way `wc -l` does, that is, the number of newline characters.\n- If DIR contains no such files, print `0`.\n- The script must start with `#!/usr/bin/env bash` or `#!/bin/bash` and may use only bash and coreutils.\n"
+    },
+    {
+      "id": "6d1f69a831a75db961b58150b5b6c3e03e6f76f86324fe07445f82a78f58dd45",
+      "modified_diff": "--- a/durations.py\n+++ b/durations.py\n@@ -1,25 +1,15 @@\n import re\n \n-_UNITS = \"dhms\"\n-_SECONDS = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n-_COMPONENT = re.compile(r\"([0-9]+)([dhms])\")\n+_PATTERN = re.compile(\n+    r\" *(?:([0-9]+)d)? *(?:([0-9]+)h)? *(?:([0-9]+)m)? *(?:([0-9]+)s)? *\"\n+)\n+_FACTORS = (86400, 3600, 60, 1)\n \n \n def parse_duration(text):\n-    s = text.strip(\" \")\n-    if not s:\n-        raise ValueError(\"empty duration\")\n-    pos, total, last = 0, 0, -1\n-    while pos < len(s):\n-        match = _COMPONENT.match(s, pos)\n-        if match is None:\n-            raise ValueError(\"invalid duration: %r\" % text)\n-        index = _UNITS.index(match.group(2))\n-        if index <= last:\n-            raise ValueError(\"units out of order or repeated: %r\" % text)\n-        last = index\n-        total += int(match.group(1)) * _SECONDS[match.group(2)]\n-        pos = match.end()\n-        while pos < len(s) and s[pos] == \" \":\n-            pos += 1\n-    return total\n+    match = _PATTERN.fullmatch(text)\n+    if match is None or all(g is None for g in match.groups()):\n+        raise ValueError(\"invalid duration: %r\" % text)\n+    return sum(\n+        int(g) * f for g, f in zip(match.groups(), _FACTORS) if g is not None\n+    )\n",
+      "modified_files": {
+        "durations.py": "import re\n\n_PATTERN = re.compile(\n    r\" *(?:([0-9]+)d)? *(?:([0-9]+)h)? *(?:([0-9]+)m)? *(?:([0-9]+)s)? *\"\n)\n_FACTORS = (86400, 3600, 60, 1)\n\n\ndef parse_duration(text):\n    match = _PATTERN.fullmatch(text)\n    if match is None or all(g is None for g in match.groups()):\n        raise ValueError(\"invalid duration: %r\" % text)\n    return sum(\n        int(g) * f for g, f in zip(match.groups(), _FACTORS) if g is not None\n    )\n"
+      },
+      "reference_solution": {
+        "durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([0-9]+)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.strip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        while pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"
+      },
+      "task_text": "# Parse durations\n\nThe job scheduler accepts timeouts such as `1h30m`. Write a Python module `durations.py` with a function `parse_duration(text)` that returns the duration in seconds as an integer.\n\n- A duration is one or more components. Each component is one or more ASCII digits immediately followed by a unit: `d` (day, 86400 seconds), `h` (hour), `m` (minute), or `s` (second).\n- Components may be written next to each other or separated by one or more spaces. Units must appear in the order `d`, `h`, `m`, `s`, each at most once: `\"2d 4h\"`, `\"90m\"`, and `\"1h 15m 30s\"` are valid; `\"30s 1m\"` and `\"1h1h\"` are not.\n- Leading and trailing spaces are allowed.\n- Example: `parse_duration(\"1h30m\")` returns `5400`.\n- For any other input (an empty string, an unknown unit, a number without a unit, a unit without a number, a space between a number and its unit, or any other character), raise `ValueError`.\n"
+    },
+    {
+      "id": "6d43cf9cea465e324b94287fa9bba10d9855b5c7309dd3af3b783429a59ef2fe",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n   {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}},\n+  {\"tool\": \"get_ticket\", \"args\": {\"ticket_id\": \"T-1001\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}},\n  {\"tool\": \"get_ticket\", \"args\": {\"ticket_id\": \"T-1001\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+      },
+      "task_text": "# Open a helpdesk ticket\n\nYou are working the IT helpdesk queue. Ana Lima (ana.lima@example.com) writes:\n\n> Since this morning the office VPN drops every few minutes and I have to log in again each time.\n\nUse the helpdesk tools to:\n\n1. Look up Ana's user record with `find_user`.\n2. Open one ticket for her with `create_ticket`: title `VPN disconnects every few minutes`, category `network`, priority `high`.\n3. Assign the new ticket to the `netops` team with `assign_ticket`.\n\nTickets are numbered in sequence; the next ticket created will be `T-1001`. Do not modify any existing ticket.\n\nTools (see `support/env.py`):\n\n- `find_user(email)`\n- `create_ticket(user_id, title, category, priority)`\n- `assign_ticket(ticket_id, team)`\n- `add_comment(ticket_id, text)`\n- `get_ticket(ticket_id)`\n"
+    },
+    {
+      "id": "6df16f8806356e92ec0b19126c90092cb09e14c48db595d6474c4a71fe875b73",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,7 +10,7 @@\n         {\n             \"sku\": row[\"sku\"],\n             \"name\": row[\"name\"],\n-            \"price\": float(row[\"price\"]),\n+            \"price\": row[\"price\"],\n             \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n         }\n     )\n",
+      "modified_files": {
+        "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": row[\"price\"],\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+      },
+      "task_text": "# Product catalog to JSON\n\nThe online shop exports its catalog as `products.csv` in the working directory. The new storefront needs the same data as JSON.\n\nWrite `products.json` in the working directory. It must contain a JSON array with one object per data row of `products.csv`, in the same order as the rows. Each object has exactly these four keys:\n\n- `sku`: the SKU, as a string, unchanged.\n- `name`: the product name, as a string, unchanged. The CSV uses standard quoting, so a quoted value such as `\"Braided Cable, 2 m\"` is a single field.\n- `price`: the price as a JSON number (for example `39.5` for `39.50`).\n- `in_stock`: `true` if the `in_stock` column is `yes`, `false` if it is `no`.\n\nIndentation, spacing, and the order of keys inside each object are up to you.\n"
+    },
+    {
+      "id": "708be7444a811b55a86c6cf4819ffcc980eac78c41b53feeb9f0bd2900ea60df",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n   {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}},\n+  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}},\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+      },
+      "task_text": "# Refund a damaged item\n\nCustomer Tom\u00e1s Rivera (customer `C-8812`) writes that the countertop blender in his order `ORD-90417` arrived with a cracked jug. He asks for a refund of the blender only ($64.99). He gave the last four digits of his card as `4821`.\n\nSupport policy: before issuing any refund you must verify the customer's identity by calling `verify_identity` with the customer ID and the last four digits of the card on file, and you may only refund after that check succeeds.\n\nThen refund 6499 cents on order `ORD-90417` with reason `damaged`. Make no other refunds or changes.\n\nTools (see `support/env.py`):\n\n- `verify_identity(customer_id, last4)`\n- `get_order(order_id)`\n- `issue_refund(order_id, amount_cents, reason)`\n"
+    },
+    {
+      "id": "718e6bbe1e72e03c4098340758e0bb348e3978a6b7f823b690f4c78c5327f283",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n+  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"medium\"}},\n   {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"medium\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+      },
+      "task_text": "# Open a helpdesk ticket\n\nYou are working the IT helpdesk queue. Ana Lima (ana.lima@example.com) writes:\n\n> Since this morning the office VPN drops every few minutes and I have to log in again each time.\n\nUse the helpdesk tools to:\n\n1. Look up Ana's user record with `find_user`.\n2. Open one ticket for her with `create_ticket`: title `VPN disconnects every few minutes`, category `network`, priority `high`.\n3. Assign the new ticket to the `netops` team with `assign_ticket`.\n\nTickets are numbered in sequence; the next ticket created will be `T-1001`. Do not modify any existing ticket.\n\nTools (see `support/env.py`):\n\n- `find_user(email)`\n- `create_ticket(user_id, title, category, priority)`\n- `assign_ticket(ticket_id, team)`\n- `add_comment(ticket_id, text)`\n- `get_ticket(ticket_id)`\n"
+    },
+    {
+      "id": "724a1799a80797de442be180d2ac96c3300c93a25973c6743e4cd60140ee5139",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,4 @@\n [\n   {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3302\", \"to_account\": \"ACC-3301\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3302\", \"to_account\": \"ACC-3301\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+      },
+      "task_text": "# Move money to savings\n\nJonah Weiss (customer `C-118`) calls the bank: he wants to move $250.00 from his checking account to his savings account, with the memo `holiday fund`.\n\nUse the banking tools to make exactly one transfer of 25000 cents from his checking account `ACC-3301` to his savings account `ACC-3302`, with memo `holiday fund`. Do not move money into or out of any other account.\n\nTools (see `support/env.py`):\n\n- `list_accounts(customer_id)`\n- `get_balance(account_id)`\n- `transfer(from_account, to_account, amount_cents, memo)`\n"
+    },
+    {
+      "id": "73156b4244143803e05d2ab318b8779dbe6c09b7911d7dd84783a38904ccc819",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n   {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n-  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n+  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}},\n+  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7790\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7790\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+      },
+      "task_text": "# Correct a staff directory profile\n\nHR forwarded a request from user `U-7781`: their name was entered in capitals and without their middle initial, and their pronouns are missing.\n\nUsing the directory tools, set the `display_name` of user `U-7781` to exactly `Maya R. Okafor` (with this capitalization, spacing, and punctuation) and set their `pronouns` to exactly `she/her`. Do not change any other field or any other user.\n\nTools (see `support/env.py`):\n\n- `get_profile(user_id)`\n- `update_profile(user_id, field, value)`, where `field` is one of `display_name`, `pronouns`, `title`, `phone`\n"
+    },
+    {
+      "id": "7433de0db5e42cc2b4e7beb66f6fb64273a28f5273b54daac68d0f605e3e68f6",
+      "modified_diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,5 +3,4 @@\n \n columns = list(zip(*rows))\n with open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n-    for column in columns:\n-        fh.write(\"\\t\".join(column) + \"\\n\")\n+    fh.write(\"\\n\".join(\"\\t\".join(column) for column in columns))\n",
+      "modified_files": {
+        "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\\n\".join(\"\\t\".join(column) for column in columns))\n"
+      },
+      "reference_solution": {
+        "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+      },
+      "task_text": "# Transpose a TSV table\n\n`matrix.tsv` is a tab-separated table in which every row has the same number of cells. Write `transposed.tsv` with rows and columns swapped: the cell in row i, column j of the output is the cell in row j, column i of the input.\n\nWrite the output in the same format: cells separated by a single tab character, every row (including the last) terminated by a newline, and cell text unchanged (cells may contain spaces).\n"
+    },
+    {
+      "id": "74f2bba66babb03cf87f7cd53b1e8a32a197147e0698bfe365bbdfd52370165f",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n   {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n+  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}},\n+  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1000\", \"team\": \"netops\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1000\", \"team\": \"netops\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+      },
+      "task_text": "# Open a helpdesk ticket\n\nYou are working the IT helpdesk queue. Ana Lima (ana.lima@example.com) writes:\n\n> Since this morning the office VPN drops every few minutes and I have to log in again each time.\n\nUse the helpdesk tools to:\n\n1. Look up Ana's user record with `find_user`.\n2. Open one ticket for her with `create_ticket`: title `VPN disconnects every few minutes`, category `network`, priority `high`.\n3. Assign the new ticket to the `netops` team with `assign_ticket`.\n\nTickets are numbered in sequence; the next ticket created will be `T-1001`. Do not modify any existing ticket.\n\nTools (see `support/env.py`):\n\n- `find_user(email)`\n- `create_ticket(user_id, title, category, priority)`\n- `assign_ticket(ticket_id, team)`\n- `add_comment(ticket_id, text)`\n- `get_ticket(ticket_id)`\n"
+    },
+    {
+      "id": "75e098546bc39e3a53d43a6efbedba33572bc47f9a2741797bd51c4d89b295a4",
+      "modified_diff": "--- a/distance.py\n+++ b/distance.py\n@@ -1,4 +1,6 @@\n def levenshtein(a, b):\n+    a = a.encode(\"utf-8\")\n+    b = b.encode(\"utf-8\")\n     previous = list(range(len(b) + 1))\n     for i, ca in enumerate(a, start=1):\n         current = [i]\n",
+      "modified_files": {
+        "distance.py": "def levenshtein(a, b):\n    a = a.encode(\"utf-8\")\n    b = b.encode(\"utf-8\")\n    previous = list(range(len(b) + 1))\n    for i, ca in enumerate(a, start=1):\n        current = [i]\n        for j, cb in enumerate(b, start=1):\n            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (ca != cb)))\n        previous = current\n    return previous[-1]\n"
+      },
+      "reference_solution": {
+        "distance.py": "def levenshtein(a, b):\n    previous = list(range(len(b) + 1))\n    for i, ca in enumerate(a, start=1):\n        current = [i]\n        for j, cb in enumerate(b, start=1):\n            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (ca != cb)))\n        previous = current\n    return previous[-1]\n"
+      },
+      "task_text": "# Edit distance for search suggestions\n\nThe search box suggests corrections for misspelled hotel names. Write a Python module `distance.py` with a function `levenshtein(a, b)` that returns the Levenshtein distance between the strings `a` and `b`: the minimum number of single-character insertions, deletions, and substitutions needed to turn `a` into `b`. Characters are compared exactly (case-sensitive), and each Unicode code point counts as one character.\n"
+    },
+    {
+      "id": "76a57df2eb5afae29cf7d524449c9fd1fd1807be0aa3854e3bb0f4b55c5734fd",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n-  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n+  {\"tool\": \"verify_identity\", \"args\": {\"last4\": \"4821\", \"customer_id\": \"C-8812\"}},\n   {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n-  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n+  {\"tool\": \"issue_refund\", \"args\": {\"reason\": \"damaged\", \"amount_cents\": 6499, \"order_id\": \"ORD-90417\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"last4\": \"4821\", \"customer_id\": \"C-8812\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"reason\": \"damaged\", \"amount_cents\": 6499, \"order_id\": \"ORD-90417\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+      },
+      "task_text": "# Refund a damaged item\n\nCustomer Tom\u00e1s Rivera (customer `C-8812`) writes that the countertop blender in his order `ORD-90417` arrived with a cracked jug. He asks for a refund of the blender only ($64.99). He gave the last four digits of his card as `4821`.\n\nSupport policy: before issuing any refund you must verify the customer's identity by calling `verify_identity` with the customer ID and the last four digits of the card on file, and you may only refund after that check succeeds.\n\nThen refund 6499 cents on order `ORD-90417` with reason `damaged`. Make no other refunds or changes.\n\nTools (see `support/env.py`):\n\n- `verify_identity(customer_id, last4)`\n- `get_order(order_id)`\n- `issue_refund(order_id, amount_cents, reason)`\n"
+    },
+    {
+      "id": "76b6aca2720cb4215c55a091141864d69bacabce79ddafae1627ac61cf96d81b",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,7 @@\n [\n   {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n+  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3301\"}},\n+  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}},\n+  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3301\"}},\n+  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3302\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3301\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3302\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+      },
+      "task_text": "# Move money to savings\n\nJonah Weiss (customer `C-118`) calls the bank: he wants to move $250.00 from his checking account to his savings account, with the memo `holiday fund`.\n\nUse the banking tools to make exactly one transfer of 25000 cents from his checking account `ACC-3301` to his savings account `ACC-3302`, with memo `holiday fund`. Do not move money into or out of any other account.\n\nTools (see `support/env.py`):\n\n- `list_accounts(customer_id)`\n- `get_balance(account_id)`\n- `transfer(from_account, to_account, amount_cents, memo)`\n"
+    },
+    {
+      "id": "77907224540d4c6bc06ed120453c57fb270fcd22b0f2cfaa6720f30bdf474588",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n-  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n-  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n-]\n+[{\"tool\":\"find_user\",\"args\":{\"email\":\"ana.lima@example.com\"}},{\"tool\":\"create_ticket\",\"args\":{\"user_id\":\"U-204\",\"title\":\"VPN disconnects every few minutes\",\"category\":\"network\",\"priority\":\"high\"}},{\"tool\":\"assign_ticket\",\"args\":{\"ticket_id\":\"T-1001\",\"team\":\"netops\"}}]\n",
+      "modified_files": {
+        "trajectory.json": "[{\"tool\":\"find_user\",\"args\":{\"email\":\"ana.lima@example.com\"}},{\"tool\":\"create_ticket\",\"args\":{\"user_id\":\"U-204\",\"title\":\"VPN disconnects every few minutes\",\"category\":\"network\",\"priority\":\"high\"}},{\"tool\":\"assign_ticket\",\"args\":{\"ticket_id\":\"T-1001\",\"team\":\"netops\"}}]"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+      },
+      "task_text": "# Open a helpdesk ticket\n\nYou are working the IT helpdesk queue. Ana Lima (ana.lima@example.com) writes:\n\n> Since this morning the office VPN drops every few minutes and I have to log in again each time.\n\nUse the helpdesk tools to:\n\n1. Look up Ana's user record with `find_user`.\n2. Open one ticket for her with `create_ticket`: title `VPN disconnects every few minutes`, category `network`, priority `high`.\n3. Assign the new ticket to the `netops` team with `assign_ticket`.\n\nTickets are numbered in sequence; the next ticket created will be `T-1001`. Do not modify any existing ticket.\n\nTools (see `support/env.py`):\n\n- `find_user(email)`\n- `create_ticket(user_id, title, category, priority)`\n- `assign_ticket(ticket_id, team)`\n- `add_comment(ticket_id, text)`\n- `get_ticket(ticket_id)`\n"
+    },
+    {
+      "id": "7a8b188aab74e2ab9639be7657ef835369a01bf3468e4712b4098a9a587d2ae7",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1 @@\n-[\n-  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n-  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n-]\n+[{\"tool\":\"list_accounts\",\"args\":{\"customer_id\":\"C-118\"}},{\"tool\":\"transfer\",\"args\":{\"memo\":\"holiday fund\",\"amount_cents\":25000,\"to_account\":\"ACC-3302\",\"from_account\":\"ACC-3301\"}}]\n",
+      "modified_files": {
+        "trajectory.json": "[{\"tool\":\"list_accounts\",\"args\":{\"customer_id\":\"C-118\"}},{\"tool\":\"transfer\",\"args\":{\"memo\":\"holiday fund\",\"amount_cents\":25000,\"to_account\":\"ACC-3302\",\"from_account\":\"ACC-3301\"}}]"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+      },
+      "task_text": "# Move money to savings\n\nJonah Weiss (customer `C-118`) calls the bank: he wants to move $250.00 from his checking account to his savings account, with the memo `holiday fund`.\n\nUse the banking tools to make exactly one transfer of 25000 cents from his checking account `ACC-3301` to his savings account `ACC-3302`, with memo `holiday fund`. Do not move money into or out of any other account.\n\nTools (see `support/env.py`):\n\n- `list_accounts(customer_id)`\n- `get_balance(account_id)`\n- `transfer(from_account, to_account, amount_cents, memo)`\n"
+    },
+    {
+      "id": "7a8b991b30a3f5b5ae191dfaf4b3795e75feba8a72e520eb17b5b0f6246634cb",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n-  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n+  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.org\"}},\n   {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n   {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.org\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+      },
+      "task_text": "# Open a helpdesk ticket\n\nYou are working the IT helpdesk queue. Ana Lima (ana.lima@example.com) writes:\n\n> Since this morning the office VPN drops every few minutes and I have to log in again each time.\n\nUse the helpdesk tools to:\n\n1. Look up Ana's user record with `find_user`.\n2. Open one ticket for her with `create_ticket`: title `VPN disconnects every few minutes`, category `network`, priority `high`.\n3. Assign the new ticket to the `netops` team with `assign_ticket`.\n\nTickets are numbered in sequence; the next ticket created will be `T-1001`. Do not modify any existing ticket.\n\nTools (see `support/env.py`):\n\n- `find_user(email)`\n- `create_ticket(user_id, title, category, priority)`\n- `assign_ticket(ticket_id, team)`\n- `add_comment(ticket_id, text)`\n- `get_ticket(ticket_id)`\n"
+    },
+    {
+      "id": "7a8e30237997127ca534a0fef6a94989eb054d2f553e85e08e9925a4db9c81e7",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n   {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n-  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n+  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 18 Nov 2026 at 10:15.\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 18 Nov 2026 at 10:15.\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n]\n"
+      },
+      "task_text": "# Reschedule a clinic appointment\n\nPatient Gareth Lowe (patient `P-3307`) phoned the clinic: he cannot make his appointment `APT-6620` with Dr. Hale and asked for the open slot on `2026-11-18` at `10:15`.\n\n1. Move appointment `APT-6620` to `2026-11-18` at `10:15` with `reschedule`.\n2. After the appointment has been moved, text the patient with `send_sms` to confirm. The message must include the new date written as `2026-11-18` and the new time written as `10:15`.\n\nDo not change any other appointment.\n\nTools (see `support/env.py`):\n\n- `find_slots(provider, date)`\n- `reschedule(appointment_id, date, time)`\n- `send_sms(patient_id, text)`\n"
+    },
+    {
+      "id": "7a900d48f51b55033dcf6011740b850fa892f5985c950dc599bf5054f6d85411",
+      "modified_diff": "--- a/dupes.py\n+++ b/dupes.py\n@@ -1,6 +1,6 @@\n def duplicate_groups(files):\n     by_content = {}\n     for path, content in files.items():\n-        by_content.setdefault(content, []).append(path)\n+        by_content.setdefault(content.strip(), []).append(path)\n     groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n     return sorted(groups)\n",
+      "modified_files": {
+        "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content.strip(), []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n    return sorted(groups)\n"
+      },
+      "reference_solution": {
+        "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n    return sorted(groups)\n"
+      },
+      "task_text": "# Find duplicate files\n\nA cleanup tool needs to report files with identical contents. Write a Python module `dupes.py` with a function `duplicate_groups(files)`.\n\n- `files` is a dict mapping a file path (a string) to that file's contents (a string).\n- Two files are duplicates when their contents are exactly equal.\n- Return a list of groups, one group for each content that is shared by two or more paths. A group is the sorted list of all paths with that content. Contents that belong to only one path produce no group.\n- Order the groups by their first path. If there are no duplicates, return `[]`.\n"
+    },
+    {
+      "id": "7aa18e2177219902a3b89796bb2f804f5c4aab459d17cf13dbd847ca22ee1c32",
+      "modified_diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n   {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n-  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n+  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmation\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n ]\n",
+      "modified_files": {
+        "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmation\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+      },
+      "task_text": "# Book a room and confirm by email\n\nHannah Becker asks the hotel for a double room from 2026-12-03 to 2026-12-06.\n\n1. Book a `double` room for guest `Hannah Becker` with check-in `2026-12-03` and check-out `2026-12-06` using `book_room`. Booking references are issued in sequence; this booking will get `R-2041`.\n2. Then email her at `hannah.becker@example.com` with `send_email`, using the subject `Booking confirmed`. The body must mention her booking reference `R-2041`, the check-in date `2026-12-03`, and the check-out date `2026-12-06`; the wording is up to you.\n\nMake no other bookings and send no other emails.\n\nTools (see `support/env.py`):\n\n- `search_rooms(check_in, check_out, guests)`\n- `book_room(guest_name, room_type, check_in, check_out)`\n- `send_email(to, subject, body)`\n"
+    }
+  ],
+  "prompt_version": "review/v1",
+  "purpose": "review",
+  "response_schema": {
+    "enums": {
+      "verdict": [
+        "violating",
+        "preserving",
+        "unsure"
+      ]
+    },
+    "required": [
+      "verdict",
+      "reason"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

@@ -1,0 +1,1058 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "sections": {
+    "CS201-A": {
+     "course": "CS201",
+     "meetings": [
+      [
+       "Mon",
+       "11:00",
+       "12:30"
+      ],
+      [
+       "Wed",
+       "11:00",
+       "12:30"
+      ]
+     ],
+     "seats_free": 6
+    },
+    "CS201-B": {
+     "course": "CS201",
+     "meetings": [
+      [
+       "Tue",
+       "14:00",
+       "15:30"
+      ],
+      [
+       "Thu",
+       "14:00",
+       "15:30"
+      ]
+     ],
+     "seats_free": 3
+    },
+    "CS201-C": {
+     "course": "CS201",
+     "meetings": [
+      [
+       "Fri",
+       "09:00",
+       "12:00"
+      ]
+     ],
+     "seats_free": 0
+    },
+    "CS201-D": {
+     "course": "CS201",
+     "meetings": [
+      [
+       "Tue",
+       "16:00",
+       "17:30"
+      ],
+      [
+       "Fri",
+       "13:00",
+       "14:30"
+      ]
+     ],
+     "seats_free": 1
+    },
+    "HIST210-A": {
+     "course": "HIST210",
+     "meetings": [
+      [
+       "Mon",
+       "10:00",
+       "11:30"
+      ],
+      [
+       "Wed",
+       "10:00",
+       "11:30"
+      ]
+     ],
+     "seats_free": 4
+    },
+    "MATH220-B": {
+     "course": "MATH220",
+     "meetings": [
+      [
+       "Tue",
+       "13:00",
+       "14:30"
+      ],
+      [
+       "Thu",
+       "13:00",
+       "14:30"
+      ]
+     ],
+     "seats_free": 1
+    }
+   },
+   "students": {
+    "S-4471": {
+     "enrolled": [
+      "HIST210-A",
+      "MATH220-B",
+      "CS201-D"
+     ],
+     "name": "Wen Li"
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "student_id": "S-4471"
+    },
+    "result": {
+     "ok": true,
+     "student": {
+      "enrolled": [
+       "HIST210-A",
+       "MATH220-B"
+      ],
+      "name": "Wen Li"
+     }
+    },
+    "tool": "get_student"
+   },
+   {
+    "args": {
+     "course": "CS201"
+    },
+    "result": {
+     "ok": true,
+     "sections": {
+      "CS201-A": {
+       "course": "CS201",
+       "meetings": [
+        [
+         "Mon",
+         "11:00",
+         "12:30"
+        ],
+        [
+         "Wed",
+         "11:00",
+         "12:30"
+        ]
+       ],
+       "seats_free": 6
+      },
+      "CS201-B": {
+       "course": "CS201",
+       "meetings": [
+        [
+         "Tue",
+         "14:00",
+         "15:30"
+        ],
+        [
+         "Thu",
+         "14:00",
+         "15:30"
+        ]
+       ],
+       "seats_free": 3
+      },
+      "CS201-C": {
+       "course": "CS201",
+       "meetings": [
+        [
+         "Fri",
+         "09:00",
+         "12:00"
+        ]
+       ],
+       "seats_free": 0
+      },
+      "CS201-D": {
+       "course": "CS201",
+       "meetings": [
+        [
+         "Tue",
+         "16:00",
+         "17:30"
+        ],
+        [
+         "Fri",
+         "13:00",
+         "14:30"
+        ]
+       ],
+       "seats_free": 2
+      }
+     }
+    },
+    "tool": "list_sections"
+   },
+   {
+    "args": {
+     "section_id": "CS201-D",
+     "student_id": "S-4471"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "enroll"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "section_id": "CS201-D",
+      "student_id": "S-4471"
+     },
+     "tool": "enroll",
+     "type": "trajectory_includes"
+    },
+    {
+     "args": {
+      "section_id": "CS201-A"
+     },
+     "tool": "enroll",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "section_id": "CS201-B"
+     },
+     "tool": "enroll",
+     "type": "trajectory_excludes"
+    },
+    {
+     "args": {
+      "section_id": "CS201-C"
+     },
+     "tool": "enroll",
+     "type": "trajectory_excludes"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Enroll student S-4471 in exactly one section of CS201."
+  },
+  {
+   "checks": [
+    {
+     "equals": "CS201-D",
+     "pointer": "/students/S-4471/enrolled/2",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "The chosen section must have a free seat (CS201-C has none) and its meetings must not overlap any section the student is already enrolled in (CS201-A overlaps HIST210-A on Mon/Wed and CS201-B overlaps MATH220-B on Tue/Thu)."
+  },
+  {
+   "checks": [
+    {
+     "args": {},
+     "tool": "drop",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": [
+      "HIST210-A",
+      "MATH220-B",
+      "CS201-D"
+     ],
+     "pointer": "/students/S-4471/enrolled",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Keep the student's existing enrollments (do not drop anything)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:course-enroll",
+ "task_hash": "fe001ded2cc1b8172e8687f61d78e73db3259843e7a9f72d8d9f6e046726d1d3",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,27 @@\n [\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\n+    \"tool\": \"get_student\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_student\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_sections\",\n+    \"args\": {\n+      \"course\": \"CS201\"\n+    }\n+  },\n+  {\n+    \"tool\": \"enroll\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\",\n+      \"section_id\": \"CS201-D\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_student\",\n    \"args\": {\n      \"student_id\": \"S-4471\"\n    }\n  },\n  {\n    \"tool\": \"get_student\",\n    \"args\": {\n      \"student_id\": \"S-4471\"\n    }\n  },\n  {\n    \"tool\": \"list_sections\",\n    \"args\": {\n      \"course\": \"CS201\"\n    }\n  },\n  {\n    \"tool\": \"enroll\",\n    \"args\": {\n      \"student_id\": \"S-4471\",\n      \"section_id\": \"CS201-D\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "3f23404656db52c1a0c07dcdeaafc566007e60706263f1039f40d1ce2b12c10a",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "course-enroll",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A repeated read-only get_student call does not change state; the single enroll in CS201-D is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "3f23404656db52c1a0c07dcdeaafc566007e60706263f1039f40d1ce2b12c10a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,27 @@\n [\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\n+    \"tool\": \"list_sections\",\n+    \"args\": {\n+      \"course\": \"CS201\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_student\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_sections\",\n+    \"args\": {\n+      \"course\": \"CS201\"\n+    }\n+  },\n+  {\n+    \"tool\": \"enroll\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\",\n+      \"section_id\": \"CS201-D\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_sections\",\n    \"args\": {\n      \"course\": \"CS201\"\n    }\n  },\n  {\n    \"tool\": \"get_student\",\n    \"args\": {\n      \"student_id\": \"S-4471\"\n    }\n  },\n  {\n    \"tool\": \"list_sections\",\n    \"args\": {\n      \"course\": \"CS201\"\n    }\n  },\n  {\n    \"tool\": \"enroll\",\n    \"args\": {\n      \"student_id\": \"S-4471\",\n      \"section_id\": \"CS201-D\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a6dc3df2bdaf72ed5efdb84d495da66825709d4314022597cdf539fed2075d40",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "course-enroll",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The extra list_sections call is read-only and the same single enroll call still follows.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "a6dc3df2bdaf72ed5efdb84d495da66825709d4314022597cdf539fed2075d40"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\n+    \"tool\": \"get_student\",\n+    \"args\": {\n+      \"student_id\": \"S-4471-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_sections\",\n+    \"args\": {\n+      \"course\": \"CS201\"\n+    }\n+  },\n+  {\n+    \"tool\": \"enroll\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\",\n+      \"section_id\": \"CS201-D\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_student\",\n    \"args\": {\n      \"student_id\": \"S-4471-x\"\n    }\n  },\n  {\n    \"tool\": \"list_sections\",\n    \"args\": {\n      \"course\": \"CS201\"\n    }\n  },\n  {\n    \"tool\": \"enroll\",\n    \"args\": {\n      \"student_id\": \"S-4471\",\n      \"section_id\": \"CS201-D\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "da25551d24d1fa3bf646e168126570ad05984859bd4314631adaa66a6272c25c",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "course-enroll",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only get_student lookup has a changed id; the required enroll call for S-4471 into CS201-D is intact.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\n+    \"tool\": \"get_student\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_sections\",\n+    \"args\": {\n+      \"course\": \"CS201-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"enroll\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\",\n+      \"section_id\": \"CS201-D\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_student\",\n    \"args\": {\n      \"student_id\": \"S-4471\"\n    }\n  },\n  {\n    \"tool\": \"list_sections\",\n    \"args\": {\n      \"course\": \"CS201-x\"\n    }\n  },\n  {\n    \"tool\": \"enroll\",\n    \"args\": {\n      \"student_id\": \"S-4471\",\n      \"section_id\": \"CS201-D\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "512c80aef6fac0a296d845663f7feeeb8abf3085683dc0f6208a8fb87636bd98",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "course-enroll",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the read-only list_sections argument changed; the task does not mandate that call and the enroll step is the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\n+    \"tool\": \"get_student\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_sections\",\n+    \"args\": {\n+      \"course\": \"CS201\"\n+    }\n+  },\n+  {\n+    \"tool\": \"enroll\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\",\n+      \"section_id\": \"CS201-D-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_student\",\n    \"args\": {\n      \"student_id\": \"S-4471\"\n    }\n  },\n  {\n    \"tool\": \"list_sections\",\n    \"args\": {\n      \"course\": \"CS201\"\n    }\n  },\n  {\n    \"tool\": \"enroll\",\n    \"args\": {\n      \"student_id\": \"S-4471\",\n      \"section_id\": \"CS201-D-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e1e553a1658553ce547e2def2f7f7f8eb7781062d4a1e9c6a90948a2e295b132",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "course-enroll",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks enroll",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Enroll in an actual CS201 section: enroll uses the nonexistent section id CS201-D-x.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks enroll"
+      ],
+      "requirement": "R1",
+      "text": "Enroll student S-4471 in exactly one section of CS201."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled/2 missing"
+      ],
+      "requirement": "R2",
+      "text": "The chosen section must have a free seat (CS201-C has none) and its meetings must not overlap any section the student is already enrolled in (CS201-A overlaps HIST210-A on Mon/Wed and CS201-B overlaps MATH220-B on Tue/Thu)."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled = ['HIST210-A', 'MATH220-B']"
+      ],
+      "requirement": "R3",
+      "text": "Keep the student's existing enrollments (do not drop anything)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e1e553a1658553ce547e2def2f7f7f8eb7781062d4a1e9c6a90948a2e295b132"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\n+    \"tool\": \"get_student\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_sections\",\n+    \"args\": {\n+      \"course\": \"CS201\"\n+    }\n+  },\n+  {\n+    \"tool\": \"enroll\",\n+    \"args\": {\n+      \"student_id\": \"S-4471-x\",\n+      \"section_id\": \"CS201-D\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_student\",\n    \"args\": {\n      \"student_id\": \"S-4471\"\n    }\n  },\n  {\n    \"tool\": \"list_sections\",\n    \"args\": {\n      \"course\": \"CS201\"\n    }\n  },\n  {\n    \"tool\": \"enroll\",\n    \"args\": {\n      \"student_id\": \"S-4471-x\",\n      \"section_id\": \"CS201-D\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d83bad88a2efd607fa4d576667a81f84bf45acc976f6f9a1b8856016cf604b3b",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "course-enroll",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks enroll",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Enroll student S-4471: The enroll call uses student id S-4471-x, so the real student is not enrolled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks enroll"
+      ],
+      "requirement": "R1",
+      "text": "Enroll student S-4471 in exactly one section of CS201."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled/2 missing"
+      ],
+      "requirement": "R2",
+      "text": "The chosen section must have a free seat (CS201-C has none) and its meetings must not overlap any section the student is already enrolled in (CS201-A overlaps HIST210-A on Mon/Wed and CS201-B overlaps MATH220-B on Tue/Thu)."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled = ['HIST210-A', 'MATH220-B']"
+      ],
+      "requirement": "R3",
+      "text": "Keep the student's existing enrollments (do not drop anything)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d83bad88a2efd607fa4d576667a81f84bf45acc976f6f9a1b8856016cf604b3b"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\n+    \"tool\": \"list_sections\",\n+    \"args\": {\n+      \"course\": \"CS201\"\n+    }\n+  },\n+  {\n+    \"tool\": \"enroll\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\",\n+      \"section_id\": \"CS201-D\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_sections\",\n    \"args\": {\n      \"course\": \"CS201\"\n    }\n  },\n  {\n    \"tool\": \"enroll\",\n    \"args\": {\n      \"student_id\": \"S-4471\",\n      \"section_id\": \"CS201-D\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "37484b7498eb17029bcef2c54f386d847196985bb3958b143c21343fa34adb4b",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "course-enroll",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same section list and the same enroll call remain, and only the read-only get_student lookup is removed, so the resulting state is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,15 @@\n [\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\n+    \"tool\": \"get_student\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\"\n+    }\n+  },\n+  {\n+    \"tool\": \"enroll\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\",\n+      \"section_id\": \"CS201-D\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_student\",\n    \"args\": {\n      \"student_id\": \"S-4471\"\n    }\n  },\n  {\n    \"tool\": \"enroll\",\n    \"args\": {\n      \"student_id\": \"S-4471\",\n      \"section_id\": \"CS201-D\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "cdb94aa60af803ba199926440e1845e37a48ffbb7e77d027c80fcf7d79736399",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "course-enroll",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The final enroll call is unchanged and the task does not require calling list_sections, so the end state is the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,14 @@\n [\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\n+    \"tool\": \"get_student\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_sections\",\n+    \"args\": {\n+      \"course\": \"CS201\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_student\",\n    \"args\": {\n      \"student_id\": \"S-4471\"\n    }\n  },\n  {\n    \"tool\": \"list_sections\",\n    \"args\": {\n      \"course\": \"CS201\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a08821a35132f438f6738c5f25ee3309520de7fdb8725bd182e8d18cf945e78c",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "course-enroll",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks enroll",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Enroll the student in one section: The enroll call was removed, so no enrollment happens.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks enroll"
+      ],
+      "requirement": "R1",
+      "text": "Enroll student S-4471 in exactly one section of CS201."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled/2 missing"
+      ],
+      "requirement": "R2",
+      "text": "The chosen section must have a free seat (CS201-C has none) and its meetings must not overlap any section the student is already enrolled in (CS201-A overlaps HIST210-A on Mon/Wed and CS201-B overlaps MATH220-B on Tue/Thu)."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled = ['HIST210-A', 'MATH220-B']"
+      ],
+      "requirement": "R3",
+      "text": "Keep the student's existing enrollments (do not drop anything)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "a08821a35132f438f6738c5f25ee3309520de7fdb8725bd182e8d18cf945e78c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\n+    \"tool\": \"list_sections\",\n+    \"args\": {\n+      \"course\": \"CS201\"\n+    }\n+  },\n+  {\n+    \"tool\": \"get_student\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\"\n+    }\n+  },\n+  {\n+    \"tool\": \"enroll\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\",\n+      \"section_id\": \"CS201-D\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"list_sections\",\n    \"args\": {\n      \"course\": \"CS201\"\n    }\n  },\n  {\n    \"tool\": \"get_student\",\n    \"args\": {\n      \"student_id\": \"S-4471\"\n    }\n  },\n  {\n    \"tool\": \"enroll\",\n    \"args\": {\n      \"student_id\": \"S-4471\",\n      \"section_id\": \"CS201-D\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "01a9a81417168ef1c74fba0f8d8b0f182a263b893a05b31272d19a79b3473dde",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "course-enroll",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the order of two read-only lookups changed, and the same enroll call is made.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "01a9a81417168ef1c74fba0f8d8b0f182a263b893a05b31272d19a79b3473dde"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,21 @@\n [\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\n+    \"tool\": \"get_student\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\"\n+    }\n+  },\n+  {\n+    \"tool\": \"enroll\",\n+    \"args\": {\n+      \"student_id\": \"S-4471\",\n+      \"section_id\": \"CS201-D\"\n+    }\n+  },\n+  {\n+    \"tool\": \"list_sections\",\n+    \"args\": {\n+      \"course\": \"CS201\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"get_student\",\n    \"args\": {\n      \"student_id\": \"S-4471\"\n    }\n  },\n  {\n    \"tool\": \"enroll\",\n    \"args\": {\n      \"student_id\": \"S-4471\",\n      \"section_id\": \"CS201-D\"\n    }\n  },\n  {\n    \"tool\": \"list_sections\",\n    \"args\": {\n      \"course\": \"CS201\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b25b8db7bdc15847111ef246250d49f1dd6b045dea5f7c2042d7ebb4ab0fccef",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "course-enroll",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same enroll call for CS201-D is made and list_sections is read-only, so the resulting state is identical to the reference.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "b25b8db7bdc15847111ef246250d49f1dd6b045dea5f7c2042d7ebb4ab0fccef"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,4 @@\n [\n   {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "88e8403f24a8b2e9505b45db7998e9066bd8a121b4f74f6d7e3f2374498f928c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "course-enroll",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks enroll",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "enroll the student in one CS201 section: The enroll call was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks enroll"
+      ],
+      "requirement": "R1",
+      "text": "Enroll student S-4471 in exactly one section of CS201."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled/2 missing"
+      ],
+      "requirement": "R2",
+      "text": "The chosen section must have a free seat (CS201-C has none) and its meetings must not overlap any section the student is already enrolled in (CS201-A overlaps HIST210-A on Mon/Wed and CS201-B overlaps MATH220-B on Tue/Thu)."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled = ['HIST210-A', 'MATH220-B']"
+      ],
+      "requirement": "R3",
+      "text": "Keep the student's existing enrollments (do not drop anything)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "88e8403f24a8b2e9505b45db7998e9066bd8a121b4f74f6d7e3f2374498f928c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n   {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}},\n+  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-A\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}},\n  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-A\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "655c26b11f4c9fb2a74d607eb3c32de9eefa6bb3407a1cf02c2b00d1be211082",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "course-enroll",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory has enroll",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Enroll in exactly one section: It enrolls the student in two sections, CS201-D and CS201-A.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory has enroll"
+      ],
+      "requirement": "R1",
+      "text": "Enroll student S-4471 in exactly one section of CS201."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled = ['HIST210-A', 'MATH220-B', 'CS201-D', 'CS201-A']"
+      ],
+      "requirement": "R3",
+      "text": "Keep the student's existing enrollments (do not drop anything)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "655c26b11f4c9fb2a74d607eb3c32de9eefa6bb3407a1cf02c2b00d1be211082"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n   {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-C\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-C\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4fb2c99b0ad2d9a19391031d723d32d876d48a771857c9a71c2283c5443c1e68",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "course-enroll",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks enroll",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Whether CS201-C has a free seat and no time overlap cannot be determined from the task text, which does not list the section data.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": null
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks enroll",
+       "trajectory has enroll"
+      ],
+      "requirement": "R1",
+      "text": "Enroll student S-4471 in exactly one section of CS201."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled/2 missing"
+      ],
+      "requirement": "R2",
+      "text": "The chosen section must have a free seat (CS201-C has none) and its meetings must not overlap any section the student is already enrolled in (CS201-A overlaps HIST210-A on Mon/Wed and CS201-B overlaps MATH220-B on Tue/Thu)."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled = ['HIST210-A', 'MATH220-B']"
+      ],
+      "requirement": "R3",
+      "text": "Keep the student's existing enrollments (do not drop anything)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4fb2c99b0ad2d9a19391031d723d32d876d48a771857c9a71c2283c5443c1e68"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n   {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n   {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-A\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-A\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b92426e979fe9c24f81db91c1e99c942a1dad360cf82938c5034c987a6275725",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "course-enroll",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks enroll",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Whether CS201-A has a free seat and no time overlap cannot be determined from the request, though the reference chose CS201-D instead.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": null
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks enroll",
+       "trajectory has enroll"
+      ],
+      "requirement": "R1",
+      "text": "Enroll student S-4471 in exactly one section of CS201."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled/2 = 'CS201-A'"
+      ],
+      "requirement": "R2",
+      "text": "The chosen section must have a free seat (CS201-C has none) and its meetings must not overlap any section the student is already enrolled in (CS201-A overlaps HIST210-A on Mon/Wed and CS201-B overlaps MATH220-B on Tue/Thu)."
+     },
+     {
+      "failed": [
+       "state /students/S-4471/enrolled = ['HIST210-A', 'MATH220-B', 'CS201-A']"
+      ],
+      "requirement": "R3",
+      "text": "Keep the student's existing enrollments (do not drop anything)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "b92426e979fe9c24f81db91c1e99c942a1dad360cf82938c5034c987a6275725"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,6 @@\n [\n   {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n   {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n+  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}},\n+  {\"tool\": \"drop\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"HIST210-A\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}},\n  {\"tool\": \"drop\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"HIST210-A\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "44fd0b39c01ec41e6147e45636deec36545c7bd7ec86e3b9bd12790ed48ea876",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "course-enroll",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: state /students/S-4471/enrolled/2 missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Keep the student's existing enrollments: It adds a drop call that removes an existing enrollment.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "state /students/S-4471/enrolled/2 missing"
+      ],
+      "requirement": "R2",
+      "text": "The chosen section must have a free seat (CS201-C has none) and its meetings must not overlap any section the student is already enrolled in (CS201-A overlaps HIST210-A on Mon/Wed and CS201-B overlaps MATH220-B on Tue/Thu)."
+     },
+     {
+      "failed": [
+       "trajectory has drop",
+       "state /students/S-4471/enrolled = ['MATH220-B', 'CS201-D']"
+      ],
+      "requirement": "R3",
+      "text": "Keep the student's existing enrollments (do not drop anything)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "44fd0b39c01ec41e6147e45636deec36545c7bd7ec86e3b9bd12790ed48ea876"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1,5 @@\n [\n+  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n   {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n   {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "c59737fc759536808deb9f034e026d36c0a1e16d0f6fb7f53c1ecee5706f9d8e",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "course-enroll",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the order of two read-only lookups changed; the same enroll call is made.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "c59737fc759536808deb9f034e026d36c0a1e16d0f6fb7f53c1ecee5706f9d8e"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,5 +1 @@\n-[\n-  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n-  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n-  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n-]\n+[{\"args\":{\"student_id\":\"S-4471\"},\"tool\":\"get_student\"},{\"args\":{\"course\":\"CS201\"},\"tool\":\"list_sections\"},{\"args\":{\"section_id\":\"CS201-D\",\"student_id\":\"S-4471\"},\"tool\":\"enroll\"}]\n",
+   "files": {
+    "trajectory.json": "[{\"args\":{\"student_id\":\"S-4471\"},\"tool\":\"get_student\"},{\"args\":{\"course\":\"CS201\"},\"tool\":\"list_sections\"},{\"args\":{\"section_id\":\"CS201-D\",\"student_id\":\"S-4471\"},\"tool\":\"enroll\"}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7fa5b506b0e955b96d38ef14e2a8bf7d0623b52a455497a4a5a24ded4cc51528",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "course-enroll",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "3 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only JSON whitespace and key order changed; the same tool calls with the same args remain in the same order.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "7fa5b506b0e955b96d38ef14e2a8bf7d0623b52a455497a4a5a24ded4cc51528"
+   }
+  }
+ ]
+}

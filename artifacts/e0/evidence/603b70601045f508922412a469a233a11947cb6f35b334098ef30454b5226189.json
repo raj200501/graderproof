@@ -1,0 +1,1215 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [
+  {
+   "checks": [
+    {
+     "equals": "0 B",
+     "probe": {
+      "args": [
+       0
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1023 B",
+     "probe": {
+      "args": [
+       1023
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1 B",
+     "probe": {
+      "args": [
+       1
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "If n is less than 1024, return the number followed by ' B'."
+  },
+  {
+   "checks": [
+    {
+     "equals": "1.5 KiB",
+     "probe": {
+      "args": [
+       1536
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1.0 KiB",
+     "probe": {
+      "args": [
+       1024
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1.0 MiB",
+     "probe": {
+      "args": [
+       1048576
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1.0 GiB",
+     "probe": {
+      "args": [
+       1073741824
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1.0 TiB",
+     "probe": {
+      "args": [
+       1099511627776
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       123456789
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       5368709120
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Otherwise choose the largest unit among KiB, MiB, GiB, TiB not larger than n and write the result with exactly one decimal place, a space, and the unit."
+  },
+  {
+   "checks": [
+    {
+     "equals": "1024.0 TiB",
+     "probe": {
+      "args": [
+       1125899906842624
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "2048.0 TiB",
+     "probe": {
+      "args": [
+       2251799813685248
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Sizes of 1024 TiB or more are still written in TiB."
+  },
+  {
+   "checks": [
+    {
+     "equals": "1.3 KiB",
+     "probe": {
+      "args": [
+       1280
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       1075
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       1126
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1.8 KiB",
+     "probe": {
+      "args": [
+       1792
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Round to one decimal place with halves rounded up (1280 bytes is '1.3 KiB')."
+  },
+  {
+   "checks": [
+    {
+     "equals": "1024.0 KiB",
+     "probe": {
+      "args": [
+       1048575
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "equals": "1024.0 MiB",
+     "probe": {
+      "args": [
+       1073741823
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    },
+    {
+     "matches_reference": true,
+     "probe": {
+      "args": [
+       1099511627775
+      ],
+      "function": "sizes.format_size",
+      "kwargs": {}
+     },
+     "type": "call"
+    }
+   ],
+   "id": "R6",
+   "source": "model:requirements/v1",
+   "text": "The unit is chosen before rounding, so 1048575 bytes is '1024.0 KiB'."
+  }
+ ],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+  },
+  "probes": {
+   "09b133c1a579b6c7": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "1fd18805c52b7f03": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "2fb78c33a79e9d37": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "5260e06e308d4f37": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "63e7044a3fffaffb": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "71bff3aff82a26c3": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "72f089cf4853f9dd": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "865788d47768138a": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "8a0695232cf4b3b6": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "8a93ab271e514f1f": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "9bece3a76cf225ff": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "b0bb4ff4fdad91cb": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "b25c6568898cf84f": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "c4f844ab77efde86": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "caf09783197e3d40": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "d7b9c1d23de4dee2": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "de4437ae9d6c7efe": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "f7a86c1086e11da3": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   },
+   "ffdf016661fa652a": {
+    "error": "AttributeError: module 'sizes' has no attribute 'sizes.format_size'",
+    "ok": false
+   }
+  },
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "sizes.py",
+     "type": "file_exists"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write a Python module sizes.py defining format_size(n)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:byte-size",
+ "task_hash": "603b70601045f508922412a469a233a11947cb6f35b334098ef30454b5226189",
+ "variants": [
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -7,5 +7,5 @@\n     for name, size in _UNITS:\n         if n >= size:\n             tenths = (n * 20 + size) // (2 * size)\n-            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n+            return \"%d.%d %s\" % ((tenths) * (10), tenths % 10, name)\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % ((tenths) * (10), tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4e456545bda0066633fceec25a89a584278c419de7958f265d43573cfcb315f2",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "format the size with one decimal place: The whole part is multiplied by 10 instead of divided, giving wrong output.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -3,7 +3,7 @@\n \n def format_size(n):\n     if n < 1024:\n-        return \"%d B\" % n\n+        return (\"%d B\") // (n)\n     for name, size in _UNITS:\n         if n >= size:\n             tenths = (n * 20 + size) // (2 * size)\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return (\"%d B\") // (n)\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ff75cba85ad66cc5343746373734d8edca9c352d5ae02801c8d9b6df4edc88ea",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Return the number followed by ' B' for n < 1024: A string floor-divided by an int raises TypeError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -6,6 +6,6 @@\n         return \"%d B\" % n\n     for name, size in _UNITS:\n         if n >= size:\n-            tenths = (n * 20 + size) // (2 * size)\n+            tenths = (n * 20 + size) * (2 * size)\n             return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) * (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "21d8ba8b9372e3418a72ae73b552e57fa997ddae89833703ff3455c5a575234c",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Format size with one decimal place rounded half up: Floor division was replaced by multiplication, giving wildly wrong values.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -6,6 +6,6 @@\n         return \"%d B\" % n\n     for name, size in _UNITS:\n         if n >= size:\n-            tenths = (n * 20 + size) // (2 * size)\n+            tenths = ((n * 20) - (size)) // (2 * size)\n             return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = ((n * 20) - (size)) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "4eca269221278a5e411d44c94890dd04b1824e71b2da54470ed78802465d5306",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "round halves up: Subtracting size rounds down, so 1280 bytes gives 1.2 KiB instead of 1.3 KiB.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -6,6 +6,6 @@\n         return \"%d B\" % n\n     for name, size in _UNITS:\n         if n >= size:\n-            tenths = (n * 20 + size) // (2 * size)\n+            tenths = (n * 20 + size) // ((2) // (size))\n             return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // ((2) // (size))\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e41824e6434eab7ed348c573cf7883695f60bd1c40754636b8ba91af7b61de39",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Format sizes with one decimal place: (2) // size evaluates to 0, so the division raises ZeroDivisionError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -6,6 +6,6 @@\n         return \"%d B\" % n\n     for name, size in _UNITS:\n         if n >= size:\n-            tenths = (n * 20 + size) // (2 * size)\n+            tenths = ((n) // (20) + size) // (2 * size)\n             return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = ((n) // (20) + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6d5c739b84d54ef2d6c8dcc8cce5ebf9aa7d31b518bdcf23f7f79601b9296550",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Round n/unit to one decimal place: The tenths formula is altered (n // 20 instead of n * 20), producing wrong values such as 0.0 KiB for 1536.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -2,7 +2,7 @@\n \n \n def format_size(n):\n-    if n < 1024:\n+    if n <= 1024:\n         return \"%d B\" % n\n     for name, size in _UNITS:\n         if n >= size:\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n <= 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9a4eee16a511bc821f1956443a420b129ae515b55771754cc46317b322c6c773",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only n less than 1024 is written in bytes: n equal to 1024 now returns 1024 B instead of 1.0 KiB.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -5,7 +5,7 @@\n     if n < 1024:\n         return \"%d B\" % n\n     for name, size in _UNITS:\n-        if n >= size:\n+        if n > size:\n             tenths = (n * 20 + size) // (2 * size)\n             return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n > size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "a9390b2062bca8d5557eb6ead8e5a86d9dde98ba65994d098bd4aecf18cb7433",
+   "kind": "violating",
+   "operator": "py-compare",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Choose the largest unit not larger than n: Using n > size makes exact unit boundaries such as 1024 fall through to the AssertionError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -1,4 +1,4 @@\n-_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n+_UNITS = [('Ti', 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n \n \n def format_size(n):\n",
+   "files": {
+    "sizes.py": "_UNITS = [('Ti', 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "450482d481855094dec4a9763d69c597bdbe2861de601babbbada0b25e61f799",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Use unit TiB: The terabyte unit name is 'Ti' instead of 'TiB'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -1,4 +1,4 @@\n-_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n+_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 0 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n \n \n def format_size(n):\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 0 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "fbb35fa30af62f38878a9b02a8045cc9334a7b044a9ad2378d1307feb8fbe93f",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Format sizes with GiB as 1024^3 bytes: The GiB size is 0, so sizes below 1 TiB and at least 1024 bytes hit a division by zero.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -1,4 +1,4 @@\n-_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n+_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 0), (\"KiB\", 1024)]\n \n \n def format_size(n):\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 0), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c998a47cc59e8d047983fde3f74ce8f30558d1f9a6516ff28d3907c46349411d",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "MiB is 1024 squared bytes: MiB size became 1, so sizes between 1 KiB and 1 GiB are formatted as MiB with wrong values.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -1,4 +1,4 @@\n-_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n+_UNITS = [(\"TiB\", 1024 ** 5), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n \n \n def format_size(n):\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 5), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2b47b22f5c5e4531269860240ad7456c3c84644e1a33ef607c8fe6f98c56158d",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "TiB is 1024^4 bytes: The TiB unit is set to 1024**5, so sizes of 1 TiB and above are formatted in GiB.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -8,4 +8,4 @@\n         if n >= size:\n             tenths = (n * 20 + size) // (2 * size)\n             return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n-    raise AssertionError(\"unreachable\")\n+    raise AssertionError('unreachabl')\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError('unreachabl')\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "32f51f6c31dd2933ba443c74c4b2ad6ba1972868e62fd3359e0c34496b4ec094",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "byte-size",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the message of an unreachable AssertionError changed, so behaviour is the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -2,7 +2,7 @@\n \n \n def format_size(n):\n-    if n < 1024:\n+    if n < 1025:\n         return \"%d B\" % n\n     for name, size in _UNITS:\n         if n >= size:\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1025:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d369bea4d209d81b8459fb11a2848e84ea0cfa862e9dd79e995817993ebb6706",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Sizes of 1024 bytes or more use a unit (1024 gives 1.0 KiB): n=1024 now returns '1024 B' instead of '1.0 KiB'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -2,7 +2,7 @@\n \n \n def format_size(n):\n-    if n < 1024:\n+    if not (n < 1024):\n         return \"%d B\" % n\n     for name, size in _UNITS:\n         if n >= size:\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if not (n < 1024):\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "9ef5d91071077424abe4b50e333fdd59d1da5f1438c975babf89e384cc5b82fe",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Sizes below 1024 are written in bytes; larger sizes use units: The condition is inverted, so large sizes print as bytes and small sizes fall through to AssertionError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -5,7 +5,7 @@\n     if n < 1024:\n         return \"%d B\" % n\n     for name, size in _UNITS:\n-        if n >= size:\n+        if not (n >= size):\n             tenths = (n * 20 + size) // (2 * size)\n             return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if not (n >= size):\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b080d717d1bfd108aaf9e0f3127d5a263fa61bdaa91b6906453cc051548010be",
+   "kind": "violating",
+   "operator": "py-negate",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Choose the largest unit not larger than n: The inverted condition selects the wrong unit (TiB for small n) or raises.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -4,7 +4,7 @@\n def format_size(n):\n     if n < 1024:\n         return \"%d B\" % n\n-    for name, size in _UNITS:\n+    for name, size in list(_UNITS)[:-1]:\n         if n >= size:\n             tenths = (n * 20 + size) // (2 * size)\n             return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in list(_UNITS)[:-1]:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "de1f94520a09474d1789d90c1ff80953d593ba08cb83799d737fc80328cbae9c",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Use KiB for sizes from 1024 bytes up to below 1 MiB: KiB is removed from the unit list so such sizes reach the AssertionError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -4,8 +4,8 @@\n def format_size(n):\n     if n < 1024:\n         return \"%d B\" % n\n-    for name, size in _UNITS:\n-        if n >= size:\n-            tenths = (n * 20 + size) // (2 * size)\n-            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n+    for name_gp, size_gp in _UNITS:\n+        if n >= size_gp:\n+            tenths_gp = (n * 20 + size_gp) // (2 * size_gp)\n+            return \"%d.%d %s\" % (tenths_gp // 10, tenths_gp % 10, name_gp)\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name_gp, size_gp in _UNITS:\n        if n >= size_gp:\n            tenths_gp = (n * 20 + size_gp) // (2 * size_gp)\n            return \"%d.%d %s\" % (tenths_gp // 10, tenths_gp % 10, name_gp)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "04033ee04f7035b4cfb97acce81eca877d7492c0704305c949df0f63cca30bc9",
+   "kind": "preserving",
+   "operator": "py-rename-locals",
+   "task_id": "byte-size",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only local variable names changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "04033ee04f7035b4cfb97acce81eca877d7492c0704305c949df0f63cca30bc9"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -7,5 +7,5 @@\n     for name, size in _UNITS:\n         if n >= size:\n             tenths = (n * 20 + size) // (2 * size)\n-            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n+            return None\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return None\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6c1e624d27bde551b76b19a4fc7d8393bcba0bee69252d661fd0f38fd990c6bb",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Return the formatted size string for n >= 1024: The function returns None for sizes of 1024 or more.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -3,7 +3,7 @@\n \n def format_size(n):\n     if n < 1024:\n-        return \"%d B\" % n\n+        return None\n     for name, size in _UNITS:\n         if n >= size:\n             tenths = (n * 20 + size) // (2 * size)\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return None\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0c624a64d8d3741dbcae2375d5da47bf2c392923c8ba2b49a3e966df63618994",
+   "kind": "violating",
+   "operator": "py-return-none",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Return number followed by B for n below 1024: Returns None for sizes under 1024.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -1,4 +1,4 @@\n-_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n+pass\n \n \n def format_size(n):\n",
+   "files": {
+    "sizes.py": "pass\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "7e322ff52b33af781bf7f86a9227267a86f5de477709b03ee10a271503dc46bf",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Format sizes of 1024 bytes or more with KiB/MiB/GiB/TiB: _UNITS is no longer defined, so any n >= 1024 raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -7,5 +7,5 @@\n     for name, size in _UNITS:\n         if n >= size:\n             tenths = (n * 20 + size) // (2 * size)\n-            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n+            pass\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            pass\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "acc76597caced84c3fd5e9ad427b0ecdd301777be5ed5fdd3518147d5cbd33fa",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Return the formatted size string: The return was replaced with pass, so the loop ends in AssertionError for n >= 1024.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -8,4 +8,4 @@\n         if n >= size:\n             tenths = (n * 20 + size) // (2 * size)\n             return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n-    raise AssertionError(\"unreachable\")\n+    pass\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    pass\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "387a3601ae3fc640369a0256d8bc325964cc347ea77144039c9cbfcaf0045718",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "byte-size",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the unreachable fallback changed, since any n >= 1024 matches the KiB unit.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -2,8 +2,7 @@\n \n \n def format_size(n):\n-    if n < 1024:\n-        return \"%d B\" % n\n+    pass\n     for name, size in _UNITS:\n         if n >= size:\n             tenths = (n * 20 + size) // (2 * size)\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    pass\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 20 + size) // (2 * size)\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "31bae72549fa16d94e99ae1fe3b30b4864e22b84172159df89953941e6ae5d28",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Return the number followed by ' B' for n below 1024: The small-size branch is removed, so n below 1024 (e.g. 0) falls through and hits the AssertionError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -4,8 +4,5 @@\n def format_size(n):\n     if n < 1024:\n         return \"%d B\" % n\n-    for name, size in _UNITS:\n-        if n >= size:\n-            tenths = (n * 20 + size) // (2 * size)\n-            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n+    pass\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    pass\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dee374fbd2e6dc15d5a4d6fd436ef01f13e05724567e13eccd292335526ae341",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Format sizes of 1024 or more with a unit: The conversion logic is removed so format_size raises AssertionError for n >= 1024.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -5,7 +5,5 @@\n     if n < 1024:\n         return \"%d B\" % n\n     for name, size in _UNITS:\n-        if n >= size:\n-            tenths = (n * 20 + size) // (2 * size)\n-            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n+        pass\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        pass\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "d9d89299de7dc1ccae02721ff95789948ff6a40bb8ce47f3fa52dfc1af40f447",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Format sizes of 1024 or more with a unit: The loop body is removed so format_size raises AssertionError for any n >= 1024.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -6,6 +6,6 @@\n         return \"%d B\" % n\n     for name, size in _UNITS:\n         if n >= size:\n-            tenths = (n * 20 + size) // (2 * size)\n+            tenths = (n * 10) // size\n             return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return \"%d B\" % n\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 10) // size\n            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "328cc01c0454363b32e834560851768ab3fdf4163a2f927b01f2412f45c7968b",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "byte-size",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "round to one decimal place with halves rounded up: Truncation instead of rounding, so 1280 bytes gives 1.2 KiB.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -1,11 +1,12 @@\n-_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n+_UNITS = ((\"TiB\", 1 << 40), (\"GiB\", 1 << 30), (\"MiB\", 1 << 20), (\"KiB\", 1 << 10))\n \n \n def format_size(n):\n     if n < 1024:\n-        return \"%d B\" % n\n+        return str(n) + \" B\"\n     for name, size in _UNITS:\n         if n >= size:\n-            tenths = (n * 20 + size) // (2 * size)\n-            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n+            tenths = (n * 10 + size // 2) // size\n+            whole, frac = divmod(tenths, 10)\n+            return \"{}.{} {}\".format(whole, frac, name)\n     raise AssertionError(\"unreachable\")\n",
+   "files": {
+    "sizes.py": "_UNITS = ((\"TiB\", 1 << 40), (\"GiB\", 1 << 30), (\"MiB\", 1 << 20), (\"KiB\", 1 << 10))\n\n\ndef format_size(n):\n    if n < 1024:\n        return str(n) + \" B\"\n    for name, size in _UNITS:\n        if n >= size:\n            tenths = (n * 10 + size // 2) // size\n            whole, frac = divmod(tenths, 10)\n            return \"{}.{} {}\".format(whole, frac, name)\n    raise AssertionError(\"unreachable\")\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ca4628b886839ab88a922b2d5b0aa0f403c6f38a8e440fdc63604ce59547bd65",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "byte-size",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "(n*10 + size//2)//size equals (n*20 + size)//(2*size) for these even unit sizes, so the half-up rounding and output are identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ca4628b886839ab88a922b2d5b0aa0f403c6f38a8e440fdc63604ce59547bd65"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/sizes.py\n+++ b/sizes.py\n@@ -1,11 +1,12 @@\n-_UNITS = [(\"TiB\", 1024 ** 4), (\"GiB\", 1024 ** 3), (\"MiB\", 1024 ** 2), (\"KiB\", 1024)]\n+UNITS = [(\"KiB\", 2 ** 10), (\"MiB\", 2 ** 20), (\"GiB\", 2 ** 30), (\"TiB\", 2 ** 40)]\n \n \n def format_size(n):\n     if n < 1024:\n-        return \"%d B\" % n\n-    for name, size in _UNITS:\n-        if n >= size:\n-            tenths = (n * 20 + size) // (2 * size)\n-            return \"%d.%d %s\" % (tenths // 10, tenths % 10, name)\n-    raise AssertionError(\"unreachable\")\n+        return f\"{n} B\"\n+    unit, size = UNITS[0]\n+    for candidate_unit, candidate_size in UNITS:\n+        if n >= candidate_size:\n+            unit, size = candidate_unit, candidate_size\n+    tenths = (2 * n * 10 + size) // (2 * size)\n+    return f\"{tenths // 10}.{tenths % 10} {unit}\"\n",
+   "files": {
+    "sizes.py": "UNITS = [(\"KiB\", 2 ** 10), (\"MiB\", 2 ** 20), (\"GiB\", 2 ** 30), (\"TiB\", 2 ** 40)]\n\n\ndef format_size(n):\n    if n < 1024:\n        return f\"{n} B\"\n    unit, size = UNITS[0]\n    for candidate_unit, candidate_size in UNITS:\n        if n >= candidate_size:\n            unit, size = candidate_unit, candidate_size\n    tenths = (2 * n * 10 + size) // (2 * size)\n    return f\"{tenths // 10}.{tenths % 10} {unit}\"\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "df9f43fa74de0293a88992bcbb1efdb5a76be5a0241a6a4b465a887423fe7261",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "byte-size",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "1 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Unit selection picks the largest unit not above n and the rounding formula is arithmetically the same, so outputs match the reference.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "df9f43fa74de0293a88992bcbb1efdb5a76be5a0241a6a4b465a887423fe7261"
+   }
+  }
+ ]
+}

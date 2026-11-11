@@ -1,0 +1,190 @@
+{
+  "created_utc": "2026-11-04T02:41:03Z",
+  "hash": "5706b7992ecfbcff2e265bd8f83ceb6b9a787272b322e92ec4e1054931455993",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "bc4641b21e8bc9a233f05e9b948191a581f54daed7a2917e87a70db8774ebd87",
+      "reference_solution": {
+        "solve.py": "import json\n\nconfig = {}\nwith open(\"app.env\", encoding=\"utf-8\") as fh:\n    for raw in fh.read().split(\"\\n\"):\n        line = raw.strip(\" \\t\")\n        if not line or line.startswith(\"#\"):\n            continue\n        key, _, value = line.partition(\"=\")\n        key, value = key.strip(\" \\t\"), value.strip(\" \\t\")\n        if len(value) >= 2 and value[0] == value[-1] and value[0] in \"\\\"'\":\n            value = value[1:-1]\n        config[key] = value\n\nwith open(\"config.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(config, fh, indent=2)\n    fh.write(\"\\n\")\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Convert app.env into config.json, which must be valid JSON containing an object."
+        },
+        {
+          "id": "R2",
+          "text": "Ignore blank lines and lines whose first non-space character is '#' (the commented APP_PORT=1234 line contributes nothing, and no comment header key appears)."
+        },
+        {
+          "id": "R3",
+          "text": "Split each line at the first '=' and remove spaces and tabs around the key and the value (so '   LOG_LEVEL = info' gives key LOG_LEVEL, value info)."
+        },
+        {
+          "id": "R4",
+          "text": "If the value starts and ends with the same quote character (\" or '), remove that one pair of quotes; nothing else is unescaped, so inner quotes are kept."
+        },
+        {
+          "id": "R5",
+          "text": "If a key appears more than once, the last occurrence wins (APP_PORT is 9090)."
+        },
+        {
+          "id": "R6",
+          "text": "config.json maps each key to its value as a string (all values are JSON strings, not numbers)."
+        }
+      ],
+      "task_text": "# Convert an env file to JSON\n\nThe deployment tool wants its settings as JSON. Convert `app.env` into `config.json`.\n\nRules for reading `app.env`:\n\n- Ignore blank lines and lines whose first non-space character is `#`.\n- Every other line has the form `KEY=VALUE`, split at the first `=`. Remove spaces and tabs around the key and around the value.\n- If the value (after that) starts and ends with the same quote character, `\"` or `'`, remove that pair of quotes. Nothing else is unescaped.\n- If a key appears more than once, the last occurrence wins.\n\n`config.json` must contain a JSON object mapping each key to its value as a string. Formatting and key order are up to you.\n"
+    },
+    {
+      "id": "c61acaf40ef700539138b8d9f17029d6e5ada4d33e7a1a8d3ba316ddd6562bd0",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\"}},\n  {\"tool\": \"create_booking\", \"args\": {\"room\": \"412\", \"guest_name\": \"Elif Demir\", \"check_in\": \"2026-12-18\", \"check_out\": \"2026-12-20\", \"loyalty_number\": \"LY-55821\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Book the cheapest available, non-smoking, king-bed room for 2026-12-18 to 2026-12-20, which is room 412 (18900 cents) among the available rooms 205, 220, 305, 412."
+        },
+        {
+          "id": "R2",
+          "text": "Book it under the guest name 'Elif Demir' and attach the loyalty number 'LY-55821'."
+        },
+        {
+          "id": "R3",
+          "text": "Make no other bookings or changes: exactly one new booking exists, the existing booking B-9001 is untouched, and room data is unchanged."
+        },
+        {
+          "id": "R4",
+          "text": "Do not book a room that does not meet the criteria (smoking room 220, queen room 205, pricier room 305)."
+        }
+      ],
+      "task_text": "# Book the cheapest matching room\n\nElif Demir wants a room from `2026-12-18` (check-in) to `2026-12-20` (check-out).\n\nBook the cheapest room that is available for those dates, is non-smoking, and has a king bed. Book it under the guest name `Elif Demir` and attach her loyalty number `LY-55821`. Make no other bookings or changes.\n\nTools (see `support/env.py`):\n\n- `search_rooms(check_in, check_out)`: rooms available for the whole stay, with bed type, smoking flag, and nightly price\n- `create_booking(room, guest_name, check_in, check_out, loyalty_number)`\n- `cancel_booking(booking_id)`\n"
+    },
+    {
+      "id": "c738ed1612d3c55987179e47f7976edfbbaed5571e2b43ecd91a79d250818418",
+      "reference_solution": {
+        "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module tagging.py"
+        },
+        {
+          "id": "R2",
+          "text": "all_tags(posts) strips surrounding whitespace and lowercases each tag"
+        },
+        {
+          "id": "R3",
+          "text": "Ignore tags that are empty after normalization"
+        },
+        {
+          "id": "R4",
+          "text": "Return each distinct normalized tag exactly once, across posts and within a post"
+        },
+        {
+          "id": "R5",
+          "text": "Return a list; empty input gives an empty list"
+        }
+      ],
+      "task_text": "# Collect blog tags\n\nThe blog's sidebar shows every tag used on the site. Write a Python module `tagging.py` with a function `all_tags(posts)`.\n\n- `posts` is a list of dicts; each has a key `tags` whose value is a list of strings.\n- Normalize each tag by removing surrounding whitespace and converting it to lowercase. Ignore tags that are empty after this.\n- Return a list containing each distinct normalized tag exactly once. The order of the returned list does not matter.\n"
+    },
+    {
+      "id": "ce8651d35a45f7dae395b6c60ba4235ef7a68d29e71fa49af53afd644fd6d24c",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Book a double room for Hannah Becker, check-in 2026-12-03, check-out 2026-12-06, using book_room"
+        },
+        {
+          "id": "R2",
+          "text": "Email hannah.becker@example.com with send_email, subject Booking confirmed"
+        },
+        {
+          "id": "R3",
+          "text": "Ordering: book the room first, then send the email"
+        },
+        {
+          "id": "R4",
+          "text": "Make no other bookings: the sequence advances only once and the existing booking is untouched"
+        },
+        {
+          "id": "R5",
+          "text": "Send no other emails: only to the guest"
+        }
+      ],
+      "task_text": "# Book a room and confirm by email\n\nHannah Becker asks the hotel for a double room from 2026-12-03 to 2026-12-06.\n\n1. Book a `double` room for guest `Hannah Becker` with check-in `2026-12-03` and check-out `2026-12-06` using `book_room`. Booking references are issued in sequence; this booking will get `R-2041`.\n2. Then email her at `hannah.becker@example.com` with `send_email`, using the subject `Booking confirmed`. The body must mention her booking reference `R-2041`, the check-in date `2026-12-03`, and the check-out date `2026-12-06`; the wording is up to you.\n\nMake no other bookings and send no other emails.\n\nTools (see `support/env.py`):\n\n- `search_rooms(check_in, check_out, guests)`\n- `book_room(guest_name, room_type, check_in, check_out)`\n- `send_email(to, subject, body)`\n"
+    },
+    {
+      "id": "d1b4ab441deff99aabce7d0ffd8f2ed0f89e7fc37c4509da789152e0766636ac",
+      "reference_solution": {
+        "semver.py": "import re\n\n_VERSION = re.compile(r\"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\")\n\n\ndef bump(version, part):\n    match = _VERSION.fullmatch(version)\n    if match is None:\n        raise ValueError(\"invalid version: %r\" % (version,))\n    major, minor, patch = (int(g) for g in match.groups())\n    if part == \"major\":\n        return \"%d.0.0\" % (major + 1)\n    if part == \"minor\":\n        return \"%d.%d.0\" % (major, minor + 1)\n    if part == \"patch\":\n        return \"%d.%d.%d\" % (major, minor, patch + 1)\n    raise ValueError(\"unknown part: %r\" % (part,))\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module semver.py"
+        },
+        {
+          "id": "R2",
+          "text": "Bumping major increments MAJOR and resets MINOR and PATCH to 0"
+        },
+        {
+          "id": "R3",
+          "text": "Bumping minor increments MINOR and resets PATCH to 0"
+        },
+        {
+          "id": "R4",
+          "text": "Bumping patch increments PATCH"
+        }
+      ],
+      "task_text": "# Bump a version number\n\nThe release script needs to compute the next version. Write a Python module `semver.py` with a function `bump(version, part)`.\n\n- `version` is a string `MAJOR.MINOR.PATCH` of three non-negative decimal integers without leading zeros (`0` itself is allowed). Anything else, such as `\"1.2\"`, `\"1.2.3.4\"`, `\"01.2.3\"`, `\"1.2.3-beta\"`, or `\"v1.2.3\"`, is invalid.\n- `part` is `\"major\"`, `\"minor\"`, or `\"patch\"`. Bumping `major` increments MAJOR and resets MINOR and PATCH to 0; bumping `minor` increments MINOR and resets PATCH to 0; bumping `patch` increments PATCH.\n- Return the new version string, for example `bump(\"1.9.9\", \"major\")` returns `\"2.0.0\"`.\n- Raise `ValueError` for an invalid version or an unknown part.\n"
+    },
+    {
+      "id": "d3ce41aabc8cd3862a73d50e25d96d4655b2c582c30a16a9c99787068ff4d73f",
+      "reference_solution": {
+        "flatten.py": "def flatten(d, sep=\".\"):\n    out = {}\n\n    def walk(node, prefix):\n        for key, value in node.items():\n            path = prefix + sep + key if prefix else key\n            if isinstance(value, dict):\n                walk(value, path)\n            else:\n                out[path] = value\n\n    walk(d, \"\")\n    return out\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module flatten.py"
+        },
+        {
+          "id": "R2",
+          "text": "One entry per non-dict value, keyed by the path of keys joined with sep"
+        },
+        {
+          "id": "R3",
+          "text": "A custom sep is used to join the path"
+        },
+        {
+          "id": "R4",
+          "text": "Non-dict values, including lists, are kept as they are and not flattened"
+        },
+        {
+          "id": "R5",
+          "text": "An empty nested dict contributes no entries; flatten({}) returns {}"
+        },
+        {
+          "id": "R6",
+          "text": "Return a new dict and do not modify d or anything inside it"
+        }
+      ],
+      "task_text": "# Flatten nested settings\n\nThe settings service stores nested configuration, but the environment loader needs flat keys. Write a Python module `flatten.py` with a function `flatten(d, sep=\".\")`.\n\n- `d` is a dict with string keys. Values may be dicts (nested to any depth) or anything else.\n- Return a new dict with one entry per non-dict value, whose key is the path of keys from the top joined with `sep`. For example, `flatten({\"db\": {\"host\": \"x\", \"port\": 5432}})` returns `{\"db.host\": \"x\", \"db.port\": 5432}`.\n- Values that are not dicts, including lists, are kept as they are and are not flattened. An empty nested dict contributes no entries. `flatten({})` returns `{}`.\n- Do not modify `d` or anything inside it.\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

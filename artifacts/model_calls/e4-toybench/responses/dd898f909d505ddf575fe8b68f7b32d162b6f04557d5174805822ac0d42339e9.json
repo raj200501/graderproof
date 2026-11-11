@@ -1,0 +1,281 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "dd898f909d505ddf575fe8b68f7b32d162b6f04557d5174805822ac0d42339e9",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "996abe0f1ffe01eda8a9e03b83e780a4f907fc2dc3448027ec84e2bed00fbcc9": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The day multiplier is mistyped as 84600 instead of 86400.",
+          "files": {
+            "durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 84600, \"h\": 3600, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([0-9]+)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.strip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        while pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Only a single space is skipped between components, so two or more spaces raise ValueError.",
+          "files": {
+            "durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([0-9]+)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.strip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        if pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The number pattern forbids a leading zero, so inputs such as 05m are rejected.",
+          "files": {
+            "durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([1-9][0-9]*)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.strip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        while pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "Only trailing spaces are stripped, so input with leading spaces raises ValueError.",
+          "files": {
+            "durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([0-9]+)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.rstrip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        while pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Parses the whole string with one anchored regex with optional unit groups instead of a scanning loop.",
+          "files": {
+            "durations.py": "import re\n\n_PATTERN = re.compile(\n    r\" *(?:([0-9]+)d)? *(?:([0-9]+)h)? *(?:([0-9]+)m)? *(?:([0-9]+)s)? *\"\n)\n_FACTORS = (86400, 3600, 60, 1)\n\n\ndef parse_duration(text):\n    match = _PATTERN.fullmatch(text)\n    if match is None or all(g is None for g in match.groups()):\n        raise ValueError(\"invalid duration: %r\" % text)\n    return sum(\n        int(g) * f for g, f in zip(match.groups(), _FACTORS) if g is not None\n    )\n"
+          }
+        },
+        {
+          "description": "Validates the shape with a regex, then collects components with findall and checks order and repeats separately.",
+          "files": {
+            "durations.py": "import re\n\n_ORDER = [\"d\", \"h\", \"m\", \"s\"]\n_FACTOR = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n_SHAPE = re.compile(r\" *(?:[0-9]+[dhms] *)+\")\n_PART = re.compile(r\"([0-9]+)([dhms])\")\n\n\ndef parse_duration(text):\n    if _SHAPE.fullmatch(text) is None:\n        raise ValueError(\"invalid duration: %r\" % text)\n    parts = _PART.findall(text)\n    units = [unit for _, unit in parts]\n    positions = [_ORDER.index(unit) for unit in units]\n    if positions != sorted(set(positions)):\n        raise ValueError(\"units out of order or repeated: %r\" % text)\n    total = 0\n    for number, unit in parts:\n        total += int(number) * _FACTOR[unit]\n    return total\n"
+          }
+        }
+      ]
+    },
+    "a0fe68f7cf0abe5b40dcaac502bbdffdd038190336c3afe95a6d0637e056418a": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The reservation is booked for 19:00 instead of 19:30.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:00\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The create_reservation call is repeated, so two new reservations are made.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "After booking, the trajectory cancels existing reservation R-501 as if it were a duplicate.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}},\n  {\"tool\": \"cancel_reservation\", \"args\": {\"reservation_id\": \"R-501\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Same two calls with different key order, compact formatting, and no trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"args\": {\"party_size\": 4, \"time\": \"19:30\", \"date\": \"2026-11-14\"}, \"tool\": \"check_availability\"},{\"args\": {\"notes\": \"wheelchair access\", \"party_size\": 4, \"time\": \"19:30\", \"date\": \"2026-11-14\", \"phone\": \"+44 20 7946 0321\", \"name\": \"Priya Raman\"}, \"tool\": \"create_reservation\"}]"
+          }
+        },
+        {
+          "description": "Adds a read-only list_reservations call before booking and drops the availability check.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_reservations\", \"args\": {\"date\": \"2026-11-14\"}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Reference calls with four-space indentation and each call spread over several lines.",
+          "files": {
+            "trajectory.json": "[\n    {\n        \"tool\": \"check_availability\",\n        \"args\": {\n            \"date\": \"2026-11-14\",\n            \"time\": \"19:30\",\n            \"party_size\": 4\n        }\n    },\n    {\n        \"tool\": \"create_reservation\",\n        \"args\": {\n            \"name\": \"Priya Raman\",\n            \"phone\": \"+44 20 7946 0321\",\n            \"date\": \"2026-11-14\",\n            \"time\": \"19:30\",\n            \"party_size\": 4,\n            \"notes\": \"wheelchair access\"\n        }\n    }\n]\n"
+          }
+        }
+      ]
+    },
+    "a181f23e6ce28a6235bbc8a64b26759e1338dc12d12ea8c7ac9e0248686bc490": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The customers columns email and created_at are listed in swapped order.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    created_at TEXT NOT NULL,\n    email TEXT NOT NULL UNIQUE\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The orders status column loses its DEFAULT 'pending' clause.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The index is named idx_orders_cust instead of idx_orders_customer.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_cust ON orders(customer_id);\nEOF\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "An extra index on customers(created_at) is created in addition to the required one.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nCREATE INDEX idx_customers_created ON customers(created_at);\nEOF\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Lowercase SQL keywords, single-line statements, and IF NOT EXISTS guards.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\ncreate table if not exists customers (id integer primary key, email text not null unique, created_at text not null);\ncreate table if not exists orders (id integer primary key, customer_id integer not null references customers(id), total_cents integer not null, status text not null default 'pending');\ncreate index if not exists idx_orders_customer on orders(customer_id);\nEOF\n"
+          }
+        },
+        {
+          "description": "The foreign key is declared as a table-level constraint instead of inline on the column.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL,\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending',\n    FOREIGN KEY (customer_id) REFERENCES customers(id)\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+          }
+        },
+        {
+          "description": "Writes the same script with printf, creates orders before customers, and wraps the statements in a transaction.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nprintf '%s\\n' \\\n  'BEGIN;' \\\n  'CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), total_cents INTEGER NOT NULL, status TEXT NOT NULL DEFAULT '\"'\"'pending'\"'\"');' \\\n  'CREATE TABLE customers (id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL);' \\\n  'CREATE INDEX idx_orders_customer ON orders(customer_id);' \\\n  'COMMIT;' > schema.sql\n"
+          }
+        }
+      ]
+    },
+    "a1c9fb2c9022ec31a1f2d1570274e815831cbfe546e1d22da1a4a72eb5d0be9a": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The backup copy is made after the edits, so nginx.conf.orig holds the modified file.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\ncp -- nginx.conf nginx.conf.orig\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The sed edits also strip the indentation from the two changed lines.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\nsed -e 's/^[[:space:]]*worker_connections 1024;/worker_connections 4096;/' -e 's/^[[:space:]]*keepalive_timeout 65;/keepalive_timeout 30;/' nginx.conf.orig > nginx.conf\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses sed -i with a backup suffix to create nginx.conf.orig and edit in place.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nsed -i.orig -e 's/worker_connections 1024;/worker_connections 4096;/' -e 's/keepalive_timeout 65;/keepalive_timeout 30;/' nginx.conf\n"
+          }
+        },
+        {
+          "description": "Copies with cp -p, then edits through a temporary file that is moved over nginx.conf.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -p -- nginx.conf nginx.conf.orig\ntmp=$(mktemp ./nginx.conf.XXXXXX)\nsed -e 's/worker_connections 1024;/worker_connections 4096;/' -e 's/keepalive_timeout 65;/keepalive_timeout 30;/' nginx.conf.orig > \"$tmp\"\nchmod --reference=nginx.conf.orig \"$tmp\"\nmv -- \"$tmp\" nginx.conf\n"
+          }
+        }
+      ]
+    },
+    "a749069371764e852585b3334d2639404996882f6269f0bf582d324f423227f6": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The refill is requested at the wrong pharmacy id, PH-OAK, while the message still names Elm Street.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-OAK\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The patient message omits the prescription number RX-1001.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your atorvastatin refill will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The patient is notified before the refill is requested.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "A second refill request for another prescription, RX-1002, is added before the notification.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1002\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Same calls with different key order, compact formatting, and no trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"args\": {\"patient_id\": \"P-5512\"}, \"tool\": \"list_prescriptions\"},{\"args\": {\"pharmacy_id\": \"PH-ELM\", \"rx_id\": \"RX-1001\"}, \"tool\": \"request_refill\"},{\"args\": {\"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\", \"patient_id\": \"P-5512\"}, \"tool\": \"notify_patient\"}]"
+          }
+        },
+        {
+          "description": "Skips list_prescriptions, uses list_pharmacies as the lookup, and words the message differently while keeping Elm Street and RX-1001.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_pharmacies\", \"args\": {}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Hello, your atorvastatin refill (RX-1001) has been requested and can be collected at the Elm Street pharmacy.\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Only the two required calls, with no lookup call and a short message.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"RX-1001 refill requested at Elm Street.\"}}\n]\n"
+          }
+        }
+      ]
+    },
+    "a9a7c1d97fd3c78dd18688155a10c3c6b3bc718265de4ed5d482d86605022219": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The script is created at bin/word-count instead of bin/wordcount.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/word-count <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/word-count\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The generated script has no shebang line and starts directly with set.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The script passes the file name to wc, so the output is the count followed by the file name instead of a plain integer.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses the #!/bin/bash shebang and normalizes the count with printf %d.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/bin/bash\nset -eu\nn=$(wc -w < \"$1\")\nprintf '%d\\n' \"$n\"\nEOF\nchmod +x bin/wordcount\n"
+          }
+        },
+        {
+          "description": "Reads the file through cat and a pipe, then strips any padding from the count with tr.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\ncat -- \"$1\" | wc -w | tr -d '[:space:]'\necho\nEOF\nchmod +x bin/wordcount\n"
+          }
+        },
+        {
+          "description": "Creates the script with printf and uses exec to replace the shell with wc.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\nprintf '%s\\n' '#!/usr/bin/env bash' 'exec wc -w < \"${1:?usage: wordcount FILE}\"' > bin/wordcount\nchmod 755 bin/wordcount\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

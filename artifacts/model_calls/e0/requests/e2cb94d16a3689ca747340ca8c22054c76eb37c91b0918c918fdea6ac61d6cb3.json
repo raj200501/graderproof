@@ -1,0 +1,190 @@
+{
+  "created_utc": "2026-11-04T02:41:03Z",
+  "hash": "e2cb94d16a3689ca747340ca8c22054c76eb37c91b0918c918fdea6ac61d6cb3",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "898b9d9fb49dfe27231940c78ff2cdf2342c5bf600abeca5f53713b8045e7888",
+      "reference_solution": {
+        "taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due is None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    return sorted(tasks, key=_key)\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a module `taskqueue.py` with a function `sort_tasks(tasks)`."
+        },
+        {
+          "id": "R2",
+          "text": "Order by priority, 1 first."
+        },
+        {
+          "id": "R3",
+          "text": "Within the same priority, order by due date, earliest first, with tasks without a due date after those with one."
+        },
+        {
+          "id": "R4",
+          "text": "Within the same priority and due date, order by title, alphabetical and case-sensitive."
+        },
+        {
+          "id": "R5",
+          "text": "Dicts may contain other keys, which must be kept."
+        },
+        {
+          "id": "R6",
+          "text": "Return a new list with the same dicts; the input list and its dicts are not modified (input order stays as given)."
+        }
+      ],
+      "task_text": "# Order a task list\n\nWrite a Python module `taskqueue.py` with a function `sort_tasks(tasks)` for a to-do app.\n\n- `tasks` is a list of dicts. Each dict has a `title` (string), a `priority` (integer, 1 is the most urgent), and a `due` date (an ISO `YYYY-MM-DD` string, or `None` when there is no due date). Dicts may contain other keys, which must be kept.\n- Return a new list with the same dicts ordered by priority (1 first), then by due date (earliest first, tasks without a due date after those with one), then by title (alphabetical, case-sensitive).\n- The caller keeps using its own list: `sort_tasks` must not modify the input list or any of the dicts in it.\n"
+    },
+    {
+      "id": "8c3d7d63e3f17244d8e25ed2a031c0176ceeda76dc97195cbd71a862456f8be4",
+      "reference_solution": {
+        "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port not in used:\n            return port\n    return None\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a module `ports.py` with a function `pick_port(used, low, high)`."
+        },
+        {
+          "id": "R2",
+          "text": "Both ends of the range are included: a free port at `low` or at `high` must be found when it is the only free one."
+        },
+        {
+          "id": "R3",
+          "text": "The returned port is not in `used` and lies within the range, when a free port exists (only one free port, so the answer is unique)."
+        },
+        {
+          "id": "R4",
+          "text": "If every port in the range is taken, return `None`."
+        }
+      ],
+      "task_text": "# Allocate a free port\n\nThe test harness starts services on free ports. Write a Python module `ports.py` with a function `pick_port(used, low, high)`.\n\n- `used` is a set of port numbers that are taken; `low` and `high` are integers with `low <= high`.\n- Return any port `p` with `low <= p <= high` (both ends included) that is not in `used`. Any such port is acceptable.\n- If every port in the range is taken, return `None`.\n"
+    },
+    {
+      "id": "9563c4f6af36ba5193a9d30376cfbc095079db9fb3f5bf59e2732a372848039f",
+      "reference_solution": {
+        "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a module `luhn.py` with a function `luhn_valid(number)`."
+        },
+        {
+          "id": "R2",
+          "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+        },
+        {
+          "id": "R3",
+          "text": "Return False when the checksum fails (the sum is not divisible by 10)."
+        },
+        {
+          "id": "R4",
+          "text": "Spaces and dashes are allowed as group separators and are removed first."
+        },
+        {
+          "id": "R5",
+          "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+        },
+        {
+          "id": "R6",
+          "text": "What remains must consist only of ASCII digits; any other character gives False, including empty input, and no exception is raised for a string argument."
+        },
+        {
+          "id": "R7",
+          "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+        }
+      ],
+      "task_text": "# Card number check\n\nWrite a Python module `luhn.py` with a function `luhn_valid(number)` used to catch typos in card numbers before they are sent to the payment provider.\n\n- `number` is a string. Spaces and dashes are allowed as group separators and are removed first.\n- Return `True` if what remains consists only of ASCII digits, has 12 to 19 digits, and passes the Luhn checksum: starting from the rightmost digit and moving left, double every second digit (subtracting 9 from any result above 9), add up all the digits, and check that the sum is divisible by 10.\n- Return `False` in every other case, including empty input and input with other characters. Never raise an exception for a string argument.\n"
+    },
+    {
+      "id": "996abe0f1ffe01eda8a9e03b83e780a4f907fc2dc3448027ec84e2bed00fbcc9",
+      "reference_solution": {
+        "durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([0-9]+)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.strip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        while pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a module `durations.py` with a function `parse_duration(text)`."
+        },
+        {
+          "id": "R2",
+          "text": "Return the duration in seconds as an integer, with d = 86400, h = 3600, m = 60, s = 1; example `parse_duration(\"1h30m\")` returns 5400."
+        },
+        {
+          "id": "R3",
+          "text": "Components may be written next to each other or separated by one or more spaces; valid examples `2d 4h`, `90m`, `1h 15m 30s`."
+        },
+        {
+          "id": "R4",
+          "text": "Each component is one or more ASCII digits followed by the unit, so multi-digit numbers work and leading zeros are digits."
+        },
+        {
+          "id": "R6",
+          "text": "Leading and trailing spaces are allowed."
+        }
+      ],
+      "task_text": "# Parse durations\n\nThe job scheduler accepts timeouts such as `1h30m`. Write a Python module `durations.py` with a function `parse_duration(text)` that returns the duration in seconds as an integer.\n\n- A duration is one or more components. Each component is one or more ASCII digits immediately followed by a unit: `d` (day, 86400 seconds), `h` (hour), `m` (minute), or `s` (second).\n- Components may be written next to each other or separated by one or more spaces. Units must appear in the order `d`, `h`, `m`, `s`, each at most once: `\"2d 4h\"`, `\"90m\"`, and `\"1h 15m 30s\"` are valid; `\"30s 1m\"` and `\"1h1h\"` are not.\n- Leading and trailing spaces are allowed.\n- Example: `parse_duration(\"1h30m\")` returns `5400`.\n- For any other input (an empty string, an unknown unit, a number without a unit, a unit without a number, a space between a number and its unit, or any other character), raise `ValueError`.\n"
+    },
+    {
+      "id": "9e5efee08af90eb9b89c3bcb282f1953b59d0a7068c373e286cc88156c6dfb44",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_loans\", \"args\": {\"member_id\": \"M-1209\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-501\"}},\n  {\"tool\": \"renew_loan\", \"args\": {\"loan_id\": \"L-503\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Renew L-501 (due 2026-11-06, no holds by others) exactly once with renew_loan."
+        },
+        {
+          "id": "R2",
+          "text": "Renew L-503 (due 2026-11-10, no holds by others) exactly once with renew_loan."
+        },
+        {
+          "id": "R3",
+          "text": "Do not renew L-502, which is due on or before 2026-11-10 but whose title has a hold by another member."
+        },
+        {
+          "id": "R4",
+          "text": "Do not renew any other loan: L-504 (due after 2026-11-10) and L-611 (another member's loan) stay unchanged."
+        },
+        {
+          "id": "R5",
+          "text": "Use list_loans to see the member's loans and holds before renewing."
+        }
+      ],
+      "task_text": "# Renew library loans\n\nLibrary member `M-1209` asks to renew everything that is due on or before `2026-11-10`.\n\nRenew each of the member's loans due on or before `2026-11-10` exactly once with `renew_loan`, except loans whose title another member has placed a hold on (`list_loans` shows the holds). Do not renew any other loan.\n\nTools (see `support/env.py`):\n\n- `list_loans(member_id)`\n- `renew_loan(loan_id)`: extends the due date by 14 days\n"
+    },
+    {
+      "id": "a0fe68f7cf0abe5b40dcaac502bbdffdd038190336c3afe95a6d0637e056418a",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Book a reservation for name Priya Raman, phone +44 20 7946 0321, date 2026-11-14, time 19:30, party size 4, notes wheelchair access, using create_reservation."
+        },
+        {
+          "id": "R2",
+          "text": "Make exactly one new reservation."
+        },
+        {
+          "id": "R3",
+          "text": "Leave all existing reservations as they are: no cancellations, and R-501 and R-502 unchanged."
+        }
+      ],
+      "task_text": "# Restaurant reservation\n\nA caller asks for a dinner reservation. Use the reservation tools to book a table with these details:\n\n- name: `Priya Raman`\n- phone: `+44 20 7946 0321`\n- date: `2026-11-14`, time: `19:30`\n- party size: 4\n- notes: `wheelchair access`\n\nMake exactly one new reservation and leave all existing reservations as they are.\n\nTools (see `support/env.py`):\n\n- `check_availability(date, time, party_size)`\n- `create_reservation(name, phone, date, time, party_size, notes)`\n- `cancel_reservation(reservation_id)`\n- `list_reservations(date)`\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

@@ -1,0 +1,765 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "schema.sql": "CREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "schema.sql",
+     "type": "file_exists"
+    },
+    {
+     "code": 0,
+     "type": "exit_code"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write schema.sql in the working directory and run without errors."
+  },
+  {
+   "checks": [
+    {
+     "path": "schema.sql",
+     "pattern": "(?is)CREATE\\s+TABLE\\s+customers\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*email\\s+TEXT\\s+NOT\\s+NULL\\s+UNIQUE\\s*,\\s*created_at\\s+TEXT\\s+NOT\\s+NULL\\s*\\)",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Table customers with columns in order: id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL."
+  },
+  {
+   "checks": [
+    {
+     "path": "schema.sql",
+     "pattern": "(?is)CREATE\\s+TABLE\\s+orders\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*customer_id\\s+INTEGER\\s+NOT\\s+NULL\\s+REFERENCES\\s+customers\\s*\\(\\s*id\\s*\\)\\s*,\\s*total_cents\\s+INTEGER\\s+NOT\\s+NULL\\s*,\\s*status\\s+TEXT\\s+NOT\\s+NULL\\s+DEFAULT\\s+'pending'\\s*\\)",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Table orders with columns in order: id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), total_cents INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending'."
+  },
+  {
+   "checks": [
+    {
+     "path": "schema.sql",
+     "pattern": "(?is)CREATE\\s+INDEX\\s+idx_orders_customer\\s+ON\\s+orders\\s*\\(\\s*customer_id\\s*\\)",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "An index named idx_orders_customer on orders(customer_id)."
+  },
+  {
+   "checks": [
+    {
+     "path": "schema.sql",
+     "pattern": "(?is)\\A(?:(?!CREATE\\s+(?:VIEW|TRIGGER|TEMP|TEMPORARY|VIRTUAL|UNIQUE)).)*\\Z",
+     "type": "file_regex"
+    },
+    {
+     "path": "schema.sql",
+     "pattern": "(?is)\\A(?:(?!CREATE\\s+TABLE\\s+(?!customers\\b|orders\\b)).)*\\Z",
+     "type": "file_regex"
+    },
+    {
+     "path": "schema.sql",
+     "pattern": "(?is)\\A(?:(?!CREATE\\s+INDEX\\s+(?!idx_orders_customer\\b)).)*\\Z",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R5",
+   "source": "model:requirements/v1",
+   "text": "Create no other table, view, index, or trigger."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:schema-setup",
+ "task_hash": "a181f23e6ce28a6235bbc8a64b26759e1338dc12d12ea8c7ac9e0248686bc490",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,18 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cat > schema.sql <<'EOF'\n+CREATE TABLE customers (\n+    id INTEGER PRIMARY KEY,\n+    email TEXT NOT NULL UNIQUE,\n+    created_at TEXT NOT NULL\n+);\n+\n+CREATE TABLE orders (\n+    id INTEGER PRIMARY KEY,\n+    customer_id INTEGER NOT NULL REFERENCES customers(id),\n+    total_cents INTEGER NOT NULL,\n+    status TEXT NOT NULL DEFAULT 'pending'\n+);\n+\n+CREATE INDEX idx_orders_customer ON orders(customer_id);\n+EOF\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['schema.sql']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,18 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cat > schema.sql <<'EOF'\n-CREATE TABLE customers (\n-    id INTEGER PRIMARY KEY,\n-    email TEXT NOT NULL UNIQUE,\n-    created_at TEXT NOT NULL\n-);\n-\n-CREATE TABLE orders (\n-    id INTEGER PRIMARY KEY,\n-    customer_id INTEGER NOT NULL REFERENCES customers(id),\n-    total_cents INTEGER NOT NULL,\n-    status TEXT NOT NULL DEFAULT 'pending'\n-);\n-\n-CREATE INDEX idx_orders_customer ON orders(customer_id);\n-EOF\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['schema.sql']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "d0d93ebaa606ead82184259a7c8f55925a5f8af340b3b4f6b4aa50573b907f1f",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "schema-setup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: schema.sql does not match /(?is)CREATE\\s+INDEX\\s+idx_orders_customer\\s+ON\\s+orders\\s*\\(\\s*customer_id\\s*\\)/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "schema.sql must create the idx_orders_customer index: The wrapper drops the last line of schema.sql, which removes the CREATE INDEX statement.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "schema.sql does not match /(?is)CREATE\\s+INDEX\\s+idx_orders_customer\\s+ON\\s+orders\\s*\\(\\s*customer_id\\s*\\)/"
+      ],
+      "requirement": "R4",
+      "text": "An index named idx_orders_customer on orders(customer_id)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "d0d93ebaa606ead82184259a7c8f55925a5f8af340b3b4f6b4aa50573b907f1f"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,18 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cat > schema.sql <<'EOF'\n+CREATE TABLE customers (\n+    id INTEGER PRIMARY KEY,\n+    email TEXT NOT NULL UNIQUE,\n+    created_at TEXT NOT NULL\n+);\n+\n+CREATE TABLE orders (\n+    id INTEGER PRIMARY KEY,\n+    customer_id INTEGER NOT NULL REFERENCES customers(id),\n+    total_cents INTEGER NOT NULL,\n+    status TEXT NOT NULL DEFAULT 'pending'\n+);\n+\n+CREATE INDEX idx_orders_customer ON orders(customer_id);\n+EOF\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['schema.sql']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,18 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cat > schema.sql <<'EOF'\n-CREATE TABLE customers (\n-    id INTEGER PRIMARY KEY,\n-    email TEXT NOT NULL UNIQUE,\n-    created_at TEXT NOT NULL\n-);\n-\n-CREATE TABLE orders (\n-    id INTEGER PRIMARY KEY,\n-    customer_id INTEGER NOT NULL REFERENCES customers(id),\n-    total_cents INTEGER NOT NULL,\n-    status TEXT NOT NULL DEFAULT 'pending'\n-);\n-\n-CREATE INDEX idx_orders_customer ON orders(customer_id);\n-EOF\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['schema.sql']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3bc7d47bd766dd5e818a60baa362002dee0f3b78cc08085c60d928e80e7f05ce",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "schema-setup",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Create no other content and run without errors: The wrapper appends the line 'extra' to schema.sql, which is invalid SQL.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,18 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cat > schema.sql <<'EOF'\n+CREATE TABLE customers (\n+    id INTEGER PRIMARY KEY,\n+    email TEXT NOT NULL UNIQUE,\n+    created_at TEXT NOT NULL\n+);\n+\n+CREATE TABLE orders (\n+    id INTEGER PRIMARY KEY,\n+    customer_id INTEGER NOT NULL REFERENCES customers(id),\n+    total_cents INTEGER NOT NULL,\n+    status TEXT NOT NULL DEFAULT 'pending'\n+);\n+\n+CREATE INDEX idx_orders_customer ON orders(customer_id);\n+EOF\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['schema.sql']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,18 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cat > schema.sql <<'EOF'\n-CREATE TABLE customers (\n-    id INTEGER PRIMARY KEY,\n-    email TEXT NOT NULL UNIQUE,\n-    created_at TEXT NOT NULL\n-);\n-\n-CREATE TABLE orders (\n-    id INTEGER PRIMARY KEY,\n-    customer_id INTEGER NOT NULL REFERENCES customers(id),\n-    total_cents INTEGER NOT NULL,\n-    status TEXT NOT NULL DEFAULT 'pending'\n-);\n-\n-CREATE INDEX idx_orders_customer ON orders(customer_id);\n-EOF\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['schema.sql']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "8c71ad1f27eef9ce4d4d83ec30568c65218d44df67e0dd4021c3b14f8f95cdc5",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "schema-setup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the trailing newline of schema.sql is toggled, and the SQL content is unchanged and still valid.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "8c71ad1f27eef9ce4d4d83ec30568c65218d44df67e0dd4021c3b14f8f95cdc5"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,18 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cat > schema.sql <<'EOF'\n+CREATE TABLE customers (\n+    id INTEGER PRIMARY KEY,\n+    email TEXT NOT NULL UNIQUE,\n+    created_at TEXT NOT NULL\n+);\n+\n+CREATE TABLE orders (\n+    id INTEGER PRIMARY KEY,\n+    customer_id INTEGER NOT NULL REFERENCES customers(id),\n+    total_cents INTEGER NOT NULL,\n+    status TEXT NOT NULL DEFAULT 'pending'\n+);\n+\n+CREATE INDEX idx_orders_customer ON orders(customer_id);\n+EOF\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['schema.sql']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,18 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cat > schema.sql <<'EOF'\n-CREATE TABLE customers (\n-    id INTEGER PRIMARY KEY,\n-    email TEXT NOT NULL UNIQUE,\n-    created_at TEXT NOT NULL\n-);\n-\n-CREATE TABLE orders (\n-    id INTEGER PRIMARY KEY,\n-    customer_id INTEGER NOT NULL REFERENCES customers(id),\n-    total_cents INTEGER NOT NULL,\n-    status TEXT NOT NULL DEFAULT 'pending'\n-);\n-\n-CREATE INDEX idx_orders_customer ON orders(customer_id);\n-EOF\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 0.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['schema.sql']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 0.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "b47796d22f314d316d3fe441ff8d9909fea3b05a88060e263750aa37498a8cbe",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "schema-setup",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "schema.sql must create exactly the specified schema: The transform appends trailing spaces to every non-empty line, changing the file content from the intended script.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "b47796d22f314d316d3fe441ff8d9909fea3b05a88060e263750aa37498a8cbe"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.sh\n+++ b/_gp_orig_solve.sh\n@@ -0,0 +1,18 @@\n+#!/usr/bin/env bash\n+set -euo pipefail\n+cat > schema.sql <<'EOF'\n+CREATE TABLE customers (\n+    id INTEGER PRIMARY KEY,\n+    email TEXT NOT NULL UNIQUE,\n+    created_at TEXT NOT NULL\n+);\n+\n+CREATE TABLE orders (\n+    id INTEGER PRIMARY KEY,\n+    customer_id INTEGER NOT NULL REFERENCES customers(id),\n+    total_cents INTEGER NOT NULL,\n+    status TEXT NOT NULL DEFAULT 'pending'\n+);\n+\n+CREATE INDEX idx_orders_customer ON orders(customer_id);\n+EOF\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.sh\n+++ b/solve.sh\n@@ -1,18 +1,9 @@\n #!/usr/bin/env bash\n-set -euo pipefail\n-cat > schema.sql <<'EOF'\n-CREATE TABLE customers (\n-    id INTEGER PRIMARY KEY,\n-    email TEXT NOT NULL UNIQUE,\n-    created_at TEXT NOT NULL\n-);\n-\n-CREATE TABLE orders (\n-    id INTEGER PRIMARY KEY,\n-    customer_id INTEGER NOT NULL REFERENCES customers(id),\n-    total_cents INTEGER NOT NULL,\n-    status TEXT NOT NULL DEFAULT 'pending'\n-);\n-\n-CREATE INDEX idx_orders_customer ON orders(customer_id);\n-EOF\n+here=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n+sleep 3.0\n+captured=\"$(mktemp)\"\n+bash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\n+status=$?\n+python3 \"$here/_gp_transform.py\" \"$captured\"\n+rm -f \"$captured\"\n+exit $status\n",
+   "files": {
+    "_gp_orig_solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.sh": "#!/usr/bin/env bash\nhere=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nsleep 3.0\ncaptured=\"$(mktemp)\"\nbash \"$here/_gp_orig_solve.sh\" \"$@\" > \"$captured\"\nstatus=$?\npython3 \"$here/_gp_transform.py\" \"$captured\"\nrm -f \"$captured\"\nexit $status\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "747f791179e1a42b1901258d42ac465f0906d17162fb5d571397c346906319cc",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "schema-setup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper only adds a delay and runs the original script, whose schema.sql output is unchanged.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "747f791179e1a42b1901258d42ac465f0906d17162fb5d571397c346906319cc"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,6 +1,6 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cat > schema.sql <<'EOF'\n+cat | head -n 1 > schema.sql <<'EOF'\n CREATE TABLE customers (\n     id INTEGER PRIMARY KEY,\n     email TEXT NOT NULL UNIQUE,\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat | head -n 1 > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "3880b0f182d4a49afb780ef9acdecec6c48a61df3549a9cc7dc3fbd4501890ed",
+   "kind": "violating",
+   "operator": "sh-partial-output",
+   "task_id": "schema-setup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: schema.sql does not match /(?is)CREATE\\s+TABLE\\s+customers\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*email\\s+TEXT\\s+NOT\\s+NULL\\s+UNIQUE\\s*,\\s*created_at\\s+TEXT\\s+NOT\\s+NULL\\s*\\)/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "schema.sql creates all tables and the index: head -n 1 truncates schema.sql to its first line, which is an incomplete statement.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "schema.sql does not match /(?is)CREATE\\s+TABLE\\s+customers\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*email\\s+TEXT\\s+NOT\\s+NULL\\s+UNIQUE\\s*,\\s*created_at\\s+TEXT\\s+NOT\\s+NULL\\s*\\)/"
+      ],
+      "requirement": "R2",
+      "text": "Table customers with columns in order: id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL."
+     },
+     {
+      "failed": [
+       "schema.sql does not match /(?is)CREATE\\s+TABLE\\s+orders\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*customer_id\\s+INTEGER\\s+NOT\\s+NULL\\s+REFERENCES\\s+customers\\s*\\(\\s*id\\s*\\)\\s*,\\s*total_cents\\s+INTEGER\\s+NOT\\s+NULL\\s*,\\s*status\\s+TEXT\\s+NOT\\s+NULL\\s+DEFAULT\\s+'pending'\\s*\\)/"
+      ],
+      "requirement": "R3",
+      "text": "Table orders with columns in order: id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), total_cents INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending'."
+     },
+     {
+      "failed": [
+       "schema.sql does not match /(?is)CREATE\\s+INDEX\\s+idx_orders_customer\\s+ON\\s+orders\\s*\\(\\s*customer_id\\s*\\)/"
+      ],
+      "requirement": "R4",
+      "text": "An index named idx_orders_customer on orders(customer_id)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "3880b0f182d4a49afb780ef9acdecec6c48a61df3549a9cc7dc3fbd4501890ed"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,6 +1,6 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cat > schema.sql <<'EOF'\n+cat > schema.sql.wrong <<'EOF'\n CREATE TABLE customers (\n     id INTEGER PRIMARY KEY,\n     email TEXT NOT NULL UNIQUE,\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql.wrong <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "5b2767af43e44ebbbb8636fb7dc82fd0a5eba623123c6aa698a63c186aa8faed",
+   "kind": "violating",
+   "operator": "sh-target-file",
+   "task_id": "schema-setup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: schema.sql missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write schema.sql in the working directory: The script writes schema.sql.wrong instead of schema.sql.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "schema.sql missing"
+      ],
+      "requirement": "R1",
+      "text": "Write schema.sql in the working directory and run without errors."
+     },
+     {
+      "failed": [
+       "schema.sql missing"
+      ],
+      "requirement": "R2",
+      "text": "Table customers with columns in order: id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL."
+     },
+     {
+      "failed": [
+       "schema.sql missing"
+      ],
+      "requirement": "R3",
+      "text": "Table orders with columns in order: id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), total_cents INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending'."
+     },
+     {
+      "failed": [
+       "schema.sql missing"
+      ],
+      "requirement": "R4",
+      "text": "An index named idx_orders_customer on orders(customer_id)."
+     },
+     {
+      "failed": [
+       "schema.sql missing",
+       "schema.sql missing",
+       "schema.sql missing"
+      ],
+      "requirement": "R5",
+      "text": "Create no other table, view, index, or trigger."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "5b2767af43e44ebbbb8636fb7dc82fd0a5eba623123c6aa698a63c186aa8faed"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -15,4 +15,5 @@\n );\n \n CREATE INDEX idx_orders_customer ON orders(customer_id);\n+CREATE INDEX idx_orders_customer ON orders(customer_id);\n EOF\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "b6b97ac4f66747937c7609a9d54739d60791b1989ebe70adba04face7d0ed3f1",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "schema-setup",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The script must run without errors and create exactly one index: Creating idx_orders_customer twice fails with an index-already-exists error.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -3,8 +3,8 @@\n cat > schema.sql <<'EOF'\n CREATE TABLE customers (\n     id INTEGER PRIMARY KEY,\n-    email TEXT NOT NULL UNIQUE,\n-    created_at TEXT NOT NULL\n+    created_at TEXT NOT NULL,\n+    email TEXT NOT NULL UNIQUE\n );\n \n CREATE TABLE orders (\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    created_at TEXT NOT NULL,\n    email TEXT NOT NULL UNIQUE\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "7ebbdd5fa9eb4a907bb87e4faf572e35903a6288fa52b55e84a6d159339dd249",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "schema-setup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: schema.sql does not match /(?is)CREATE\\s+TABLE\\s+customers\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*email\\s+TEXT\\s+NOT\\s+NULL\\s+UNIQUE\\s*,\\s*created_at\\s+TEXT\\s+NOT\\s+NULL\\s*\\)/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "customers columns must be in the order id, email, created_at: The columns of customers were swapped so created_at comes before email.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "schema.sql does not match /(?is)CREATE\\s+TABLE\\s+customers\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*email\\s+TEXT\\s+NOT\\s+NULL\\s+UNIQUE\\s*,\\s*created_at\\s+TEXT\\s+NOT\\s+NULL\\s*\\)/"
+      ],
+      "requirement": "R2",
+      "text": "Table customers with columns in order: id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7ebbdd5fa9eb4a907bb87e4faf572e35903a6288fa52b55e84a6d159339dd249"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -9,7 +9,7 @@\n \n CREATE TABLE orders (\n     id INTEGER PRIMARY KEY,\n-    customer_id INTEGER NOT NULL REFERENCES customers(id),\n+    customer_id INTEGER NOT NULL,\n     total_cents INTEGER NOT NULL,\n     status TEXT NOT NULL DEFAULT 'pending'\n );\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL,\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "7c96dd0831c43f127349da8e9914d6410d28be334e2aae7287c8ea1d302ded35",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "schema-setup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: schema.sql does not match /(?is)CREATE\\s+TABLE\\s+orders\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*customer_id\\s+INTEGER\\s+NOT\\s+NULL\\s+REFERENCES\\s+customers\\s*\\(\\s*id\\s*\\)\\s*,\\s*total_cents\\s+INTEGER\\s+NOT\\s+NULL\\s*,\\s*status\\s+TEXT\\s+NOT\\s+NULL\\s+DEFAULT\\s+'pending'\\s*\\)/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "orders.customer_id has a foreign key referencing customers(id): The foreign key reference was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "schema.sql does not match /(?is)CREATE\\s+TABLE\\s+orders\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*customer_id\\s+INTEGER\\s+NOT\\s+NULL\\s+REFERENCES\\s+customers\\s*\\(\\s*id\\s*\\)\\s*,\\s*total_cents\\s+INTEGER\\s+NOT\\s+NULL\\s*,\\s*status\\s+TEXT\\s+NOT\\s+NULL\\s+DEFAULT\\s+'pending'\\s*\\)/"
+      ],
+      "requirement": "R3",
+      "text": "Table orders with columns in order: id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), total_cents INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending'."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "7c96dd0831c43f127349da8e9914d6410d28be334e2aae7287c8ea1d302ded35"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -14,5 +14,5 @@\n     status TEXT NOT NULL DEFAULT 'pending'\n );\n \n-CREATE INDEX idx_orders_customer ON orders(customer_id);\n+CREATE INDEX idx_orders_cust ON orders(customer_id);\n EOF\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_cust ON orders(customer_id);\nEOF\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "4ff08401ca4649ce58f8c9c735fbdcf2e8a2e06788fd7b3a7ca5a24cbea692c4",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "schema-setup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R4: schema.sql does not match /(?is)CREATE\\s+INDEX\\s+idx_orders_customer\\s+ON\\s+orders\\s*\\(\\s*customer_id\\s*\\)/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "An index named idx_orders_customer: The index is named idx_orders_cust.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "schema.sql does not match /(?is)CREATE\\s+INDEX\\s+idx_orders_customer\\s+ON\\s+orders\\s*\\(\\s*customer_id\\s*\\)/"
+      ],
+      "requirement": "R4",
+      "text": "An index named idx_orders_customer on orders(customer_id)."
+     },
+     {
+      "failed": [
+       "schema.sql does not match /(?is)\\A(?:(?!CREATE\\s+INDEX\\s+(?!idx_orders_customer\\b)).)*\\Z/"
+      ],
+      "requirement": "R5",
+      "text": "Create no other table, view, index, or trigger."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "4ff08401ca4649ce58f8c9c735fbdcf2e8a2e06788fd7b3a7ca5a24cbea692c4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -15,4 +15,5 @@\n );\n \n CREATE INDEX idx_orders_customer ON orders(customer_id);\n+CREATE INDEX idx_orders_status ON orders(status);\n EOF\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nCREATE INDEX idx_orders_status ON orders(status);\nEOF\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true,
+    true,
+    true
+   ],
+   "id": "94ed03b75c0462cf8e4188bc2a77a60d251626c60cc59953798886bb8d0bf181",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "schema-setup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R5: schema.sql does not match /(?is)\\A(?:(?!CREATE\\s+INDEX\\s+(?!idx_orders_customer\\b)).)*\\Z/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "must not create any other index: It creates the extra index idx_orders_status.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "schema.sql does not match /(?is)\\A(?:(?!CREATE\\s+INDEX\\s+(?!idx_orders_customer\\b)).)*\\Z/"
+      ],
+      "requirement": "R5",
+      "text": "Create no other table, view, index, or trigger."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "94ed03b75c0462cf8e4188bc2a77a60d251626c60cc59953798886bb8d0bf181"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,18 +1,16 @@\n #!/usr/bin/env bash\n set -euo pipefail\n cat > schema.sql <<'EOF'\n-CREATE TABLE customers (\n-    id INTEGER PRIMARY KEY,\n-    email TEXT NOT NULL UNIQUE,\n-    created_at TEXT NOT NULL\n+create table customers (\n+\tid integer primary key,\n+\temail text not null unique,\n+\tcreated_at text not null\n );\n-\n-CREATE TABLE orders (\n-    id INTEGER PRIMARY KEY,\n-    customer_id INTEGER NOT NULL REFERENCES customers(id),\n-    total_cents INTEGER NOT NULL,\n-    status TEXT NOT NULL DEFAULT 'pending'\n+create table orders (\n+\tid integer primary key,\n+\tcustomer_id integer not null references customers(id),\n+\ttotal_cents integer not null,\n+\tstatus text not null default 'pending'\n );\n-\n-CREATE INDEX idx_orders_customer ON orders(customer_id);\n+create index idx_orders_customer on orders(customer_id);\n EOF\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\ncreate table customers (\n\tid integer primary key,\n\temail text not null unique,\n\tcreated_at text not null\n);\ncreate table orders (\n\tid integer primary key,\n\tcustomer_id integer not null references customers(id),\n\ttotal_cents integer not null,\n\tstatus text not null default 'pending'\n);\ncreate index idx_orders_customer on orders(customer_id);\nEOF\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ecb26dd545d6a6bb554912516e8435188e681d49b90187b1e4d444bc470d8a1e",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "schema-setup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The schema is the same; only keyword case, whitespace and blank lines changed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ecb26dd545d6a6bb554912516e8435188e681d49b90187b1e4d444bc470d8a1e"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -9,9 +9,10 @@\n \n CREATE TABLE orders (\n     id INTEGER PRIMARY KEY,\n-    customer_id INTEGER NOT NULL REFERENCES customers(id),\n+    customer_id INTEGER NOT NULL,\n     total_cents INTEGER NOT NULL,\n-    status TEXT NOT NULL DEFAULT 'pending'\n+    status TEXT NOT NULL DEFAULT 'pending',\n+    FOREIGN KEY (customer_id) REFERENCES customers(id)\n );\n \n CREATE INDEX idx_orders_customer ON orders(customer_id);\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL,\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending',\n    FOREIGN KEY (customer_id) REFERENCES customers(id)\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "32b8f8f45bb8982e6a24974ced892086951390f79d6dbce0eda1832f6c943160",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "schema-setup",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R3: schema.sql does not match /(?is)CREATE\\s+TABLE\\s+orders\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*customer_id\\s+INTEGER\\s+NOT\\s+NULL\\s+REFERENCES\\s+customers\\s*\\(\\s*id\\s*\\)\\s*,\\s*total_cents\\s+INTEGER\\s+NOT\\s+NULL\\s*,\\s*status\\s+TEXT\\s+NOT\\s+NULL\\s+DEFAULT\\s+'pending'\\s*\\)/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "A table-level FOREIGN KEY is equivalent to the inline REFERENCES, with the same columns and index.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,18 +1,3 @@\n #!/usr/bin/env bash\n set -euo pipefail\n-cat > schema.sql <<'EOF'\n-CREATE TABLE customers (\n-    id INTEGER PRIMARY KEY,\n-    email TEXT NOT NULL UNIQUE,\n-    created_at TEXT NOT NULL\n-);\n-\n-CREATE TABLE orders (\n-    id INTEGER PRIMARY KEY,\n-    customer_id INTEGER NOT NULL REFERENCES customers(id),\n-    total_cents INTEGER NOT NULL,\n-    status TEXT NOT NULL DEFAULT 'pending'\n-);\n-\n-CREATE INDEX idx_orders_customer ON orders(customer_id);\n-EOF\n+printf '%s\\n' \"PRAGMA foreign_keys = ON;\" \"CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL);\" \"CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), total_cents INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending');\" \"CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);\" > schema.sql\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nprintf '%s\\n' \"PRAGMA foreign_keys = ON;\" \"CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL);\" \"CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), total_cents INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending');\" \"CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);\" > schema.sql\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "a2b3cca2158168695408b766d0483dcd7a25b872763a88c878c9687d8cc4dca0",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "schema-setup",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R2: schema.sql does not match /(?is)CREATE\\s+TABLE\\s+customers\\s*\\(\\s*id\\s+INTEGER\\s+PRIMARY\\s+KEY\\s*,\\s*email\\s+TEXT\\s+NOT\\s+NULL\\s+UNIQUE\\s*,\\s*created_at\\s+TEXT\\s+NOT\\s+NULL\\s*\\)/",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The script still creates exactly the required tables and index with the same columns; the PRAGMA and IF NOT EXISTS create nothing extra.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.sh\n+++ b/solve.sh\n@@ -1,6 +1,9 @@\n #!/usr/bin/env bash\n set -euo pipefail\n cat > schema.sql <<'EOF'\n+-- orders service schema\n+BEGIN TRANSACTION;\n+\n CREATE TABLE customers (\n     id INTEGER PRIMARY KEY,\n     email TEXT NOT NULL UNIQUE,\n@@ -15,4 +18,7 @@\n );\n \n CREATE INDEX idx_orders_customer ON orders(customer_id);\n+\n+COMMIT;\n+\n EOF\n",
+   "files": {
+    "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\n-- orders service schema\nBEGIN TRANSACTION;\n\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\n\nCOMMIT;\n\nEOF\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "ab1e0b3509f9d1e0f5af1308dcca31917d2bf694ec6f09e757e8becd84a48190",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "schema-setup",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "5 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A comment and a transaction wrapper do not change the objects created, and the script runs without errors.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4",
+     "R5"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "ab1e0b3509f9d1e0f5af1308dcca31917d2bf694ec6f09e757e8becd84a48190"
+   }
+  }
+ ]
+}

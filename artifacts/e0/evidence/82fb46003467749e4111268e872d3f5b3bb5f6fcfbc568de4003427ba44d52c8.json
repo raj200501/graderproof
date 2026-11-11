@@ -1,0 +1,652 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {},
+  "probes": {},
+  "state": {
+   "bookings": {
+    "BK-4470": {
+     "customer": "Lin Zhao",
+     "date": "2026-12-05",
+     "status": "confirmed",
+     "tour": "Porto old town walk"
+    },
+    "BK-4471": {
+     "customer": "Lin Zhao",
+     "date": "2026-12-12",
+     "status": "cancelled",
+     "tour": "Douro valley day trip"
+    },
+    "BK-4502": {
+     "customer": "Tiago Costa",
+     "date": "2026-12-12",
+     "status": "confirmed",
+     "tour": "Douro valley day trip"
+    }
+   }
+  },
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": [
+   {
+    "args": {
+     "customer_name": "Lin Zhao"
+    },
+    "result": {
+     "bookings": {
+      "BK-4470": {
+       "customer": "Lin Zhao",
+       "date": "2026-12-05",
+       "status": "confirmed",
+       "tour": "Porto old town walk"
+      },
+      "BK-4471": {
+       "customer": "Lin Zhao",
+       "date": "2026-12-12",
+       "status": "confirmed",
+       "tour": "Douro valley day trip"
+      }
+     },
+     "ok": true
+    },
+    "tool": "find_bookings"
+   },
+   {
+    "args": {
+     "booking_id": "BK-4471"
+    },
+    "result": {
+     "ok": true
+    },
+    "tool": "cancel_booking"
+   }
+  ]
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "args": {
+      "booking_id": "BK-4471"
+     },
+     "tool": "cancel_booking",
+     "type": "trajectory_includes"
+    },
+    {
+     "equals": "cancelled",
+     "pointer": "/bookings/BK-4471/status",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Cancel booking BK-4471 with `cancel_booking`."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "booking_id": "BK-4470"
+     },
+     "tool": "cancel_booking",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": "confirmed",
+     "pointer": "/bookings/BK-4470/status",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-12-05",
+     "pointer": "/bookings/BK-4470/date",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "Keep the booking on 2026-12-05 (BK-4470): do not cancel or change it."
+  },
+  {
+   "checks": [
+    {
+     "args": {
+      "booking_id": "BK-4502"
+     },
+     "tool": "cancel_booking",
+     "type": "trajectory_excludes"
+    },
+    {
+     "equals": "confirmed",
+     "pointer": "/bookings/BK-4502/status",
+     "type": "state_equals"
+    },
+    {
+     "equals": "Tiago Costa",
+     "pointer": "/bookings/BK-4502/customer",
+     "type": "state_equals"
+    },
+    {
+     "equals": "2026-12-12",
+     "pointer": "/bookings/BK-4502/date",
+     "type": "state_equals"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Do not cancel or change any other booking (BK-4502 for another customer stays confirmed and unchanged)."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "none",
+     "target": "state",
+     "type": "same_as_reference"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "The final state matches the reference state exactly (only BK-4471 changed)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:booking-cancel",
+ "task_hash": "82fb46003467749e4111268e872d3f5b3bb5f6fcfbc568de4003427ba44d52c8",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,20 @@\n [\n-  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n+  {\n+    \"tool\": \"find_bookings\",\n+    \"args\": {\n+      \"customer_name\": \"Lin Zhao\"\n+    }\n+  },\n+  {\n+    \"tool\": \"find_bookings\",\n+    \"args\": {\n+      \"customer_name\": \"Lin Zhao\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"booking_id\": \"BK-4471\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_bookings\",\n    \"args\": {\n      \"customer_name\": \"Lin Zhao\"\n    }\n  },\n  {\n    \"tool\": \"find_bookings\",\n    \"args\": {\n      \"customer_name\": \"Lin Zhao\"\n    }\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"booking_id\": \"BK-4471\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "79073a14a6129acdbffa071f0369f37045ad228e206500fe13c3d078c75e750a",
+   "kind": "preserving",
+   "operator": "traj-add-readonly",
+   "task_id": "booking-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "A duplicated read-only find_bookings call changes no state and the correct booking is still cancelled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "79073a14a6129acdbffa071f0369f37045ad228e206500fe13c3d078c75e750a"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,14 @@\n [\n-  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n+  {\n+    \"tool\": \"find_bookings\",\n+    \"args\": {\n+      \"customer_name\": \"Lin Zhao-x\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"booking_id\": \"BK-4471\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_bookings\",\n    \"args\": {\n      \"customer_name\": \"Lin Zhao-x\"\n    }\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"booking_id\": \"BK-4471\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "29298486093e623161616836a5fd367d513a45fd0d291ecc312c45808985d745",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "booking-cancel",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The cancel_booking call for BK-4471 is unchanged; the task does not require the read-only lookup, so the end state is the same.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,14 @@\n [\n-  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n+  {\n+    \"tool\": \"find_bookings\",\n+    \"args\": {\n+      \"customer_name\": \"Lin Zhao\"\n+    }\n+  },\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"booking_id\": \"BK-4471-x\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_bookings\",\n    \"args\": {\n      \"customer_name\": \"Lin Zhao\"\n    }\n  },\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"booking_id\": \"BK-4471-x\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "314665d871921e94c358a6a2f11ed7599d93a3c7a9667255efbb16893a18f4f5",
+   "kind": "violating",
+   "operator": "traj-argument",
+   "task_id": "booking-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks cancel_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Cancel booking BK-4471: The booking id is BK-4471-x, so the wrong or nonexistent booking is cancelled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks cancel_booking",
+       "state /bookings/BK-4471/status = 'confirmed'"
+      ],
+      "requirement": "R1",
+      "text": "Cancel booking BK-4471 with `cancel_booking`."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The final state matches the reference state exactly (only BK-4471 changed)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "314665d871921e94c358a6a2f11ed7599d93a3c7a9667255efbb16893a18f4f5"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,8 @@\n [\n-  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"booking_id\": \"BK-4471\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"booking_id\": \"BK-4471\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "bc5a97b26d9fc0fefadc934f51d61696214e9b519bc722c4109b0638b6d56223",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "booking-cancel",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The task only requires cancelling BK-4471 and the lookup call is not required.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,8 @@\n [\n-  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n+  {\n+    \"tool\": \"find_bookings\",\n+    \"args\": {\n+      \"customer_name\": \"Lin Zhao\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"find_bookings\",\n    \"args\": {\n      \"customer_name\": \"Lin Zhao\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ef413216111a5a974381c76b5638c9407e71a3822c8e8b05cc33f2613c955240",
+   "kind": "violating",
+   "operator": "traj-drop-call",
+   "task_id": "booking-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks cancel_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "cancel booking BK-4471: The cancel_booking call was removed, so the booking is not cancelled.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks cancel_booking",
+       "state /bookings/BK-4471/status = 'confirmed'"
+      ],
+      "requirement": "R1",
+      "text": "Cancel booking BK-4471 with `cancel_booking`."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The final state matches the reference state exactly (only BK-4471 changed)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ef413216111a5a974381c76b5638c9407e71a3822c8e8b05cc33f2613c955240"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,14 @@\n [\n-  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n+  {\n+    \"tool\": \"cancel_booking\",\n+    \"args\": {\n+      \"booking_id\": \"BK-4471\"\n+    }\n+  },\n+  {\n+    \"tool\": \"find_bookings\",\n+    \"args\": {\n+      \"customer_name\": \"Lin Zhao\"\n+    }\n+  }\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\n    \"tool\": \"cancel_booking\",\n    \"args\": {\n      \"booking_id\": \"BK-4471\"\n    }\n  },\n  {\n    \"tool\": \"find_bookings\",\n    \"args\": {\n      \"customer_name\": \"Lin Zhao\"\n    }\n  }\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "010e9b9d5737adbc858e0432ae5d9742cd3a1685254aa54f5319ba27353f1599",
+   "kind": "preserving",
+   "operator": "traj-swap-independent",
+   "task_id": "booking-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The same booking is cancelled and the only reordering is of a read-only lookup, which the task does not require at all.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "010e9b9d5737adbc858e0432ae5d9742cd3a1685254aa54f5319ba27353f1599"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,3 @@\n [\n-  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n+  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0d8563616159d96a2d06ede765fca0fb7286b904f7b8095f3ce686899ae67e8c",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "booking-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: trajectory lacks cancel_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Cancel booking BK-4471: The cancel_booking call was removed.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory lacks cancel_booking",
+       "state /bookings/BK-4471/status = 'confirmed'"
+      ],
+      "requirement": "R1",
+      "text": "Cancel booking BK-4471 with `cancel_booking`."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The final state matches the reference state exactly (only BK-4471 changed)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0d8563616159d96a2d06ede765fca0fb7286b904f7b8095f3ce686899ae67e8c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n   {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n+  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}},\n+  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4470\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4470\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "cc708cfa44e45d4cb75f287e13e7143801527b433a526f976eff0d1ed0c5bc42",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "booking-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: trajectory has cancel_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Cancel exactly BK-4471 and do not cancel any other booking: It also cancels BK-4470, which the customer wanted to keep.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory has cancel_booking",
+       "state /bookings/BK-4470/status = 'cancelled'"
+      ],
+      "requirement": "R2",
+      "text": "Keep the booking on 2026-12-05 (BK-4470): do not cancel or change it."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The final state matches the reference state exactly (only BK-4471 changed)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "cc708cfa44e45d4cb75f287e13e7143801527b433a526f976eff0d1ed0c5bc42"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n   {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n+  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}},\n+  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4502\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4502\"}}\n]\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "907be32ec70552f829243dac9ad5a3b78f00f306dbcebfa754f76b3024be1065",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "booking-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R3: trajectory has cancel_booking",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "do not cancel any other booking: It also cancels BK-4502.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "trajectory has cancel_booking",
+       "state /bookings/BK-4502/status = 'cancelled'"
+      ],
+      "requirement": "R3",
+      "text": "Do not cancel or change any other booking (BK-4502 for another customer stays confirmed and unchanged)."
+     },
+     {
+      "failed": [
+       "state differs from reference"
+      ],
+      "requirement": "R4",
+      "text": "The final state matches the reference state exactly (only BK-4471 changed)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "907be32ec70552f829243dac9ad5a3b78f00f306dbcebfa754f76b3024be1065"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,3 @@\n [\n-  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n   {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "8bd20bb228479dbbe6886baf72099ebf189660731c1918070282f173e806c95b",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "booking-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The task gives the booking ID and cancelling it is the only required action; the find_bookings lookup is read-only.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "8bd20bb228479dbbe6886baf72099ebf189660731c1918070282f173e806c95b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1 @@\n-[\n-  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n-]\n+[{\"tool\":\"find_bookings\",\"args\":{\"customer_name\":\"Lin Zhao\"}},{\"tool\":\"cancel_booking\",\"args\":{\"booking_id\":\"BK-4471\"}}]\n",
+   "files": {
+    "trajectory.json": "[{\"tool\":\"find_bookings\",\"args\":{\"customer_name\":\"Lin Zhao\"}},{\"tool\":\"cancel_booking\",\"args\":{\"booking_id\":\"BK-4471\"}}]"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "87726940b7e3f033a2c6c9774bfda142eed31257d953c067c1609aaa3497bfa9",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "booking-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only JSON whitespace changed; the calls are identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "87726940b7e3f033a2c6c9774bfda142eed31257d953c067c1609aaa3497bfa9"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/trajectory.json\n+++ b/trajectory.json\n@@ -1,4 +1,5 @@\n [\n-  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n-  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n+  {\"args\": {\"customer_name\": \"Lin Zhao\"}, \"tool\": \"find_bookings\"},\n+  {\"args\": {\"customer_name\": \"Lin Zhao\"}, \"tool\": \"find_bookings\"},\n+  {\"args\": {\"booking_id\": \"BK-4471\"}, \"tool\": \"cancel_booking\"}\n ]\n",
+   "files": {
+    "trajectory.json": "[\n  {\"args\": {\"customer_name\": \"Lin Zhao\"}, \"tool\": \"find_bookings\"},\n  {\"args\": {\"customer_name\": \"Lin Zhao\"}, \"tool\": \"find_bookings\"},\n  {\"args\": {\"booking_id\": \"BK-4471\"}, \"tool\": \"cancel_booking\"}\n]\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "7117f1631fddb25b634dec435c54ef466bba518d41bf7c15c170e5727bca44fd",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "booking-cancel",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "It repeats a read-only find_bookings call and reorders JSON keys, and still cancels only BK-4471.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "7117f1631fddb25b634dec435c54ef466bba518d41bf7c15c170e5727bca44fd"
+   }
+  }
+ ]
+}

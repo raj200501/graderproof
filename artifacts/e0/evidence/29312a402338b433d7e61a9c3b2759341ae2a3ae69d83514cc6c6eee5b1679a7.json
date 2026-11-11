@@ -1,0 +1,1444 @@
+{
+ "determinism": "stable_pass",
+ "invalid_requirements": [],
+ "reference_outcome": {
+  "exit_status": 0,
+  "files": {
+   "payments.csv": "date,customer,amount\n2026-10-01,Northwind Traders,1200.00\n2026-10-03,Contoso Ltd,310.50\n2026-10-07,Northwind Traders,89.99\n2026-10-12,Fabrikam Inc,2250.00\n2026-10-15,Contoso Ltd,45.25\n2026-10-21,\"Adventure Works, LLC\",600.00\n2026-10-28,Fabrikam Inc,149.95\n",
+   "totals.csv": "customer,total\n\"Adventure Works, LLC\",600.00\nContoso Ltd,355.75\nFabrikam Inc,2399.95\nNorthwind Traders,1289.99\n"
+  },
+  "probes": {},
+  "state": null,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": false,
+  "trajectory": []
+ },
+ "requirements": [
+  {
+   "checks": [
+    {
+     "path": "totals.csv",
+     "type": "file_exists"
+    },
+    {
+     "code": 0,
+     "type": "exit_code"
+    }
+   ],
+   "id": "R1",
+   "source": "model:requirements/v1",
+   "text": "Write totals.csv in the working directory."
+  },
+  {
+   "checks": [
+    {
+     "normalize": "strip",
+     "path": "totals.csv",
+     "text": "customer,total\n\"Adventure Works, LLC\",600.00\nContoso Ltd,355.75\nFabrikam Inc,2399.95\nNorthwind Traders,1289.99\n",
+     "type": "file_equals"
+    }
+   ],
+   "id": "R2",
+   "source": "model:requirements/v1",
+   "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+  },
+  {
+   "checks": [
+    {
+     "path": "totals.csv",
+     "text": "\"Adventure Works, LLC\",600.00",
+     "type": "file_contains"
+    }
+   ],
+   "id": "R3",
+   "source": "model:requirements/v1",
+   "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+  },
+  {
+   "checks": [
+    {
+     "path": "totals.csv",
+     "pattern": "(?m)^(\"Adventure Works, LLC\"|Contoso Ltd|Fabrikam Inc|Northwind Traders),[0-9]+\\.[0-9]{2}[ \\t\\r]*$",
+     "type": "file_regex"
+    }
+   ],
+   "id": "R4",
+   "source": "model:requirements/v1",
+   "text": "Totals are written with exactly two decimal places (for example 600.00)."
+  }
+ ],
+ "schema": "graderproof.evidence/1",
+ "task": "tasks:customer-totals",
+ "task_hash": "29312a402338b433d7e61a9c3b2759341ae2a3ae69d83514cc6c6eee5b1679a7",
+ "variants": [
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,14 @@\n+import csv\n+from collections import defaultdict\n+from decimal import Decimal\n+\n+totals = defaultdict(Decimal)\n+with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n+\n+with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"customer\", \"total\"])\n+    for customer in sorted(totals):\n+        writer.writerow([customer, \"%.2f\" % totals[customer]])\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,33 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['totals.csv']\n+\n+\n+def drop_last_line(text):\n+    lines = text.rstrip(\"\\n\").split(\"\\n\")\n+    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n+    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n+\n+\n+def transform_file(text):\n+    return drop_last_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,14 +1,14 @@\n-import csv\n-from collections import defaultdict\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = defaultdict(Decimal)\n-with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n-\n-with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n-    for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['totals.csv']\n\n\ndef drop_last_line(text):\n    lines = text.rstrip(\"\\n\").split(\"\\n\")\n    end = \"\\n\" if text.endswith(\"\\n\") else \"\"\n    return \"\\n\".join(lines[:-1]) + (end if len(lines) > 1 else \"\")\n\n\ndef transform_file(text):\n    return drop_last_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f5d11e9c0675300c4e3313d35d33d4049632422733e92912eab9f91ea6fb5f67",
+   "kind": "violating",
+   "operator": "out-drop-last-line",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "one row per customer in totals.csv: The transform drops the last line, losing the last customer's row.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f5d11e9c0675300c4e3313d35d33d4049632422733e92912eab9f91ea6fb5f67"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,14 @@\n+import csv\n+from collections import defaultdict\n+from decimal import Decimal\n+\n+totals = defaultdict(Decimal)\n+with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n+\n+with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"customer\", \"total\"])\n+    for customer in sorted(totals):\n+        writer.writerow([customer, \"%.2f\" % totals[customer]])\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['totals.csv']\n+\n+\n+def extra_line(text):\n+    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n+\n+\n+def transform_file(text):\n+    return extra_line(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,14 +1,14 @@\n-import csv\n-from collections import defaultdict\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = defaultdict(Decimal)\n-with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n-\n-with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n-    for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['totals.csv']\n\n\ndef extra_line(text):\n    return text + (\"\" if text.endswith(\"\\n\") or not text else \"\\n\") + \"extra\\n\"\n\n\ndef transform_file(text):\n    return extra_line(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "410ddbea23db927e286ec9b45855af6aea9b7620d5fa721ab072e5d1f51c512c",
+   "kind": "violating",
+   "operator": "out-extra-line",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "totals.csv has the header and one row per customer only: The transform appends an extra line 'extra' to totals.csv.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "410ddbea23db927e286ec9b45855af6aea9b7620d5fa721ab072e5d1f51c512c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,14 @@\n+import csv\n+from collections import defaultdict\n+from decimal import Decimal\n+\n+totals = defaultdict(Decimal)\n+with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n+\n+with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"customer\", \"total\"])\n+    for customer in sorted(totals):\n+        writer.writerow([customer, \"%.2f\" % totals[customer]])\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['totals.csv']\n+\n+\n+def toggle_newline(text):\n+    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n+\n+\n+def transform_file(text):\n+    return toggle_newline(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,14 +1,14 @@\n-import csv\n-from collections import defaultdict\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = defaultdict(Decimal)\n-with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n-\n-with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n-    for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['totals.csv']\n\n\ndef toggle_newline(text):\n    return text[:-1] if text.endswith(\"\\n\") else text + \"\\n\"\n\n\ndef transform_file(text):\n    return toggle_newline(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "75429a5739bcfd37c00133e524dd56aa742c59bfd9f74fb7a39a0bac122a2a7d",
+   "kind": "preserving",
+   "operator": "out-trailing-newline",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Only the final trailing newline of totals.csv is removed, and the task text does not require one.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "75429a5739bcfd37c00133e524dd56aa742c59bfd9f74fb7a39a0bac122a2a7d"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,14 @@\n+import csv\n+from collections import defaultdict\n+from decimal import Decimal\n+\n+totals = defaultdict(Decimal)\n+with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n+\n+with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"customer\", \"total\"])\n+    for customer in sorted(totals):\n+        writer.writerow([customer, \"%.2f\" % totals[customer]])\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,31 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = ['totals.csv']\n+\n+\n+def trailing_spaces(text):\n+    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n+\n+\n+def transform_file(text):\n+    return trailing_spaces(text)\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,14 +1,14 @@\n-import csv\n-from collections import defaultdict\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = defaultdict(Decimal)\n-with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n-\n-with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n-    for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(0.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = ['totals.csv']\n\n\ndef trailing_spaces(text):\n    return \"\\n\".join(line + \"  \" if line else line for line in text.split(\"\\n\"))\n\n\ndef transform_file(text):\n    return trailing_spaces(text)\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(0.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "1621c1e412478c6ad414ba0cece98f7b09d07255e27a370aa2b6c8b9c3389fbe",
+   "kind": "preserving",
+   "operator": "out-trailing-spaces",
+   "task_id": "customer-totals",
+   "validation_status": "rejected",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "totals.csv contents exactly as specified: A wrapper appends trailing spaces to every line of totals.csv.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/_gp_orig_solve.py\n+++ b/_gp_orig_solve.py\n@@ -0,0 +1,14 @@\n+import csv\n+from collections import defaultdict\n+from decimal import Decimal\n+\n+totals = defaultdict(Decimal)\n+with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+    for row in csv.DictReader(fh):\n+        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n+\n+with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer.writerow([\"customer\", \"total\"])\n+    for customer in sorted(totals):\n+        writer.writerow([customer, \"%.2f\" % totals[customer]])\n--- a/_gp_transform.py\n+++ b/_gp_transform.py\n@@ -0,0 +1,27 @@\n+\"\"\"Rewrite outputs after the original entry runs.\"\"\"\n+import json\n+import pathlib\n+import sys\n+\n+TARGETS = []\n+\n+\n+def transform_file(text):\n+    return text\n+\n+\n+def transform_stdout(out):\n+    return out\n+\n+\n+def main():\n+    captured = pathlib.Path(sys.argv[1])\n+    out = captured.read_text() if captured.exists() else \"\"\n+    for name in TARGETS:\n+        path = pathlib.Path(name)\n+        if path.is_file():\n+            path.write_text(transform_file(path.read_text()))\n+    sys.stdout.write(transform_stdout(out))\n+\n+\n+main()\n--- a/solve.py\n+++ b/solve.py\n@@ -1,14 +1,14 @@\n-import csv\n-from collections import defaultdict\n-from decimal import Decimal\n+import pathlib\n+import subprocess\n+import sys\n+import tempfile\n+import time\n \n-totals = defaultdict(Decimal)\n-with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n-\n-with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n-    for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+here = pathlib.Path(__file__).resolve().parent\n+time.sleep(3.0)\n+run = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\n+with tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n+    fh.write(run.stdout)\n+subprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\n+pathlib.Path(fh.name).unlink()\n+sys.exit(run.returncode)\n",
+   "files": {
+    "_gp_orig_solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+    "_gp_transform.py": "\"\"\"Rewrite outputs after the original entry runs.\"\"\"\nimport json\nimport pathlib\nimport sys\n\nTARGETS = []\n\n\ndef transform_file(text):\n    return text\n\n\ndef transform_stdout(out):\n    return out\n\n\ndef main():\n    captured = pathlib.Path(sys.argv[1])\n    out = captured.read_text() if captured.exists() else \"\"\n    for name in TARGETS:\n        path = pathlib.Path(name)\n        if path.is_file():\n            path.write_text(transform_file(path.read_text()))\n    sys.stdout.write(transform_stdout(out))\n\n\nmain()\n",
+    "solve.py": "import pathlib\nimport subprocess\nimport sys\nimport tempfile\nimport time\n\nhere = pathlib.Path(__file__).resolve().parent\ntime.sleep(3.0)\nrun = subprocess.run([sys.executable, str(here / '_gp_orig_solve.py'), *sys.argv[1:]], stdout=subprocess.PIPE)\nwith tempfile.NamedTemporaryFile(\"wb\", delete=False, suffix=\".out\") as fh:\n    fh.write(run.stdout)\nsubprocess.run([sys.executable, str(here / '_gp_transform.py'), fh.name])\npathlib.Path(fh.name).unlink()\nsys.exit(run.returncode)\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "33914400a8f3d7aa3f41e1047bccb2d2f4d0b109cd40f1637e4459745fd3ac99",
+   "kind": "preserving",
+   "operator": "pre-delay",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "The wrapper only adds a delay and runs the original script with an identity transform, so totals.csv is identical.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "33914400a8f3d7aa3f41e1047bccb2d2f4d0b109cd40f1637e4459745fd3ac99"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,4 +11,4 @@\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"customer\", \"total\"])\n     for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+        writer.writerow([customer, (\"%.2f\") // (totals[customer])])\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, (\"%.2f\") // (totals[customer])])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dfd05046b1fc8c41ef4645ef1e925afeca7fbd6336d94afc9af13a321ef7a35f",
+   "kind": "violating",
+   "operator": "py-arith",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write totals.csv with two-decimal totals: Applying // between a str and a Decimal raises TypeError, so no totals are written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write totals.csv in the working directory."
+     },
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv lacks '\"Adventure Works, LLC\",600.00'"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv does not match /(?m)^(\"Adventure Works, LLC\"|Contoso Ltd|Fabrikam Inc|Northwind Traders),[0-9]+\\.[0-9]{2}[ \\t\\r]*$/"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "dfd05046b1fc8c41ef4645ef1e925afeca7fbd6336d94afc9af13a321ef7a35f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,6 +9,6 @@\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n+    writer.writerow(['customerx', \"total\"])\n     for customer in sorted(totals):\n         writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow(['customerx', \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "6745720e50f3f57d56ca6aee6a10ada9bce2c102a460d9b0388f8c7969def376",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "header row customer,total: The header is written as customerx.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "6745720e50f3f57d56ca6aee6a10ada9bce2c102a460d9b0388f8c7969def376"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,6 +9,6 @@\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n+    writer.writerow([\"customer\", ''])\n     for customer in sorted(totals):\n         writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", ''])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "ffc8a35eb5d67433a370597fdf1272c6a9f8ddd595a35f624804241e6c5f45eb",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Header row must be customer,total: The second header field is an empty string instead of 'total'.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "ffc8a35eb5d67433a370597fdf1272c6a9f8ddd595a35f624804241e6c5f45eb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,6 +9,6 @@\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n+    writer.writerow([\"customer\", 'tota'])\n     for customer in sorted(totals):\n         writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", 'tota'])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "524605bc9977643d2ee5fc1634509b694ed4b076cd92549e20b4f912feca5825",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Header row customer,total: The header's second column is written as tota.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "524605bc9977643d2ee5fc1634509b694ed4b076cd92549e20b4f912feca5825"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,4 +11,4 @@\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"customer\", \"total\"])\n     for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+        writer.writerow([customer, '%.2' % totals[customer]])\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, '%.2' % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "15c413692b9a4e5a57e55a393d04d28cd59c0377b241590d7c779b1d3f153c34",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write totals with two decimal places: The format string '%.2' is incomplete and raises ValueError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write totals.csv in the working directory."
+     },
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv lacks '\"Adventure Works, LLC\",600.00'"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv does not match /(?m)^(\"Adventure Works, LLC\"|Contoso Ltd|Fabrikam Inc|Northwind Traders),[0-9]+\\.[0-9]{2}[ \\t\\r]*$/"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "15c413692b9a4e5a57e55a393d04d28cd59c0377b241590d7c779b1d3f153c34"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n totals = defaultdict(Decimal)\n with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n+        totals[row['custome']] += Decimal(row[\"amount\"])\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row['custome']] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "373b613f275817ad56194b118c2fd22225083b390e35230aad0a53c29a6ae22b",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: totals.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Sum payments per customer: row['custome'] raises KeyError because the column is named customer.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write totals.csv in the working directory."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "373b613f275817ad56194b118c2fd22225083b390e35230aad0a53c29a6ae22b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -5,7 +5,7 @@\n totals = defaultdict(Decimal)\n with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n+        totals[row['customerx']] += Decimal(row[\"amount\"])\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row['customerx']] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "bb5980c6ac7a4d07cf89c28e0fc6dff84d5fc11e4e7adc8a589bf78a5abee67c",
+   "kind": "violating",
+   "operator": "py-constant",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: totals.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Sum payments per customer: The code reads a nonexistent column 'customerx', which raises KeyError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write totals.csv in the working directory."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "bb5980c6ac7a4d07cf89c28e0fc6dff84d5fc11e4e7adc8a589bf78a5abee67c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,5 +10,5 @@\n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"customer\", \"total\"])\n-    for customer in sorted(totals):\n+    for customer in list(sorted(totals))[:-1]:\n         writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in list(sorted(totals))[:-1]:\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "0fe3bd3ab2a947f694c2fc393f785b1d3b780faa56968cf9276c01cf00f0e710",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One row per customer: The last customer in sorted order is omitted.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "0fe3bd3ab2a947f694c2fc393f785b1d3b780faa56968cf9276c01cf00f0e710"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,7 +4,7 @@\n \n totals = defaultdict(Decimal)\n with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n+    for row in list(csv.DictReader(fh))[:-1]:\n         totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in list(csv.DictReader(fh))[:-1]:\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f5a013d723da5681247ad823f0e9c4724c059d70de47d2fa7163bec7605c2f8a",
+   "kind": "violating",
+   "operator": "py-partial-loop",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "sum all of each customer's payments: The last payment row is skipped, so totals are wrong.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f5a013d723da5681247ad823f0e9c4724c059d70de47d2fa7163bec7605c2f8a"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,8 +7,4 @@\n     for row in csv.DictReader(fh):\n         totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n \n-with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n-    for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+pass\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\npass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "8b4c9ec7cd52e5683547cf5b99f192e59d5dc890f3c4fc67828c8250f9378e3b",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: totals.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write totals.csv: The output file is never written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R1",
+      "text": "Write totals.csv in the working directory."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "8b4c9ec7cd52e5683547cf5b99f192e59d5dc890f3c4fc67828c8250f9378e3b"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,7 +8,7 @@\n         totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    pass\n     writer.writerow([\"customer\", \"total\"])\n     for customer in sorted(totals):\n         writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    pass\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "e19a092b14df4ca593202706dd5cef7faea25f54040a3eaf8712d81ffaaa5faf",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: exit 1",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write totals.csv: writer is never defined, so the script raises NameError.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write totals.csv in the working directory."
+     },
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv lacks '\"Adventure Works, LLC\",600.00'"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv does not match /(?m)^(\"Adventure Works, LLC\"|Contoso Ltd|Fabrikam Inc|Northwind Traders),[0-9]+\\.[0-9]{2}[ \\t\\r]*$/"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "e19a092b14df4ca593202706dd5cef7faea25f54040a3eaf8712d81ffaaa5faf"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -9,6 +9,6 @@\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n+    pass\n     for customer in sorted(totals):\n         writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    pass\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "44690b1a3134bf53ff535f86bef59684d79456247ae9b3c97f6c8c9eed509ccb",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Header row customer,total: The header row is no longer written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "44690b1a3134bf53ff535f86bef59684d79456247ae9b3c97f6c8c9eed509ccb"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,5 +10,4 @@\n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"customer\", \"total\"])\n-    for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+    pass\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "709aa650261bb749415219c3914a263bec79e37c52876778016eab7a14548acd",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One row per customer with totals: The loop writing customer rows was removed, so only the header is written.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv lacks '\"Adventure Works, LLC\",600.00'"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv does not match /(?m)^(\"Adventure Works, LLC\"|Contoso Ltd|Fabrikam Inc|Northwind Traders),[0-9]+\\.[0-9]{2}[ \\t\\r]*$/"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "709aa650261bb749415219c3914a263bec79e37c52876778016eab7a14548acd"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,4 +11,4 @@\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"customer\", \"total\"])\n     for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+        pass\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        pass\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "2e0fdcc411bf60fe734909eea47d71514ea40e47e9d528778fa424e047a57ec0",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One row per customer in totals.csv: No customer rows are written, only the header.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv lacks '\"Adventure Works, LLC\",600.00'"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv does not match /(?m)^(\"Adventure Works, LLC\"|Contoso Ltd|Fabrikam Inc|Northwind Traders),[0-9]+\\.[0-9]{2}[ \\t\\r]*$/"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "2e0fdcc411bf60fe734909eea47d71514ea40e47e9d528778fa424e047a57ec0"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -4,8 +4,7 @@\n \n totals = defaultdict(Decimal)\n with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n-    for row in csv.DictReader(fh):\n-        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n+    pass\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    pass\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "335be067f6d25301e4296b9301718fda5301abef988983f9043ace7d0dd14fa4",
+   "kind": "violating",
+   "operator": "py-stmt-delete",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "One row per customer with the sum of payments: Rows are never read, so totals.csv has only the header.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv lacks '\"Adventure Works, LLC\",600.00'"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv does not match /(?m)^(\"Adventure Works, LLC\"|Contoso Ltd|Fabrikam Inc|Northwind Traders),[0-9]+\\.[0-9]{2}[ \\t\\r]*$/"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "335be067f6d25301e4296b9301718fda5301abef988983f9043ace7d0dd14fa4"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n     for row in csv.DictReader(fh):\n         totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n \n-with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open('totals.csv.bak', \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"customer\", \"total\"])\n     for customer in sorted(totals):\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open('totals.csv.bak', \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f7062f96fbc1fb2f494cddc04f6c1c8991b8f9201431c1f244b9ffc32b2a393f",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: totals.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write totals.csv: Output is written to totals.csv.bak instead of totals.csv.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R1",
+      "text": "Write totals.csv in the working directory."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f7062f96fbc1fb2f494cddc04f6c1c8991b8f9201431c1f244b9ffc32b2a393f"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -3,7 +3,7 @@\n from decimal import Decimal\n \n totals = defaultdict(Decimal)\n-with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open('payments.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n         totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n \n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open('payments.csv.bak', newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "310f169c2d21d8ac1e9c1da73eed8b784b74ed7469a4edc5a43d69219c900b7c",
+   "kind": "violating",
+   "operator": "py-target-file",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: totals.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Read payments.csv: The script reads payments.csv.bak, which is not the specified input file.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv missing",
+       "exit 1"
+      ],
+      "requirement": "R1",
+      "text": "Write totals.csv in the working directory."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "310f169c2d21d8ac1e9c1da73eed8b784b74ed7469a4edc5a43d69219c900b7c"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -7,7 +7,7 @@\n     for row in csv.DictReader(fh):\n         totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n \n-with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n+with open(\"total.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"customer\", \"total\"])\n     for customer in sorted(totals):\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"total.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "dda2fd5f27e1b8e48bec454bf0bc0234d1a9094c6e55d1b17ced1bd68408dd3f",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R1: totals.csv missing",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Write the output to totals.csv: It writes to total.csv, the wrong filename.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R1",
+      "text": "Write totals.csv in the working directory."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv missing"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "dda2fd5f27e1b8e48bec454bf0bc0234d1a9094c6e55d1b17ced1bd68408dd3f"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -10,5 +10,5 @@\n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"customer\", \"total\"])\n-    for customer in sorted(totals):\n+    for customer in sorted(totals, key=str.lower):\n         writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals, key=str.lower):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "f1a37d99c4c1f97ecb4d96b700a0aa70fdd242843b0089a90974b5343ae1d991",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "customer-totals",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Sort rows by customer name with plain string comparison: Sorting with key=str.lower is case-insensitive, which differs from plain string order for mixed-case names.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,7 +8,6 @@\n         totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n+    fh.write(\"customer,total\\n\")\n     for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+        fh.write(\"%s,%.2f\\n\" % (customer, totals[customer]))\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    fh.write(\"customer,total\\n\")\n    for customer in sorted(totals):\n        fh.write(\"%s,%.2f\\n\" % (customer, totals[customer]))\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "f53c39d6ab53d444be5df8ea2d0dd2a847bcf1449811e84101940566127ca2e8",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Customer names must be quoted where CSV requires it: Manual string writing does not quote names containing commas or quotes.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv lacks '\"Adventure Works, LLC\",600.00'"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "f53c39d6ab53d444be5df8ea2d0dd2a847bcf1449811e84101940566127ca2e8"
+   }
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -11,4 +11,4 @@\n     writer = csv.writer(fh, lineterminator=\"\\n\")\n     writer.writerow([\"customer\", \"total\"])\n     for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+        writer.writerow([customer, \"%.1f\" % totals[customer]])\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.1f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "99aa1e99b8b01ad015458b9fe7e7558627a1fcc467fca9e068c1c90de76aabbb",
+   "kind": "violating",
+   "operator": "model-violating",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "Totals written with exactly two decimal places: Totals are written with one decimal place.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "violating"
+    }
+   ],
+   "witness": {
+    "broken": [
+     {
+      "failed": [
+       "totals.csv differs from expected text"
+      ],
+      "requirement": "R2",
+      "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places."
+     },
+     {
+      "failed": [
+       "totals.csv lacks '\"Adventure Works, LLC\",600.00'"
+      ],
+      "requirement": "R3",
+      "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted)."
+     },
+     {
+      "failed": [
+       "totals.csv does not match /(?m)^(\"Adventure Works, LLC\"|Contoso Ltd|Fabrikam Inc|Northwind Traders),[0-9]+\\.[0-9]{2}[ \\t\\r]*$/"
+      ],
+      "requirement": "R4",
+      "text": "Totals are written with exactly two decimal places (for example 600.00)."
+     }
+    ],
+    "type": "requirement-broken",
+    "variant": "99aa1e99b8b01ad015458b9fe7e7558627a1fcc467fca9e068c1c90de76aabbb"
+   }
+  },
+  {
+   "counted_in_headline": false,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -8,7 +8,7 @@\n         totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n+    writer = csv.writer(fh)\n     writer.writerow([\"customer\", \"total\"])\n     for customer in sorted(totals):\n         writer.writerow([customer, \"%.2f\" % totals[customer]])\n",
+   "files": {
+    "solve.py": "import csv\nfrom collections import defaultdict\nfrom decimal import Decimal\n\ntotals = defaultdict(Decimal)\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh)\n    writer.writerow([\"customer\", \"total\"])\n    for customer in sorted(totals):\n        writer.writerow([customer, \"%.2f\" % totals[customer]])\n"
+   },
+   "grader_passed": false,
+   "grader_runs": [
+    false
+   ],
+   "id": "c732c566f2dc029efcb3c761446528758ac2a281323942683361e8eddf8d2fb1",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "customer-totals",
+   "validation_status": "disagreed",
+   "validations": [
+    {
+     "evidence": "R2: totals.csv differs from expected text",
+     "validator": "witness:requirements/v1",
+     "verdict": "violating"
+    },
+    {
+     "evidence": "The task does not specify the line terminator, and the default CSV writer still produces valid, correctly quoted CSV with the same content.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": null
+  },
+  {
+   "counted_in_headline": true,
+   "diff": "--- a/solve.py\n+++ b/solve.py\n@@ -1,14 +1,14 @@\n import csv\n-from collections import defaultdict\n from decimal import Decimal\n \n-totals = defaultdict(Decimal)\n+sums = {}\n with open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n     for row in csv.DictReader(fh):\n-        totals[row[\"customer\"]] += Decimal(row[\"amount\"])\n+        name = row[\"customer\"]\n+        sums[name] = sums.get(name, Decimal(\"0\")) + Decimal(row[\"amount\"])\n \n with open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n-    writer = csv.writer(fh, lineterminator=\"\\n\")\n-    writer.writerow([\"customer\", \"total\"])\n-    for customer in sorted(totals):\n-        writer.writerow([customer, \"%.2f\" % totals[customer]])\n+    writer = csv.DictWriter(fh, fieldnames=[\"customer\", \"total\"], lineterminator=\"\\n\")\n+    writer.writeheader()\n+    for name, value in sorted(sums.items()):\n+        writer.writerow({\"customer\": name, \"total\": format(value.quantize(Decimal(\"0.01\")), \"f\")})\n",
+   "files": {
+    "solve.py": "import csv\nfrom decimal import Decimal\n\nsums = {}\nwith open(\"payments.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        name = row[\"customer\"]\n        sums[name] = sums.get(name, Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"totals.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.DictWriter(fh, fieldnames=[\"customer\", \"total\"], lineterminator=\"\\n\")\n    writer.writeheader()\n    for name, value in sorted(sums.items()):\n        writer.writerow({\"customer\": name, \"total\": format(value.quantize(Decimal(\"0.01\")), \"f\")})\n"
+   },
+   "grader_passed": true,
+   "grader_runs": [
+    true
+   ],
+   "id": "8f383e1b93eb6dfedafdedb8ee2ac8156c48082483c11a82b4c172c7d275634b",
+   "kind": "preserving",
+   "operator": "model-preserving",
+   "task_id": "customer-totals",
+   "validation_status": "validated",
+   "validations": [
+    {
+     "evidence": "4 requirements hold",
+     "validator": "witness:requirements/v1",
+     "verdict": "preserving"
+    },
+    {
+     "evidence": "Same sums, sorted order, two-decimal formatting and CSV writing with a different implementation.",
+     "validator": "model:claude-subagent/review/v1",
+     "verdict": "preserving"
+    }
+   ],
+   "witness": {
+    "held": [
+     "R1",
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "type": "all-requirements-hold",
+    "variant": "8f383e1b93eb6dfedafdedb8ee2ac8156c48082483c11a82b4c172c7d275634b"
+   }
+  }
+ ]
+}
