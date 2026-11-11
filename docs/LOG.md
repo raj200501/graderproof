@@ -2,6 +2,12 @@
 
 History moved out of STATUS.md, newest first.
 
+## 2026-11-11, goal_turn 6: E1 round 1 answered, text clipping found, release sprint
+
+- Final fast check of goal_turn 5 on 4f53770: 9/14 (G5, G7, G8, G9, G12 fail).
+- E1/E2 round 1: model-worker subagents answered the 17 requirement-extraction requests; all 17 transcripts passed the D24 audit. Workers reported cut task texts: the frozen code clips text bound for model requests, which hid every tau2-bench customer request. `tools/clip_audit.py` measured the cuts per store (none in HumanEval, E0, E4, or the demo). Nothing was ingested; D38 records the decision to amend prereg 0002 before any E1/E2 data. The amendment workflow was stopped in its read-only scope phase when the release sprint arrived.
+- Release sprint: publication checks passed; README.md gained a pitch paragraph and a Status section; STATUS.md updated.
+
 ## 2026-11-11, goal_turn 5: E0 complete, E4 on toybench, README and report
 
 - E0 (prereg 0001) finished from the frozen worktree at 1629c30: the remaining review batches were answered by model-worker subagents and their transcripts audited, flags that were not detections were adjudicated (D34), and the preregistered scoring command was run; the labels were committed unchanged and match the hash committed in 7fab903 (a34b46a). H1 (recall at least 0.90) is not met and H2 (precision at least 0.90) is met; docs/E0_MISSES.md explains every miss (e43683f).
