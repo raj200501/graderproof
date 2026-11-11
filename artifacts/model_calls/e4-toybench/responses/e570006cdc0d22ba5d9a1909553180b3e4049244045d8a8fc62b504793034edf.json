@@ -1,0 +1,359 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "e570006cdc0d22ba5d9a1909553180b3e4049244045d8a8fc62b504793034edf",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "b31e16c23214a870f2cd009d60147aa225190703563a2e69ab826096a7d4266b": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The address drops the 'Flat 3, ' unit prefix, so the stored address is not the exact required string.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "After the correct update, the same address is also applied to a neighbouring order number ORD-55102 (transposed digits).",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55102\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Argument keys of update_shipping_address are given in a different order (address first).",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\", \"order_id\": \"ORD-55120\"}}\n]\n"
+          }
+        },
+        {
+          "description": "The read-only get_order lookup is skipped and the update is made directly.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Same calls written as compact single-line JSON with no trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"get_order\",\"args\":{\"order_id\":\"ORD-55120\"}},{\"tool\":\"update_shipping_address\",\"args\":{\"order_id\":\"ORD-55120\",\"address\":\"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}}]"
+          }
+        },
+        {
+          "description": "A second read-only get_order is added after the update to confirm the result.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}},\n  {\"tool\": \"update_shipping_address\", \"args\": {\"order_id\": \"ORD-55120\", \"address\": \"Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-55120\"}}\n]\n"
+          }
+        }
+      ]
+    },
+    "b5b662c75ed95926f3e1d5c92948f0126904b38d1a7ca3eaeaa91691d37afe69": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The last four digits are mistyped as 4812 (two digits swapped) in verify_identity.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4812\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The refund is issued before the identity check is performed.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}},\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The refund amount has a transposed digit (6949 instead of 6499).",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6949, \"reason\": \"damaged\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The refund call is accidentally repeated, creating a second refund record.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Argument keys are listed in a different order in each call.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"last4\": \"4821\", \"customer_id\": \"C-8812\"}},\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"reason\": \"damaged\", \"amount_cents\": 6499, \"order_id\": \"ORD-90417\"}}\n]\n"
+          }
+        },
+        {
+          "description": "The read-only get_order call is omitted; identity is still verified before the refund.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+          }
+        },
+        {
+          "description": "get_order is called before verify_identity (read-only), with the refund still after the check.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_order\", \"args\": {\"order_id\": \"ORD-90417\"}},\n  {\"tool\": \"verify_identity\", \"args\": {\"customer_id\": \"C-8812\", \"last4\": \"4821\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"ORD-90417\", \"amount_cents\": 6499, \"reason\": \"damaged\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact single-line JSON with no trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"verify_identity\",\"args\":{\"customer_id\":\"C-8812\",\"last4\":\"4821\"}},{\"tool\":\"get_order\",\"args\":{\"order_id\":\"ORD-90417\"}},{\"tool\":\"issue_refund\",\"args\":{\"order_id\":\"ORD-90417\",\"amount_cents\":6499,\"reason\":\"damaged\"}}]"
+          }
+        }
+      ]
+    },
+    "bb02f2c2cba37c5513dffcd508e3c1e568b2868b15505e1b3963af64491c9be8": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The output file is named transpose.tsv instead of transposed.tsv.",
+          "files": {
+            "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transpose.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(column) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Cell text is stripped of surrounding whitespace before writing, so cells with leading or trailing spaces change.",
+          "files": {
+            "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    for column in columns:\n        fh.write(\"\\t\".join(cell.strip() for cell in column) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Rows are joined with newlines, so the last row has no terminating newline.",
+          "files": {
+            "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(\"\\n\".join(\"\\t\".join(column) for column in columns))\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The transposed content is also written back over matrix.tsv, modifying the input.",
+          "files": {
+            "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ncolumns = list(zip(*rows))\nfor name in (\"transposed.tsv\", \"matrix.tsv\"):\n    with open(name, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n        for column in columns:\n            fh.write(\"\\t\".join(column) + \"\\n\")\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Builds the whole output in memory and writes it once with a single write call.",
+          "files": {
+            "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\ntext = \"\"\nfor column in zip(*rows):\n    text += \"\\t\".join(column) + \"\\n\"\n\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.write(text)\n"
+          }
+        },
+        {
+          "requirement_note": "none",
+          "description": "Uses explicit index loops instead of zip to transpose.",
+          "files": {
+            "solve.py": "with open(\"matrix.tsv\", encoding=\"utf-8\", newline=\"\") as fh:\n    rows = [line.split(\"\\t\") for line in fh.read().split(\"\\n\") if line != \"\"]\n\nheight = len(rows)\nwidth = len(rows[0]) if rows else 0\nout = []\nfor j in range(width):\n    out.append(\"\\t\".join(rows[i][j] for i in range(height)) + \"\\n\")\n\nwith open(\"transposed.tsv\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n    fh.writelines(out)\n"
+          }
+        },
+        {
+          "description": "Uses pathlib and splitlines-free parsing with bytes-preserving write through write_text.",
+          "files": {
+            "solve.py": "from pathlib import Path\n\nraw = Path(\"matrix.tsv\").read_bytes().decode(\"utf-8\")\nrows = [line.split(\"\\t\") for line in raw.split(\"\\n\") if line]\ntransposed = [list(col) for col in zip(*rows)]\nlines = [\"\\t\".join(col) + \"\\n\" for col in transposed]\nPath(\"transposed.tsv\").write_bytes(\"\".join(lines).encode(\"utf-8\"))\n"
+          }
+        }
+      ]
+    },
+    "bb4f3fdca39716f5377ff4ffff1b10d63e113016e949672df874bd9de68d1083": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "find_user is called with the wrong email domain (example.org instead of example.com).",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.org\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The ticket is created with priority 'medium' instead of 'high'.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"medium\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The ticket is assigned to the 'helpdesk' team instead of 'netops'.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"helpdesk\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The user lookup is done after the ticket is created rather than before.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "An extra assign_ticket call is made on the existing ticket T-1000.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1000\", \"team\": \"netops\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "The create_ticket call is repeated, opening a duplicate second ticket.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Argument keys of create_ticket are in a different order.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"priority\": \"high\", \"category\": \"network\", \"title\": \"VPN disconnects every few minutes\", \"user_id\": \"U-204\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"team\": \"netops\", \"ticket_id\": \"T-1001\"}}\n]\n"
+          }
+        },
+        {
+          "description": "A read-only get_ticket call on T-1001 is added at the end to confirm the assignment.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}},\n  {\"tool\": \"get_ticket\", \"args\": {\"ticket_id\": \"T-1001\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact single-line JSON with no trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"find_user\",\"args\":{\"email\":\"ana.lima@example.com\"}},{\"tool\":\"create_ticket\",\"args\":{\"user_id\":\"U-204\",\"title\":\"VPN disconnects every few minutes\",\"category\":\"network\",\"priority\":\"high\"}},{\"tool\":\"assign_ticket\",\"args\":{\"ticket_id\":\"T-1001\",\"team\":\"netops\"}}]"
+          }
+        },
+        {
+          "description": "A read-only get_ticket on T-1001 sits between creation and assignment.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_user\", \"args\": {\"email\": \"ana.lima@example.com\"}},\n  {\"tool\": \"create_ticket\", \"args\": {\"user_id\": \"U-204\", \"title\": \"VPN disconnects every few minutes\", \"category\": \"network\", \"priority\": \"high\"}},\n  {\"tool\": \"get_ticket\", \"args\": {\"ticket_id\": \"T-1001\"}},\n  {\"tool\": \"assign_ticket\", \"args\": {\"ticket_id\": \"T-1001\", \"team\": \"netops\"}}\n]\n"
+          }
+        }
+      ]
+    },
+    "c738ed1612d3c55987179e47f7976edfbbaed5571e2b43ecd91a79d250818418": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Tags are stripped but not lowercased, so 'Python' and 'python' stay distinct.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip()\n            if norm:\n                seen.setdefault(norm, None)\n    return list(seen)\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The empty-after-normalization check is dropped, so blank tags yield an empty string in the result.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            seen.setdefault(norm, None)\n    return list(seen)\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Tags are deduplicated within each post but not across posts, so a tag used in two posts appears twice.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    result = []\n    for post in posts:\n        seen = set()\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm and norm not in seen:\n                seen.add(norm)\n                result.append(norm)\n    return result\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "The function returns a set instead of a list.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    seen = set()\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen.add(norm)\n    return seen\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses a set comprehension and returns the set converted to a list (order differs from the reference).",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    tags = {tag.strip().lower() for post in posts for tag in post[\"tags\"]}\n    tags.discard(\"\")\n    return list(tags)\n"
+          }
+        },
+        {
+          "description": "Returns the tags sorted alphabetically.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    seen = set()\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.lower().strip()\n            if norm:\n                seen.add(norm)\n    return sorted(seen)\n"
+          }
+        },
+        {
+          "description": "Builds the list with an explicit membership check and renamed variables.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    result = []\n    for entry in posts:\n        for raw in entry[\"tags\"]:\n            cleaned = raw.strip().lower()\n            if cleaned != \"\" and cleaned not in result:\n                result.append(cleaned)\n    return result\n"
+          }
+        },
+        {
+          "description": "Returns tags in reverse first-seen order using a dict.",
+          "files": {
+            "tagging.py": "def all_tags(posts):\n    seen = {}\n    for post in posts:\n        for tag in post[\"tags\"]:\n            norm = tag.strip().lower()\n            if norm:\n                seen[norm] = True\n    return list(reversed(list(seen)))\n"
+          }
+        }
+      ]
+    },
+    "ce8651d35a45f7dae395b6c60ba4235ef7a68d29e71fa49af53afd644fd6d24c": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "A single room is booked instead of a double room.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"single\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The email subject is 'Booking confirmation' instead of 'Booking confirmed'.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmation\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The confirmation email is sent before the room is booked.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The book_room call is repeated, so the booking sequence advances twice.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "A copy of the confirmation is also emailed to a reservations desk address.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"reservations@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Different email body wording that still mentions R-2041, 2026-12-03 and 2026-12-06.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\", \"guests\": 2}},\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Hello Hannah,\\n\\nWe look forward to welcoming you. Reference R-2041: arriving 2026-12-03, departing 2026-12-06.\\n\\nThe Reservations Team\"}}\n]\n"
+          }
+        },
+        {
+          "description": "The read-only search_rooms call is skipped.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"book_room\", \"args\": {\"guest_name\": \"Hannah Becker\", \"room_type\": \"double\", \"check_in\": \"2026-12-03\", \"check_out\": \"2026-12-06\"}},\n  {\"tool\": \"send_email\", \"args\": {\"to\": \"hannah.becker@example.com\", \"subject\": \"Booking confirmed\", \"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Argument keys are listed in a different order in every call.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"search_rooms\", \"args\": {\"guests\": 2, \"check_out\": \"2026-12-06\", \"check_in\": \"2026-12-03\"}},\n  {\"tool\": \"book_room\", \"args\": {\"check_out\": \"2026-12-06\", \"check_in\": \"2026-12-03\", \"room_type\": \"double\", \"guest_name\": \"Hannah Becker\"}},\n  {\"tool\": \"send_email\", \"args\": {\"body\": \"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\", \"subject\": \"Booking confirmed\", \"to\": \"hannah.becker@example.com\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact single-line JSON with no trailing newline.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"search_rooms\",\"args\":{\"check_in\":\"2026-12-03\",\"check_out\":\"2026-12-06\",\"guests\":2}},{\"tool\":\"book_room\",\"args\":{\"guest_name\":\"Hannah Becker\",\"room_type\":\"double\",\"check_in\":\"2026-12-03\",\"check_out\":\"2026-12-06\"}},{\"tool\":\"send_email\",\"args\":{\"to\":\"hannah.becker@example.com\",\"subject\":\"Booking confirmed\",\"body\":\"Dear Hannah Becker, your booking R-2041 is confirmed. Check-in: 2026-12-03. Check-out: 2026-12-06.\"}}]"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

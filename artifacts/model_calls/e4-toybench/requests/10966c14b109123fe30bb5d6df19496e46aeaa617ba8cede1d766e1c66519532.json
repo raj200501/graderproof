@@ -1,0 +1,346 @@
+{
+  "created_utc": "2026-11-04T02:29:00Z",
+  "hash": "10966c14b109123fe30bb5d6df19496e46aeaa617ba8cede1d766e1c66519532",
+  "instructions": "You turn a task's text into atomic, machine-checkable requirements. For each item you\nget the task text, the task kind, the reference solution (it satisfies the task), the\ninitial workspace, and what the reference produced (files, stdout, exit status, tool\ncalls, final state). You are not shown how the task is graded and must not guess.\n\nWrite one requirement per distinct obligation in the task text (outputs, their\ncontent, required steps, ordering constraints, prohibited actions, policies). Each\nrequirement has an \"id\" (R1, R2, ...), \"text\" (the obligation in plain words, quoting\nthe task where possible), and \"checks\": a list of typed checks that pass on the\nreference outcome and fail when the obligation is broken. Allowed check types and\nfields: file_exists {path}; file_absent {path}; file_equals {path, text, normalize:\nnone|strip|trailing_ws}; file_contains {path, text}; file_regex {path, pattern};\nfile_json {path, pointer, equals, lenient}; file_lines {path, count};\nstdout_contains {text}; stdout_regex {pattern}; stdout_json {pointer, equals,\nlenient}; exit_code {code}; call {probe: {function, args, kwargs}, equals} or\n{probe, matches_reference: true}; same_as_reference {target: stdout|state|file:<path>,\nnormalize}; trajectory_includes {tool, args}; trajectory_excludes {tool, args};\ntrajectory_before {first: {tool, args}, then: {tool, args}}; state_equals {pointer,\nequals}.\n\nBe exactly as strict as the task text. If the text demands an exact format, check it\nexactly; if it only asks for content, check content (use \"normalize\" or \"lenient\" so\nthat harmless formatting does not fail the check). For function tasks, add call\nprobes on the examples in the text and on a few further valid inputs, using\nmatches_reference for inputs whose expected output the text does not state. Return\nfor each item: {\"requirements\": [ ... ]}.\n",
+  "items": [
+    {
+      "id": "80a983f5c4a87e51d0d042dd79d60e3ff45ea72d24564a3fbf8904af746bbd56",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "employees": {
+            "E-77": {
+              "balance_days": 2,
+              "name": "Sara Lindholm"
+            },
+            "E-81": {
+              "balance_days": 2,
+              "name": "Diego Alvarez"
+            },
+            "E-90": {
+              "balance_days": 0,
+              "name": "Mina Haddad"
+            }
+          },
+          "requests": {
+            "LR-288": {
+              "days": 5,
+              "employee_id": "E-81",
+              "reason": "blackout period",
+              "status": "rejected"
+            },
+            "LR-298": {
+              "days": 1,
+              "employee_id": "E-77",
+              "reason": null,
+              "status": "approved"
+            },
+            "LR-301": {
+              "days": 4,
+              "employee_id": "E-77",
+              "reason": null,
+              "status": "approved"
+            },
+            "LR-302": {
+              "days": 3,
+              "employee_id": "E-81",
+              "reason": "insufficient balance",
+              "status": "rejected"
+            },
+            "LR-303": {
+              "days": 10,
+              "employee_id": "E-90",
+              "reason": null,
+              "status": "approved"
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "status": "pending"
+            },
+            "result": {
+              "ok": true,
+              "requests": {
+                "LR-301": {
+                  "days": 4,
+                  "employee_id": "E-77",
+                  "reason": null,
+                  "status": "pending"
+                },
+                "LR-302": {
+                  "days": 3,
+                  "employee_id": "E-81",
+                  "reason": null,
+                  "status": "pending"
+                },
+                "LR-303": {
+                  "days": 10,
+                  "employee_id": "E-90",
+                  "reason": null,
+                  "status": "pending"
+                }
+              }
+            },
+            "tool": "list_requests"
+          },
+          {
+            "args": {
+              "employee_id": "E-77"
+            },
+            "result": {
+              "balance_days": 6,
+              "ok": true
+            },
+            "tool": "get_balance"
+          },
+          {
+            "args": {
+              "request_id": "LR-301"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "approve_request"
+          },
+          {
+            "args": {
+              "employee_id": "E-81"
+            },
+            "result": {
+              "balance_days": 2,
+              "ok": true
+            },
+            "tool": "get_balance"
+          },
+          {
+            "args": {
+              "reason": "insufficient balance",
+              "request_id": "LR-302"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "reject_request"
+          },
+          {
+            "args": {
+              "employee_id": "E-90"
+            },
+            "result": {
+              "balance_days": 10,
+              "ok": true
+            },
+            "tool": "get_balance"
+          },
+          {
+            "args": {
+              "request_id": "LR-303"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "approve_request"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+      },
+      "task_text": "# Process pending leave requests\n\nYou are the HR assistant. Process every leave request that is currently `pending`:\n\n- Approve the request with `approve_request` if the employee's remaining leave balance is at least the number of days requested (approving deducts the days from the balance).\n- Otherwise reject it with `reject_request`, using the reason `insufficient balance`.\n\nDo not change requests that are not pending.\n\nTools (see `support/env.py`):\n\n- `list_requests(status)`\n- `get_balance(employee_id)`\n- `approve_request(request_id)`\n- `reject_request(request_id, reason)`\n"
+    },
+    {
+      "id": "814b9f61286022e5d797009583de535c84584ab1c01ebb4b453ffe45eea486df",
+      "initial_workspace": {
+        "app.ini": "; Booking service configuration\n[server]\nhost = 0.0.0.0\nport = 8080\n\n[database]\nurl = postgres://booking@db.internal/booking\npool_size = 5\n; seconds\nconnect_timeout = 10\n\n[cache]\nbackend = redis\nurl = redis://cache.internal:6379/0\n\n[reports]\npool_size = 5\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "app.ini": "; Booking service configuration\n[server]\nhost = 0.0.0.0\nport = 8080\n\n[database]\nurl = postgres://booking@db.internal/booking\npool_size = 20\n; seconds\nconnect_timeout = 10\n\n[cache]\nbackend = redis\nurl = redis://cache.internal:6379/0\ntimeout = 15\n\n[reports]\npool_size = 5\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "with open(\"app.ini\", encoding=\"utf-8\") as fh:\n    lines = fh.read().split(\"\\n\")\n\nout = []\nsection = None\nfor line in lines:\n    stripped = line.strip()\n    if stripped.startswith(\"[\") and stripped.endswith(\"]\"):\n        section = stripped[1:-1]\n    if section == \"database\" and stripped == \"pool_size = 5\":\n        line = \"pool_size = 20\"\n    out.append(line)\n    if section == \"cache\" and stripped == \"url = redis://cache.internal:6379/0\":\n        out.append(\"timeout = 15\")\n\nwith open(\"app.ini\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(out))\n"
+      },
+      "task_text": "# Edit the service configuration\n\nEdit `app.ini` in place:\n\n1. In the `[database]` section, change the line `pool_size = 5` to `pool_size = 20`.\n2. In the `[cache]` section, insert a new line `timeout = 15` directly after the line `url = redis://cache.internal:6379/0`.\n\nEvery other line, including comments, blank lines, and their order, must stay exactly as it is. The file must still end with a newline.\n"
+    },
+    {
+      "id": "82fb46003467749e4111268e872d3f5b3bb5f6fcfbc568de4003427ba44d52c8",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "bookings": {
+            "BK-4470": {
+              "customer": "Lin Zhao",
+              "date": "2026-12-05",
+              "status": "confirmed",
+              "tour": "Porto old town walk"
+            },
+            "BK-4471": {
+              "customer": "Lin Zhao",
+              "date": "2026-12-12",
+              "status": "cancelled",
+              "tour": "Douro valley day trip"
+            },
+            "BK-4502": {
+              "customer": "Tiago Costa",
+              "date": "2026-12-12",
+              "status": "confirmed",
+              "tour": "Douro valley day trip"
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "customer_name": "Lin Zhao"
+            },
+            "result": {
+              "bookings": {
+                "BK-4470": {
+                  "customer": "Lin Zhao",
+                  "date": "2026-12-05",
+                  "status": "confirmed",
+                  "tour": "Porto old town walk"
+                },
+                "BK-4471": {
+                  "customer": "Lin Zhao",
+                  "date": "2026-12-12",
+                  "status": "confirmed",
+                  "tour": "Douro valley day trip"
+                }
+              },
+              "ok": true
+            },
+            "tool": "find_bookings"
+          },
+          {
+            "args": {
+              "booking_id": "BK-4471"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "cancel_booking"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"find_bookings\", \"args\": {\"customer_name\": \"Lin Zhao\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"booking_id\": \"BK-4471\"}}\n]\n"
+      },
+      "task_text": "# Cancel one of two trips\n\nLin Zhao has two guided-tour bookings in Porto. She asks to cancel the one on `2026-12-12`, which is booking `BK-4471`, and to keep the one on `2026-12-05`.\n\nCancel exactly that booking with `cancel_booking`. Do not cancel or change any other booking.\n\nTools (see `support/env.py`):\n\n- `find_bookings(customer_name)`\n- `cancel_booking(booking_id)`\n"
+    },
+    {
+      "id": "8581102271bb6f6ed0740466a4d869df36f4d202ea111145e69d95482e9acf50",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+      },
+      "task_text": "# Parse URL query strings\n\nWrite a Python module `urlquery.py` with a function `parse_query(qs)` that parses the query part of a URL into a dict.\n\n- `qs` is a string such as `\"?q=red+shoes&size=42&sort=price%2Basc\"`. A single leading `?` is ignored.\n- Pairs are separated by `&`. Each pair is `key=value`, split at the first `=`. A pair without `=` (such as `debug`) has the value `\"\"`. Empty pairs (from `&&` or a trailing `&`) are skipped.\n- Keys and values are decoded: `+` stands for a space, and `%XX` is a percent-encoded UTF-8 byte (so `%2B` is `+` and `%C3%A9` is `\u00e9`).\n- If a key appears more than once, the last value wins.\n- Return a dict mapping each decoded key to its decoded value (both strings). `parse_query(\"\")` returns `{}`.\n\nUse only the Python standard library.\n"
+    },
+    {
+      "id": "898b9d9fb49dfe27231940c78ff2cdf2342c5bf600abeca5f53713b8045e7888",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due is None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    return sorted(tasks, key=_key)\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due is None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    return sorted(tasks, key=_key)\n"
+      },
+      "task_text": "# Order a task list\n\nWrite a Python module `taskqueue.py` with a function `sort_tasks(tasks)` for a to-do app.\n\n- `tasks` is a list of dicts. Each dict has a `title` (string), a `priority` (integer, 1 is the most urgent), and a `due` date (an ISO `YYYY-MM-DD` string, or `None` when there is no due date). Dicts may contain other keys, which must be kept.\n- Return a new list with the same dicts ordered by priority (1 first), then by due date (earliest first, tasks without a due date after those with one), then by title (alphabetical, case-sensitive).\n- The caller keeps using its own list: `sort_tasks` must not modify the input list or any of the dicts in it.\n"
+    },
+    {
+      "id": "8c3d7d63e3f17244d8e25ed2a031c0176ceeda76dc97195cbd71a862456f8be4",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port not in used:\n            return port\n    return None\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port not in used:\n            return port\n    return None\n"
+      },
+      "task_text": "# Allocate a free port\n\nThe test harness starts services on free ports. Write a Python module `ports.py` with a function `pick_port(used, low, high)`.\n\n- `used` is a set of port numbers that are taken; `low` and `high` are integers with `low <= high`.\n- Return any port `p` with `low <= p <= high` (both ends included) that is not in `used`. Any such port is acceptable.\n- If every port in the range is taken, return `None`.\n"
+    },
+    {
+      "id": "9563c4f6af36ba5193a9d30376cfbc095079db9fb3f5bf59e2732a372848039f",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+      },
+      "task_text": "# Card number check\n\nWrite a Python module `luhn.py` with a function `luhn_valid(number)` used to catch typos in card numbers before they are sent to the payment provider.\n\n- `number` is a string. Spaces and dashes are allowed as group separators and are removed first.\n- Return `True` if what remains consists only of ASCII digits, has 12 to 19 digits, and passes the Luhn checksum: starting from the rightmost digit and moving left, double every second digit (subtracting 9 from any result above 9), add up all the digits, and check that the sum is divisible by 10.\n- Return `False` in every other case, including empty input and input with other characters. Never raise an exception for a string argument.\n"
+    },
+    {
+      "id": "996abe0f1ffe01eda8a9e03b83e780a4f907fc2dc3448027ec84e2bed00fbcc9",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([0-9]+)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.strip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        while pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([0-9]+)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.strip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        while pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"
+      },
+      "task_text": "# Parse durations\n\nThe job scheduler accepts timeouts such as `1h30m`. Write a Python module `durations.py` with a function `parse_duration(text)` that returns the duration in seconds as an integer.\n\n- A duration is one or more components. Each component is one or more ASCII digits immediately followed by a unit: `d` (day, 86400 seconds), `h` (hour), `m` (minute), or `s` (second).\n- Components may be written next to each other or separated by one or more spaces. Units must appear in the order `d`, `h`, `m`, `s`, each at most once: `\"2d 4h\"`, `\"90m\"`, and `\"1h 15m 30s\"` are valid; `\"30s 1m\"` and `\"1h1h\"` are not.\n- Leading and trailing spaces are allowed.\n- Example: `parse_duration(\"1h30m\")` returns `5400`.\n- For any other input (an empty string, an unknown unit, a number without a unit, a unit without a number, a space between a number and its unit, or any other character), raise `ValueError`.\n"
+    }
+  ],
+  "prompt_version": "requirements/v1",
+  "purpose": "requirements",
+  "response_schema": {
+    "required": [
+      "requirements"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

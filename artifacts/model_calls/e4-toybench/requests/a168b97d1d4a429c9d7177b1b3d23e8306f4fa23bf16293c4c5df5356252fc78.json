@@ -1,0 +1,212 @@
+{
+  "created_utc": "2026-11-11T04:34:02Z",
+  "hash": "a168b97d1d4a429c9d7177b1b3d23e8306f4fa23bf16293c4c5df5356252fc78",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "7df27bb6bc2bb56c81570bc6ac9ab72ad0fb4c58cfcd61d440e3d48ae44ecc52",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p logs/archive\nfor f in logs/app-*.log; do\n  name=${f#logs/app-}\n  day=${name%.log}\n  if [[ \"$day\" < \"2026-10-01\" ]]; then\n    mv -- \"$f\" logs/archive/\n  fi\ndone\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Create the directory `logs/archive/` and move every log file dated before 2026-10-01 into it."
+        },
+        {
+          "id": "R2",
+          "text": "Moved files no longer remain in `logs/` (they are moved, not copied)."
+        },
+        {
+          "id": "R3",
+          "text": "Keep each moved file's name and contents unchanged."
+        },
+        {
+          "id": "R4",
+          "text": "Files dated 2026-10-01 or later stay in `logs/` untouched."
+        }
+      ],
+      "round": 2,
+      "task_text": "# Archive old application logs\n\nThe directory `logs/` holds one log file per day, named `app-YYYY-MM-DD.log`. The disk is filling up and older logs are being moved to an archive directory that is backed up separately.\n\nMove every log file in `logs/` dated before 2026-10-01 into the directory `logs/archive/` (create it). Keep each moved file's name and contents unchanged. Files dated 2026-10-01 or later stay in `logs/` untouched. Do not delete, rename, or create any other file.\n"
+    },
+    {
+      "id": "80a983f5c4a87e51d0d042dd79d60e3ff45ea72d24564a3fbf8904af746bbd56",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_requests\", \"args\": {\"status\": \"pending\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-77\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-81\"}},\n  {\"tool\": \"reject_request\", \"args\": {\"request_id\": \"LR-302\", \"reason\": \"insufficient balance\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"employee_id\": \"E-90\"}},\n  {\"tool\": \"approve_request\", \"args\": {\"request_id\": \"LR-303\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Approve LR-301 with approve_request because E-77 has balance 6, at least the 4 days requested."
+        },
+        {
+          "id": "R2",
+          "text": "Reject LR-302 with reject_request and the reason `insufficient balance`, because E-81 has balance 2, less than the 3 days requested."
+        },
+        {
+          "id": "R3",
+          "text": "Approve LR-303 because E-90 has balance 10, exactly the 10 days requested (balance at least the days requested)."
+        },
+        {
+          "id": "R4",
+          "text": "Approving deducts the days from the balance; balances end at E-77 2, E-81 2, E-90 0, so each request is approved only once and rejected requests deduct nothing."
+        },
+        {
+          "id": "R5",
+          "text": "Do not change requests that are not pending (LR-288 and LR-298 keep their status and reason)."
+        },
+        {
+          "id": "R6",
+          "text": "Process every pending request: the final state matches the reference state."
+        }
+      ],
+      "round": 2,
+      "task_text": "# Process pending leave requests\n\nYou are the HR assistant. Process every leave request that is currently `pending`:\n\n- Approve the request with `approve_request` if the employee's remaining leave balance is at least the number of days requested (approving deducts the days from the balance).\n- Otherwise reject it with `reject_request`, using the reason `insufficient balance`.\n\nDo not change requests that are not pending.\n\nTools (see `support/env.py`):\n\n- `list_requests(status)`\n- `get_balance(employee_id)`\n- `approve_request(request_id)`\n- `reject_request(request_id, reason)`\n"
+    },
+    {
+      "id": "8581102271bb6f6ed0740466a4d869df36f4d202ea111145e69d95482e9acf50",
+      "reference_solution": {
+        "urlquery.py": "from urllib.parse import unquote_plus\n\n\ndef parse_query(qs):\n    if qs.startswith(\"?\"):\n        qs = qs[1:]\n    result = {}\n    for pair in qs.split(\"&\"):\n        if not pair:\n            continue\n        key, _, value = pair.partition(\"=\")\n        result[unquote_plus(key)] = unquote_plus(value)\n    return result\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a module `urlquery.py`."
+        },
+        {
+          "id": "R2",
+          "text": "Pairs are separated by `&`; a single leading `?` is ignored; keys and values are decoded (`+` is a space, `%XX` is a UTF-8 byte); example from the text."
+        },
+        {
+          "id": "R3",
+          "text": "Each pair is split at the first `=`; a pair without `=` has the value empty string."
+        },
+        {
+          "id": "R4",
+          "text": "Empty pairs (from `&&` or a trailing `&`) are skipped; `parse_query(\"\")` returns `{}`."
+        },
+        {
+          "id": "R5",
+          "text": "If a key appears more than once, the last value wins."
+        },
+        {
+          "id": "R6",
+          "text": "Return a dict mapping each decoded key to its decoded value; keys that only differ after decoding collapse."
+        },
+        {
+          "id": "R7",
+          "text": "Use only the Python standard library."
+        }
+      ],
+      "round": 2,
+      "task_text": "# Parse URL query strings\n\nWrite a Python module `urlquery.py` with a function `parse_query(qs)` that parses the query part of a URL into a dict.\n\n- `qs` is a string such as `\"?q=red+shoes&size=42&sort=price%2Basc\"`. A single leading `?` is ignored.\n- Pairs are separated by `&`. Each pair is `key=value`, split at the first `=`. A pair without `=` (such as `debug`) has the value `\"\"`. Empty pairs (from `&&` or a trailing `&`) are skipped.\n- Keys and values are decoded: `+` stands for a space, and `%XX` is a percent-encoded UTF-8 byte (so `%2B` is `+` and `%C3%A9` is `\u00e9`).\n- If a key appears more than once, the last value wins.\n- Return a dict mapping each decoded key to its decoded value (both strings). `parse_query(\"\")` returns `{}`.\n\nUse only the Python standard library.\n"
+    },
+    {
+      "id": "898b9d9fb49dfe27231940c78ff2cdf2342c5bf600abeca5f53713b8045e7888",
+      "reference_solution": {
+        "taskqueue.py": "def _key(task):\n    due = task[\"due\"]\n    return (task[\"priority\"], due is None, due or \"\", task[\"title\"])\n\n\ndef sort_tasks(tasks):\n    return sorted(tasks, key=_key)\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a module `taskqueue.py` with a function `sort_tasks(tasks)`."
+        },
+        {
+          "id": "R2",
+          "text": "Order by priority, 1 first."
+        },
+        {
+          "id": "R3",
+          "text": "Within the same priority, order by due date, earliest first, with tasks without a due date after those with one."
+        },
+        {
+          "id": "R4",
+          "text": "Within the same priority and due date, order by title, alphabetical and case-sensitive."
+        },
+        {
+          "id": "R5",
+          "text": "Dicts may contain other keys, which must be kept."
+        },
+        {
+          "id": "R6",
+          "text": "Return a new list with the same dicts; the input list and its dicts are not modified (input order stays as given)."
+        }
+      ],
+      "round": 2,
+      "task_text": "# Order a task list\n\nWrite a Python module `taskqueue.py` with a function `sort_tasks(tasks)` for a to-do app.\n\n- `tasks` is a list of dicts. Each dict has a `title` (string), a `priority` (integer, 1 is the most urgent), and a `due` date (an ISO `YYYY-MM-DD` string, or `None` when there is no due date). Dicts may contain other keys, which must be kept.\n- Return a new list with the same dicts ordered by priority (1 first), then by due date (earliest first, tasks without a due date after those with one), then by title (alphabetical, case-sensitive).\n- The caller keeps using its own list: `sort_tasks` must not modify the input list or any of the dicts in it.\n"
+    },
+    {
+      "id": "8c3d7d63e3f17244d8e25ed2a031c0176ceeda76dc97195cbd71a862456f8be4",
+      "reference_solution": {
+        "ports.py": "def pick_port(used, low, high):\n    for port in range(low, high + 1):\n        if port not in used:\n            return port\n    return None\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a module `ports.py` with a function `pick_port(used, low, high)`."
+        },
+        {
+          "id": "R2",
+          "text": "Both ends of the range are included: a free port at `low` or at `high` must be found when it is the only free one."
+        },
+        {
+          "id": "R3",
+          "text": "The returned port is not in `used` and lies within the range, when a free port exists (only one free port, so the answer is unique)."
+        },
+        {
+          "id": "R4",
+          "text": "If every port in the range is taken, return `None`."
+        }
+      ],
+      "round": 2,
+      "task_text": "# Allocate a free port\n\nThe test harness starts services on free ports. Write a Python module `ports.py` with a function `pick_port(used, low, high)`.\n\n- `used` is a set of port numbers that are taken; `low` and `high` are integers with `low <= high`.\n- Return any port `p` with `low <= p <= high` (both ends included) that is not in `used`. Any such port is acceptable.\n- If every port in the range is taken, return `None`.\n"
+    },
+    {
+      "id": "9563c4f6af36ba5193a9d30376cfbc095079db9fb3f5bf59e2732a372848039f",
+      "reference_solution": {
+        "luhn.py": "def luhn_valid(number):\n    digits = number.replace(\" \", \"\").replace(\"-\", \"\")\n    if not 12 <= len(digits) <= 19 or any(ch not in \"0123456789\" for ch in digits):\n        return False\n    total = 0\n    for position, ch in enumerate(reversed(digits)):\n        value = int(ch)\n        if position % 2 == 1:\n            value *= 2\n            if value > 9:\n                value -= 9\n        total += value\n    return total % 10 == 0\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a module `luhn.py` with a function `luhn_valid(number)`."
+        },
+        {
+          "id": "R2",
+          "text": "Return True for a string of 12 to 19 ASCII digits that passes the Luhn checksum."
+        },
+        {
+          "id": "R3",
+          "text": "Return False when the checksum fails (the sum is not divisible by 10)."
+        },
+        {
+          "id": "R4",
+          "text": "Spaces and dashes are allowed as group separators and are removed first."
+        },
+        {
+          "id": "R5",
+          "text": "The digit count must be 12 to 19 after removing separators; fewer than 12 or more than 19 digits give False."
+        },
+        {
+          "id": "R6",
+          "text": "What remains must consist only of ASCII digits; any other character gives False, including empty input, and no exception is raised for a string argument."
+        },
+        {
+          "id": "R7",
+          "text": "Luhn doubling starts at the second digit from the right and subtracts 9 from results above 9."
+        }
+      ],
+      "round": 2,
+      "task_text": "# Card number check\n\nWrite a Python module `luhn.py` with a function `luhn_valid(number)` used to catch typos in card numbers before they are sent to the payment provider.\n\n- `number` is a string. Spaces and dashes are allowed as group separators and are removed first.\n- Return `True` if what remains consists only of ASCII digits, has 12 to 19 digits, and passes the Luhn checksum: starting from the rightmost digit and moving left, double every second digit (subtracting 9 from any result above 9), add up all the digits, and check that the sum is divisible by 10.\n- Return `False` in every other case, including empty input and input with other characters. Never raise an exception for a string argument.\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

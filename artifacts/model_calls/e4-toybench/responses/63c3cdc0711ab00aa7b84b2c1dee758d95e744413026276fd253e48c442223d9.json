@@ -1,0 +1,375 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "63c3cdc0711ab00aa7b84b2c1dee758d95e744413026276fd253e48c442223d9",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "5ef4358f009839c1d392a236272c458c465faf5e9709f1482f68a80145cf87bf": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Writes the output to product.json (singular) instead of products.json.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"product.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Drops the last data row by slicing rows[:-1].",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows[:-1]:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Keeps only the text before the first comma in the name, truncating \"Braided Cable, 2 m\".",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"].split(\",\")[0],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Leaves price as the raw CSV string instead of converting it to a number.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": row[\"price\"],\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Uses bool() on the raw column text, so every non-empty value including \"no\" becomes true.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": bool(row[\"in_stock\"]),\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2)\n    fh.write(\"\\n\")\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Compact single-line JSON with no spaces and no trailing newline.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, separators=(\",\", \":\"))\n"
+          }
+        },
+        {
+          "requirement": "",
+          "description": "Four-space indentation with keys sorted alphabetically (in_stock, name, price, sku).",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = []\nfor row in rows:\n    products.append(\n        {\n            \"sku\": row[\"sku\"],\n            \"name\": row[\"name\"],\n            \"price\": float(row[\"price\"]),\n            \"in_stock\": row[\"in_stock\"].strip().lower() == \"yes\",\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=4, sort_keys=True)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "description": "Uses csv.reader with column indexes from the header instead of DictReader.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    reader = csv.reader(fh)\n    header = next(reader)\n    idx = {name: i for i, name in enumerate(header)}\n    data = [r for r in reader if r]\n\nout = []\nfor r in data:\n    out.append(\n        {\n            \"in_stock\": r[idx[\"in_stock\"]].strip().lower() == \"yes\",\n            \"price\": float(r[idx[\"price\"]]),\n            \"name\": r[idx[\"name\"]],\n            \"sku\": r[idx[\"sku\"]],\n        }\n    )\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(json.dumps(out, indent=1))\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "description": "Maps yes/no through a lookup table, builds the list with a comprehension, and writes with ensure_ascii off.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nFLAGS = {\"yes\": True, \"no\": False}\n\nwith open(\"products.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nproducts = [\n    {\n        \"sku\": row[\"sku\"],\n        \"name\": row[\"name\"],\n        \"price\": float(row[\"price\"]),\n        \"in_stock\": FLAGS[row[\"in_stock\"].strip().lower()],\n    }\n    for row in rows\n]\n\nwith open(\"products.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(products, fh, indent=2, ensure_ascii=False)\n    fh.write(\"\\n\")\n"
+          }
+        }
+      ]
+    },
+    "665e7a352c7e64732dbf3c55aff71f9bb6a6269b62a4cd1be13866b8e89cfc0b": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Sets display_name to 'Maya Okafor', forgetting the middle initial.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Sets pronouns to 'she/her/hers' instead of exactly 'she/her'.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her/hers\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Also changes the title of U-7781 to 'Senior Data Analyst'.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"title\", \"value\": \"Senior Data Analyst\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Also sets pronouns on the other user U-7790.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7790\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Updates pronouns first, then display_name.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Skips the initial get_profile and goes straight to the two updates.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"display_name\", \"value\": \"Maya R. Okafor\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"user_id\": \"U-7781\", \"field\": \"pronouns\", \"value\": \"she/her\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Adds a read-only get_profile after the updates to verify and uses a different argument key order.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"value\": \"Maya R. Okafor\", \"field\": \"display_name\", \"user_id\": \"U-7781\"}},\n  {\"tool\": \"update_profile\", \"args\": {\"value\": \"she/her\", \"field\": \"pronouns\", \"user_id\": \"U-7781\"}},\n  {\"tool\": \"get_profile\", \"args\": {\"user_id\": \"U-7781\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact single-line JSON formatting of the same trajectory.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"get_profile\",\"args\":{\"user_id\":\"U-7781\"}},{\"tool\":\"update_profile\",\"args\":{\"user_id\":\"U-7781\",\"field\":\"display_name\",\"value\":\"Maya R. Okafor\"}},{\"tool\":\"update_profile\",\"args\":{\"user_id\":\"U-7781\",\"field\":\"pronouns\",\"value\":\"she/her\"}}]"
+          }
+        }
+      ]
+    },
+    "6ef5bc2ac5a70fd0a55d668a597d0a09063f9a3a3d691777e90eebc5304869ca": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Cancels with when set to period_end instead of immediately.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"period_end\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Refunds 7000 cents instead of 700 (extra zero).",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 7000}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Issues the refund before cancelling.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Also cancels a neighbouring subscription SUB-3382 at period end.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3382\", \"when\": \"period_end\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Issues a second small refund of 100 cents on the same subscription after the correct one.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 100}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Omits the read-only get_subscription lookup.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact single-line JSON with args keys in a different order.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"get_subscription\",\"args\":{\"sub_id\":\"SUB-3381\"}},{\"tool\":\"cancel_subscription\",\"args\":{\"when\":\"immediately\",\"sub_id\":\"SUB-3381\"}},{\"tool\":\"issue_refund\",\"args\":{\"amount_cents\":700,\"sub_id\":\"SUB-3381\"}}]"
+          }
+        },
+        {
+          "description": "Adds a read-only get_subscription call after the refund to confirm the final state.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}},\n  {\"tool\": \"cancel_subscription\", \"args\": {\"sub_id\": \"SUB-3381\", \"when\": \"immediately\"}},\n  {\"tool\": \"issue_refund\", \"args\": {\"sub_id\": \"SUB-3381\", \"amount_cents\": 700}},\n  {\"tool\": \"get_subscription\", \"args\": {\"sub_id\": \"SUB-3381\"}}\n]\n"
+          }
+        }
+      ]
+    },
+    "7100e86dcce06899e9d740a17d965e4768f5b3a2fd2c5ba1fdf90b62555ac4ac": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Forgets the chmod +x so the script is not executable.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Drops the shebang line from the generated script.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\nchmod +x bin/countlines\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Also globs one level of subdirectories, so nested .log files are counted.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log \"$1\"/*/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | wc -l\nfi\nEOF\nchmod +x bin/countlines\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Counts with grep -c \"\", which also counts a final line lacking a trailing newline, unlike wc -l.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | grep -c \"\" || true\nfi\nEOF\nchmod +x bin/countlines\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Uses python3 to compute the final count, going beyond bash and coreutils.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\nfiles=()\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    files+=(\"$f\")\n  fi\ndone\nif [ \"${#files[@]}\" -eq 0 ]; then\n  echo 0\nelse\n  cat -- \"${files[@]}\" | python3 -c 'import sys; print(sys.stdin.read().count(chr(10)))'\nfi\nEOF\nchmod +x bin/countlines\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses the #!/bin/bash shebang and sums per-file wc -l counts in a loop.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/bin/bash\nset -euo pipefail\nshopt -s nullglob dotglob\ntotal=0\nfor f in \"$1\"/*.log; do\n  if [ -f \"$f\" ]; then\n    n=$(wc -l < \"$f\")\n    total=$((total + n))\n  fi\ndone\nprintf '%d\\n' \"$total\"\nEOF\nchmod +x bin/countlines\n"
+          }
+        },
+        {
+          "description": "Strips any whitespace from the wc output via tr and relies on cat of the glob guarded by a file test, using a trailing-slash-safe directory variable.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nshopt -s nullglob dotglob\ndir=\"${1%/}\"\ncount=0\nfor f in \"$dir\"/*.log; do\n  [ -f \"$f\" ] || continue\n  c=$(cat -- \"$f\" | wc -l | tr -d '[:space:]')\n  count=$((count + c))\ndone\necho \"$count\"\nEOF\nchmod +x bin/countlines\n"
+          }
+        },
+        {
+          "description": "Writes the script with printf lines rather than a heredoc and uses a different loop structure with no explicit array.",
+          "files": {
+            "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/countlines <<'EOF'\n#!/usr/bin/env bash\nset -eu\nshopt -s nullglob dotglob\nall=(\"$1\"/*.log)\nsum=0\nfor f in \"${all[@]}\"; do\n  if [[ -f $f ]]; then\n    sum=$(( sum + $(wc -l < \"$f\") ))\n  fi\ndone\necho \"$sum\"\nexit 0\nEOF\nchmod 755 bin/countlines\n"
+          }
+        }
+      ]
+    },
+    "7619281e02fe68cd880e47569e9f4b0ce7488283ae063171bb2b034951aa1007": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Repeats the same transfer twice, so two transfers are made.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Transfers 2500 cents ($25.00) instead of 25000.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 2500, \"memo\": \"holiday fund\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Swaps source and destination, moving money from savings to checking.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3302\", \"to_account\": \"ACC-3301\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Uses the memo 'holiday-fund' with a hyphen instead of a space.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday-fund\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Skips list_accounts and goes directly to the transfer.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Adds read-only get_balance calls before and after the transfer.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"list_accounts\", \"args\": {\"customer_id\": \"C-118\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3301\"}},\n  {\"tool\": \"transfer\", \"args\": {\"from_account\": \"ACC-3301\", \"to_account\": \"ACC-3302\", \"amount_cents\": 25000, \"memo\": \"holiday fund\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3301\"}},\n  {\"tool\": \"get_balance\", \"args\": {\"account_id\": \"ACC-3302\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Compact single-line JSON with transfer arguments in a different key order.",
+          "files": {
+            "trajectory.json": "[{\"tool\":\"list_accounts\",\"args\":{\"customer_id\":\"C-118\"}},{\"tool\":\"transfer\",\"args\":{\"memo\":\"holiday fund\",\"amount_cents\":25000,\"to_account\":\"ACC-3302\",\"from_account\":\"ACC-3301\"}}]"
+          }
+        }
+      ]
+    },
+    "7a61e8561a68e4be0c081c93e3ff3dbd062304d6d8a80fb537c5a3713798250e": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Skips the last CSV row by slicing rows[:-1].",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows[:-1]:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Writes rows in reverse order.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in reversed(rows):\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Leaves id as the string from the CSV instead of an integer.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": row[\"id\"],\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Joins first and last name as 'Last, First' instead of 'First Last'.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s, %s\" % (row[\"last_name\"], row[\"first_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Forgets to lowercase the email address.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"],\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R6",
+          "description": "Swaps month and day in the output date (YYYY-DD-MM).",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, day, month),\n        }\n        fh.write(json.dumps(record) + \"\\n\")\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Compact separators and sorted keys on each line.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for row in rows:\n        month, day, year = row[\"signup_date\"].split(\"/\")\n        record = {\n            \"id\": int(row[\"id\"]),\n            \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n            \"email\": row[\"email\"].lower(),\n            \"signup\": \"%s-%s-%s\" % (year, month, day),\n        }\n        fh.write(json.dumps(record, separators=(\",\", \":\"), sort_keys=True) + \"\\n\")\n"
+          }
+        },
+        {
+          "description": "Omits the trailing newline after the last line by joining lines with newlines.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nlines = []\nfor row in rows:\n    month, day, year = row[\"signup_date\"].split(\"/\")\n    record = {\n        \"id\": int(row[\"id\"]),\n        \"name\": \"%s %s\" % (row[\"first_name\"], row[\"last_name\"]),\n        \"email\": row[\"email\"].lower(),\n        \"signup\": \"%s-%s-%s\" % (year, month, day),\n    }\n    lines.append(json.dumps(record))\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(lines))\n"
+          }
+        },
+        {
+          "description": "Uses csv.reader, datetime for the date conversion, and f-strings, with a different key order.",
+          "files": {
+            "solve.py": "import csv\nimport datetime\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    reader = csv.reader(fh)\n    header = next(reader)\n    pos = {c: i for i, c in enumerate(header)}\n    data = [r for r in reader if r]\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    for r in data:\n        when = datetime.datetime.strptime(r[pos[\"signup_date\"]], \"%m/%d/%Y\")\n        record = {\n            \"signup\": when.strftime(\"%Y-%m-%d\"),\n            \"email\": r[pos[\"email\"]].lower(),\n            \"name\": f\"{r[pos['first_name']]} {r[pos['last_name']]}\",\n            \"id\": int(r[pos[\"id\"]]),\n        }\n        fh.write(json.dumps(record, ensure_ascii=False) + \"\\n\")\n"
+          }
+        },
+        {
+          "description": "Builds all records first, then writes them with a single writelines call and extra spaces after separators.",
+          "files": {
+            "solve.py": "import csv\nimport json\n\nwith open(\"users.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    rows = list(csv.DictReader(fh))\n\nout = []\nfor row in rows:\n    month, day, year = row[\"signup_date\"].strip().split(\"/\")\n    record = {\n        \"id\": int(row[\"id\"]),\n        \"name\": row[\"first_name\"] + \" \" + row[\"last_name\"],\n        \"email\": row[\"email\"].lower(),\n        \"signup\": year + \"-\" + month.zfill(2) + \"-\" + day.zfill(2),\n    }\n    out.append(json.dumps(record, separators=(\", \", \": \")) + \"\\n\")\n\nwith open(\"users.jsonl\", \"w\", encoding=\"utf-8\") as fh:\n    fh.writelines(out)\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

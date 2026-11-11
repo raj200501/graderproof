@@ -1,0 +1,559 @@
+{
+  "created_utc": "2026-11-04T02:29:00Z",
+  "hash": "da1216100e1b6b501cf81c90e4de7625463ebfed941bb81f4d7a7bf36e0a83ed",
+  "instructions": "You turn a task's text into atomic, machine-checkable requirements. For each item you\nget the task text, the task kind, the reference solution (it satisfies the task), the\ninitial workspace, and what the reference produced (files, stdout, exit status, tool\ncalls, final state). You are not shown how the task is graded and must not guess.\n\nWrite one requirement per distinct obligation in the task text (outputs, their\ncontent, required steps, ordering constraints, prohibited actions, policies). Each\nrequirement has an \"id\" (R1, R2, ...), \"text\" (the obligation in plain words, quoting\nthe task where possible), and \"checks\": a list of typed checks that pass on the\nreference outcome and fail when the obligation is broken. Allowed check types and\nfields: file_exists {path}; file_absent {path}; file_equals {path, text, normalize:\nnone|strip|trailing_ws}; file_contains {path, text}; file_regex {path, pattern};\nfile_json {path, pointer, equals, lenient}; file_lines {path, count};\nstdout_contains {text}; stdout_regex {pattern}; stdout_json {pointer, equals,\nlenient}; exit_code {code}; call {probe: {function, args, kwargs}, equals} or\n{probe, matches_reference: true}; same_as_reference {target: stdout|state|file:<path>,\nnormalize}; trajectory_includes {tool, args}; trajectory_excludes {tool, args};\ntrajectory_before {first: {tool, args}, then: {tool, args}}; state_equals {pointer,\nequals}.\n\nBe exactly as strict as the task text. If the text demands an exact format, check it\nexactly; if it only asks for content, check content (use \"normalize\" or \"lenient\" so\nthat harmless formatting does not fail the check). For function tasks, add call\nprobes on the examples in the text and on a few further valid inputs, using\nmatches_reference for inputs whose expected output the text does not state. Return\nfor each item: {\"requirements\": [ ... ]}.\n",
+  "items": [
+    {
+      "id": "ded8ef98b259166383ec9a6e0e8713e66e29dd899b80b187823cabd86007585c",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "pairs.py": "from collections import Counter\n\n\ndef count_pairs(nums, target):\n    seen = Counter()\n    count = 0\n    for value in nums:\n        count += seen[target - value]\n        seen[value] += 1\n    return count\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "pairs.py": "from collections import Counter\n\n\ndef count_pairs(nums, target):\n    seen = Counter()\n    count = 0\n    for value in nums:\n        count += seen[target - value]\n        seen[value] += 1\n    return count\n"
+      },
+      "task_text": "# Count pairs with a given sum\n\nWrite a Python module `pairs.py` with a function `count_pairs(nums, target)` that returns the number of index pairs `(i, j)` with `i < j` and `nums[i] + nums[j] == target`.\n\n- `nums` is a list of at most 5,000 integers; values may be negative and may repeat. `target` is an integer.\n- Example: `count_pairs([1, 5, 7, -1, 5], 6)` returns `3` (1 + 5, 7 + (-1), and 1 + the second 5).\n- An empty list or a list with one element gives `0`.\n"
+    },
+    {
+      "id": "e03dd6153ff2f5f4b69b0cc733e0e0e7600c173ad692aca056e8e86bf07243a4",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "rle.py": "import re\n\n_PAIR = re.compile(r\"([1-9][0-9]*)([^0-9])\", re.DOTALL)\n\n\ndef encode(s):\n    out = []\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out.append(\"%d%s\" % (j - i, s[i]))\n        i = j\n    return \"\".join(out)\n\n\ndef decode(code):\n    out = []\n    pos = 0\n    while pos < len(code):\n        match = _PAIR.match(code, pos)\n        if match is None:\n            raise ValueError(\"malformed run-length code at position %d\" % pos)\n        out.append(match.group(2) * int(match.group(1)))\n        pos = match.end()\n    return \"\".join(out)\n"
+      },
+      "task_text": "# Run-length encoding\n\nWrite a Python module `rle.py` with two functions.\n\n- `encode(s)`: `s` is a string that contains no decimal digits. Replace each maximal run of one repeated character by the run length in decimal (no leading zeros) followed by that character. For example, `encode(\"aaab\")` returns `\"3a1b\"`, `encode(\"a\" * 12)` returns `\"12a\"`, and `encode(\"\")` returns `\"\"`. Spaces, newlines, and other characters are encoded like any other character.\n- `decode(code)`: the inverse. `code` is a sequence of pairs, each a positive decimal count without leading zeros followed by one character that is not a digit; the result repeats each character count times, so `decode(\"3a1b\")` returns `\"aaab\"` and `decode(\"\")` returns `\"\"`. Raise `ValueError` if `code` is not of this form (for example `\"a3\"`, `\"3\"`, `\"0a\"`, or `\"03a\"`).\n"
+    },
+    {
+      "id": "f2e62da0c11056a1848b2a8b53303e2a076c804e55bf1688c24c81883a3dcade",
+      "initial_workspace": {},
+      "kind": "module",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+        },
+        "state": null,
+        "stdout": "",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "finance.py": "def future_value(principal, annual_rate, years, periods_per_year):\n    rate = annual_rate / 100.0\n    n = periods_per_year\n    value = principal * (1 + rate / n) ** (n * years)\n    return round(value, 2)\n"
+      },
+      "task_text": "# Compound interest calculator\n\nWrite a Python module `finance.py` with a function `future_value(principal, annual_rate, years, periods_per_year)` for the savings calculator on the bank's website.\n\n- `principal` is the amount deposited (a number of dollars), `annual_rate` is the nominal yearly interest rate in percent (so `4.5` means 4.5%), `years` is a whole number of years, and `periods_per_year` is how many times per year interest is compounded (for example 12 for monthly).\n- The result is `principal * (1 + r / n) ** (n * years)`, where `r = annual_rate / 100` and `n = periods_per_year`.\n- Return the result as a float rounded to the nearest cent (2 decimal places).\n"
+    },
+    {
+      "id": "f43369ded8de97783e74e6bc0b816b0e8901e2682e860ef79ff69f3ee4636eaa",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "bookings": {
+            "M3P9LA": {
+              "fare_cents": 28900,
+              "fare_type": "refundable",
+              "flight": "NB 118 LIS-BER 2026-12-15",
+              "passenger": "Ruth Adeyemi",
+              "status": "ticketed"
+            },
+            "X7K2QD": {
+              "fare_cents": 41200,
+              "fare_type": "nonrefundable",
+              "flight": "NB 412 BER-LIS 2026-12-12",
+              "passenger": "Noah Fischer",
+              "status": "cancelled"
+            }
+          },
+          "credits": [
+            {
+              "amount_cents": 33700,
+              "pnr": "X7K2QD"
+            }
+          ],
+          "refunds": []
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "pnr": "X7K2QD"
+            },
+            "result": {
+              "booking": {
+                "fare_cents": 41200,
+                "fare_type": "nonrefundable",
+                "flight": "NB 412 BER-LIS 2026-12-12",
+                "passenger": "Noah Fischer",
+                "status": "ticketed"
+              },
+              "ok": true
+            },
+            "tool": "get_booking"
+          },
+          {
+            "args": {
+              "pnr": "X7K2QD"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "cancel_booking"
+          },
+          {
+            "args": {
+              "amount_cents": 33700,
+              "pnr": "X7K2QD"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "issue_travel_credit"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"cancel_booking\", \"args\": {\"pnr\": \"X7K2QD\"}},\n  {\"tool\": \"issue_travel_credit\", \"args\": {\"pnr\": \"X7K2QD\", \"amount_cents\": 33700}}\n]\n"
+      },
+      "task_text": "# Cancel a flight booking\n\nNoah Fischer asks to cancel his booking `X7K2QD`. Look it up and apply the cancellation policy:\n\n- Cancel the booking with `cancel_booking`.\n- Refundable fare: refund the full fare to the original payment method with `issue_refund`.\n- Non-refundable fare: do not refund anything; instead issue a travel credit equal to the fare minus a 7500-cent change fee with `issue_travel_credit`.\n\nDo not change any other booking.\n\nTools (see `support/env.py`):\n\n- `get_booking(pnr)`\n- `cancel_booking(pnr)`\n- `issue_refund(pnr, amount_cents)`\n- `issue_travel_credit(pnr, amount_cents)`\n"
+    },
+    {
+      "id": "f43bcd0a37478eca94b67a201cacb4f97e4cbcd9d674bf63f04ff007459d63ae",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "refunds": [
+            {
+              "amount_cents": 8900,
+              "rma_id": "RMA-7712"
+            }
+          ],
+          "rmas": {
+            "RMA-7712": {
+              "amount_cents": 8900,
+              "condition": "good",
+              "item": "Trail running shoes",
+              "order_id": "ORD-61200",
+              "status": "refunded"
+            },
+            "RMA-7720": {
+              "amount_cents": 2450,
+              "condition": null,
+              "item": "Insulated bottle",
+              "order_id": "ORD-61377",
+              "status": "awaiting_return"
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "rma_id": "RMA-7712"
+            },
+            "result": {
+              "ok": true,
+              "rma": {
+                "amount_cents": 8900,
+                "condition": null,
+                "item": "Trail running shoes",
+                "order_id": "ORD-61200",
+                "status": "awaiting_return"
+              }
+            },
+            "tool": "get_rma"
+          },
+          {
+            "args": {
+              "condition": "good",
+              "rma_id": "RMA-7712"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "mark_received"
+          },
+          {
+            "args": {
+              "rma_id": "RMA-7712"
+            },
+            "result": {
+              "amount_cents": 8900,
+              "ok": true
+            },
+            "tool": "refund_rma"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}},\n  {\"tool\": \"mark_received\", \"args\": {\"rma_id\": \"RMA-7712\", \"condition\": \"good\"}},\n  {\"tool\": \"refund_rma\", \"args\": {\"rma_id\": \"RMA-7712\"}}\n]\n"
+      },
+      "task_text": "# Refund a returned item\n\nThe warehouse confirms that the parcel for return `RMA-7712` (trail running shoes from order `ORD-61200`) arrived and the shoes are in good condition.\n\n1. Mark the return as received with `mark_received`, condition `good`.\n2. Refund it to the original payment method with `refund_rma`. The refund must actually be issued.\n\nDo not change any other return.\n\nTools (see `support/env.py`):\n\n- `get_rma(rma_id)`\n- `mark_received(rma_id, condition)`, where `condition` is `good` or `damaged`\n- `refund_rma(rma_id)`: only possible for a return received in good condition\n"
+    },
+    {
+      "id": "fa327cd3920a36512aeeb27274c767aac9ac9d9a067d580d3e50a1b995a72483",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "call_log": [
+            {
+              "detail": "PRM-7730",
+              "status": "ok",
+              "tool": "renew_permit"
+            },
+            {
+              "detail": "CU-5521",
+              "status": "ok",
+              "tool": "charge_card"
+            }
+          ],
+          "charges": [
+            {
+              "amount_cents": 9600,
+              "customer_id": "CU-5521",
+              "description": "permit renewal PRM-7730"
+            }
+          ],
+          "customers": {
+            "CU-5521": {
+              "card_last4": "0094",
+              "name": "Dana Kowalski"
+            },
+            "CU-6100": {
+              "card_last4": "7781",
+              "name": "Raul Mendes"
+            }
+          },
+          "permits": {
+            "PRM-7730": {
+              "customer_id": "CU-5521",
+              "expires": "2027-11-30",
+              "plate": "KX-482-LM",
+              "status": "active",
+              "zone": "R4"
+            },
+            "PRM-7731": {
+              "customer_id": "CU-6100",
+              "expires": "2027-02-28",
+              "plate": "KX-713-AB",
+              "status": "active",
+              "zone": "R4"
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "plate": "KX-482-LM"
+            },
+            "result": {
+              "customer_id": "CU-5521",
+              "expires": "2026-11-30",
+              "ok": true,
+              "permit_id": "PRM-7730",
+              "plate": "KX-482-LM",
+              "status": "active",
+              "zone": "R4"
+            },
+            "tool": "lookup_permit"
+          },
+          {
+            "args": {
+              "months": 12,
+              "permit_id": "PRM-7730"
+            },
+            "result": {
+              "expires": "2027-11-30",
+              "ok": true
+            },
+            "tool": "renew_permit"
+          },
+          {
+            "args": {
+              "amount_cents": 9600,
+              "customer_id": "CU-5521",
+              "description": "permit renewal PRM-7730"
+            },
+            "result": {
+              "charge_id": "CH-1",
+              "ok": true
+            },
+            "tool": "charge_card"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"lookup_permit\", \"args\": {\"plate\": \"KX-482-LM\"}},\n  {\"tool\": \"renew_permit\", \"args\": {\"permit_id\": \"PRM-7730\", \"months\": 12}},\n  {\"tool\": \"charge_card\", \"args\": {\"customer_id\": \"CU-5521\", \"amount_cents\": 9600, \"description\": \"permit renewal PRM-7730\"}}\n]\n"
+      },
+      "task_text": "# Renew a residential parking permit\n\nDana Kowalski (customer `CU-5521`) wants to renew the residential parking permit for her car, plate `KX-482-LM`.\n\n1. Look up the permit by plate with `lookup_permit`. Her permit is `PRM-7730`.\n2. Renew it for 12 months with `renew_permit`, which extends the expiry date by the given number of months.\n3. Charge her card on file 9600 cents (12 months at $8.00) with `charge_card`, using the description `permit renewal PRM-7730`.\n\nDo not change any other permit and do not make any other charge.\n\nTools (see `support/env.py`):\n\n- `lookup_permit(plate)`\n- `renew_permit(permit_id, months)`\n- `charge_card(customer_id, amount_cents, description)`\n"
+    },
+    {
+      "id": "fe001ded2cc1b8172e8687f61d78e73db3259843e7a9f72d8d9f6e046726d1d3",
+      "initial_workspace": {},
+      "kind": "trajectory",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {},
+        "state": {
+          "sections": {
+            "CS201-A": {
+              "course": "CS201",
+              "meetings": [
+                [
+                  "Mon",
+                  "11:00",
+                  "12:30"
+                ],
+                [
+                  "Wed",
+                  "11:00",
+                  "12:30"
+                ]
+              ],
+              "seats_free": 6
+            },
+            "CS201-B": {
+              "course": "CS201",
+              "meetings": [
+                [
+                  "Tue",
+                  "14:00",
+                  "15:30"
+                ],
+                [
+                  "Thu",
+                  "14:00",
+                  "15:30"
+                ]
+              ],
+              "seats_free": 3
+            },
+            "CS201-C": {
+              "course": "CS201",
+              "meetings": [
+                [
+                  "Fri",
+                  "09:00",
+                  "12:00"
+                ]
+              ],
+              "seats_free": 0
+            },
+            "CS201-D": {
+              "course": "CS201",
+              "meetings": [
+                [
+                  "Tue",
+                  "16:00",
+                  "17:30"
+                ],
+                [
+                  "Fri",
+                  "13:00",
+                  "14:30"
+                ]
+              ],
+              "seats_free": 1
+            },
+            "HIST210-A": {
+              "course": "HIST210",
+              "meetings": [
+                [
+                  "Mon",
+                  "10:00",
+                  "11:30"
+                ],
+                [
+                  "Wed",
+                  "10:00",
+                  "11:30"
+                ]
+              ],
+              "seats_free": 4
+            },
+            "MATH220-B": {
+              "course": "MATH220",
+              "meetings": [
+                [
+                  "Tue",
+                  "13:00",
+                  "14:30"
+                ],
+                [
+                  "Thu",
+                  "13:00",
+                  "14:30"
+                ]
+              ],
+              "seats_free": 1
+            }
+          },
+          "students": {
+            "S-4471": {
+              "enrolled": [
+                "HIST210-A",
+                "MATH220-B",
+                "CS201-D"
+              ],
+              "name": "Wen Li"
+            }
+          }
+        },
+        "stdout": "",
+        "trajectory": [
+          {
+            "args": {
+              "student_id": "S-4471"
+            },
+            "result": {
+              "ok": true,
+              "student": {
+                "enrolled": [
+                  "HIST210-A",
+                  "MATH220-B"
+                ],
+                "name": "Wen Li"
+              }
+            },
+            "tool": "get_student"
+          },
+          {
+            "args": {
+              "course": "CS201"
+            },
+            "result": {
+              "ok": true,
+              "sections": {
+                "CS201-A": {
+                  "course": "CS201",
+                  "meetings": [
+                    [
+                      "Mon",
+                      "11:00",
+                      "12:30"
+                    ],
+                    [
+                      "Wed",
+                      "11:00",
+                      "12:30"
+                    ]
+                  ],
+                  "seats_free": 6
+                },
+                "CS201-B": {
+                  "course": "CS201",
+                  "meetings": [
+                    [
+                      "Tue",
+                      "14:00",
+                      "15:30"
+                    ],
+                    [
+                      "Thu",
+                      "14:00",
+                      "15:30"
+                    ]
+                  ],
+                  "seats_free": 3
+                },
+                "CS201-C": {
+                  "course": "CS201",
+                  "meetings": [
+                    [
+                      "Fri",
+                      "09:00",
+                      "12:00"
+                    ]
+                  ],
+                  "seats_free": 0
+                },
+                "CS201-D": {
+                  "course": "CS201",
+                  "meetings": [
+                    [
+                      "Tue",
+                      "16:00",
+                      "17:30"
+                    ],
+                    [
+                      "Fri",
+                      "13:00",
+                      "14:30"
+                    ]
+                  ],
+                  "seats_free": 2
+                }
+              }
+            },
+            "tool": "list_sections"
+          },
+          {
+            "args": {
+              "section_id": "CS201-D",
+              "student_id": "S-4471"
+            },
+            "result": {
+              "ok": true
+            },
+            "tool": "enroll"
+          }
+        ]
+      },
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"get_student\", \"args\": {\"student_id\": \"S-4471\"}},\n  {\"tool\": \"list_sections\", \"args\": {\"course\": \"CS201\"}},\n  {\"tool\": \"enroll\", \"args\": {\"student_id\": \"S-4471\", \"section_id\": \"CS201-D\"}}\n]\n"
+      },
+      "task_text": "# Enroll a student in a course section\n\nStudent `S-4471` needs to take CS201 this term. Enroll the student in exactly one section of `CS201` that has a free seat and whose meeting times do not overlap any section the student is already enrolled in. Keep the student's existing enrollments.\n\nTwo meetings overlap when they are on the same day and their time ranges intersect.\n\nTools (see `support/env.py`):\n\n- `get_student(student_id)`: current enrollments\n- `list_sections(course)`: sections with meeting times and free seats\n- `enroll(student_id, section_id)`\n- `drop(student_id, section_id)`\n"
+    },
+    {
+      "id": "fe684a0d29c4a010334da69cc00a441f07a14a29d3795d2aceac331b32b6b186",
+      "initial_workspace": {
+        "invoice.csv": "item,quantity,unit_price\nStanding desk frame,2,329.00\nOak desk top,2,149.50\nCable tray,4,18.75\nMonitor arm,3,64.90\n"
+      },
+      "kind": "script",
+      "reference_outcome": {
+        "exit_status": 0,
+        "files": {
+          "invoice.csv": "item,quantity,unit_price\nStanding desk frame,2,329.00\nOak desk top,2,149.50\nCable tray,4,18.75\nMonitor arm,3,64.90\n"
+        },
+        "state": null,
+        "stdout": "Total: $1,327.90\n",
+        "trajectory": []
+      },
+      "reference_solution": {
+        "solve.py": "import csv\nfrom decimal import ROUND_HALF_UP, Decimal\n\nsubtotal = Decimal(\"0\")\nwith open(\"invoice.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        subtotal += Decimal(row[\"quantity\"]) * Decimal(row[\"unit_price\"])\n\ntax = (subtotal * Decimal(\"0.0825\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\ntotal = subtotal + tax\nprint(\"Total: ${:,.2f}\".format(total))\n"
+      },
+      "task_text": "# Invoice total\n\n`invoice.csv` lists the line items of an invoice, with columns `item,quantity,unit_price`. Compute the amount due:\n\n- subtotal = the sum of quantity \u00d7 unit_price over all rows;\n- tax = 8.25% of the subtotal, rounded to the nearest cent (exact halves round up);\n- total = subtotal + tax.\n\nPrint exactly one line to standard output, in the form `Total: $1,234.56`: the word `Total:`, one space, a dollar sign, and the total with a comma as the thousands separator and exactly two decimal places. Print nothing else.\n"
+    }
+  ],
+  "prompt_version": "requirements/v1",
+  "purpose": "requirements",
+  "response_schema": {
+    "required": [
+      "requirements"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

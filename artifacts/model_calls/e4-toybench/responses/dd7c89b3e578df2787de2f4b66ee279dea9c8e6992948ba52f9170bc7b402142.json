@@ -1,0 +1,278 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "dd7c89b3e578df2787de2f4b66ee279dea9c8e6992948ba52f9170bc7b402142",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "088161a1dd941e1a3e9e20d24b0a876f04b9c7204486b6183e7aeeaa21a01fb7": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Substitution is costed as 2 instead of 1, so the result is no longer the minimum count of single-character edits.",
+          "files": {
+            "distance.py": "def levenshtein(a, b):\n    previous = list(range(len(b) + 1))\n    for i, ca in enumerate(a, start=1):\n        current = [i]\n        for j, cb in enumerate(b, start=1):\n            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + 2 * (ca != cb)))\n        previous = current\n    return previous[-1]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Characters are compared after lowercasing, so case differences are ignored.",
+          "files": {
+            "distance.py": "def levenshtein(a, b):\n    previous = list(range(len(b) + 1))\n    for i, ca in enumerate(a, start=1):\n        current = [i]\n        for j, cb in enumerate(b, start=1):\n            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (ca.lower() != cb.lower())))\n        previous = current\n    return previous[-1]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Strings are encoded to UTF-8 bytes first, so non-ASCII code points count as several characters.",
+          "files": {
+            "distance.py": "def levenshtein(a, b):\n    a = a.encode(\"utf-8\")\n    b = b.encode(\"utf-8\")\n    previous = list(range(len(b) + 1))\n    for i, ca in enumerate(a, start=1):\n        current = [i]\n        for j, cb in enumerate(b, start=1):\n            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (ca != cb)))\n        previous = current\n    return previous[-1]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Swaps the arguments so the shorter string forms the row, and uses renamed variables; the distance is symmetric.",
+          "files": {
+            "distance.py": "def levenshtein(a, b):\n    if len(a) < len(b):\n        a, b = b, a\n    row = list(range(len(b) + 1))\n    for i in range(1, len(a) + 1):\n        diag = row[0]\n        row[0] = i\n        for j in range(1, len(b) + 1):\n            saved = row[j]\n            cost = 0 if a[i - 1] == b[j - 1] else 1\n            row[j] = min(row[j] + 1, row[j - 1] + 1, diag + cost)\n            diag = saved\n    return row[len(b)]\n"
+          }
+        },
+        {
+          "description": "Full two-dimensional table with early returns for empty strings.",
+          "files": {
+            "distance.py": "def levenshtein(a, b):\n    if a == b:\n        return 0\n    if not a:\n        return len(b)\n    if not b:\n        return len(a)\n    table = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\n    for i in range(len(a) + 1):\n        table[i][0] = i\n    for j in range(len(b) + 1):\n        table[0][j] = j\n    for i in range(1, len(a) + 1):\n        for j in range(1, len(b) + 1):\n            if a[i - 1] == b[j - 1]:\n                table[i][j] = table[i - 1][j - 1]\n            else:\n                table[i][j] = 1 + min(table[i - 1][j], table[i][j - 1], table[i - 1][j - 1])\n    return table[len(a)][len(b)]\n"
+          }
+        }
+      ]
+    },
+    "243fa62ac001404072e80a8e986f7087ae71772f4cc22cb79eeca87958a3490a": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Contents are stripped before grouping, so files that differ only in surrounding whitespace are wrongly treated as duplicates.",
+          "files": {
+            "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content.strip(), []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n    return sorted(groups)\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The threshold is off by one, so contents held by a single path also produce a group.",
+          "files": {
+            "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 0]\n    return sorted(groups)\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Groups are returned in dictionary insertion order instead of being ordered by their first path.",
+          "files": {
+            "dupes.py": "def duplicate_groups(files):\n    by_content = {}\n    for path, content in files.items():\n        by_content.setdefault(content, []).append(path)\n    groups = [sorted(paths) for paths in by_content.values() if len(paths) > 1]\n    return groups\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Iterates paths in sorted order so groups are built already sorted, then orders groups by first path with an explicit key.",
+          "files": {
+            "dupes.py": "def duplicate_groups(files):\n    seen = {}\n    for path in sorted(files):\n        seen.setdefault(files[path], []).append(path)\n    result = [group for group in seen.values() if len(group) >= 2]\n    result.sort(key=lambda group: group[0])\n    return result\n"
+          }
+        },
+        {
+          "description": "Uses collections.defaultdict and a list comprehension with renamed variables.",
+          "files": {
+            "dupes.py": "from collections import defaultdict\n\n\ndef duplicate_groups(files):\n    buckets = defaultdict(list)\n    for name, data in files.items():\n        buckets[data].append(name)\n    return sorted(sorted(names) for names in buckets.values() if len(names) >= 2)\n"
+          }
+        }
+      ]
+    },
+    "35ed2bbe4e5878261147ebf1e505dc70302f10aea7744fdadf14dfdfc69f8888": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "Category rows are written in first-seen order instead of sorted by category name.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in totals:\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "Category totals are written without forced two-decimal formatting, so whole or one-decimal totals lose trailing zeros.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, float(totals[category])])\n\nsummary = {\"categories\": len(totals), \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The grand total is written as a string instead of a JSON number.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": len(totals), \"grand_total\": \"%.2f\" % sum(totals.values())}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The categories count is the number of expense rows rather than the number of distinct categories.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nrows = 0\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        rows += 1\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"categories\": rows, \"grand_total\": float(round(sum(totals.values()), 2))}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh)\n    fh.write(\"\\n\")\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Writes summary.json with the keys in the other order, indented, and with no trailing newline.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom decimal import Decimal\n\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        totals[row[\"category\"]] = totals.get(row[\"category\"], Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    writer = csv.writer(fh, lineterminator=\"\\n\")\n    writer.writerow([\"category\", \"total\"])\n    for category in sorted(totals):\n        writer.writerow([category, \"%.2f\" % totals[category]])\n\nsummary = {\"grand_total\": float(round(sum(totals.values()), 2)), \"categories\": len(totals)}\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump(summary, fh, indent=2)\n"
+          }
+        },
+        {
+          "description": "Formats totals with Decimal.quantize and writes the CSV by hand without the csv writer.",
+          "files": {
+            "solve.py": "import csv\nimport json\nfrom decimal import ROUND_HALF_UP, Decimal\n\nCENT = Decimal(\"0.01\")\ntotals = {}\nwith open(\"expenses.csv\", newline=\"\", encoding=\"utf-8\") as fh:\n    for row in csv.DictReader(fh):\n        key = row[\"category\"]\n        totals[key] = totals.get(key, Decimal(\"0\")) + Decimal(row[\"amount\"])\n\nlines = [\"category,total\"]\nfor key in sorted(totals):\n    lines.append(key + \",\" + format(totals[key].quantize(CENT, rounding=ROUND_HALF_UP), \"f\"))\nwith open(\"by_category.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as fh:\n    fh.write(\"\\n\".join(lines) + \"\\n\")\n\ngrand = sum(totals.values(), Decimal(\"0\")).quantize(CENT, rounding=ROUND_HALF_UP)\nwith open(\"summary.json\", \"w\", encoding=\"utf-8\") as fh:\n    json.dump({\"categories\": len(totals), \"grand_total\": float(grand)}, fh, separators=(\",\", \":\"))\n"
+          }
+        }
+      ]
+    },
+    "397a1b4a70e65da0575d3f02756ca68237a352500b3e662d05a118999c6384e8": {
+      "violating": [
+        {
+          "requirement": "R2",
+          "description": "The single-message check uses a strict less-than, so a 160-character message is split.",
+          "files": {
+            "sms.py": "SINGLE_LIMIT = 160\nPART_SIZE = 153\n\n\ndef split_sms(message):\n    if len(message) < SINGLE_LIMIT:\n        return [message]\n    return [message[i : i + PART_SIZE] for i in range(0, len(message), PART_SIZE)]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Part size is 152 instead of 153, an off-by-one in the chunk length.",
+          "files": {
+            "sms.py": "SINGLE_LIMIT = 160\nPART_SIZE = 152\n\n\ndef split_sms(message):\n    if len(message) <= SINGLE_LIMIT:\n        return [message]\n    return [message[i : i + PART_SIZE] for i in range(0, len(message), PART_SIZE)]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "Each part of a multi-part message is stripped, losing edge whitespace.",
+          "files": {
+            "sms.py": "SINGLE_LIMIT = 160\nPART_SIZE = 153\n\n\ndef split_sms(message):\n    if len(message) <= SINGLE_LIMIT:\n        return [message]\n    return [message[i : i + PART_SIZE].strip() for i in range(0, len(message), PART_SIZE)]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Builds the parts with a while loop and slicing instead of a list comprehension.",
+          "files": {
+            "sms.py": "def split_sms(message):\n    if len(message) <= 160:\n        return [message]\n    parts = []\n    start = 0\n    while start < len(message):\n        parts.append(message[start:start + 153])\n        start += 153\n    return parts\n"
+          }
+        },
+        {
+          "description": "Uses divmod to compute the number of parts and slices each one by index.",
+          "files": {
+            "sms.py": "def split_sms(message):\n    if len(message) <= 160:\n        return [message]\n    full, rest = divmod(len(message), 153)\n    count = full + (1 if rest else 0)\n    return [message[n * 153:(n + 1) * 153] for n in range(count)]\n"
+          }
+        }
+      ]
+    },
+    "3c0f4ab2e192b5f0d8250b5413025f298712fbfad64af02dea53009670fcffa1": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "The appointment is moved to 10:30 instead of 10:15.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:30\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "The SMS writes the date in a different format (18 Nov 2026) instead of 2026-11-18.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 18 Nov 2026 at 10:15.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "The SMS is sent before the appointment is rescheduled.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "A second, unrelated appointment is also rescheduled.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6621\", \"date\": \"2026-11-18\", \"time\": \"10:45\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n]\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "A second confirmation SMS is also sent to a different patient.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"find_slots\", \"args\": {\"provider\": \"Dr. Hale\", \"date\": \"2026-11-18\"}},\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3310\", \"text\": \"Hello, an appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\"}}\n]\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Omits the optional find_slots lookup and uses different message wording that still contains the date and time.",
+          "files": {
+            "trajectory.json": "[\n  {\"tool\": \"reschedule\", \"args\": {\"appointment_id\": \"APT-6620\", \"date\": \"2026-11-18\", \"time\": \"10:15\"}},\n  {\"tool\": \"send_sms\", \"args\": {\"patient_id\": \"P-3307\", \"text\": \"Confirmed: your visit with Dr. Hale is now on 2026-11-18 at 10:15. See you then.\"}}\n]\n"
+          }
+        },
+        {
+          "description": "Same calls with different key order inside each object and compact one-line JSON formatting.",
+          "files": {
+            "trajectory.json": "[{\"args\":{\"date\":\"2026-11-18\",\"provider\":\"Dr. Hale\"},\"tool\":\"find_slots\"},{\"args\":{\"time\":\"10:15\",\"date\":\"2026-11-18\",\"appointment_id\":\"APT-6620\"},\"tool\":\"reschedule\"},{\"args\":{\"text\":\"Hello Gareth, your appointment with Dr. Hale has been moved to 2026-11-18 at 10:15.\",\"patient_id\":\"P-3307\"},\"tool\":\"send_sms\"}]"
+          }
+        }
+      ]
+    },
+    "4176dbee329d43014eec627e89f589169ed32fd103d1ad6f75dfaae92e2b085e": {
+      "violating": [
+        {
+          "requirement": "R1",
+          "description": "Only trailing spaces are stripped, so trailing tabs remain.",
+          "files": {
+            "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+          }
+        },
+        {
+          "requirement": "R2",
+          "description": "A final newline is always appended, so files without one gain it.",
+          "files": {
+            "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if not cleaned.endswith(\"\\n\"):\n            cleaned += \"\\n\"\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+          }
+        },
+        {
+          "requirement": "R3",
+          "description": "Text files under src/ are cleaned as well as Python files.",
+          "files": {
+            "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith((\".py\", \".txt\")):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+          }
+        },
+        {
+          "requirement": "R4",
+          "description": "The walk starts at the project root, so vendor/ Python files are cleaned too.",
+          "files": {
+            "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\".\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\") or name == \"solve.py\":\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+          }
+        },
+        {
+          "requirement": "R5",
+          "description": "Cleaned content is written to a temporary file and the original is removed without renaming the temporary file into place.",
+          "files": {
+            "solve.py": "import os\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = \"\\n\".join(line.rstrip(\" \\t\") for line in text.split(\"\\n\"))\n        if cleaned != text:\n            with open(path + \".tmp\", \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n            os.remove(path)\n"
+          }
+        }
+      ],
+      "preserving": [
+        {
+          "description": "Uses a multiline regular expression to remove trailing spaces and tabs instead of splitting on newlines.",
+          "files": {
+            "solve.py": "import os\nimport re\n\nPATTERN = re.compile(r\"[ \\t]+$\", re.MULTILINE)\n\nfor root, _dirs, names in os.walk(\"src\"):\n    for name in sorted(names):\n        if not name.endswith(\".py\"):\n            continue\n        path = os.path.join(root, name)\n        with open(path, encoding=\"utf-8\", newline=\"\") as fh:\n            text = fh.read()\n        cleaned = PATTERN.sub(\"\", text)\n        if cleaned != text:\n            with open(path, \"w\", encoding=\"utf-8\", newline=\"\") as fh:\n                fh.write(cleaned)\n"
+          }
+        },
+        {
+          "description": "Works on bytes and uses pathlib's rglob, rewriting only files that change.",
+          "files": {
+            "solve.py": "from pathlib import Path\n\nfor path in sorted(Path(\"src\").rglob(\"*.py\")):\n    if not path.is_file():\n        continue\n    data = path.read_bytes()\n    lines = data.split(b\"\\n\")\n    cleaned = b\"\\n\".join(line.rstrip(b\" \\t\") for line in lines)\n    if cleaned != data:\n        path.write_bytes(cleaned)\n"
+          }
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

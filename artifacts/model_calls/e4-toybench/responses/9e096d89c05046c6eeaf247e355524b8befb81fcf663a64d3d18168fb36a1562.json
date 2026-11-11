@@ -1,0 +1,390 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "9e096d89c05046c6eeaf247e355524b8befb81fcf663a64d3d18168fb36a1562",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "b2a4e9330d00fb6d663af0bf1316cb5492c1aa98b2d3b12351b232b1cfbd8bde": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Cancel the booking of member G-208 for class CL-TUE-YOGA.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "cancel_booking", "args": {"member_id": "G-208", "class_id": "CL-TUE-YOGA"}},
+            {"type": "state_equals", "pointer": "/classes/CL-TUE-YOGA/roster", "equals": ["G-111", "G-305"]}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Add member G-208 to the end of the waitlist of the full class CL-THU-YOGA.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "join_waitlist", "args": {"member_id": "G-208", "class_id": "CL-THU-YOGA"}},
+            {"type": "state_equals", "pointer": "/classes/CL-THU-YOGA/waitlist", "equals": ["G-150", "G-208"]}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Do not change anything else: the Thursday roster stays unchanged, the Tuesday waitlist stays empty, and the Saturday class is untouched.",
+          "checks": [
+            {"type": "state_equals", "pointer": "/classes/CL-THU-YOGA/roster", "equals": ["G-120", "G-311"]},
+            {"type": "state_equals", "pointer": "/classes/CL-TUE-YOGA/waitlist", "equals": []},
+            {"type": "state_equals", "pointer": "/classes/CL-SAT-YOGA", "equals": {"capacity": 4, "day": "Saturday", "roster": ["G-111"], "time": "10:00", "title": "Slow yoga", "waitlist": []}},
+            {"type": "state_equals", "pointer": "/classes/CL-THU-YOGA/capacity", "equals": 2},
+            {"type": "state_equals", "pointer": "/classes/CL-TUE-YOGA/capacity", "equals": 3}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Do not book any class (the full Thursday class must be joined via the waitlist, not booked).",
+          "checks": [
+            {"type": "trajectory_excludes", "tool": "book_class", "args": {}}
+          ]
+        }
+      ]
+    },
+    "b31e16c23214a870f2cd009d60147aa225190703563a2e69ab826096a7d4266b": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Use update_shipping_address to set the shipping address of ORD-55120 to exactly 'Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP'.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "update_shipping_address", "args": {"order_id": "ORD-55120", "address": "Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP"}},
+            {"type": "state_equals", "pointer": "/orders/ORD-55120/shipping_address", "equals": "Flat 3, 14 Harbour Street, Leith, Edinburgh EH6 6QP"}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Do not change any other field of order ORD-55120.",
+          "checks": [
+            {"type": "state_equals", "pointer": "/orders/ORD-55120/customer", "equals": "Iain Murray"},
+            {"type": "state_equals", "pointer": "/orders/ORD-55120/items", "equals": ["Hiking boots (UK 9)"]},
+            {"type": "state_equals", "pointer": "/orders/ORD-55120/status", "equals": "processing"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Do not change any other order.",
+          "checks": [
+            {"type": "state_equals", "pointer": "/orders/ORD-55087", "equals": {"customer": "Iain Murray", "items": ["Rain jacket"], "shipping_address": "27 Comely Bank Avenue, Edinburgh EH4 1EL", "status": "shipped"}},
+            {"type": "state_equals", "pointer": "/orders/ORD-55133", "equals": {"customer": "Freya Lund", "items": ["Two-person tent"], "shipping_address": "9 Rose Street, Aberdeen AB10 1UB", "status": "processing"}}
+          ]
+        }
+      ]
+    },
+    "b5b662c75ed95926f3e1d5c92948f0126904b38d1a7ca3eaeaa91691d37afe69": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Verify the customer's identity by calling verify_identity with customer ID C-8812 and the last four digits 4821.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "verify_identity", "args": {"customer_id": "C-8812", "last4": "4821"}},
+            {"type": "state_equals", "pointer": "/verified", "equals": ["C-8812"]}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Ordering policy: the identity check must happen before any refund is issued.",
+          "checks": [
+            {"type": "trajectory_before", "first": {"tool": "verify_identity", "args": {"customer_id": "C-8812", "last4": "4821"}}, "then": {"tool": "issue_refund", "args": {}}}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Refund 6499 cents on order ORD-90417 with reason 'damaged'.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "issue_refund", "args": {"order_id": "ORD-90417", "amount_cents": 6499, "reason": "damaged"}},
+            {"type": "state_equals", "pointer": "/orders/ORD-90417/refunded_cents", "equals": 6499}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Make no other refunds: exactly one refund record exists, for ORD-90417.",
+          "checks": [
+            {"type": "state_equals", "pointer": "/refunds", "equals": [{"amount_cents": 6499, "order_id": "ORD-90417", "reason": "damaged"}]},
+            {"type": "state_equals", "pointer": "/orders/ORD-90388/refunded_cents", "equals": 0}
+          ]
+        },
+        {
+          "id": "R5",
+          "text": "Make no other changes: customers, order items, and the other order stay unchanged.",
+          "checks": [
+            {"type": "state_equals", "pointer": "/orders/ORD-90388", "equals": {"customer_id": "C-8840", "items": [{"name": "Electric kettle", "price_cents": 3450, "sku": "KTL-07"}], "refunded_cents": 0, "status": "delivered"}},
+            {"type": "state_equals", "pointer": "/orders/ORD-90417/items", "equals": [{"name": "Countertop blender", "price_cents": 6499, "sku": "BLD-200"}, {"name": "Travel mug", "price_cents": 1299, "sku": "MUG-12"}]},
+            {"type": "state_equals", "pointer": "/customers", "equals": {"C-8812": {"card_last4": "4821", "name": "Tomás Rivera"}, "C-8840": {"card_last4": "1177", "name": "Helen Achebe"}}}
+          ]
+        }
+      ]
+    },
+    "bb02f2c2cba37c5513dffcd508e3c1e568b2868b15505e1b3963af64491c9be8": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write the output file transposed.tsv.",
+          "checks": [
+            {"type": "file_exists", "path": "transposed.tsv"},
+            {"type": "exit_code", "code": 0}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Rows and columns are swapped: cell (i,j) of the output is cell (j,i) of the input; cell text is unchanged (cells may contain spaces).",
+          "checks": [
+            {"type": "file_equals", "path": "transposed.tsv", "text": "metric\trevenue\tnew customers\nQ1\t1.2 M\t310\nQ2\t1.4 M\t355\nQ3\t1.1 M\t298\nQ4\t1.9 M\t502\n", "normalize": "none"},
+            {"type": "file_lines", "path": "transposed.tsv", "count": 5}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Same format: cells separated by a single tab, and every row including the last terminated by a newline.",
+          "checks": [
+            {"type": "file_regex", "path": "transposed.tsv", "pattern": "\\A(?:[^\\t\\n]*(?:\\t[^\\t\\n]*)*\\n)+\\Z"},
+            {"type": "file_regex", "path": "transposed.tsv", "pattern": "\\n\\Z"},
+            {"type": "file_contains", "path": "transposed.tsv", "text": "Q1\t1.2 M\t310\n"}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "The input matrix.tsv is not modified.",
+          "checks": [
+            {"type": "file_equals", "path": "matrix.tsv", "text": "metric\tQ1\tQ2\tQ3\tQ4\nrevenue\t1.2 M\t1.4 M\t1.1 M\t1.9 M\nnew customers\t310\t355\t298\t502\n", "normalize": "none"}
+          ]
+        }
+      ]
+    },
+    "bb4f3fdca39716f5377ff4ffff1b10d63e113016e949672df874bd9de68d1083": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Look up Ana's user record with find_user using ana.lima@example.com.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "find_user", "args": {"email": "ana.lima@example.com"}}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Open one ticket for Ana (U-204) with create_ticket: title 'VPN disconnects every few minutes', category 'network', priority 'high'.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "create_ticket", "args": {"user_id": "U-204", "title": "VPN disconnects every few minutes", "category": "network", "priority": "high"}},
+            {"type": "state_equals", "pointer": "/tickets/T-1001/user_id", "equals": "U-204"},
+            {"type": "state_equals", "pointer": "/tickets/T-1001/title", "equals": "VPN disconnects every few minutes"},
+            {"type": "state_equals", "pointer": "/tickets/T-1001/category", "equals": "network"},
+            {"type": "state_equals", "pointer": "/tickets/T-1001/priority", "equals": "high"},
+            {"type": "state_equals", "pointer": "/next_ticket", "equals": 1002}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Assign the new ticket T-1001 to the netops team with assign_ticket.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "assign_ticket", "args": {"ticket_id": "T-1001", "team": "netops"}},
+            {"type": "state_equals", "pointer": "/tickets/T-1001/team", "equals": "netops"},
+            {"type": "state_equals", "pointer": "/tickets/T-1001/status", "equals": "open"}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Ordering: the user lookup comes before ticket creation, and the ticket is created before it is assigned.",
+          "checks": [
+            {"type": "trajectory_before", "first": {"tool": "find_user", "args": {"email": "ana.lima@example.com"}}, "then": {"tool": "create_ticket", "args": {}}},
+            {"type": "trajectory_before", "first": {"tool": "create_ticket", "args": {}}, "then": {"tool": "assign_ticket", "args": {"ticket_id": "T-1001"}}}
+          ]
+        },
+        {
+          "id": "R5",
+          "text": "Do not modify any existing ticket.",
+          "checks": [
+            {"type": "state_equals", "pointer": "/tickets/T-0998", "equals": {"category": "hardware", "comments": [], "priority": "low", "status": "closed", "team": "desktop", "title": "Cannot print to floor 3 printer", "user_id": "U-204"}},
+            {"type": "state_equals", "pointer": "/tickets/T-1000", "equals": {"category": "software", "comments": [], "priority": "medium", "status": "open", "team": "apps", "title": "CRM export times out", "user_id": "U-311"}},
+            {"type": "trajectory_excludes", "tool": "assign_ticket", "args": {"ticket_id": "T-1000"}},
+            {"type": "trajectory_excludes", "tool": "assign_ticket", "args": {"ticket_id": "T-0998"}}
+          ]
+        },
+        {
+          "id": "R6",
+          "text": "Open exactly one ticket (no duplicates).",
+          "checks": [
+            {"type": "state_equals", "pointer": "/next_ticket", "equals": 1002}
+          ]
+        }
+      ]
+    },
+    "bbf853e256902a2948387ac9b9089809cec392078df87ec3f77ad826f1533e42": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a Python module dateparse.py.",
+          "checks": [
+            {"type": "file_exists", "path": "dateparse.py"}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "to_iso_date accepts 'Month D, YYYY' with full or three-letter English month names in any capitalization and one or two digit day: \"March 5, 2026\" gives \"2026-03-05\".",
+          "checks": [
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["March 5, 2026"], "kwargs": {}}, "equals": "2026-03-05"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["Mar 5, 2026"], "kwargs": {}}, "equals": "2026-03-05"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["mar 15, 2026"], "kwargs": {}}, "equals": "2026-03-15"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["DECEMBER 31, 1999"], "kwargs": {}}, "equals": "1999-12-31"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["sEp 09, 2024"], "kwargs": {}}, "equals": "2024-09-09"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["May 1, 2030"], "kwargs": {}}, "equals": "2030-05-01"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["February 29, 2024"], "kwargs": {}}, "equals": "2024-02-29"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "to_iso_date accepts DD/MM/YYYY (day first, two digits each): \"05/03/2026\" gives \"2026-03-05\".",
+          "checks": [
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["05/03/2026"], "kwargs": {}}, "equals": "2026-03-05"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["31/12/2025"], "kwargs": {}}, "equals": "2025-12-31"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["01/02/2000"], "kwargs": {}}, "equals": "2000-02-01"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["12/11/2026"], "kwargs": {}}, "equals": "2026-11-12"}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "to_iso_date accepts YYYY.MM.DD: \"2026.03.05\" gives \"2026-03-05\".",
+          "checks": [
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["2026.03.05"], "kwargs": {}}, "equals": "2026-03-05"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["1999.12.31"], "kwargs": {}}, "equals": "1999-12-31"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["2024.02.29"], "kwargs": {}}, "equals": "2024-02-29"}
+          ]
+        },
+        {
+          "id": "R5",
+          "text": "Surrounding spaces are ignored.",
+          "checks": [
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["  March 5, 2026  "], "kwargs": {}}, "equals": "2026-03-05"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": [" 05/03/2026"], "kwargs": {}}, "equals": "2026-03-05"},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["2026.03.05   "], "kwargs": {}}, "equals": "2026-03-05"}
+          ]
+        },
+        {
+          "id": "R6",
+          "text": "Raise ValueError for dates that do not exist, such as \"31/04/2026\".",
+          "checks": [
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["31/04/2026"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["29/02/2025"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["February 30, 2026"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["2026.13.01"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["00/01/2026"], "kwargs": {}}, "matches_reference": true}
+          ]
+        },
+        {
+          "id": "R7",
+          "text": "Raise ValueError for any other input (unknown month names, other formats, wrong digit counts).",
+          "checks": [
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["Smarch 5, 2026"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["2026-03-05"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["5/3/2026"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["03/05/26"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["March 5 2026"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["Sept 5, 2026"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": [""], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "to_iso_date", "args": ["2026.3.5"], "kwargs": {}}, "matches_reference": true}
+          ]
+        }
+      ]
+    },
+    "bc4641b21e8bc9a233f05e9b948191a581f54daed7a2917e87a70db8774ebd87": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Convert app.env into config.json, which must be valid JSON containing an object.",
+          "checks": [
+            {"type": "file_exists", "path": "config.json"},
+            {"type": "exit_code", "code": 0},
+            {"type": "file_json", "path": "config.json", "pointer": "", "equals": {"APP_NAME": "booking-api", "APP_PORT": "9090", "DATABASE_URL": "postgres://booking@db.internal:5432/booking", "FEATURE_FLAGS": "search,waitlist", "LOG_LEVEL": "info", "EMPTY_VALUE": "", "GREETING": "Welcome to \"Harbour\" Hotels", "CACHE_TTL": "300 # seconds"}, "lenient": false}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Ignore blank lines and lines whose first non-space character is '#' (the commented APP_PORT=1234 line contributes nothing, and no comment header key appears).",
+          "checks": [
+            {"type": "file_json", "path": "config.json", "pointer": "/APP_PORT", "equals": "9090", "lenient": false},
+            {"type": "file_json", "path": "config.json", "pointer": "/APP_NAME", "equals": "booking-api", "lenient": false}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Split each line at the first '=' and remove spaces and tabs around the key and the value (so '   LOG_LEVEL = info' gives key LOG_LEVEL, value info).",
+          "checks": [
+            {"type": "file_json", "path": "config.json", "pointer": "/LOG_LEVEL", "equals": "info", "lenient": false},
+            {"type": "file_json", "path": "config.json", "pointer": "/EMPTY_VALUE", "equals": "", "lenient": false},
+            {"type": "file_json", "path": "config.json", "pointer": "/DATABASE_URL", "equals": "postgres://booking@db.internal:5432/booking", "lenient": false},
+            {"type": "file_json", "path": "config.json", "pointer": "/CACHE_TTL", "equals": "300 # seconds", "lenient": false}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "If the value starts and ends with the same quote character (\" or '), remove that one pair of quotes; nothing else is unescaped, so inner quotes are kept.",
+          "checks": [
+            {"type": "file_json", "path": "config.json", "pointer": "/FEATURE_FLAGS", "equals": "search,waitlist", "lenient": false},
+            {"type": "file_json", "path": "config.json", "pointer": "/GREETING", "equals": "Welcome to \"Harbour\" Hotels", "lenient": false},
+            {"type": "file_json", "path": "config.json", "pointer": "/DATABASE_URL", "equals": "postgres://booking@db.internal:5432/booking", "lenient": false}
+          ]
+        },
+        {
+          "id": "R5",
+          "text": "If a key appears more than once, the last occurrence wins (APP_PORT is 9090).",
+          "checks": [
+            {"type": "file_json", "path": "config.json", "pointer": "/APP_PORT", "equals": "9090", "lenient": false}
+          ]
+        },
+        {
+          "id": "R6",
+          "text": "config.json maps each key to its value as a string (all values are JSON strings, not numbers).",
+          "checks": [
+            {"type": "file_json", "path": "config.json", "pointer": "/APP_PORT", "equals": "9090", "lenient": false},
+            {"type": "file_json", "path": "config.json", "pointer": "/CACHE_TTL", "equals": "300 # seconds", "lenient": false},
+            {"type": "file_regex", "path": "config.json", "pattern": "\"APP_PORT\"\\s*:\\s*\"9090\""}
+          ]
+        }
+      ]
+    },
+    "c61acaf40ef700539138b8d9f17029d6e5ada4d33e7a1a8d3ba316ddd6562bd0": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Book the cheapest available, non-smoking, king-bed room for 2026-12-18 to 2026-12-20, which is room 412 (18900 cents) among the available rooms 205, 220, 305, 412.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "create_booking", "args": {"room": "412", "check_in": "2026-12-18", "check_out": "2026-12-20"}},
+            {"type": "state_equals", "pointer": "/bookings/B-9002/room", "equals": "412"},
+            {"type": "state_equals", "pointer": "/bookings/B-9002/check_in", "equals": "2026-12-18"},
+            {"type": "state_equals", "pointer": "/bookings/B-9002/check_out", "equals": "2026-12-20"}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Book it under the guest name 'Elif Demir' and attach the loyalty number 'LY-55821'.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "create_booking", "args": {"room": "412", "guest_name": "Elif Demir", "check_in": "2026-12-18", "check_out": "2026-12-20", "loyalty_number": "LY-55821"}},
+            {"type": "state_equals", "pointer": "/bookings/B-9002/guest_name", "equals": "Elif Demir"},
+            {"type": "state_equals", "pointer": "/bookings/B-9002/loyalty_number", "equals": "LY-55821"},
+            {"type": "state_equals", "pointer": "/bookings/B-9002/status", "equals": "confirmed"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Make no other bookings or changes: exactly one new booking exists, the existing booking B-9001 is untouched, and room data is unchanged.",
+          "checks": [
+            {"type": "state_equals", "pointer": "/next_id", "equals": 9003},
+            {"type": "state_equals", "pointer": "/bookings/B-9001", "equals": {"check_in": "2026-12-19", "check_out": "2026-12-21", "guest_name": "Paul Okoro", "loyalty_number": null, "room": "118", "status": "confirmed"}},
+            {"type": "state_equals", "pointer": "/rooms/412", "equals": {"bed": "king", "price_cents": 18900, "smoking": false}},
+            {"type": "trajectory_excludes", "tool": "cancel_booking", "args": {}}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Do not book a room that does not meet the criteria (smoking room 220, queen room 205, pricier room 305).",
+          "checks": [
+            {"type": "trajectory_excludes", "tool": "create_booking", "args": {"room": "220"}},
+            {"type": "trajectory_excludes", "tool": "create_booking", "args": {"room": "205"}},
+            {"type": "trajectory_excludes", "tool": "create_booking", "args": {"room": "305"}},
+            {"type": "trajectory_excludes", "tool": "create_booking", "args": {"room": "118"}}
+          ]
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}

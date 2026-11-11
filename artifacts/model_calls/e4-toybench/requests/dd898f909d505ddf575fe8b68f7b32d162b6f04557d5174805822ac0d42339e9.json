@@ -1,0 +1,164 @@
+{
+  "created_utc": "2026-11-11T04:34:02Z",
+  "hash": "dd898f909d505ddf575fe8b68f7b32d162b6f04557d5174805822ac0d42339e9",
+  "instructions": "You propose modified versions of the reference solution of a software task. For each\nitem you get the task text, the reference solution files (they satisfy the task), and\nthe task's numbered requirements. You are not told how the task is graded and must\nnot guess.\n\n1. \"violating\": for up to 6 requirements (prefer the most important\n   ones), one minimal edit of the reference that breaks exactly that requirement while\n   keeping every other requirement satisfied. Make the edit look like a plausible\n   mistake (an off-by-one, a skipped step, a wrong field, a partial result, a missing\n   confirmation), not sabotage.\n2. \"preserving\": up to 4 alternative solutions that satisfy every\n   requirement but differ from the reference in a way an overly strict checker might\n   reject: formatting the task text leaves open (whitespace, key order, number format,\n   a trailing newline, a code fence around structured output only if the text allows\n   it), a different algorithm or tool path, harmless reordering or renaming, or a\n   valid alternative argument form. If the task text fixes the exact form, do not\n   change it.\n\nReturn the full new content of every file you change, using only the reference's\nfile paths. Do not add comments that describe the change. Return for each item:\n{\"violating\": [{\"requirement\": \"R1\", \"description\": \"one sentence\",\n\"files\": {\"<path>\": \"<full content>\"}}], \"preserving\": [{\"description\": \"one\nsentence\", \"files\": {\"<path>\": \"<full content>\"}}]}.\n",
+  "items": [
+    {
+      "id": "996abe0f1ffe01eda8a9e03b83e780a4f907fc2dc3448027ec84e2bed00fbcc9",
+      "reference_solution": {
+        "durations.py": "import re\n\n_UNITS = \"dhms\"\n_SECONDS = {\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}\n_COMPONENT = re.compile(r\"([0-9]+)([dhms])\")\n\n\ndef parse_duration(text):\n    s = text.strip(\" \")\n    if not s:\n        raise ValueError(\"empty duration\")\n    pos, total, last = 0, 0, -1\n    while pos < len(s):\n        match = _COMPONENT.match(s, pos)\n        if match is None:\n            raise ValueError(\"invalid duration: %r\" % text)\n        index = _UNITS.index(match.group(2))\n        if index <= last:\n            raise ValueError(\"units out of order or repeated: %r\" % text)\n        last = index\n        total += int(match.group(1)) * _SECONDS[match.group(2)]\n        pos = match.end()\n        while pos < len(s) and s[pos] == \" \":\n            pos += 1\n    return total\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Provide a module `durations.py` with a function `parse_duration(text)`."
+        },
+        {
+          "id": "R2",
+          "text": "Return the duration in seconds as an integer, with d = 86400, h = 3600, m = 60, s = 1; example `parse_duration(\"1h30m\")` returns 5400."
+        },
+        {
+          "id": "R3",
+          "text": "Components may be written next to each other or separated by one or more spaces; valid examples `2d 4h`, `90m`, `1h 15m 30s`."
+        },
+        {
+          "id": "R4",
+          "text": "Each component is one or more ASCII digits followed by the unit, so multi-digit numbers work and leading zeros are digits."
+        },
+        {
+          "id": "R6",
+          "text": "Leading and trailing spaces are allowed."
+        }
+      ],
+      "round": 2,
+      "task_text": "# Parse durations\n\nThe job scheduler accepts timeouts such as `1h30m`. Write a Python module `durations.py` with a function `parse_duration(text)` that returns the duration in seconds as an integer.\n\n- A duration is one or more components. Each component is one or more ASCII digits immediately followed by a unit: `d` (day, 86400 seconds), `h` (hour), `m` (minute), or `s` (second).\n- Components may be written next to each other or separated by one or more spaces. Units must appear in the order `d`, `h`, `m`, `s`, each at most once: `\"2d 4h\"`, `\"90m\"`, and `\"1h 15m 30s\"` are valid; `\"30s 1m\"` and `\"1h1h\"` are not.\n- Leading and trailing spaces are allowed.\n- Example: `parse_duration(\"1h30m\")` returns `5400`.\n- For any other input (an empty string, an unknown unit, a number without a unit, a unit without a number, a space between a number and its unit, or any other character), raise `ValueError`.\n"
+    },
+    {
+      "id": "a0fe68f7cf0abe5b40dcaac502bbdffdd038190336c3afe95a6d0637e056418a",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"check_availability\", \"args\": {\"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4}},\n  {\"tool\": \"create_reservation\", \"args\": {\"name\": \"Priya Raman\", \"phone\": \"+44 20 7946 0321\", \"date\": \"2026-11-14\", \"time\": \"19:30\", \"party_size\": 4, \"notes\": \"wheelchair access\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Book a reservation for name Priya Raman, phone +44 20 7946 0321, date 2026-11-14, time 19:30, party size 4, notes wheelchair access, using create_reservation."
+        },
+        {
+          "id": "R2",
+          "text": "Make exactly one new reservation."
+        },
+        {
+          "id": "R3",
+          "text": "Leave all existing reservations as they are: no cancellations, and R-501 and R-502 unchanged."
+        }
+      ],
+      "round": 2,
+      "task_text": "# Restaurant reservation\n\nA caller asks for a dinner reservation. Use the reservation tools to book a table with these details:\n\n- name: `Priya Raman`\n- phone: `+44 20 7946 0321`\n- date: `2026-11-14`, time: `19:30`\n- party size: 4\n- notes: `wheelchair access`\n\nMake exactly one new reservation and leave all existing reservations as they are.\n\nTools (see `support/env.py`):\n\n- `check_availability(date, time, party_size)`\n- `create_reservation(name, phone, date, time, party_size, notes)`\n- `cancel_reservation(reservation_id)`\n- `list_reservations(date)`\n"
+    },
+    {
+      "id": "a181f23e6ce28a6235bbc8a64b26759e1338dc12d12ea8c7ac9e0248686bc490",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncat > schema.sql <<'EOF'\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n    email TEXT NOT NULL UNIQUE,\n    created_at TEXT NOT NULL\n);\n\nCREATE TABLE orders (\n    id INTEGER PRIMARY KEY,\n    customer_id INTEGER NOT NULL REFERENCES customers(id),\n    total_cents INTEGER NOT NULL,\n    status TEXT NOT NULL DEFAULT 'pending'\n);\n\nCREATE INDEX idx_orders_customer ON orders(customer_id);\nEOF\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write schema.sql in the working directory and run without errors."
+        },
+        {
+          "id": "R2",
+          "text": "Table customers with columns in order: id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL."
+        },
+        {
+          "id": "R3",
+          "text": "Table orders with columns in order: id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), total_cents INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending'."
+        },
+        {
+          "id": "R4",
+          "text": "An index named idx_orders_customer on orders(customer_id)."
+        },
+        {
+          "id": "R5",
+          "text": "Create no other table, view, index, or trigger."
+        }
+      ],
+      "round": 2,
+      "task_text": "# SQLite schema for the orders service\n\nWrite `schema.sql` in the working directory: a SQLite script that, run on an empty database, creates exactly the following.\n\n- Table `customers` with columns, in this order: `id INTEGER PRIMARY KEY`, `email TEXT NOT NULL UNIQUE`, `created_at TEXT NOT NULL`.\n- Table `orders` with columns, in this order: `id INTEGER PRIMARY KEY`, `customer_id INTEGER NOT NULL` with a foreign key referencing `customers(id)`, `total_cents INTEGER NOT NULL`, `status TEXT NOT NULL DEFAULT 'pending'`.\n- An index named `idx_orders_customer` on `orders(customer_id)`.\n\nThe script must run without errors and must not create any other table, view, index, or trigger (the automatic index SQLite creates for a `UNIQUE` column does not count).\n"
+    },
+    {
+      "id": "a1c9fb2c9022ec31a1f2d1570274e815831cbfe546e1d22da1a4a72eb5d0be9a",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\ncp -- nginx.conf nginx.conf.orig\ncontent=$(<nginx.conf)\ncontent=${content/worker_connections 1024;/worker_connections 4096;}\ncontent=${content/keepalive_timeout 65;/keepalive_timeout 30;}\nprintf '%s\\n' \"$content\" > nginx.conf\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Save an exact copy of the original file as nginx.conf.orig in the same directory."
+        },
+        {
+          "id": "R4",
+          "text": "Leave everything else in nginx.conf byte-for-byte unchanged, including indentation, comments, and blank lines."
+        }
+      ],
+      "round": 2,
+      "task_text": "# Tune the web server configuration\n\nThe web server in front of the booking site needs more concurrent connections and shorter idle keep-alives. The configuration file is `nginx.conf` in the working directory.\n\n1. Before editing anything, save an exact copy of the original file as `nginx.conf.orig` in the same directory.\n2. In `nginx.conf`, change `worker_connections 1024;` to `worker_connections 4096;`.\n3. In `nginx.conf`, change `keepalive_timeout 65;` to `keepalive_timeout 30;`.\n\nLeave everything else in `nginx.conf` byte-for-byte unchanged, including indentation, comments, and blank lines.\n"
+    },
+    {
+      "id": "a749069371764e852585b3334d2639404996882f6269f0bf582d324f423227f6",
+      "reference_solution": {
+        "trajectory.json": "[\n  {\"tool\": \"list_prescriptions\", \"args\": {\"patient_id\": \"P-5512\"}},\n  {\"tool\": \"request_refill\", \"args\": {\"rx_id\": \"RX-1001\", \"pharmacy_id\": \"PH-ELM\"}},\n  {\"tool\": \"notify_patient\", \"args\": {\"patient_id\": \"P-5512\", \"message\": \"Your refill of RX-1001 (atorvastatin) will be ready for pickup at Elm Street Pharmacy tomorrow after 14:00.\"}}\n]\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Request a refill of prescription RX-1001 at pharmacy PH-ELM with request_refill."
+        },
+        {
+          "id": "R2",
+          "text": "Notify patient P-5512 with notify_patient (the message must include the pharmacy name Elm Street and the prescription number RX-1001)."
+        },
+        {
+          "id": "R3",
+          "text": "Ordering: request the refill first, then notify the patient."
+        },
+        {
+          "id": "R4",
+          "text": "Do not request refills of any other prescription."
+        }
+      ],
+      "round": 2,
+      "task_text": "# Refill a prescription\n\nPatient `P-5512` asks to refill her atorvastatin prescription for pickup at the Elm Street pharmacy.\n\n1. Request a refill of prescription `RX-1001` at pharmacy `PH-ELM` with `request_refill`.\n2. Then notify the patient with `notify_patient`. The message must include the pharmacy name `Elm Street` and the prescription number `RX-1001`.\n\nDo not request refills of any other prescription.\n\nTools (see `support/env.py`):\n\n- `list_prescriptions(patient_id)`\n- `list_pharmacies()`\n- `request_refill(rx_id, pharmacy_id)`\n- `notify_patient(patient_id, message)`\n"
+    },
+    {
+      "id": "a9a7c1d97fd3c78dd18688155a10c3c6b3bc718265de4ed5d482d86605022219",
+      "reference_solution": {
+        "solve.sh": "#!/usr/bin/env bash\nset -euo pipefail\nmkdir -p bin\ncat > bin/wordcount <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nwc -w < \"$1\"\nEOF\nchmod +x bin/wordcount\n"
+      },
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Create a script at bin/wordcount."
+        },
+        {
+          "id": "R2",
+          "text": "The script must start with #!/usr/bin/env bash or #!/bin/bash."
+        },
+        {
+          "id": "R3",
+          "text": "Run as bin/wordcount FILE, print the number of words in FILE (as counted by wc -w) as a plain decimal integer on a single line, exit status 0. An empty file has 0 words."
+        }
+      ],
+      "round": 2,
+      "task_text": "# Word-count helper script\n\nThe editors want a small command to count words in their drafts.\n\nCreate an executable bash script at `bin/wordcount` (create the `bin/` directory). When run as `bin/wordcount FILE`, it must print the number of words in FILE as a plain decimal integer on a single line, and exit with status 0. A word is a maximal run of non-whitespace characters, which is what `wc -w` counts; an empty file has 0 words.\n\nThe script must start with `#!/usr/bin/env bash` or `#!/bin/bash` and may use only bash and coreutils.\n"
+    }
+  ],
+  "prompt_version": "propose/v1",
+  "purpose": "propose",
+  "response_schema": {
+    "required": [
+      "violating",
+      "preserving"
+    ]
+  },
+  "schema": "graderproof.model_request/1"
+}

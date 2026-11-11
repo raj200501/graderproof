@@ -1,0 +1,330 @@
+{
+  "schema": "graderproof.model_response/1",
+  "request": "b23f4c671812311be46ac8bf25244df37dcf0375caa43a2b6968c86b513e279f",
+  "backend": "claude-code-subagent",
+  "model": "claude-sonnet (Claude Code subagent alias sonnet)",
+  "items": {
+    "243fa62ac001404072e80a8e986f7087ae71772f4cc22cb79eeca87958a3490a": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module dupes.py providing duplicate_groups(files).",
+          "checks": [
+            {"type": "file_exists", "path": "dupes.py"}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Files with exactly equal contents are duplicates; return one group (sorted list of all paths) per content shared by two or more paths.",
+          "checks": [
+            {"type": "call", "probe": {"function": "duplicate_groups", "args": [{"a": "x", "b": "x", "c": "y"}], "kwargs": {}}, "equals": [["a", "b"]]},
+            {"type": "call", "probe": {"function": "duplicate_groups", "args": [{"c": "x", "a": "x", "b": "x"}], "kwargs": {}}, "equals": [["a", "b", "c"]]},
+            {"type": "call", "probe": {"function": "duplicate_groups", "args": [{"a": "x", "b": "x ", "c": "X"}], "kwargs": {}}, "equals": []}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Contents that belong to only one path produce no group; if there are no duplicates return [].",
+          "checks": [
+            {"type": "call", "probe": {"function": "duplicate_groups", "args": [{}], "kwargs": {}}, "equals": []},
+            {"type": "call", "probe": {"function": "duplicate_groups", "args": [{"a": "1", "b": "2", "c": "3"}], "kwargs": {}}, "equals": []},
+            {"type": "call", "probe": {"function": "duplicate_groups", "args": [{"only": ""}], "kwargs": {}}, "equals": []}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Order the groups by their first path (each group is the sorted list of its paths).",
+          "checks": [
+            {"type": "call", "probe": {"function": "duplicate_groups", "args": [{"b": "1", "a": "2", "c": "1", "d": "2"}], "kwargs": {}}, "equals": [["a", "d"], ["b", "c"]]},
+            {"type": "call", "probe": {"function": "duplicate_groups", "args": [{"z": "p", "y": "p", "m": "q", "n": "q", "a": "r", "b": "r"}], "kwargs": {}}, "equals": [["a", "b"], ["m", "n"], ["y", "z"]]},
+            {"type": "call", "probe": {"function": "duplicate_groups", "args": [{"d/x": "", "a/y": "", "b": "k", "c": "k"}], "kwargs": {}}, "matches_reference": true}
+          ]
+        }
+      ]
+    },
+    "29312a402338b433d7e61a9c3b2759341ae2a3ae69d83514cc6c6eee5b1679a7": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write totals.csv in the working directory.",
+          "checks": [
+            {"type": "file_exists", "path": "totals.csv"},
+            {"type": "exit_code", "code": 0}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "totals.csv has the header row customer,total, then one row per customer with the sum of that customer's payments, rows sorted by customer name (plain string comparison), each total with exactly two decimal places.",
+          "checks": [
+            {"type": "file_equals", "path": "totals.csv", "text": "customer,total\n\"Adventure Works, LLC\",600.00\nContoso Ltd,355.75\nFabrikam Inc,2399.95\nNorthwind Traders,1289.99\n", "normalize": "strip"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Customer names are CSV values and must be quoted where the CSV format requires it (the name containing a comma is quoted).",
+          "checks": [
+            {"type": "file_contains", "path": "totals.csv", "text": "\"Adventure Works, LLC\",600.00"}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Totals are written with exactly two decimal places (for example 600.00).",
+          "checks": [
+            {"type": "file_regex", "path": "totals.csv", "pattern": "(?m)^(\"Adventure Works, LLC\"|Contoso Ltd|Fabrikam Inc|Northwind Traders),[0-9]+\\.[0-9]{2}[ \\t\\r]*$"}
+          ]
+        }
+      ]
+    },
+    "318057baa0253123b08fd8ba3bdf4ef271bcc79e014610bc7cff0ff7ecdf51f1": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module workdays.py with a function business_days(start, end, holidays=()).",
+          "checks": [
+            {"type": "file_exists", "path": "workdays.py"},
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-05", "2026-10-12"], "kwargs": {}}, "equals": 5}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Count dates d with start <= d < end (start included, end excluded) that fall on Monday to Friday.",
+          "checks": [
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-05", "2026-10-06"], "kwargs": {}}, "equals": 1},
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-09", "2026-10-12"], "kwargs": {}}, "equals": 1},
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-03", "2026-10-05"], "kwargs": {}}, "equals": 0},
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-02", "2026-10-13"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-12-28", "2027-01-05"], "kwargs": {}}, "matches_reference": true}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Dates in holidays (iterable of ISO date strings) are not counted.",
+          "checks": [
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-05", "2026-10-12", ["2026-10-07"]], "kwargs": {}}, "equals": 4},
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-05", "2026-10-12"], "kwargs": {"holidays": ["2026-10-05", "2026-10-10"]}}, "equals": 4},
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-05", "2026-10-12", ["2026-10-12"]], "kwargs": {}}, "equals": 5},
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-05", "2026-10-19", ["2026-10-06", "2026-10-13", "2026-10-14"]], "kwargs": {}}, "matches_reference": true}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "If end is not after start, return 0.",
+          "checks": [
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-05", "2026-10-05"], "kwargs": {}}, "equals": 0},
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-12", "2026-10-05"], "kwargs": {}}, "equals": 0},
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-12", "2026-10-05", ["2026-10-07"]], "kwargs": {}}, "equals": 0}
+          ]
+        },
+        {
+          "id": "R5",
+          "text": "Return the count as an integer.",
+          "checks": [
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-05", "2026-10-09"], "kwargs": {}}, "equals": 4},
+            {"type": "call", "probe": {"function": "business_days", "args": ["2026-10-05", "2026-10-05"], "kwargs": {}}, "equals": 0}
+          ]
+        }
+      ]
+    },
+    "35ed2bbe4e5878261147ebf1e505dc70302f10aea7744fdadf14dfdfc69f8888": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Produce by_category.csv and summary.json.",
+          "checks": [
+            {"type": "file_exists", "path": "by_category.csv"},
+            {"type": "file_exists", "path": "summary.json"},
+            {"type": "exit_code", "code": 0}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "by_category.csv: header row category,total, then one row per category occurring in expenses.csv, sorted by category name, where total is the sum of that category's amounts with exactly two decimal places.",
+          "checks": [
+            {"type": "file_equals", "path": "by_category.csv", "text": "category,total\nmeals,120.50\noffice,23.40\nsoftware,169.00\ntravel,602.79\n", "normalize": "strip"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "summary.json: a JSON object with exactly two keys, categories (number of categories, an integer) and grand_total (sum of all amounts rounded to 2 decimal places, as a number).",
+          "checks": [
+            {"type": "file_json", "path": "summary.json", "pointer": "", "equals": {"categories": 4, "grand_total": 915.69}, "lenient": true},
+            {"type": "file_json", "path": "summary.json", "pointer": "/categories", "equals": 4, "lenient": false},
+            {"type": "file_json", "path": "summary.json", "pointer": "/grand_total", "equals": 915.69, "lenient": true}
+          ]
+        }
+      ]
+    },
+    "397a1b4a70e65da0575d3f02756ca68237a352500b3e662d05a118999c6384e8": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write a Python module sms.py with a function split_sms(message) returning the list of parts to send.",
+          "checks": [
+            {"type": "file_exists", "path": "sms.py"},
+            {"type": "call", "probe": {"function": "split_sms", "args": ["hello"], "kwargs": {}}, "equals": ["hello"]}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "If message has at most 160 characters, return [message], including the empty message which returns [\"\"].",
+          "checks": [
+            {"type": "call", "probe": {"function": "split_sms", "args": [""], "kwargs": {}}, "equals": [""]},
+            {"type": "call", "probe": {"function": "split_sms", "args": ["abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "split_sms", "args": ["abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijk"], "kwargs": {}}, "matches_reference": true}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Otherwise split into consecutive parts of exactly 153 characters, except the last part which holds the remaining 1 to 153 characters.",
+          "checks": [
+            {"type": "call", "probe": {"function": "split_sms", "args": ["abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijk"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "split_sms", "args": ["abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdef"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "split_sms", "args": ["abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefg"], "kwargs": {}}, "matches_reference": true}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Joining the parts in order must give back message exactly: do not strip, add, reorder, or change any character (whitespace at the edges of parts is preserved).",
+          "checks": [
+            {"type": "call", "probe": {"function": "split_sms", "args": ["  hi  "], "kwargs": {}}, "equals": ["  hi  "]},
+            {"type": "call", "probe": {"function": "split_sms", "args": ["                                                                                                                                                                                         x y"], "kwargs": {}}, "matches_reference": true},
+            {"type": "call", "probe": {"function": "split_sms", "args": ["line1\nline2\n\n"], "kwargs": {}}, "equals": ["line1\nline2\n\n"]}
+          ]
+        }
+      ]
+    },
+    "397e3795688e2a65325b67b4a756c06874d0ef1a76d7967e232c3c78ff3d69d0": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Write the Markdown table to team.md.",
+          "checks": [
+            {"type": "file_exists", "path": "team.md"},
+            {"type": "exit_code", "code": 0}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "The first row of the table is the header row with the CSV column names (name, role, location), starting and ending with |, cells separated by |; spaces around cell text are optional.",
+          "checks": [
+            {"type": "file_regex", "path": "team.md", "pattern": "\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "The second row is a separator row; each separator cell consists of three or more - characters, optionally with a leading and/or trailing : for alignment.",
+          "checks": [
+            {"type": "file_regex", "path": "team.md", "pattern": "\\A[^\\n]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n"}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "One row per CSV record in the original order, with cell text unchanged, each row starting and ending with |.",
+          "checks": [
+            {"type": "file_regex", "path": "team.md", "pattern": "\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z"}
+          ]
+        },
+        {
+          "id": "R5",
+          "text": "team.md contains only the table (exactly header, separator, and four record rows; a final newline is optional).",
+          "checks": [
+            {"type": "file_regex", "path": "team.md", "pattern": "\\A[ \\t]*\\|[ \\t]*name[ \\t]*\\|[ \\t]*role[ \\t]*\\|[ \\t]*location[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*:?-{3,}:?[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Ada Park[ \\t]*\\|[ \\t]*Engineering Manager[ \\t]*\\|[ \\t]*Berlin[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Luis Romero[ \\t]*\\|[ \\t]*Backend Engineer[ \\t]*\\|[ \\t]*Madrid[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Grace Kim[ \\t]*\\|[ \\t]*Product Designer[ \\t]*\\|[ \\t]*Seoul[ \\t]*\\|[ \\t]*\\n[ \\t]*\\|[ \\t]*Tomasz Nowak[ \\t]*\\|[ \\t]*Site Reliability Engineer[ \\t]*\\|[ \\t]*Warsaw[ \\t]*\\|[ \\t]*\\n?\\Z"},
+            {"type": "file_lines", "path": "team.md", "count": 6}
+          ]
+        }
+      ]
+    },
+    "3c0f4ab2e192b5f0d8250b5413025f298712fbfad64af02dea53009670fcffa1": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "Move appointment APT-6620 to 2026-11-18 at 10:15 with reschedule.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "reschedule", "args": {"appointment_id": "APT-6620", "date": "2026-11-18", "time": "10:15"}},
+            {"type": "state_equals", "pointer": "/appointments/APT-6620/date", "equals": "2026-11-18"},
+            {"type": "state_equals", "pointer": "/appointments/APT-6620/time", "equals": "10:15"}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Text the patient P-3307 with send_sms to confirm; the message must include the new date written as 2026-11-18 and the new time written as 10:15.",
+          "checks": [
+            {"type": "trajectory_includes", "tool": "send_sms", "args": {"patient_id": "P-3307"}},
+            {"type": "state_equals", "pointer": "/sms_outbox/0/patient_id", "equals": "P-3307"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "The SMS is sent after the appointment has been moved (reschedule before send_sms).",
+          "checks": [
+            {"type": "trajectory_before", "first": {"tool": "reschedule", "args": {"appointment_id": "APT-6620", "date": "2026-11-18", "time": "10:15"}}, "then": {"tool": "send_sms", "args": {"patient_id": "P-3307"}}}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Do not change any other appointment.",
+          "checks": [
+            {"type": "trajectory_excludes", "tool": "reschedule", "args": {"appointment_id": "APT-6655"}},
+            {"type": "state_equals", "pointer": "/appointments/APT-6655", "equals": {"date": "2026-11-18", "patient_id": "P-4410", "provider": "Dr. Hale", "status": "scheduled", "time": "11:00"}}
+          ]
+        },
+        {
+          "id": "R5",
+          "text": "Only the single named patient is texted (no SMS to other patients).",
+          "checks": [
+            {"type": "trajectory_excludes", "tool": "send_sms", "args": {"patient_id": "P-4410"}}
+          ]
+        }
+      ]
+    },
+    "4176dbee329d43014eec627e89f589169ed32fd103d1ad6f75dfaae92e2b085e": {
+      "requirements": [
+        {
+          "id": "R1",
+          "text": "For every .py file under src/ (including subdirectories), remove all spaces and tabs at the end of every line, and change nothing else (line order, indentation, blank lines, final-newline status preserved).",
+          "checks": [
+            {"type": "file_equals", "path": "src/app/__init__.py", "text": "\"\"\"Booking service application package.\"\"\"\n", "normalize": "none"},
+            {"type": "file_equals", "path": "src/app/pricing.py", "text": "from decimal import Decimal\n\nTAX_RATE = Decimal(\"0.20\")\n\ndef gross(net):\n    \"\"\"Return the price including tax.\"\"\"\n    return (net * (1 + TAX_RATE)).quantize(Decimal(\"0.01\"))\n\n\ndef discount(price, percent):\n\treturn price * (100 - percent) / 100\n", "normalize": "none"},
+            {"type": "file_equals", "path": "src/cli/main.py", "text": "import sys\n\nfrom app.pricing import gross\n\n\ndef main(argv):\n    for arg in argv[1:]:\n        print(gross(arg))\n    return 0\n\n\nif __name__ == \"__main__\":\n    sys.exit(main(sys.argv))", "normalize": "none"}
+          ]
+        },
+        {
+          "id": "R2",
+          "text": "Keep whether or not each file ends with a newline (src/cli/main.py has no final newline and must still have none).",
+          "checks": [
+            {"type": "file_regex", "path": "src/cli/main.py", "pattern": "sys\\.argv\\)\\)\\Z"},
+            {"type": "file_regex", "path": "src/app/pricing.py", "pattern": "/ 100\\n\\Z"}
+          ]
+        },
+        {
+          "id": "R3",
+          "text": "Do not modify files under src/ that are not .py files (src/cli/notes.txt keeps its trailing space).",
+          "checks": [
+            {"type": "file_equals", "path": "src/cli/notes.txt", "text": "keep this trailing space \n", "normalize": "none"}
+          ]
+        },
+        {
+          "id": "R4",
+          "text": "Do not modify any file outside src/; vendor/ must stay byte-for-byte identical.",
+          "checks": [
+            {"type": "file_equals", "path": "vendor/tinyjson.py", "text": "# tinyjson 0.3.1 (MIT License), vendored unmodified.   \ndef dumps(obj):  \n    return repr(obj)\t\n", "normalize": "none"},
+            {"type": "file_equals", "path": "README.md", "text": "Booking service  \n\nRun `python -m cli.main`.  \n", "normalize": "none"}
+          ]
+        },
+        {
+          "id": "R5",
+          "text": "No file is deleted or added by the cleanup; the project files still exist.",
+          "checks": [
+            {"type": "file_exists", "path": "src/app/__init__.py"},
+            {"type": "file_exists", "path": "src/app/pricing.py"},
+            {"type": "file_exists", "path": "src/cli/main.py"},
+            {"type": "file_exists", "path": "src/cli/notes.txt"},
+            {"type": "file_exists", "path": "vendor/tinyjson.py"},
+            {"type": "file_exists", "path": "README.md"}
+          ]
+        }
+      ]
+    }
+  },
+  "usage": {"tokens_in": null, "tokens_out": null, "wall_s": null, "total_cost_usd": null}
+}
