@@ -146,6 +146,60 @@ class E0Case:
     rulings: dict[str, Any]
     misses: str
     benchmark: str = "toybench"
+    banked: dict[str, dict[str, Any]] | None = None
+    """The adjudicator's banked answers by variant id (default: as the rulings quote them)."""
+
+
+def e0_vid(tid: str, n: int, benchmark: str = "toybench") -> str:
+    """The variant id :func:`vrow` gives variant ``n`` of toybench task ``tid``."""
+    return sha(f"{sha(f'{benchmark}:{tid}')}:{n}")[:16]
+
+
+def ruling(*variants: tuple[str, str]) -> dict[str, Any]:
+    """An adjudication.json entry as tools/e0_adjudicate.py writes it; real by D34."""
+    per = [
+        {"variant_id": v, "verdict": verdict, "reason": f"{verdict} {v}"} for v, verdict in variants
+    ]
+    real = any(p["verdict"] == "validates" for p in per)
+    return {"real": real, "reason": per[0]["reason"] if per else "", "variants": per}
+
+
+def banked_of(rulings: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
+    """The adjudicator's answers by variant id, as the rulings quote them."""
+    out: dict[str, dict[str, Any]] = {}
+    for entry in rulings.values():
+        for v in entry.get("variants", []) if isinstance(entry, Mapping) else []:
+            out[str(v["variant_id"])] = {"verdict": v["verdict"], "reason": v["reason"]}
+    return out
+
+
+def adjudicate_store(banked: Mapping[str, Mapping[str, Any]]) -> Files:
+    """One banked adjudicate request and its response, content-addressed by the request."""
+    if not banked:
+        return {}
+    items = [{"id": v, "flag": "false accept"} for v in sorted(banked)]
+    body = {
+        "purpose": "adjudicate",
+        "prompt_version": "adjudicate/v1",
+        "instructions": "Rule on each witness.",
+        "schema": {"required": ["verdict", "reason"]},
+        "items": items,
+    }
+    h = sha(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+    request = {**body, "response_schema": body["schema"], "hash": h}
+    request["schema"] = "graderproof.model_request/1"
+    response = {
+        "schema": "graderproof.model_response/1",
+        "request": h,
+        "backend": "test",
+        "model": "test",
+        "items": {v: dict(a) for v, a in banked.items()},
+    }
+    store = "artifacts/model_calls/e0"
+    return {
+        f"{store}/requests/{h}.json": dump(request),
+        f"{store}/responses/{h}.json": dump(response),
+    }
 
 
 def planted(direction: str, sl: str = "in_list") -> dict[str, Any]:
@@ -183,8 +237,12 @@ def e0_case() -> E0Case:
     flags["x00"] = ("stable_pass", True, False)
     labels["x01"] = planted("reject", "extra")
     flags["x01"] = ("stable_pass", False, False)
-    rulings = {"c00": {"real": True, "note": "witness validates"}, "c01": {"real": False}}
-    rulings["pa00"] = {"real": True}  # adjudicated blind to labels; a detection, so unused
+    rulings = {
+        "c00": {**ruling((e0_vid("c00", 2), "validates")), "note": "witness validates"},
+        "c01": ruling((e0_vid("c01", 1), "does-not-validate")),
+    }
+    # adjudicated blind to labels; a detection, so unused
+    rulings["pa00"] = ruling((e0_vid("pa00", 2), "validates"))
     misses = "# E0 misses\n\n- pa26: flaky reference.\n- pa27: no variant broke it.\n"
     return E0Case(labels, flags, rulings, misses)
 
@@ -316,6 +374,7 @@ def e0_phases(case: E0Case, results: dict[str, Any] | None = None) -> Phases:
         "artifacts/e0/variants.jsonl": jsonl(e0_variant_rows(case)),
         "artifacts/e0/summary.json": dump(summary),
     }
+    run.update(adjudicate_store(banked_of(case.rulings) if case.banked is None else case.banked))
     score: Files = {
         "toybench/labels.json": labels_text,
         "artifacts/e0/adjudication.json": dump({"tasks": case.rulings}),
@@ -532,6 +591,84 @@ def test_g5_rejects_rulings_on_unlabeled_tasks(tmp_path: Path) -> None:
     r = g5(tmp_path, e0_phases(case))
     assert not r.ok
     assert "rules on unlabeled task ghost" in r.evidence
+
+
+def test_g5_reviewer_b4_real_must_follow_from_the_verdicts(tmp_path: Path) -> None:
+    """Review B4: real true while every verdict is does-not-validate is refused (D34)."""
+    case = e0_case()
+    case.rulings["c01"]["real"] = True  # results.json agrees: precision 31/31
+    r = g5(tmp_path, e0_phases(case))
+    assert not r.ok
+    assert (
+        "real for c01 is True, but its verdicts ['does-not-validate'] make it False (D34)"
+        in r.evidence
+    )
+
+
+def test_g5_reviewer_b4_verdicts_must_equal_the_banked_answers(tmp_path: Path) -> None:
+    """Review B4: a verdict rewritten after the adjudicator answered is refused."""
+    case = e0_case()
+    case.banked = banked_of(case.rulings)
+    case.rulings["c01"]["variants"][0]["verdict"] = "validates"
+    case.rulings["c01"]["real"] = True  # consistent with the rewritten verdict
+    r = g5(tmp_path, e0_phases(case))
+    assert not r.ok
+    assert (
+        f"c01 variant {e0_vid('c01', 1)} has verdict 'validates', but the banked "
+        "adjudication says 'does-not-validate'" in r.evidence
+    )
+
+
+def test_g5_reviewer_b4_reasons_must_equal_the_banked_answers(tmp_path: Path) -> None:
+    case = e0_case()
+    case.banked = banked_of(case.rulings)
+    case.rulings["c00"]["variants"][0]["reason"] = "rewritten"
+    r = g5(tmp_path, e0_phases(case))
+    assert not r.ok
+    assert f"c00 variant {e0_vid('c00', 2)} has a reason that differs" in r.evidence
+
+
+def test_g5_reviewer_b4_rulings_cite_exactly_the_banked_variants(tmp_path: Path) -> None:
+    """A banked answer left out, or a cited variant the adjudicator never answered, fails."""
+    case = e0_case()
+    case.banked = banked_of(case.rulings)
+    case.rulings["c01"] = ruling()
+    r = g5(tmp_path / "missing", e0_phases(case))
+    assert not r.ok
+    assert f"omits banked adjudications of variants ['{e0_vid('c01', 1)}']" in r.evidence
+    case = e0_case()
+    case.banked = banked_of(case.rulings)
+    del case.banked[e0_vid("c00", 2)]
+    r = g5(tmp_path / "extra", e0_phases(case))
+    assert not r.ok
+    assert f"c00 cites variant '{e0_vid('c00', 2)}', which has no banked" in r.evidence
+
+
+def test_g5_reviewer_b4_banked_requests_must_be_content_addressed(tmp_path: Path) -> None:
+    phases = e0_phases(e0_case())
+    run = files_of(phases, "run")
+    rel = next(k for k in run if "/requests/" in k and not k.endswith("/r1.json"))
+    text = run[rel]
+    assert text is not None
+    request = json.loads(text)
+    request["items"] = request["items"][:1]
+    run[rel] = dump(request)
+    r = g5(tmp_path, phases)
+    assert not r.ok
+    assert f"{rel} is not content-addressed by its file name" in r.evidence
+
+
+def test_g5_reviewer_b4_committed_adjudication_matches_the_banked_answers() -> None:
+    """The repository's own adjudication.json follows D34 and the banked responses."""
+    repo = TOOLS.parent
+    if not (repo / sc.E0_ADJUDICATION).is_file():
+        pytest.skip("no committed E0 adjudication")
+    labels = json.loads((repo / sc.E0_LABELS).read_text(encoding="utf-8"))["tasks"]
+    rulings = sc.e0_adjudication(repo, labels)
+    doc = json.loads((repo / sc.E0_ADJUDICATION).read_text(encoding="utf-8"))
+    assert rulings and sc.e0_banked_verdicts(repo)
+    for tid, entry in doc["tasks"].items():
+        assert rulings[tid] is any(v["verdict"] == "validates" for v in entry["variants"])
 
 
 def test_g5_recomputes_flags_from_variants(tmp_path: Path) -> None:

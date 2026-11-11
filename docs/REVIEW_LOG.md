@@ -2,6 +2,21 @@
 
 Non-blocking issues raised by independent reviews (gate G12, docs/BUILD_BRIEF.md section 6), with what became of each. Blocking issues and full evidence are in `artifacts/review/history/`.
 
+## Review of 5677b9f639c9 (2026-11-11, BLOCK)
+
+Blocking issues B1 to B6 are fixed in the commit after 5677b9f: corrected wording and new claims for B1 to B3 and B6, a G5 check of the adjudication against the banked rulings for B4, and D37 with a CORRECTIONS.md entry for B5.
+
+| Id | Issue | Status |
+|---|---|---|
+| N1 | The E4 generalization test is not independent of the repair: both use the same requirement checks | Disclosed in README.md and docs/REPORT.md section 5.5 (the batch measures coverage of the grafted checks). Open: an independent generalization check needs a judge other than the grafted requirements. |
+| N2 | The adjudication's provenance names the frozen E0 commit, but the adjudication tool did not exist at that commit | Open: future adjudications will record the adjudication tool's own commit and file SHA-256. |
+| N3 | D36 was committed in the same commit as the E4 data | Acknowledged as a process slip; the copied requests are byte-identical to E0's, so no result changes. |
+| N4 | The claimcheck allowlist for 0.90 accepts comparison words, which let B2 through | Open: narrow the 0.90 contexts to threshold phrases and render met or not-met statements from the artifact. |
+| N5 | G5 e0_scores does not drop flags on tasks whose reference is rejected or flaky | Open: no E0 task has a reference-level flag, so no result changes; to fix in G5 before the next planted set. |
+| N6 | Previous N18 is still open: no gate checks artifacts/ for task-level evidence from third-party benchmarks | Open: a gate that fails on task-level third-party evidence under artifacts/, before E1 runs. |
+| N7 | The materials check ran the toybench adapter and graders before the labels hash was committed | Disclosed in prereg 0001; no action needed. |
+| N8 | Checks not completed within the time box | To cover in the next review. |
+
 ## Review of df55c18ed112 (2026-11-04, BLOCK)
 
 Blocking issues B1 to B5 were fixed in 51fe7b3 (gates, D33) and 2d8058f (package).

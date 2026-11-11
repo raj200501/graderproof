@@ -10,7 +10,7 @@ toybench is this project's own planted-ground-truth benchmark for E0 (`prereg/00
 | Mean per-task mutation score | 0.88<!--claim:e0.mutation_mean--> | `artifacts/e0/summary.json` |
 | Variants counted (two agreeing validations and a witness) | 1,362<!--claim:e0.n_headline--> | `artifacts/e0/summary.json` |
 | Validator agreement | 0.90<!--claim:e0.agreement--> | `artifacts/e0/summary.json` |
-| Variants excluded for disagreeing validators | 289<!--claim:e0.n_excluded--> | `artifacts/e0/summary.json` |
+| Variants excluded (validators disagreed or unsure; both labeled the other way) | 289<!--claim:e0.n_excluded--> (180<!--claim:e0.n_disagreed-->; 109<!--claim:e0.n_rejected-->) | `artifacts/e0/summary.json`, `artifacts/e0/tables.json` |
 
 These rates are high by construction: about half of the graders were written with a planted weakness. What toybench measures is graderproof itself:
 

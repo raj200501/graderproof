@@ -61,8 +61,14 @@ Artifact contracts (later iterations may tighten them, never loosen):
   ``toybench/tasks/`` exactly as at HEAD. ``artifacts/e0/tasks.jsonl`` rows also carry
   ``task`` = ``<benchmark>:<id>`` (one benchmark, one row per label, ``task_hash`` =
   SHA-256 of ``task``). ``artifacts/e0/adjudication.json`` = ``{"tasks": {<id>:
-  {"real": bool, ...}}}`` holds an entry for every counted task that is flagged but not
-  detected.
+  {"real": bool, "variants": [{"variant_id", "verdict", "reason"?}], ...}}}`` holds an
+  entry for every counted task that is flagged but not detected. ``real`` is true exactly
+  when at least one of the entry's verdicts is ``validates`` (D34; the other verdict is
+  ``does-not-validate``), every verdict and stored reason equals the banked answer for
+  that variant id in the response to an ``adjudicate`` request under
+  ``artifacts/model_calls/e0/`` (each such request content-addressed by its file name,
+  each response answering exactly its request's items), and the entries together cite
+  every banked variant exactly once.
   ``artifacts/e0/results.json``: ``bootstrap``, ``recall`` and ``precision`` as
   ``{point, ci: [lo, hi], n}``, ``tasks [{task: <id>, planted, slice, ...}]`` with one
   row per label (``detected``, ``flagged``, and ``adjudicated_real``, when present,
@@ -170,6 +176,8 @@ E0_ADJUDICATION = "artifacts/e0/adjudication.json"
 E0_MISSES = "docs/E0_MISSES.md"
 E0_SLICES = ("in_list", "clean", "extra")
 E0_DIRECTIONS = ("accept", "reject")
+E0_ADJUDICATE_PURPOSE = "adjudicate"
+E0_VERDICTS = ("validates", "does-not-validate")
 TOKEN_CHARS = "A-Za-z0-9_-"
 E4_SCHEMA = "graderproof.e4/1"
 E4_GENERALIZATION = (
@@ -1232,17 +1240,125 @@ def e0_flags(c: Path, labels: Mapping[str, Any]) -> dict[str, TaskRow]:
     return by_id
 
 
+def model_request_hash(req: Mapping[str, Any]) -> str:
+    """Content address of a banked model request, as graderproof's client computes it."""
+    body = {
+        "purpose": req.get("purpose"),
+        "prompt_version": req.get("prompt_version"),
+        "instructions": req.get("instructions"),
+        "schema": req.get("response_schema"),
+        "items": req.get("items"),
+    }
+    return sha256_text(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+
+
+def e0_banked_verdicts(c: Path) -> dict[str, dict[str, Any]]:
+    """The adjudicator's banked answers by variant id, from the E0 model store.
+
+    Every request under ``artifacts/model_calls/e0/requests/`` whose purpose is
+    ``adjudicate`` must be content-addressed (its file name, its ``hash``, and the
+    recomputed hash agree) and have a response that names it and answers exactly its
+    items. A variant answered twice is an error.
+    """
+    out: dict[str, dict[str, Any]] = {}
+    req_dir = c / E0_MODEL_STORE / "requests"
+    for path in sorted(req_dir.glob("*.json")) if req_dir.is_dir() else []:
+        rel = path.relative_to(c).as_posix()
+        req = load_obj(path, rel)
+        if req.get("purpose") != E0_ADJUDICATE_PURPOSE:
+            continue
+        h = path.stem
+        need(
+            req.get("hash") == h and model_request_hash(req) == h,
+            f"{rel} is not content-addressed by its file name",
+        )
+        resp_rel = f"{E0_MODEL_STORE}/responses/{h}.json"
+        resp = load_obj(c / resp_rel, resp_rel)
+        need(resp.get("request") == h, f"{resp_rel} does not name its request")
+        items: Any = req.get("items")
+        answers: Any = resp.get("items")
+        need(
+            isinstance(items, list) and all(isinstance(i, Mapping) for i in items),
+            f"{rel} has no items list",
+        )
+        need(isinstance(answers, Mapping), f"{resp_rel} has no items object")
+        ids = [str(i.get("id")) for i in items]
+        missing, extra = sorted(set(ids) - set(answers)), sorted(set(answers) - set(ids))
+        need(
+            not missing and not extra,
+            f"{resp_rel} does not answer exactly its request's items: "
+            f"missing {missing[:3]}, extra {extra[:3]}",
+        )
+        for vid in ids:
+            need(vid not in out, f"variant {vid} has two banked adjudications")
+            ans = answers[vid]
+            need(isinstance(ans, Mapping), f"{resp_rel}: the answer for {vid} is not an object")
+            out[vid] = dict(ans)
+    return out
+
+
+def e0_entry_verdicts(
+    tid: str, entry: Mapping[str, Any], banked: Mapping[str, Mapping[str, Any]], seen: set[str]
+) -> list[str]:
+    """Verdicts of one adjudication.json entry, each equal to the banked answer (D34)."""
+    variants: Any = entry.get("variants")
+    need(isinstance(variants, list), f"{E0_ADJUDICATION}: {tid} has no variants list")
+    verdicts: list[str] = []
+    for v in variants:
+        vid = v.get("variant_id") if isinstance(v, Mapping) else None
+        need(
+            isinstance(vid, str) and vid in banked,
+            f"{E0_ADJUDICATION}: {tid} cites variant {vid!r}, which has no banked adjudication",
+        )
+        need(vid not in seen, f"{E0_ADJUDICATION}: variant {vid} is ruled on twice")
+        seen.add(str(vid))
+        ans, verdict = banked[str(vid)], v.get("verdict")
+        need(
+            verdict in E0_VERDICTS,
+            f"{E0_ADJUDICATION}: {tid} variant {vid} has verdict {verdict!r}, not one of "
+            f"{E0_VERDICTS}",
+        )
+        need(
+            verdict == ans.get("verdict"),
+            f"{E0_ADJUDICATION}: {tid} variant {vid} has verdict {verdict!r}, but the banked "
+            f"adjudication says {ans.get('verdict')!r}",
+        )
+        need(
+            "reason" not in v or v["reason"] == ans.get("reason"),
+            f"{E0_ADJUDICATION}: {tid} variant {vid} has a reason that differs from the banked "
+            "adjudication",
+        )
+        verdicts.append(str(verdict))
+    return verdicts
+
+
 def e0_adjudication(c: Path, labels: Mapping[str, Any]) -> dict[str, bool]:
-    """Rulings from artifacts/e0/adjudication.json: label id to ``real`` (a JSON boolean)."""
+    """Rulings from artifacts/e0/adjudication.json: label id to ``real`` (a JSON boolean).
+
+    Each entry's ``real`` must follow from its per-variant verdicts by D34 (real exactly
+    when at least one verdict is ``validates``), every verdict and stored reason must equal
+    the adjudicator's banked answer for that variant, and the entries together must cite
+    every banked variant exactly once.
+    """
     doc = load_obj(c / E0_ADJUDICATION, E0_ADJUDICATION)
     tasks: Any = doc.get("tasks")
     need(isinstance(tasks, Mapping), f"{E0_ADJUDICATION} has no tasks object")
+    banked = e0_banked_verdicts(c)
+    seen: set[str] = set()
     out: dict[str, bool] = {}
     for tid, entry in tasks.items():
         need(tid in labels, f"{E0_ADJUDICATION} rules on unlabeled task {tid}")
         real = entry.get("real") if isinstance(entry, Mapping) else None
         need(isinstance(real, bool), f"{E0_ADJUDICATION}: real for {tid} is not true or false")
+        verdicts = e0_entry_verdicts(str(tid), entry, banked, seen)
+        need(
+            real == ("validates" in verdicts),
+            f"{E0_ADJUDICATION}: real for {tid} is {real}, but its verdicts {verdicts} make it "
+            f"{not real} (D34)",
+        )
         out[str(tid)] = bool(real)
+    unruled = sorted(set(banked) - seen)
+    need(not unruled, f"{E0_ADJUDICATION} omits banked adjudications of variants {unruled[:3]}")
     return out
 
 
