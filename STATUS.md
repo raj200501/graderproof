@@ -1,4 +1,4 @@
-goal_turn: 6
+goal_turn: 7
 STATE: ACTIVE
 
 # graderproof status
@@ -7,7 +7,7 @@ Updated 2026-11-12. History lives in docs/LOG.md.
 
 ## Gates (from `python tools/ship_check.py --fast`; only a full run counts)
 
-Fast check on 5373797 (2026-11-12, fresh clone): **9/14**. G5, G7, G8, G9, and G12 fail. GitHub Actions CI is green on main at 5373797 (D41).
+Fast check on b9b3a8d (2026-11-12, fresh clone; later commits change docs, the E1 tables, and their claims): **9/14**. G5, G7, G8, G9, and G12 fail. GitHub Actions CI is green on main (D41).
 
 | Gate | State | Evidence or blocker |
 |---|---|---|
