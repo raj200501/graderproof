@@ -28,7 +28,7 @@ Fast check on b9b3a8d (2026-11-12, fresh clone; later commits change docs, the E
 
 ## Now
 
-The release sprint's blocker is fixed: public third-party rows carry keyed ids and no operator names (D44), and G14 enforces it. Next is SEC-3 from the sprint audit. The bubblewrap child runs as root, so it can read root-only files outside `$HOME`, such as this cloud session's token files under `/home/claude/.claude/remote/`. The network is unshared, so nothing could leave, but third-party graders and model-proposed variants run there. HumanEval E1/E2 is complete and confirmatory (`artifacts/audit/humaneval/`, prereg 0003); BFCL and tau2-bench continue under the daily cap. The review of 2d87aaa (2026-11-12) is BLOCK with both blocking issues fixed in 12ea1da; the next review run is allowed on 2026-11-13.
+The release sprint's blocker is fixed: public third-party rows carry keyed ids and no operator names (D44), and G14 enforces it. Next is SEC-3 from the sprint audit. The bubblewrap child runs as root, so it can read root-only files outside `$HOME`, such as this cloud session's token files under `/home/claude/.claude/remote/`. The network is unshared, so nothing could leave, but third-party graders and model-proposed variants run there. HumanEval E1/E2 is complete and confirmatory (`artifacts/audit/humaneval/`, prereg 0003). BFCL round 2 has 16 of 35 requests answered and ingested, all 11 of today's worker transcripts clean; 19 review requests wait for the 2026-11-13 cap. tau2-bench has 94 requests pending. The review of 2d87aaa (2026-11-12) is BLOCK with both blocking issues fixed in 12ea1da; the next review run is allowed on 2026-11-13.
 
 ## Next three actions
 
@@ -40,7 +40,7 @@ The release sprint's blocker is fixed: public third-party rows carry keyed ids a
 
 - cash_usd = 0. Single calls through the client wrapper (ledger): 9 on 2026-10-23 (demo); 60 on 2026-11-04 (demo re-recording and E0); 41 on 2026-11-11 (36 for E0 completion, adjudication, and E4 on toybench, plus the 5 HumanEval extraction requests of the first prereg 0003 round, which the ledger dates by request time), all within the daily cap at CAP_SHARE 0.2.
 - Not in the ledger: 17 E1 round-1 extraction answers on 2026-11-11, all from audited model workers (D24) and all superseded by the amendment (D38, D39). Counting them, 2026-11-11 used 58 of the 60 allowed calls.
-- 2026-11-12: one review run (of 2d87aaa); 47 single calls in the ledger plus 2 incomplete answers set aside and re-asked, 49 of the 60 allowed.
+- 2026-11-12: one review run (of 2d87aaa); 58 single calls in the ledger, 11 of them BFCL answers ingested at 03:32 UTC, plus 2 incomplete answers set aside and re-asked. That is 60 of the 60 allowed, so no more calls until 2026-11-13.
 - Review runs: one on 2026-11-04 (df55c18) and one on 2026-11-11 (5677b9f), each within the one-a-day cap.
 
 ## Needs Raj

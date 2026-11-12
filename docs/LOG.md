@@ -4,6 +4,7 @@ History moved out of STATUS.md, newest first.
 
 ## 2026-11-12, goal_turn 7: release sprint, keyed public rows, preregistered E1 summaries
 
+- BFCL E1/E2: 11 requests (6 proposals, 5 reviews) answered by model-worker subagents. All 11 transcripts passed the D24 audit and all 11 responses validated; they were ingested from the 0003 worktree. The audit round then paused with 19 review requests pending. 2026-11-12 is at the cap of 60 single calls.
 - The release sprint (Raj's message, repeated) ended NOT-READY at 50e6de6: the public HumanEval variant ids were reproducible content hashes (D43). D44 republished the rows with keyed ids, D45 updated main for the fix, and D46 reports the preregistered summaries. The entries below record the details.
 
 ## 2026-11-12, goal_turn 6 (continued past midnight UTC)
