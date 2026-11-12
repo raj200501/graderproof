@@ -50,10 +50,13 @@ E1/E2 under prereg 0003 (D38 to D40): HumanEval is complete and confirmatory (`a
 3. **References to check by hand** (scripted access blocked): the OpenAI SWE-bench Verified post (Cloudflare challenge). It is dropped from the docs unless you confirm it opens.
 4. **Daily cap.** At CAP_SHARE 0.2 the wrapper allows 60 single calls a day, and E1/E2 with the amendment needs more than before (smaller batches for tau2-bench and BFCL), so the remaining experiments take several days of calls. Since Raj's message of 2026-11-11, a session heartbeat runs every 30 minutes, within the cap, and pushes verified steps; main is updated at each RELEASE-READY point (fast-forward or plain merge, never force).
 
+5. **Third-party disclosure (D43).** The public HumanEval rows, in history since 12ea1da, identify their tasks and let anyone regenerate the classical variants its graders accepted. Model-proposed variants and witnesses are not exposed. The evidence is in `private/disclosure/2026-11-12-humaneval-ids.md`. Withdrawing the rows needs a history rewrite, which only you can authorize. HEAD will carry keyed ids next; until then the release line is NOT-READY.
+
 ## Changed this turn
 
 - E1/E2 on HumanEval completed under prereg 0003 and reported (README.md, docs/REPORT.md section 5.6); the review of 2d87aaa banked and its two blocking issues fixed (12ea1da).
 - CI on GitHub fixed without skipping a test (D41): the interpreter lives outside the sandbox-hidden $HOME, and the upstream HumanEval driver pins fork. Green on main at 5373797.
+- Release sprint of 2026-11-12: a publication-safety audit (secrets, third-party task details, personal data, README honesty) found that the public HumanEval rows identify their tasks and, through reproducible variant ids, the classical variants its graders accepted (D43). README.md, docs/REPORT.md section 7.2, artifacts/README.md, and docs/DATA.md now say so (CORRECTIONS.md). The report's abstract now states the HumanEval finding. Sprint result: NOT-READY until HEAD carries keyed ids.
 - Final README pass (D42): the Status section gives the current gate state, the HumanEval headline carries its mean mutation score and validator agreement, the quickstart describes what a finding looks like on the synthetic demo, and a repeated limitation is merged. No claim, gate, or check changed.
 
 ## Blocked

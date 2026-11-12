@@ -1,6 +1,6 @@
 # Data sources, licenses, and retrieval
 
-Every dataset graderproof reads or produces, with its source, license, and retrieval date (non-negotiable 9). Third-party data is fetched by the adapters from pinned commits into the git-ignored `runs/` directory and is not redistributed, except small verbatim samples kept as contract-test fixtures under `tests/fixtures/`, which their licenses allow with attribution. Task-level findings about third-party tasks not yet fixed upstream are kept in the git-ignored `private/` directory (non-negotiable 14).
+Every dataset graderproof reads or produces, with its source, license, and retrieval date (non-negotiable 9). Third-party data is fetched by the adapters from pinned commits into the git-ignored `runs/` directory and is not redistributed, except small verbatim samples kept as contract-test fixtures under `tests/fixtures/`, which their licenses allow with attribution. Task-level evidence about third-party tasks not yet fixed upstream (witnesses, grader output, model calls) is kept in the git-ignored `private/` directory (non-negotiable 14); what the public audit rows still reveal is described in D43.
 
 ## Project-written data
 

@@ -215,3 +215,16 @@ Raj asked for a last pass before the merge to main that removes weaknesses and h
 - no concrete picture of what a finding looks like.
 
 Negative and null results are not weaknesses to remove. The E0 recall miss (G5), the gates that still fail, and the two E1/E2 benchmarks still under way keep their prominence (non-negotiable 3). Every new number on the page is a registered claim, and no claim, gate, or check changes.
+
+## D43 (2026-11-12) What the public third-party rows reveal
+
+**Finding.** The release sprint's audit found that the public HumanEval rows (`artifacts/audit/humaneval/tasks.jsonl` and `variants.jsonl`, public since 12ea1da) reveal more than README.md, docs/REPORT.md, artifacts/README.md, and docs/DATA.md said.
+
+1. **Tasks.** `task_hash` is the SHA-256 of `humaneval:HumanEval-<n>`, which anyone can reverse by hashing the public ids. Row order and per-task operator counts identify most tasks too. The key is linkable by design: G7 checks it against the committed sample, so the audited set is publicly verifiable.
+2. **Variants.** `variant_id` is the SHA-256 of the variant's task id, kind, operator, and files. Classical variants are a deterministic function of the public benchmark data, the committed generator, and the seed recorded in `summary.json`. The auditor regenerated them and matched every public classical row, including the counted surviving classical violating variants, and the main session reproduced the match. For those survivors the committed hash hides nothing, which breaks non-negotiable 14 in substance. Model-proposed variants, witnesses, grader output, and model requests and responses are not recoverable from public data. The evidence for Raj is in `private/disclosure/2026-11-12-humaneval-ids.md`.
+
+**Decision.**
+
+1. README.md, docs/REPORT.md section 7.2, artifacts/README.md, and docs/DATA.md say what the public rows reveal, without a recipe, with an entry in CORRECTIONS.md. No number changes.
+2. The rows have been in public history since 12ea1da, and withdrawing them needs a history rewrite, which only Raj can authorize (STATUS.md, Needs Raj). The release line is NOT-READY until HEAD no longer exposes them.
+3. Next step, before any work that commits third-party rows: public rows of third-party benchmarks not fixed upstream carry keyed ids (HMAC-SHA-256 under a key kept in `private/`) in place of `variant_id` and `witness_sha256`, ordered by those ids. A test and a G14 check fail when a public third-party row carries an id that the committed generator reproduces. The HumanEval rows in HEAD get the same treatment, with the original rows kept in `private/` and their SHA-256 committed. That change, and whether public rows keep per-task operator columns, get their own decision entry before they are made.

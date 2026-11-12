@@ -2,6 +2,12 @@
 
 Every changed or withdrawn claim gets a dated entry here (non-negotiable 3): what was claimed, where, what changed, why, and the artifact behind the new claim.
 
+## 2026-11-12: what the public artifacts reveal about third-party tasks
+
+README.md (Responsible disclosure) said that, for third-party tasks not fixed upstream, this repository publishes only hashes of surviving variants and witnesses, and aggregate statistics. docs/REPORT.md section 7.2 said that task ids stay in `private/` and that public artifacts carry only task hashes and aggregates. artifacts/README.md and docs/DATA.md said the same.
+
+These statements were wrong in two ways. The public rows of `artifacts/audit/humaneval/` identify their tasks, because their keys are hashes of the public task ids (by design, for G7). Their classical variant ids are hashes of deterministic edits of public data, so those variants can be recovered, including the ones the grader accepted. The documents now say so (D43). No number changes.
+
 ## 2026-11-11: corrections after the independent review of 5677b9f
 
 The review in `artifacts/review/latest.json` (REVIEW: BLOCK) found the following errors in README.md, docs/REPORT.md, and docs/cards/toybench.md as pushed in c07ee5e and 5677b9f. Each is corrected in the next commit; the new numbers are claims rendered from the named artifacts.

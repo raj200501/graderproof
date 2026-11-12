@@ -132,7 +132,7 @@ Every number above is rendered by `make report` from a banked artifact under `ar
 
 ## Responsible disclosure
 
-Task-level findings for third-party tasks that are not fixed upstream (surviving variants and their witnesses) stay in the git-ignored `private/` directory; this repository publishes only their hashes and aggregate statistics. Disclosure drafts are prepared in `outbound/` for the maintainer of this repository to review and send; nothing is sent automatically.
+Task-level evidence for third-party tasks that are not fixed upstream (witnesses, grader output, model-proposed variants, and the model requests and responses that contain them) stays in the git-ignored `private/` directory. Public artifacts carry one row per audited task, with counts, flags, and each counted variant's operator and outcome. These rows identify their tasks: the task key can be checked against the committed sample on purpose, so that anyone can verify the audit covered exactly the preregistered tasks. They also identify classical variants, whose public ids are hashes of deterministic edits. For HumanEval, that exposes the classical variants its graders accepted, which this repository meant to keep private. New third-party rows will carry keyed ids, and the HumanEval rows will too ([D43](DECISIONS.md), [CORRECTIONS.md](CORRECTIONS.md)). Disclosure drafts are prepared in `outbound/` for the maintainer of this repository to review and send; nothing is sent automatically.
 
 ## Related work
 

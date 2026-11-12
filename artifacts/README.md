@@ -6,4 +6,4 @@ Banked results with provenance (git SHA, config hash, model IDs and revisions, s
 - `review/`: independent reviews (`latest.json` is written only by the reviewer).
 - `citecheck.json`: what the citation checker saw for each reference.
 
-Task-level evidence for third-party tasks not yet fixed upstream is not stored here; it lives in the git-ignored `private/` directory, and only aggregates and hashes appear in this directory.
+Task-level evidence for third-party tasks not yet fixed upstream (witnesses, grader output, model calls) is not stored here; it lives in the git-ignored `private/` directory. The per-task audit rows here identify their tasks, and their classical variant ids can be matched by regenerating those deterministic variants from public data, so they expose the classical variants a grader accepted (D43, CORRECTIONS.md).
