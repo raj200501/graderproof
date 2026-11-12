@@ -1,4 +1,4 @@
-"""Gate tests for tools/ship_check.py G5 to G11 on small temporary git repositories.
+"""Gate tests for tools/ship_check.py G5 to G11 and G14 on small temporary git repositories.
 
 Each gate gets a minimal layout that passes. Each test then breaks it the way a
 reviewer scenario did (artifacts/review/latest.json B1 to B5, N10, N12) or the way an
@@ -7,7 +7,11 @@ hashes), and checks that the gate fails for that reason. The reviewer's scratch
 scripts are ported as ``test_*_reviewer_*``: g5_falsepass.py scenarios A, B, and C
 (``test_g5_reviewer_a/b/c_*``), g11_e0order.py (``test_g11_reviewer_b3_*``),
 g8g9_vacuous.py (``test_g8_reviewer_b4_*`` and ``test_g9_reviewer_b5_*``), and
-g7_mismatch.py (``test_g7_reviewer_n10_*``).
+g7_mismatch.py (``test_g7_reviewer_n10_*``). The review of 5677b9f is ported as
+``test_g5_reviewer_b4_*`` (rulings tied to the banked adjudication, the variants of
+their own task, and the response hash the ledger recorded), ``test_g5_reviewer_n5_*``
+(reference-level flags never count), and ``test_g14_reviewer_n6_*`` (no tracked
+third-party evidence).
 
 Expected statistics are computed in this file from the definitions in the ship_check
 module docstring, independently of ship_check's own code; only the bootstrap
@@ -37,6 +41,7 @@ SEED = 11
 REPS = 1000
 PREREG_E0 = "prereg/0001-e0-tool-validity.md"
 PREREG_E1 = "prereg/0002-e1-e2-audit.md"
+LEDGER = "artifacts/usage/ledger.jsonl"
 
 Files = dict[str, str | None]
 Phases = list[tuple[str, Files]]
@@ -173,15 +178,21 @@ def banked_of(rulings: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
     return out
 
 
-def adjudicate_store(banked: Mapping[str, Mapping[str, Any]]) -> Files:
-    """One banked adjudicate request and its response, content-addressed by the request."""
+def adjudicate_store(
+    banked: Mapping[str, Mapping[str, Any]], instructions: str = "Rule on each witness."
+) -> Files:
+    """One banked adjudicate request, its response, and the ledger line of its ingestion.
+
+    The request is content-addressed; the ledger line records the response's SHA-256,
+    as ``ModelClient.ingest`` does (D27).
+    """
     if not banked:
         return {}
     items = [{"id": v, "flag": "false accept"} for v in sorted(banked)]
     body = {
         "purpose": "adjudicate",
         "prompt_version": "adjudicate/v1",
-        "instructions": "Rule on each witness.",
+        "instructions": instructions,
         "schema": {"required": ["verdict", "reason"]},
         "items": items,
     }
@@ -196,9 +207,19 @@ def adjudicate_store(banked: Mapping[str, Mapping[str, Any]]) -> Files:
         "items": {v: dict(a) for v, a in banked.items()},
     }
     store = "artifacts/model_calls/e0"
+    text = dump(response)
+    ingested = {
+        "utc": "2026-11-04T00:00:00Z",
+        "kind": "single_call",
+        "purpose": "adjudicate",
+        "request": h,
+        "response_sha256": sha(text),
+        "cash_usd": 0,
+    }
     return {
         f"{store}/requests/{h}.json": dump(request),
-        f"{store}/responses/{h}.json": dump(response),
+        f"{store}/responses/{h}.json": text,
+        LEDGER: jsonl([ingested]),
     }
 
 
@@ -386,6 +407,12 @@ def e0_phases(case: E0Case, results: dict[str, Any] | None = None) -> Phases:
 
 def g5(tmp: Path, phases: Phases) -> sc.Result:
     return sc.g5_tool_validity(build(tmp, phases))
+
+
+def add_variants(phases: Phases, rows: Sequence[Mapping[str, Any]]) -> None:
+    """Append rows to the run phase's artifacts/e0/variants.jsonl."""
+    run = files_of(phases, "run")
+    run["artifacts/e0/variants.jsonl"] = (run["artifacts/e0/variants.jsonl"] or "") + jsonl(rows)
 
 
 def test_g5_passes_on_a_correct_layout(tmp_path: Path) -> None:
@@ -629,13 +656,24 @@ def test_g5_reviewer_b4_reasons_must_equal_the_banked_answers(tmp_path: Path) ->
 
 
 def test_g5_reviewer_b4_rulings_cite_exactly_the_banked_variants(tmp_path: Path) -> None:
-    """A banked answer left out, or a cited variant the adjudicator never answered, fails."""
+    """A banked answer left out, or a cited variant the adjudicator never answered, fails.
+
+    An entry that drops its flag's variant fails on the entry itself (it must cite every
+    variant behind its flags); a banked answer that no entry may cite (c05 has no flag)
+    fails on the entries together.
+    """
     case = e0_case()
     case.banked = banked_of(case.rulings)
     case.rulings["c01"] = ruling()
+    r = g5(tmp_path / "dropped", e0_phases(case))
+    assert not r.ok
+    assert f"c01 omits variant {e0_vid('c01', 1)}, which is behind a flag of c01" in r.evidence
+    case = e0_case()
+    case.banked = banked_of(case.rulings)
+    case.banked[e0_vid("c05", 0)] = {"verdict": "validates", "reason": "asked, never cited"}
     r = g5(tmp_path / "missing", e0_phases(case))
     assert not r.ok
-    assert f"omits banked adjudications of variants ['{e0_vid('c01', 1)}']" in r.evidence
+    assert f"omits banked adjudications of variants ['{e0_vid('c05', 0)}']" in r.evidence
     case = e0_case()
     case.banked = banked_of(case.rulings)
     del case.banked[e0_vid("c00", 2)]
@@ -659,16 +697,189 @@ def test_g5_reviewer_b4_banked_requests_must_be_content_addressed(tmp_path: Path
 
 
 def test_g5_reviewer_b4_committed_adjudication_matches_the_banked_answers() -> None:
-    """The repository's own adjudication.json follows D34 and the banked responses."""
+    """The repository's own adjudication.json follows D34 and the banked responses (each
+    committed once, with the hash every committed ledger version recorded), and each
+    entry cites exactly the variants behind its own task's flags."""
     repo = TOOLS.parent
     if not (repo / sc.E0_ADJUDICATION).is_file():
         pytest.skip("no committed E0 adjudication")
     labels = json.loads((repo / sc.E0_LABELS).read_text(encoding="utf-8"))["tasks"]
-    rulings = sc.e0_adjudication(repo, labels)
+    flags = sc.e0_flags(repo, labels)
+    rulings = sc.e0_adjudication(repo, labels, flags)
     doc = json.loads((repo / sc.E0_ADJUDICATION).read_text(encoding="utf-8"))
     assert rulings and sc.e0_banked_verdicts(repo)
     for tid, entry in doc["tasks"].items():
         assert rulings[tid] is any(v["verdict"] == "validates" for v in entry["variants"])
+
+
+def test_g5_reviewer_b4_cited_variants_belong_to_their_task(tmp_path: Path) -> None:
+    """Review B4 residual: a banked ruling moved to another task's entry is refused.
+
+    The adjudicator ruled pa00's variant (a detection, so unused) validates and c01's
+    variant does not. Swapping the two entries' variants keeps every verdict and reason
+    equal to the banked answers and real consistent with D34, and turns c01's false
+    positive into an adjudicated real weakness (precision 30/31 becomes 30/30). A cited
+    variant that no task lists, or that another task lists too, is refused the same way.
+    """
+    case = e0_case()
+    case.banked = banked_of(case.rulings)
+    pa00, c01 = e0_vid("pa00", 2), e0_vid("c01", 1)
+    case.rulings["pa00"], case.rulings["c01"] = (
+        ruling((c01, "does-not-validate")),
+        ruling((pa00, "validates")),
+    )
+    r = g5(tmp_path / "swap", e0_phases(case))
+    assert not r.ok
+    assert (
+        f"artifacts/e0/adjudication.json: c01 cites variant {pa00}, which "
+        "artifacts/e0/variants.jsonl does not give to c01 alone" in r.evidence
+    )
+    case = e0_case()
+    ghost = "0" * 16  # answered by the adjudicator, but no variant of any task
+    case.rulings["c01"] = ruling((c01, "does-not-validate"), (ghost, "validates"))
+    r = g5(tmp_path / "ghost", e0_phases(case))
+    assert not r.ok
+    assert (
+        f"c01 cites variant {ghost}, which artifacts/e0/variants.jsonl does not give" in r.evidence
+    )
+    case = e0_case()
+    phases = e0_phases(case)
+    row = next(v for v in e0_variant_rows(case) if v["variant_id"] == c01)
+    # the same id listed under c05 as well (not counted, so no flag moves)
+    add_variants(phases, [{**row, "task_hash": sha("toybench:c05"), "counted_in_headline": False}])
+    r = g5(tmp_path / "shared", phases)
+    assert not r.ok
+    assert f"c01 cites variant {c01}, which artifacts/e0/variants.jsonl does not give" in r.evidence
+
+
+def test_g5_reviewer_b4_entries_cite_exactly_the_variants_behind_their_flags(
+    tmp_path: Path,
+) -> None:
+    """Review B4 residual: an entry cites exactly the counted variants behind its task's
+    flags (surviving violating variants for a false accept, rejected preserving variants
+    for a false reject), the items tools/e0_adjudicate.py asks about.
+
+    c01's false reject rests on its preserving variant 1. An entry citing c01's violating
+    variant 0 instead (the grader rejected it, so it is behind no flag) with a banked
+    'validates' made c01 adjudicated real (precision 30/30). An entry that leaves out one
+    of c00's two surviving variants is refused as well.
+    """
+    case = e0_case()
+    case.rulings["c01"] = ruling((e0_vid("c01", 0), "validates"))
+    r = g5(tmp_path / "unflagged", e0_phases(case))
+    assert not r.ok
+    assert (
+        f"artifacts/e0/adjudication.json: c01 cites variant {e0_vid('c01', 0)}, which is "
+        "behind no flag of c01 in artifacts/e0/variants.jsonl" in r.evidence
+    )
+    phases = e0_phases(e0_case())
+    add_variants(phases, [vrow(sha("toybench:c00"), 4, "violating", True)])
+    r = g5(tmp_path / "omitted", phases)
+    assert not r.ok
+    assert (
+        f"artifacts/e0/adjudication.json: c00 omits variant {e0_vid('c00', 4)}, which is "
+        "behind a flag of c00 in artifacts/e0/variants.jsonl" in r.evidence
+    )
+
+
+def test_g5_reviewer_b4_banked_response_must_match_the_ledger(tmp_path: Path) -> None:
+    """Review B4 residual: the adjudicate response is the one the ledger hashed at ingestion.
+
+    Rewriting c01's banked verdict after ingestion, with adjudication.json and
+    results.json regenerated to agree, is refused; so is a response never ingested.
+    """
+    case = e0_case()
+    phases = e0_phases(case)
+    vid = e0_vid("c01", 1)
+    case.rulings["c01"] = ruling((vid, "validates"))
+    edited = e0_phases(case)
+    rel = next(k for k in files_of(edited, "run") if "/responses/" in k)
+    score = files_of(phases, "score")
+    score.update(files_of(edited, "score"))
+    score[rel] = files_of(edited, "run")[rel]
+    r = g5(tmp_path / "edited", phases)
+    assert not r.ok
+    assert (
+        f"{rel} does not match the response_sha256 that artifacts/usage/ledger.jsonl "
+        "recorded for its request at ingestion" in r.evidence
+    )
+    phases = e0_phases(e0_case())
+    files_of(phases, "run")[LEDGER] = ""
+    r = g5(tmp_path / "uningested", phases)
+    assert not r.ok
+    assert f"{rel} was never ingested (no artifacts/usage/ledger.jsonl row" in r.evidence
+
+
+def test_g5_reviewer_b4_every_committed_ledger_ties_the_response(tmp_path: Path) -> None:
+    """Review B4 residual: the ledger at HEAD alone does not tie the response, since no
+    gate keeps it append-only, so every committed version of it is read.
+
+    Refused: a later commit that rewrites c01's banked verdict and, in place, the ledger
+    row's response_sha256 (adjudication.json and results.json regenerated to agree;
+    precision 1.000 otherwise); a response first committed after a ledger row that
+    recorded another hash; and a response banked before ingestion and edited before it
+    was ingested, so committed twice.
+    """
+    case = e0_case()
+    case.rulings["c01"] = ruling((e0_vid("c01", 1), "validates"))
+    edited = e0_phases(case)
+    rel = next(k for k in files_of(edited, "run") if "/responses/" in k)
+    later: Files = {
+        **files_of(edited, "score"),
+        rel: files_of(edited, "run")[rel],
+        LEDGER: files_of(edited, "run")[LEDGER],
+    }
+    tie = (
+        f"{rel} does not match the response_sha256 that artifacts/usage/ledger.jsonl "
+        "recorded for its request at ingestion (D27; commit "
+    )
+    phases = e0_phases(e0_case())
+    files_of(phases, "score").update(later)
+    r = g5(tmp_path / "rewritten", phases)
+    assert not r.ok
+    assert tie in r.evidence
+    phases = e0_phases(e0_case())
+    del files_of(phases, "run")[rel]
+    files_of(phases, "score").update(later)
+    r = g5(tmp_path / "late", phases)
+    assert not r.ok
+    assert tie in r.evidence
+    phases = e0_phases(e0_case())
+    del files_of(phases, "run")[LEDGER]
+    files_of(phases, "score").update(later)
+    r = g5(tmp_path / "twice", phases)
+    assert not r.ok
+    assert f"{rel} has 2 commits (a banked response is committed once)" in r.evidence
+
+
+def test_g5_reviewer_b4_every_ingested_adjudication_stays_banked(tmp_path: Path) -> None:
+    """Review B4 residual: an adjudication cannot be replaced by asking again.
+
+    The banked adjudicate request and response are deleted, and a new request (other
+    instructions) whose response rules c01 validates is banked and honestly ingested.
+    The ledger still records the first request, which is no longer banked. Deleting that
+    row from the ledger as well does not help: the version the run committed has it.
+    """
+    case = e0_case()
+    phases = e0_phases(case)
+    run, score = files_of(phases, "run"), files_of(phases, "score")
+    old = sorted(k for k in run if "/model_calls/e0/" in k and not k.endswith("/r1.json"))
+    first = Path(old[0]).stem
+    case.rulings["c01"] = ruling((e0_vid("c01", 1), "validates"))
+    again = adjudicate_store(banked_of(case.rulings), "Rule on each witness, version 2.")
+    score.update(files_of(e0_phases(case), "score"))
+    score.update({k: None for k in old})
+    score.update(again)
+    score[LEDGER] = (run[LEDGER] or "") + (again[LEDGER] or "")
+    gone = f"records adjudicate request {first[:12]}, which is not banked under "
+    r = g5(tmp_path / "asked-again", phases)
+    assert not r.ok
+    assert f"artifacts/usage/ledger.jsonl (HEAD) {gone}artifacts/model_calls/e0/" in r.evidence
+    score[LEDGER] = again[LEDGER]
+    r = g5(tmp_path / "row-deleted", phases)
+    assert not r.ok
+    assert "artifacts/usage/ledger.jsonl (commit " in r.evidence
+    assert gone in r.evidence
 
 
 def test_g5_recomputes_flags_from_variants(tmp_path: Path) -> None:
@@ -703,6 +914,109 @@ def test_g5_rows_must_match_the_recomputed_detection(tmp_path: Path) -> None:
     r = g5(tmp_path, e0_phases(case, e0_results(case, want)))
     assert not r.ok
     assert "row pr03: detected is True, recomputed False" in r.evidence
+
+
+def test_g5_reviewer_n5_reference_level_flags_never_count() -> None:
+    """Review N5, prereg 0001 (Outcomes and definitions): a grader that rejects the
+    reference or is flaky on it is never a flag or a detection, even when its row
+    carries one. Such planted tasks count as misses and such clean tasks as unflagged,
+    whether the determinism or the row's reference_rejected or flaky says so.
+
+    A unit test of e0_scores on hand-built rows, as defense in depth: in G5 the rows come
+    from audit_table, which refuses every one of these rows (see
+    test_g5_reviewer_n5_reference_flags_must_match_the_determinism), so no G5 result
+    depends on it."""
+
+    table: list[tuple[str, dict[str, Any], str, bool, bool, dict[str, bool]]] = [
+        # id, label, determinism, false accept, false reject, stated row flags
+        ("pa", planted("accept"), "flaky", True, False, {}),
+        ("pd", planted("accept"), "stable_pass", True, False, {}),
+        ("pf", planted("accept"), "stable_pass", True, False, {"flaky": True}),
+        ("pr", planted("reject"), "stable_fail", False, True, {}),
+        ("c1", clean(), "stable_fail", True, False, {}),
+        ("c2", clean(), "flaky", False, True, {}),
+        ("c3", clean(), "stable_pass", False, True, {"reference_rejected": True}),
+        ("cf", clean(), "stable_pass", False, True, {}),
+        ("cr", clean(), "stable_pass", True, False, {}),
+    ]
+    labels = {tid: lab for tid, lab, *_ in table}
+    flags: dict[str, sc.TaskRow] = {}
+    for tid, _, det, fa, fr, stated in table:
+        key = f"toybench:{tid}"
+        row = {
+            "task": key,
+            "determinism": det,
+            "reference_rejected": det == "stable_fail",
+            "flaky": det == "flaky",
+            **stated,
+        }
+        flags[tid] = sc.TaskRow(row, sha(key), det, fa, fr)
+    rulings = {"c1": True, "c2": False, "c3": True, "cf": False, "cr": True}
+    scores = sc.e0_scores(labels, flags, rulings)
+    by_id = {s.id: s for s in scores}
+    for tid in ("pa", "pf", "pr", "c1", "c2", "c3"):
+        s = by_id[tid]
+        assert (s.flagged, s.detected, s.real) == (False, False, False), tid
+    assert (by_id["pd"].flagged, by_id["pd"].detected) == (True, True)
+    assert (by_id["cf"].flagged, by_id["cf"].real) == (True, False)
+    assert (by_id["cr"].flagged, by_id["cr"].real) == (True, True)
+    recall, precision = sc.e0_statistics(scores)
+    every = list(range(len(scores)))
+    assert recall(every) == 0.25  # pd of pa, pd, pf, pr
+    assert precision(every) == 0.5  # pd over pd and the false positive cf
+
+
+@pytest.mark.parametrize("key", ["reference_rejected", "flaky"])
+def test_g5_reviewer_n5_reference_flags_must_match_the_determinism(
+    tmp_path: Path, key: str
+) -> None:
+    """Why review N5 was never a reachable G5 false pass: G5 reads artifacts/e0/tasks.jsonl
+    through audit_table, which refuses a row whose reference_rejected or flaky disagrees
+    with its determinism and gives a task that is not scorable neither indicator. So
+    e0_scores only sees rows whose reference level is their determinism."""
+    case = e0_case()
+    phases = e0_phases(case)
+    rows = e0_task_rows(case)
+    for row in rows:
+        if row["task"] == "toybench:c00":  # stable_pass, false accept
+            row[key] = True
+    files_of(phases, "run")["artifacts/e0/tasks.jsonl"] = jsonl(rows)
+    r = g5(tmp_path, phases)
+    assert not r.ok
+    assert (
+        f"{key} is True; recomputed from determinism and variants.jsonl it is False" in r.evidence
+    )
+
+
+def test_g5_reviewer_n5_reference_level_tasks_have_no_variants_to_adjudicate(
+    tmp_path: Path,
+) -> None:
+    """A task at the reference level has no flag, so none of its variants is adjudicated.
+
+    pa26 (flaky, planted) and c02 (reference rejected, clean) have would-be flags in
+    variants.jsonl. An entry citing one is refused (review B4: it is behind no flag); an
+    entry citing none leaves pa26 a miss, c02 unflagged, and recall, precision, and the
+    adjudicated-real count where they were, as before review N5.
+    """
+    case = e0_case()
+    case.rulings["pa26"] = ruling((e0_vid("pa26", 2), "validates"))
+    r = g5(tmp_path / "cited", e0_phases(case))
+    assert not r.ok
+    assert f"pa26 cites variant {e0_vid('pa26', 2)}, which is behind no flag of pa26" in r.evidence
+    case = e0_case()
+    case.rulings["c02"] = ruling()
+    r = g5(tmp_path / "empty", e0_phases(case))
+    assert r.ok, r.evidence
+    assert r.evidence.startswith("recall 0.938 [")
+    assert "precision 0.968 [" in r.evidence
+    assert "n=64, 2 misses, 1 adjudicated real (min 0.9)" in r.evidence
+    results = e0_results(case)
+    for row in results["tasks"]:
+        if row["task"] == "c02":
+            row["flagged"] = row["adjudicated_real"] = True
+    r = g5(tmp_path / "claimed", e0_phases(case, results))
+    assert not r.ok
+    assert "row c02: flagged is True, recomputed False" in r.evidence
 
 
 def test_g5_recomputes_recall_without_per_row_fields(tmp_path: Path) -> None:
@@ -1955,3 +2269,235 @@ def test_g11_counts_a_preregistration_merged_from_a_branch_once(tmp_path: Path) 
     repo.commit("e0 score", E0_SCORE)
     r = g11(tmp_path, repo)
     assert r.ok, r.evidence
+
+
+# =========================================================================== G14
+
+G14_MAKE = (
+    "secrets-scan:\n\t@echo 'secrets-scan: no secrets in tracked files'\n"
+    "budget:\n\t@echo 'cash_usd = 0'\n"
+)
+TAU2_PRIVATE = "/home/user/graderproof/private/evidence/tau2-0003"  # runs/e1_0003_round.sh
+TOY = sha("tasks:t0")  # an E0 (toybench) task, listed in artifacts/e0/tasks.jsonl
+TAU2 = sha("tau2:t0")  # a third-party task
+TAU2_SUMMARY = "artifacts/audit/tau2/summary.json"
+
+
+def audit_paths(bench: str, evidence: Any, third_party: Any = True) -> str:
+    """An audit summary.json as graderproof audit writes it: whether the benchmark is
+    third-party (toybench is not), and where its evidence went."""
+    return dump(
+        {
+            "schema": "graderproof.audit/1",
+            "benchmark": bench,
+            "third_party": third_party,
+            "paths": {"evidence": evidence, "store": "artifacts/x"},
+        }
+    )
+
+
+def evidence_doc(key: str, task_hash: str | None = None) -> str:
+    """A per-task evidence document as graderproof audit writes it."""
+    return dump(
+        {
+            "schema": "graderproof.evidence/1",
+            "task": key,
+            "task_hash": sha(key) if task_hash is None else task_hash,
+            "variants": [{"id": "v1", "witness": {"broken": [{"requirement": "R1"}]}}],
+        }
+    )
+
+
+def g14_files() -> Files:
+    """A clean checkout: toybench evidence public, third-party evidence in private/."""
+    files: Files = {rel: f"{rel}\n" for rel in sc.REQUIRED_FILES}
+    files.update(
+        {
+            ".gitignore": "private/\n",
+            "Makefile": G14_MAKE,
+            "budget.toml": "cash_usd = 0\n",
+            "artifacts/e0/tasks.jsonl": jsonl([{"task": "tasks:t0", "task_hash": TOY}]),
+            f"artifacts/e0/evidence/{TOY}.json": evidence_doc("tasks:t0"),
+            "artifacts/e0/summary.json": audit_paths("tasks", "artifacts/e0/evidence", False),
+            f"artifacts/e4/toybench/evidence/{TOY}.json": evidence_doc("tasks:t0"),
+            "artifacts/e4/toybench/summary.json": dump({"schema": "graderproof.e4/1"}),
+            f"private/evidence/tau2-0003/{TAU2}.json": evidence_doc("tau2:t0"),
+            TAU2_SUMMARY: audit_paths("tau2", TAU2_PRIVATE),
+            "artifacts/audit/bfcl/summary.json": audit_paths("bfcl", "private/evidence/bfcl"),
+            # a toybench audit: its own third_party: false exempts it, not its directory
+            "artifacts/audit/toybench/summary.json": audit_paths("tasks", "runs/evidence", False),
+            "artifacts/figures/manifest.json": dump([{"path": "f.svg", "sha256": TOY}]),
+        }
+    )
+    return files
+
+
+def g14(tmp: Path, files: Files, track: Sequence[str] = ()) -> sc.Result:
+    """Commit ``files`` (private/ stays untracked unless forced by ``track``), run phase A
+    in the origin, clone it, and run G14 on the clone."""
+    repo = Repo(tmp / "origin")
+    repo.write(files)
+    for rel in track:
+        repo.git("add", "-f", rel)
+    repo.commit("hygiene")
+    ctx = sc.Ctx(origin=repo.root, work=tmp / "work", fast=True, head=repo.git("rev-parse", "HEAD"))
+    sc.check_origin(ctx)
+    sc.make_clone(ctx)
+    return sc.g14_hygiene(ctx)
+
+
+def test_g14_passes_with_toybench_evidence_public_and_third_party_evidence_private(
+    tmp_path: Path,
+) -> None:
+    r = g14(tmp_path, g14_files())
+    assert r.ok, r.evidence
+    assert "no third-party evidence under artifacts/" in r.evidence
+
+
+def test_g14_evidence_in_private_accepts_only_the_preregistered_layout() -> None:
+    """A relative path must start with private/. An absolute one must read
+    <main>/private/evidence/... (prereg 0002 and 0003): its last segment named private is
+    followed by evidence, with no artifacts segment after it, so a checkout below a
+    directory named private does not make its own artifacts/ private (review N6)."""
+    for ok in (
+        TAU2_PRIVATE,
+        "private/evidence/bfcl",
+        "private/x",
+        "/srv/private/gp/private/evidence/tau2-0003",
+    ):
+        assert sc.evidence_in_private(ok), ok
+    for bad in (
+        "/srv/private/gp/artifacts/audit/tau2/evidence-0003",  # a checkout below 'private'
+        "/srv/private/evidence/gp/artifacts/audit/tau2/evidence",
+        "/home/user/graderproof/private/runs/evidence",
+        "/home/user/graderproof/artifacts/audit/tau2/evidence",
+        "/private",
+        "artifacts/private/evidence",
+        "runs/private-evidence/tau2",
+        "private/../artifacts/audit/tau2/evidence",
+        "/home/user/graderproof/private/evidence/../../artifacts/e",
+        "private\\evidence",
+        "",
+        None,
+        3,
+    ):
+        assert not sc.evidence_in_private(bad), bad
+
+
+@pytest.mark.parametrize(
+    "rel",
+    [
+        f"artifacts/audit/tau2/evidence/{TAU2}.json",  # the old <out>/evidence
+        f"artifacts/e4/tau2/evidence/{TAU2}.json",  # E4 on a third-party audit
+        "artifacts/e1/round1/evidence/t0.json",
+        f"artifacts/audit/tau2/evidence-0003/{TAU2}.json",  # prereg 0003's directory name
+        f"artifacts/audit/tau2/Evidence/{TAU2}.json",
+        "artifacts/e1/tau2/evidence.jsonl",
+        f"artifacts/audit/tau2/private/{TAU2}.json",  # git-ignored, then forced in
+        "artifacts/audit/tau2/private/evidence/t0.json",
+        f"artifacts/e0/evidence/private/{TAU2}.json",  # private is never public
+        f"artifacts/audit/toybench/evidence/{TOY}.json",  # toybench's own places only
+    ],
+    ids=lambda rel: rel.replace(TAU2, "<tau2>").replace(TOY, "<toy>"),
+)
+def test_g14_reviewer_n6_fails_on_tracked_evidence_paths(tmp_path: Path, rel: str) -> None:
+    """Review N6 (previous N18): a tracked path under artifacts/ with a segment that names
+    evidence or private (in any case) fails G14 outside toybench's public locations,
+    whatever the file holds and whatever its summary records."""
+    files = g14_files()
+    files[rel] = dump({"task": "tau2:t0", "variants": []})
+    r = g14(tmp_path, files, track=[rel] if "/private/" in rel else [])
+    assert not r.ok
+    assert (
+        f"paths named for evidence or private data tracked under artifacts/: ['{rel}'] "
+        "(1 files)" in r.evidence
+    )
+
+
+@pytest.mark.parametrize(
+    ("rel", "doc"),
+    [
+        (f"artifacts/audit/tau2/round2/ev/{TAU2}.json", evidence_doc("tau2:t0")),
+        (f"artifacts/e1/tau2/ev/{TAU2}.json", evidence_doc("tau2:t0")),
+        (f"artifacts/audit/toybench/ev/{TAU2}.json", evidence_doc("tau2:t0")),
+        (f"artifacts/e0/evidence/{TAU2}.json", evidence_doc("tau2:t0")),  # a public place
+        (f"artifacts/e4/toybench/{TAU2}.json", evidence_doc("tau2:t0")),
+        (f"artifacts/e0/evidence/{TOY}.json", evidence_doc("tau2:t0", TOY)),  # t0's hash
+        ("artifacts/e1/copy.json", evidence_doc("tasks:t0")),  # toybench, outside its places
+    ],
+    ids=["round2", "e1", "toybench-dir", "e0-public", "e4-public", "e0-hash", "toybench-doc"],
+)
+def test_g14_reviewer_n6_fails_on_tracked_evidence_documents(
+    tmp_path: Path, rel: str, doc: str
+) -> None:
+    """Review N6: an evidence document (schema graderproof.evidence/1) tracked under
+    artifacts/ fails G14 however its path is named, unless it lies in toybench's public
+    locations and is the evidence of an E0 task (its task_hash is a row of
+    artifacts/e0/tasks.jsonl and the SHA-256 of its task key)."""
+    files = g14_files()
+    files[rel] = doc
+    r = g14(tmp_path, files)
+    assert not r.ok
+    assert (
+        "evidence documents tracked under artifacts/ other than toybench's public ones: "
+        f"['{rel}'] (1 files)" in r.evidence
+    )
+
+
+@pytest.mark.parametrize(
+    ("rel", "summary", "shown"),
+    [
+        (TAU2_SUMMARY, audit_paths("tau2", "artifacts/audit/tau2/evidence"), "'artifacts/au"),
+        (TAU2_SUMMARY, audit_paths("tau2", "/home/user/graderproof/artifacts/a"), "'/home/"),
+        (TAU2_SUMMARY, audit_paths("tau2", "private/../artifacts/audit/tau2/e"), "'private/../"),
+        (TAU2_SUMMARY, audit_paths("tau2", "/home/user/gp/private/../runs/e"), "/private/../"),
+        (TAU2_SUMMARY, audit_paths("tau2", "runs/private-evidence/tau2"), "'runs/private-"),
+        (TAU2_SUMMARY, audit_paths("tau2", "/srv/private/gp/artifacts/audit/tau2/e"), "'/srv/"),
+        (TAU2_SUMMARY, audit_paths("tau2", None), "None"),
+        (TAU2_SUMMARY, dump({"benchmark": "tau2"}), "None"),
+        (TAU2_SUMMARY, dump({"paths": {"evidence": TAU2_PRIVATE}, "evidence": "arti"}), "'arti'"),
+        (TAU2_SUMMARY, dump({"benchmark": "tau2", "paths": {"evidence": "runs/e"}}), "'runs/e'"),
+        (TAU2_SUMMARY, audit_paths("tau2", "runs/e", "false"), "'runs/e'"),  # not JSON false
+        (TAU2_SUMMARY, "{not json", "does not parse"),
+        (TAU2_SUMMARY, dump([TAU2_PRIVATE]), "is not a JSON object"),
+        ("artifacts/audit/tau2/round2/summary.json", audit_paths("tau2", "runs/e"), "'runs/e'"),
+        ("artifacts/e1/tau2/summary.json", audit_paths("tau2", "artifacts/e1/tau2/e"), "'arti"),
+        ("artifacts/audit/toybench/summary.json", audit_paths("tau2", "runs/e"), "'runs/e'"),
+        ("artifacts/e1/tau2/round1.json", audit_paths("tau2", "runs/e"), "'runs/e'"),
+        ("artifacts/e1/tau2/summary.json", dump({"schema": "graderproof.audit/1"}), "None"),
+    ],
+    ids=[
+        "artifacts",
+        "absolute-artifacts",
+        "dotdot",
+        "absolute-dotdot",
+        "private-in-name",
+        "below-private",
+        "none",
+        "no-paths",
+        "top-level",
+        "no-third-party",
+        "string-false",
+        "not-json",
+        "not-object",
+        "round2",
+        "e1",
+        "toybench-dir",
+        "audit-schema",
+        "audit-no-evidence",
+    ],
+)
+def test_g14_reviewer_n6_fails_when_a_summary_records_evidence_outside_private(
+    tmp_path: Path, rel: str, summary: str, shown: str
+) -> None:
+    """Review N6: a third-party audit whose evidence went anywhere but private/ fails G14
+    even when none of it is tracked (a mistaken --evidence or --out). Every tracked
+    summary.json under artifacts/, at any depth, and every audit summary by its schema is
+    read; an audit summary that records no evidence directory fails. Only the summary's
+    own ``third_party: false`` (toybench) exempts it, never the directory it sits in."""
+    files = g14_files()
+    files[rel] = summary
+    r = g14(tmp_path, files)
+    assert not r.ok
+    assert rel in r.evidence
+    assert shown in r.evidence

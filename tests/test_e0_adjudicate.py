@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
+import subprocess
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 import e0_adjudicate as adj
 import pytest
 
-from graderproof import e0
+from graderproof import audit, e0
 from graderproof.core import sha256_text
 from graderproof.models import ModelClient
 
@@ -24,6 +28,81 @@ BUDGET = (
     "claude_single_calls_per_day = 300\nclaude_review_runs_per_day = 6\n"
     "local_model_max_params_b = 8\ndisk_floor_gb = 8\n"
 )
+GIT = ("-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false")
+# Variables that point git elsewhere, each with where it points inside another checkout.
+REDIRECTS = {
+    "GIT_DIR": ".git",
+    "GIT_WORK_TREE": ".",
+    "GIT_COMMON_DIR": ".git",
+    "GIT_INDEX_FILE": ".git/index",
+    "GIT_OBJECT_DIRECTORY": ".git/objects",
+}
+TOOL_KEYS = ("tool_git_sha", "tool_git_dirty", "tool_sha256")
+GitRun = Callable[..., subprocess.CompletedProcess[bytes]]
+
+
+def sha(data: bytes) -> str:
+    """Hex SHA-256 of bytes."""
+    return hashlib.sha256(data).hexdigest()
+
+
+def git(repo: Path, *args: str) -> str:
+    """Run git in the throwaway checkout ``repo``, never where a redirect points; return stdout."""
+    env = {k: v for k, v in os.environ.items() if k not in REDIRECTS}
+    proc = subprocess.run(
+        ["git", "-C", str(repo), *GIT, *args], capture_output=True, text=True, check=True, env=env
+    )
+    return proc.stdout.strip()
+
+
+def commit(repo: Path, files: dict[str, str]) -> str:
+    """Write ``files`` into ``repo`` (a new checkout if missing), commit all, return HEAD."""
+    if not (repo / ".git").exists():
+        repo.mkdir(parents=True)
+        git(repo, "init", "-q")
+    for rel, text in files.items():
+        (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+        (repo / rel).write_text(text)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "c")
+    return git(repo, "rev-parse", "HEAD")
+
+
+def tool_repo(root: Path) -> tuple[Path, Path, str]:
+    """A checkout under ``root`` with a committed tool file: (checkout, tool file, HEAD)."""
+    repo = root / "repo"
+    files = {"tools/t.py": "x = 1\n", "tools/other.py": "y = 1\n", ".gitignore": "ignored.py\n"}
+    return repo, repo / "tools" / "t.py", commit(repo, files)
+
+
+def tool_source(head: str, dirty: bool, data: bytes) -> dict[str, str | bool]:
+    """What tool_provenance should report for a file that holds ``data``."""
+    return {"tool_git_sha": head, "tool_git_dirty": dirty, "tool_sha256": sha(data)}
+
+
+def after_first(git_run: GitRun, command: str, act: Callable[[], object]) -> GitRun:
+    """``git_run``, doing ``act`` right after its first ``git <command>`` call returns."""
+    done: list[bool] = []
+
+    def wrapped(cwd: Path, *args: str) -> subprocess.CompletedProcess[bytes]:
+        proc = git_run(cwd, *args)
+        if args[0] == command and not done:
+            done.append(True)
+            act()
+        return proc
+
+    return wrapped
+
+
+def run_provenance(args: list[str]) -> dict[str, Any]:
+    """Run the tool, check the keys every artifact carries, and return the source keys."""
+    assert adj.main(args) == 0
+    out = Path(args[args.index("--out") + 1])
+    prov: dict[str, Any] = json.loads(out.read_text())["provenance"]
+    base = audit.provenance(audit.AuditConfig(), {"tool": "tools/e0_adjudicate.py"})
+    assert {k: v for k, v in prov.items() if k not in TOOL_KEYS} == base  # values unchanged
+    assert set(prov) - set(base) == set(TOOL_KEYS)
+    return {k: prov[k] for k in ("git_sha", "git_dirty", *TOOL_KEYS)}
 
 
 def row(tid: str, fa: bool = False, fr: bool = False) -> dict[str, Any]:
@@ -151,3 +230,133 @@ def test_no_flags_writes_an_empty_file(tmp_path: Path) -> None:
     assert adj.main(args) == 0
     doc = json.loads((tmp_path / "e0" / "adjudication.json").read_text())
     assert doc["tasks"] == {}
+
+
+def test_tool_provenance_follows_the_checkout_that_holds_the_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo, tool, head = tool_repo(tmp_path)
+    assert adj.tool_provenance(tool) == tool_source(head, False, b"x = 1\n")
+    tool.write_text("x = 2\n")  # unstaged change
+    assert adj.tool_provenance(tool) == tool_source(head, True, b"x = 2\n")
+    git(repo, "add", "-A")  # staged change
+    assert adj.tool_provenance(tool) == tool_source(head, True, b"x = 2\n")
+    tool.write_text("x = 1\n")  # staged change, undone on disk only
+    assert adj.tool_provenance(tool) == tool_source(head, True, b"x = 1\n")
+    tool.write_text("x = 2\n")
+    head2 = commit(repo, {})
+    assert adj.tool_provenance(tool) == tool_source(head2, False, b"x = 2\n")
+    git(repo, "rm", "-q", "--cached", "tools/t.py")  # no longer tracked, bytes as committed
+    assert adj.tool_provenance(tool) == tool_source(head2, True, b"x = 2\n")
+    git(repo, "add", "tools/t.py")
+    git(repo, "config", "status.showUntrackedFiles", "no")  # git status alone misses these
+    for name in ("untracked.py", "ignored.py"):  # in the checkout, not in its HEAD
+        (repo / "tools" / name).write_text("x = 2\n")
+        assert adj.tool_provenance(repo / "tools" / name) == tool_source(head2, True, b"x = 2\n")
+    (repo / "tools" / "other.py").write_text("y = 2\n")  # changes to other files do not count
+    assert adj.tool_provenance(tool) == tool_source(head2, False, b"x = 2\n")
+    plain = tmp_path / "plain" / "t.py"
+    plain.parent.mkdir()
+    plain.write_text("x = 1\n")
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))  # tmp_path may be in a checkout
+    assert adj.tool_provenance(plain) == tool_source("unknown", True, b"x = 1\n")
+
+
+def test_tool_provenance_compares_the_bytes_with_the_commit_it_records(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """git status can call a changed file clean; its blob at the recorded commit cannot."""
+    repo, tool, head = tool_repo(tmp_path)
+    for flag in ("assume-unchanged", "skip-worktree"):  # git status skips flagged files
+        git(repo, "update-index", f"--{flag}", "tools/t.py")
+        tool.write_text("x = 3\n")
+        assert adj.tool_provenance(tool) == tool_source(head, True, b"x = 3\n")
+        tool.write_text("x = 1\n")
+        git(repo, "update-index", f"--no-{flag}", "tools/t.py")
+        assert adj.tool_provenance(tool) == tool_source(head, False, b"x = 1\n")
+    tool.write_text("x = 3\n")  # a replacement ref lets a commit holding the edit stand in
+    git(repo, "add", "tools/t.py")
+    git(repo, "replace", head, git(repo, "commit-tree", git(repo, "write-tree"), "-m", "s"))
+    assert adj.tool_provenance(tool) == tool_source(head, True, b"x = 3\n")
+    git(repo, "replace", "-d", head)
+    git(repo, "checkout", "-q", "HEAD", "--", "tools/t.py")
+    assert adj.tool_provenance(tool) == tool_source(head, False, b"x = 1\n")
+    real_git = adj._git
+    edit = after_first(real_git, "status", lambda: tool.write_text("x = 9\n"))
+    monkeypatch.setattr(adj, "_git", edit)  # an edit after the checks: hashed as compared
+    assert adj.tool_provenance(tool) == tool_source(head, False, b"x = 1\n")
+    assert tool.read_text() == "x = 9\n"
+    tool.write_text("x = 4\n")
+    race = after_first(real_git, "rev-parse", lambda: commit(repo, {}))
+    monkeypatch.setattr(adj, "_git", race)  # the edit is committed just after HEAD is read
+    assert adj.tool_provenance(tool) == tool_source(head, True, b"x = 4\n")
+    assert git(repo, "rev-parse", "HEAD") != head  # the commit did land in between
+
+
+def test_tool_provenance_leaves_the_index_alone(tmp_path: Path) -> None:
+    """Others work in the checkout that holds the tool: git status must not take its lock."""
+    repo, tool, head = tool_repo(tmp_path)
+    os.utime(tool, (1_000_000_000, 1_000_000_000))  # stat data git status would refresh
+    index = (repo / ".git" / "index").read_bytes()
+    assert adj.tool_provenance(tool) == tool_source(head, False, b"x = 1\n")
+    assert (repo / ".git" / "index").read_bytes() == index
+
+
+@pytest.mark.parametrize(
+    "names", [("GIT_DIR", "GIT_WORK_TREE"), *((n,) for n in REDIRECTS)], ids="+".join
+)
+def test_tool_provenance_ignores_variables_that_point_git_elsewhere(
+    names: tuple[str, ...], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, tool, head = tool_repo(tmp_path)
+    other = tmp_path / "other"
+    commit(other, {"tools/t.py": "x = 2\n", "o.txt": "o\n"})
+    plain = tmp_path / "plain" / "t.py"
+    plain.parent.mkdir()
+    plain.write_text("x = 1\n")
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))  # tmp_path may be in a checkout
+    for name in names:  # as git sets some of them for hooks
+        monkeypatch.setenv(name, str(other / REDIRECTS[name]))
+    assert adj.tool_provenance(tool) == tool_source(head, False, b"x = 1\n")
+    assert adj.tool_provenance(plain) == tool_source("unknown", True, b"x = 1\n")
+    tool.write_text("x = 2\n")
+    assert adj.tool_provenance(tool) == tool_source(head, True, b"x = 2\n")
+
+
+def test_provenance_records_the_tool_source_beside_the_run_checkout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Review N2: the tool can run from one checkout while its file lives in another."""
+    assert Path(adj.__file__).resolve() == adj.TOOL_FILE  # by default it describes itself
+    args = setup(tmp_path)
+    rows = [row("a", fa=True), row("c", fr=True), row("e"), row("x")]  # nothing to rule on
+    (tmp_path / "e0" / "tasks.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    frozen, main_repo = tmp_path / "frozen", tmp_path / "main"
+    run_head = commit(frozen, {"README.md": "frozen worktree\n"})
+    tool_head = commit(main_repo, {"tools/e0_adjudicate.py": "# the tool\n"})
+    assert run_head != tool_head
+    tool = main_repo / "tools" / "e0_adjudicate.py"
+    monkeypatch.setattr(adj, "TOOL_FILE", tool)
+    monkeypatch.setattr(audit, "utc_now", lambda: "2026-01-01T00:00:00Z")
+    monkeypatch.chdir(frozen)
+    want = {
+        "git_sha": run_head,
+        "git_dirty": False,
+        **tool_source(tool_head, False, b"# the tool\n"),
+    }
+    assert run_provenance(args) == want
+    (frozen / "tools").mkdir()
+    (frozen / "tools" / "scratch.py").write_text("x = 1\n")  # the run checkout is dirty
+    assert run_provenance(args) == {**want, "git_dirty": True}
+    (frozen / "tools" / "scratch.py").unlink()
+    tool.write_text("# the tool, edited\n")  # the tool is dirty when the run starts ...
+    build_items = adj.build_items
+
+    def revert_then_build(*a: Any) -> Any:
+        git(main_repo, "checkout", "--", "tools/e0_adjudicate.py")  # ... and reverted mid-run
+        return build_items(*a)
+
+    monkeypatch.setattr(adj, "build_items", revert_then_build)
+    edited = tool_source(tool_head, True, b"# the tool, edited\n")
+    assert run_provenance(args) == {**want, **edited}
+    assert tool.read_text() == "# the tool\n"

@@ -64,25 +64,34 @@ Artifact contracts (later iterations may tighten them, never loosen):
   {"real": bool, "variants": [{"variant_id", "verdict", "reason"?}], ...}}}`` holds an
   entry for every counted task that is flagged but not detected. ``real`` is true exactly
   when at least one of the entry's verdicts is ``validates`` (D34; the other verdict is
-  ``does-not-validate``), every verdict and stored reason equals the banked answer for
-  that variant id in the response to an ``adjudicate`` request under
-  ``artifacts/model_calls/e0/`` (each such request content-addressed by its file name,
-  each response answering exactly its request's items), and the entries together cite
-  every banked variant exactly once.
+  ``does-not-validate``), each entry cites exactly the variants behind its own task's
+  flags in ``artifacts/e0/variants.jsonl`` (the counted violating variants the grader
+  passed, for a false accept, and the counted preserving variants it failed, for a false
+  reject; none at the reference level), each of them listed under that task and no
+  other, every verdict and stored reason equals the banked answer for that variant id in
+  the response to an ``adjudicate`` request under ``artifacts/model_calls/e0/`` (each
+  such request content-addressed by its file name, each response answering exactly its
+  request's items and being the file that was ingested: ``artifacts/usage/ledger.jsonl``
+  has a row for the request at HEAD, every committed version of the ledger records only
+  the file's SHA-256 as its ``response_sha256``, and the file has exactly one commit),
+  every adjudicate request that any committed version of the ledger records is banked
+  so, and the entries together cite every banked variant exactly once.
   ``artifacts/e0/results.json``: ``bootstrap``, ``recall`` and ``precision`` as
   ``{point, ci: [lo, hi], n}``, ``tasks [{task: <id>, planted, slice, ...}]`` with one
   row per label (``detected``, ``flagged``, and ``adjudicated_real``, when present,
-  must equal the recomputation), ``provenance``. Definitions (D23): flagged =
-  false_accept or false_reject; detected = planted and (direction ``accept``:
-  false_accept; ``reject``: false_reject), so a rejected or flaky reference is never a
-  flag or a detection; adjudicated real = flagged, not detected, and the entry's
-  ``real`` is true. Counted tasks are those whose slice is not ``extra``, in ascending
-  id order: at least 60, at least 30 planted and 30 clean, and at least one planted
-  ``reject`` weakness (brief section 5). Recall = detected / planted; precision =
-  detected / (detected + false positives), where a false positive is flagged, not
-  detected, and not adjudicated real; ``n`` = the number of counted tasks. Every
-  counted miss (planted, not detected) appears in ``docs/E0_MISSES.md`` as a whole
-  token.
+  must equal the recomputation), ``provenance``. Definitions (D23): a task is at the
+  **reference level** when its ``determinism`` is not ``stable_pass`` or its row says
+  ``reference_rejected`` or ``flaky`` is true; it is never a flag or a detection
+  (prereg 0001), so its planted tasks count as misses and its clean tasks as unflagged
+  (the audit-table rules above already make it so). Otherwise flagged = false_accept or
+  false_reject; detected = planted and (direction ``accept``: false_accept; ``reject``:
+  false_reject); adjudicated real = flagged, not detected, and the entry's ``real`` is
+  true. Counted tasks are those whose slice is not ``extra``, in ascending id order: at
+  least 60, at least 30 planted and 30 clean, and at least one planted ``reject``
+  weakness (brief section 5). Recall = detected / planted; precision = detected /
+  (detected + false positives), where a false positive is flagged, not detected, and
+  not adjudicated real; ``n`` = the number of counted tasks. Every counted miss
+  (planted, not detected) appears in ``docs/E0_MISSES.md`` as a whole token.
 * Audits (G7) ``artifacts/audit/<benchmark>/summary.json``: ``benchmark``,
   ``category``, ``confirmatory``, ``prereg``, ``substitute_for``, ``model_store``,
   ``n_tasks_population``, ``n_sampled``, ``bootstrap``, ``e1.false_accept_task_rate``
@@ -116,6 +125,20 @@ Artifact contracts (later iterations may tighten them, never loosen):
   ``artifacts/e0/results.json``. Each cites ``"prereg"``, and that preregistration's
   commit predates the artifact's directory, the directory named by its
   ``model_store`` field (under ``artifacts/``), and for E0 ``artifacts/model_calls/e0/``.
+* Task-level evidence (G14, review N6), over the files tracked under ``artifacts/``: no
+  path has a segment whose name contains ``private``, or ``evidence`` outside
+  toybench's own public locations (``artifacts/e0/evidence/`` and
+  ``artifacts/e4/toybench/``), in any case. No evidence document (schema
+  ``graderproof.evidence/...``) is tracked except in those locations and as the evidence
+  of an E0 task (its ``task_hash`` is a row of ``artifacts/e0/tasks.jsonl`` and the
+  SHA-256 of its ``task``), and every ``.json`` file parses. Every summary (each
+  ``summary.json`` at any depth, and each file with schema ``graderproof.audit/1``) whose
+  own ``third_party`` is not JSON false and that records an evidence directory
+  (``paths.evidence``, which an audit summary must record, and ``evidence`` when
+  present) records one inside ``private/``: a relative path starting with ``private/``,
+  or an absolute one of the preregistered form ``<main>/private/evidence/...`` (prereg
+  0002 and 0003; its last ``private`` segment is followed by ``evidence`` and by no
+  ``artifacts`` segment), never with ``..``.
 * Review ``artifacts/review/latest.json`` (schema in tools/review.py).
 * Citations ``artifacts/citecheck.json`` (schema in .claude/agents/citation-checker.md).
 * Figures ``artifacts/figures/manifest.json``: ``[{path, sha256}]`` written by make report.
@@ -178,6 +201,10 @@ E0_SLICES = ("in_list", "clean", "extra")
 E0_DIRECTIONS = ("accept", "reject")
 E0_ADJUDICATE_PURPOSE = "adjudicate"
 E0_VERDICTS = ("validates", "does-not-validate")
+USAGE_LEDGER = "artifacts/usage/ledger.jsonl"
+EVIDENCE_PUBLIC = ("artifacts/e0/evidence/", "artifacts/e4/toybench/")  # toybench, our own
+EVIDENCE_SCHEMA = "graderproof.evidence/"  # per-task evidence documents, any version
+AUDIT_SCHEMA = "graderproof.audit/1"
 TOKEN_CHARS = "A-Za-z0-9_-"
 E4_SCHEMA = "graderproof.e4/1"
 E4_GENERALIZATION = (
@@ -1252,15 +1279,74 @@ def model_request_hash(req: Mapping[str, Any]) -> str:
     return sha256_text(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
 
 
+LedgerVersion = tuple[str, list[dict[str, Any]]]
+
+
+def ledger_versions(c: Path) -> list[LedgerVersion]:
+    """The usage ledger at HEAD, then at every commit that changed it (newest first).
+
+    Each entry is ``(where, rows)`` with ``where`` = ``HEAD`` or ``commit <sha12>``; a
+    commit that deleted the file has no rows. ``ModelClient.ingest`` appends one row per
+    request when it accepts a response, with the SHA-256 of the response file's bytes
+    (D27). No gate keeps the ledger append-only, so its rows at HEAD alone could have
+    been rewritten after the fact; the committed versions show what it recorded first.
+    """
+    out: list[LedgerVersion] = [("HEAD", read_rows(c / USAGE_LEDGER, USAGE_LEDGER))]
+    for commit in commits_touching(c, USAGE_LEDGER):
+        where = f"commit {commit[:12]}"
+        rc, text = git(c, "show", f"{commit}:{USAGE_LEDGER}")
+        try:
+            rows = [json.loads(ln) for ln in text.splitlines() if ln.strip()] if rc == 0 else []
+        except ValueError:
+            raise GateError(f"{USAGE_LEDGER} ({where}) is not valid JSON lines") from None
+        need(
+            all(isinstance(r, dict) for r in rows),
+            f"{USAGE_LEDGER} ({where}) has a row that is not a JSON object",
+        )
+        out.append((where, rows))
+    return out
+
+
+def e0_ingested(c: Path, resp_rel: str, h: str, versions: Sequence[LedgerVersion]) -> None:
+    """Raise :class:`GateError` unless ``resp_rel`` is the response ingested for request ``h``.
+
+    The ledger at HEAD (``versions[0]``) has a row for the request; every version of the
+    ledger records only the response file's SHA-256 for it (D27), so neither the file
+    nor the row was rewritten after ingestion; and the file has exactly one commit, since
+    a banked response is written once.
+    """
+    digest = sha256_file(c / resp_rel)
+    need(
+        any(r.get("request") == h for r in versions[0][1]),
+        f"{resp_rel} was never ingested (no {USAGE_LEDGER} row for it)",
+    )
+    for where, rows in versions:
+        need(
+            all(r.get("response_sha256") == digest for r in rows if r.get("request") == h),
+            f"{resp_rel} does not match the response_sha256 that {USAGE_LEDGER} recorded for "
+            f"its request at ingestion (D27; {where})",
+        )
+    commits = commits_touching(c, resp_rel)
+    need(
+        len(commits) == 1,
+        f"{resp_rel} has {len(commits)} commits (a banked response is committed once)",
+    )
+
+
 def e0_banked_verdicts(c: Path) -> dict[str, dict[str, Any]]:
     """The adjudicator's banked answers by variant id, from the E0 model store.
 
     Every request under ``artifacts/model_calls/e0/requests/`` whose purpose is
     ``adjudicate`` must be content-addressed (its file name, its ``hash``, and the
-    recomputed hash agree) and have a response that names it and answers exactly its
-    items. A variant answered twice is an error.
+    recomputed hash agree) and have a response that names it, answers exactly its
+    items, and is the one ingested (:func:`e0_ingested`). Every adjudicate request that
+    any committed version of the usage ledger records must be banked that way, so an
+    adjudication cannot be replaced by asking again. A variant answered twice is an
+    error.
     """
     out: dict[str, dict[str, Any]] = {}
+    versions = ledger_versions(c)
+    asked: set[str] = set()
     req_dir = c / E0_MODEL_STORE / "requests"
     for path in sorted(req_dir.glob("*.json")) if req_dir.is_dir() else []:
         rel = path.relative_to(c).as_posix()
@@ -1274,6 +1360,8 @@ def e0_banked_verdicts(c: Path) -> dict[str, dict[str, Any]]:
         )
         resp_rel = f"{E0_MODEL_STORE}/responses/{h}.json"
         resp = load_obj(c / resp_rel, resp_rel)
+        e0_ingested(c, resp_rel, h, versions)
+        asked.add(h)
         need(resp.get("request") == h, f"{resp_rel} does not name its request")
         items: Any = req.get("items")
         answers: Any = resp.get("items")
@@ -1294,24 +1382,106 @@ def e0_banked_verdicts(c: Path) -> dict[str, dict[str, Any]]:
             ans = answers[vid]
             need(isinstance(ans, Mapping), f"{resp_rel}: the answer for {vid} is not an object")
             out[vid] = dict(ans)
+    for where, rows in versions:
+        for row in rows:
+            req_hash = row.get("request")
+            need(
+                row.get("purpose") != E0_ADJUDICATE_PURPOSE or req_hash in asked,
+                f"{USAGE_LEDGER} ({where}) records adjudicate request {str(req_hash)[:12]}, "
+                f"which is not banked under {E0_MODEL_STORE}/requests/ (asked again?)",
+            )
     return out
 
 
+def reference_level(t: TaskRow) -> bool:
+    """The grader rejects the reference or is flaky on it, by determinism or by the row.
+
+    Review N5 asked G5 to apply this rule of prereg 0001; it already did. G5's rows come
+    from :func:`audit_table`, which refuses a row whose ``reference_rejected`` or
+    ``flaky`` disagrees with its determinism and gives a task that is not scorable
+    neither indicator, so in G5 this equals ``not t.scorable``. It states the rule where
+    the scores use it (defense in depth) and changes no G5 result.
+    """
+    return not t.scorable or t.row.get("reference_rejected") is True or t.row.get("flaky") is True
+
+
+@dataclass(frozen=True)
+class E0Variants:
+    """artifacts/e0/variants.jsonl indexed for checking adjudication.json (review B4)."""
+
+    owners: Mapping[str, frozenset[str]]
+    """Each variant id to the task hashes of the rows that list it."""
+    behind: Mapping[str, frozenset[str]]
+    """Each task hash to the ids of the counted variants behind its flags."""
+
+
+def e0_variants(c: Path, flags: Mapping[str, TaskRow]) -> E0Variants:
+    """Index artifacts/e0/variants.jsonl by variant id and by task.
+
+    The variants behind a task's flags are the counted violating variants that the grader
+    passed (its false accept) and the counted preserving variants that it failed (its
+    false reject), for a task that is not at the reference level; such a task has none.
+    They are the items tools/e0_adjudicate.py puts to the adjudicator.
+    """
+    graded = {t.task_hash for t in flags.values() if not reference_level(t)}
+    owners: dict[str, set[str]] = {}
+    behind: dict[str, set[str]] = {}
+    for v in read_rows(c / E0_DIR / "variants.jsonl", f"{E0_DIR}/variants.jsonl"):
+        vid, h = v.get("variant_id"), v.get("task_hash")
+        if not (isinstance(vid, str) and isinstance(h, str)):
+            continue
+        owners.setdefault(vid, set()).add(h)
+        flag = (v.get("kind"), v.get("grader_passed")) in (
+            ("violating", True),
+            ("preserving", False),
+        )
+        if h in graded and is_counted(v) and flag:
+            behind.setdefault(h, set()).add(vid)
+    return E0Variants(
+        {k: frozenset(s) for k, s in owners.items()},
+        {k: frozenset(s) for k, s in behind.items()},
+    )
+
+
 def e0_entry_verdicts(
-    tid: str, entry: Mapping[str, Any], banked: Mapping[str, Mapping[str, Any]], seen: set[str]
+    tid: str,
+    entry: Mapping[str, Any],
+    banked: Mapping[str, Mapping[str, Any]],
+    seen: set[str],
+    task_hash: str,
+    index: E0Variants,
 ) -> list[str]:
-    """Verdicts of one adjudication.json entry, each equal to the banked answer (D34)."""
+    """Verdicts of one adjudication.json entry, each equal to the banked answer (D34).
+
+    The entry must cite exactly the variants behind its task's flags (``task_hash``;
+    :func:`e0_variants`), each of them a variant of that task and of no other, so a
+    banked ruling cannot be moved to another task or to a variant behind no flag, and no
+    variant behind a flag can be left out.
+    """
     variants: Any = entry.get("variants")
     need(isinstance(variants, list), f"{E0_ADJUDICATION}: {tid} has no variants list")
+    behind = index.behind.get(task_hash, frozenset())
     verdicts: list[str] = []
+    cited: set[str] = set()
     for v in variants:
         vid = v.get("variant_id") if isinstance(v, Mapping) else None
         need(
             isinstance(vid, str) and vid in banked,
             f"{E0_ADJUDICATION}: {tid} cites variant {vid!r}, which has no banked adjudication",
         )
+        need(
+            index.owners.get(str(vid)) == frozenset((task_hash,)),
+            f"{E0_ADJUDICATION}: {tid} cites variant {vid}, which {E0_DIR}/variants.jsonl does "
+            f"not give to {tid} alone",
+        )
+        need(
+            vid in behind,
+            f"{E0_ADJUDICATION}: {tid} cites variant {vid}, which is behind no flag of {tid} in "
+            f"{E0_DIR}/variants.jsonl",
+        )
         need(vid not in seen, f"{E0_ADJUDICATION}: variant {vid} is ruled on twice")
         seen.add(str(vid))
+        cited.add(str(vid))
         ans, verdict = banked[str(vid)], v.get("verdict")
         need(
             verdict in E0_VERDICTS,
@@ -1329,28 +1499,42 @@ def e0_entry_verdicts(
             "adjudication",
         )
         verdicts.append(str(verdict))
+    omitted = sorted(behind - cited)
+    if omitted:
+        raise GateError(
+            f"{E0_ADJUDICATION}: {tid} omits variant {omitted[0]}, which is behind a flag of "
+            f"{tid} in {E0_DIR}/variants.jsonl"
+        )
     return verdicts
 
 
-def e0_adjudication(c: Path, labels: Mapping[str, Any]) -> dict[str, bool]:
+def e0_adjudication(
+    c: Path, labels: Mapping[str, Any], flags: Mapping[str, TaskRow]
+) -> dict[str, bool]:
     """Rulings from artifacts/e0/adjudication.json: label id to ``real`` (a JSON boolean).
 
     Each entry's ``real`` must follow from its per-variant verdicts by D34 (real exactly
     when at least one verdict is ``validates``), every verdict and stored reason must equal
-    the adjudicator's banked answer for that variant, and the entries together must cite
-    every banked variant exactly once.
+    the adjudicator's banked answer for that variant, each entry must cite exactly the
+    variants behind its own task's flags (its ``task_hash`` in ``flags``, the E0
+    tasks.jsonl rows by label id; :func:`e0_entry_verdicts`), and the entries together
+    must cite every banked variant exactly once.
     """
     doc = load_obj(c / E0_ADJUDICATION, E0_ADJUDICATION)
     tasks: Any = doc.get("tasks")
     need(isinstance(tasks, Mapping), f"{E0_ADJUDICATION} has no tasks object")
     banked = e0_banked_verdicts(c)
+    index = e0_variants(c, flags)
     seen: set[str] = set()
     out: dict[str, bool] = {}
     for tid, entry in tasks.items():
         need(tid in labels, f"{E0_ADJUDICATION} rules on unlabeled task {tid}")
+        need(tid in flags, f"{E0_ADJUDICATION} rules on task {tid}, which E0 did not audit")
         real = entry.get("real") if isinstance(entry, Mapping) else None
         need(isinstance(real, bool), f"{E0_ADJUDICATION}: real for {tid} is not true or false")
-        verdicts = e0_entry_verdicts(str(tid), entry, banked, seen)
+        verdicts = e0_entry_verdicts(
+            str(tid), entry, banked, seen, flags[str(tid)].task_hash, index
+        )
         need(
             real == ("validates" in verdicts),
             f"{E0_ADJUDICATION}: real for {tid} is {real}, but its verdicts {verdicts} make it "
@@ -1367,15 +1551,20 @@ def e0_scores(
     flags: Mapping[str, TaskRow],
     rulings: Mapping[str, bool],
 ) -> list[E0Task]:
-    """Every labeled task in ascending id order with flags, detection, and adjudication (D23)."""
+    """Every labeled task in ascending id order with flags, detection, and adjudication (D23).
+
+    A task at the reference level is never a flag or a detection (prereg 0001, Outcomes
+    and definitions): its planted tasks count as misses and its clean tasks as unflagged.
+    For G5's rows this was already so (:func:`reference_level`).
+    """
     out = []
     for tid in sorted(labels):
         lab, t = labels[tid], flags[tid]
         planted, direction = bool(lab["planted"]), lab.get("direction")
-        detected = planted and (
-            (direction == "accept" and t.false_accept) or (direction == "reject" and t.false_reject)
-        )
-        flagged = t.false_accept or t.false_reject
+        scorable = not reference_level(t)
+        fa, fr = scorable and t.false_accept, scorable and t.false_reject
+        detected = planted and ((direction == "accept" and fa) or (direction == "reject" and fr))
+        flagged = fa or fr
         real = flagged and not detected and rulings.get(tid) is True
         out.append(E0Task(tid, planted, str(lab["slice"]), flagged, detected, real))
     return out
@@ -1436,7 +1625,7 @@ def g5_tool_validity(ctx: Ctx) -> Result:
     need(not missing, f"E0 results lack provenance fields {missing}")
     labels = e0_labels(c)
     flags = e0_flags(c, labels)
-    rulings = e0_adjudication(c, labels)
+    rulings = e0_adjudication(c, labels, flags)
     scores = e0_scores(labels, flags, rulings)
     e0_rows_match(res, scores)
     counted = [s for s in scores if s.counted]
@@ -2265,8 +2454,135 @@ def g13_documentation(ctx: Ctx) -> Result:
     return Result(True, f"README section 11 ok; REPORT complete; {len(urls)} references verified")
 
 
+def evidence_in_private(value: Any) -> bool:
+    """Whether a recorded evidence directory lies inside a git-ignored ``private/``.
+
+    A relative path must start with ``private/``. An absolute path must have the form
+    audits record, ``<main>/private/evidence/...`` (prereg 0002 and 0003): its last
+    segment named ``private`` is followed by ``evidence``, and no later segment is named
+    ``artifacts``, so a checkout that sits below a directory named ``private`` does not
+    make its own ``artifacts/`` private. A path with ``..`` or a backslash never
+    qualifies.
+    """
+    if not isinstance(value, str) or not value or "\\" in value:
+        return False
+    p = PurePosixPath(value)
+    if ".." in p.parts:
+        return False
+    if not p.is_absolute():
+        return p.parts[:1] == ("private",)
+    names = p.parts[1:]
+    if "private" not in names:
+        return False
+    rest = names[len(names) - names[::-1].index("private") :]
+    return rest[:1] == ("evidence",) and "artifacts" not in rest
+
+
+def e0_task_hashes(clone: Path) -> set[str]:
+    """Task hashes of E0's own (toybench) tasks in artifacts/e0/tasks.jsonl (none if unreadable)."""
+    try:
+        rows = read_jsonl(clone / E0_DIR / "tasks.jsonl")
+    except (OSError, ValueError):
+        return set()
+    return {
+        r["task_hash"] for r in rows if isinstance(r, dict) and isinstance(r.get("task_hash"), str)
+    }
+
+
+def public_evidence(rel: str, doc: Mapping[str, Any], toybench: set[str]) -> bool:
+    """An evidence document toybench publishes: in its public locations, of an E0 task."""
+    key, h = doc.get("task"), doc.get("task_hash")
+    return (
+        rel.startswith(EVIDENCE_PUBLIC)
+        and isinstance(key, str)
+        and isinstance(h, str)
+        and h in toybench
+        and sha256_text(key) == h
+    )
+
+
+def summary_evidence_problem(rel: str, doc: Any) -> str:
+    """Why a tracked summary records third-party evidence outside ``private/`` (or empty).
+
+    The summary's own ``third_party`` decides: JSON false (toybench) exempts it, and
+    anything else, a missing field included, does not. An audit summary (schema
+    ``graderproof.audit/1``, or under ``artifacts/audit/``) must record
+    ``paths.evidence``; any other summary is read only when it records one (or a
+    top-level ``evidence``).
+    """
+    if not isinstance(doc, Mapping):
+        return f"{rel} is not a JSON object"
+    audit = doc.get("schema") == AUDIT_SCHEMA or rel.startswith("artifacts/audit/")
+    paths = doc.get("paths")
+    recorded: list[Any] = []
+    if isinstance(paths, Mapping) and "evidence" in paths:
+        recorded.append(paths["evidence"])
+    elif audit:
+        recorded.append(None)
+    if "evidence" in doc:
+        recorded.append(doc["evidence"])
+    if not recorded or doc.get("third_party") is False:
+        return ""
+    bad = [e for e in recorded if not evidence_in_private(e)]
+    return f"{rel}: evidence directory {bad[0]!r} is not inside private/" if bad else ""
+
+
+def third_party_evidence_problems(clone: Path) -> list[str]:
+    """Task-level evidence of third-party benchmarks that git tracks under artifacts/ (N6).
+
+    Over the files ``git ls-files`` tracks under ``artifacts/``, fails on: a path with a
+    segment whose name contains ``private``, or ``evidence`` outside toybench's public
+    locations (:data:`EVIDENCE_PUBLIC`), in any case; an evidence document (schema
+    ``graderproof.evidence/...``) anywhere but there, or there but not the evidence of an
+    E0 task (:func:`public_evidence`); a ``.json`` file that does not parse (it could be
+    one); and a summary, at any depth, that records third-party evidence outside
+    ``private/`` (:func:`summary_evidence_problem`). Symbolic links are not followed.
+    """
+    rc, out = git(clone, "ls-files", "-z", "--", "artifacts")
+    if rc != 0:
+        return ["git ls-files failed in the clone"]
+    toybench = e0_task_hashes(clone)
+    named: list[str] = []
+    documents: list[str] = []
+    unreadable: list[str] = []
+    summaries: list[str] = []
+    for rel in (p for p in out.split("\0") if p):
+        names = [s.lower() for s in PurePosixPath(rel).parts[1:]]
+        if any("private" in s for s in names) or (
+            any("evidence" in s for s in names) and not rel.startswith(EVIDENCE_PUBLIC)
+        ):
+            named.append(rel)
+        path = clone / rel
+        if not rel.endswith(".json") or path.is_symlink():
+            continue
+        try:
+            doc = load_json(path)
+        except (OSError, ValueError):
+            unreadable.append(rel)
+            continue
+        schema = doc.get("schema") if isinstance(doc, Mapping) else None
+        evidence = isinstance(doc, Mapping) and str(schema).startswith(EVIDENCE_SCHEMA)
+        if evidence and not public_evidence(rel, doc, toybench):
+            documents.append(rel)
+        if PurePosixPath(rel).name == "summary.json" or schema == AUDIT_SCHEMA:
+            why = summary_evidence_problem(rel, doc)
+            if why:
+                summaries.append(why)
+    found = (
+        ("paths named for evidence or private data tracked under artifacts/", named),
+        (
+            "evidence documents tracked under artifacts/ other than toybench's public ones",
+            documents,
+        ),
+        ("tracked JSON under artifacts/ that does not parse (it could be evidence)", unreadable),
+    )
+    problems = [f"{what}: {rels[:2]} ({len(rels)} files)" for what, rels in found if rels]
+    return problems + summaries
+
+
 def g14_hygiene(ctx: Ctx) -> Result:
-    """secrets-scan clean, budget cash 0 and caps kept, private/ untracked, files, clean tree."""
+    """secrets-scan clean, budget cash 0 and caps kept, private/ untracked, no third-party
+    evidence under artifacts/, files, clean tree."""
     c = ctx.clone
     problems = []
     if not ctx.origin_facts.get("tree_clean"):
@@ -2275,6 +2591,7 @@ def g14_hygiene(ctx: Ctx) -> Result:
         )
     if ctx.origin_facts.get("private_tracked"):
         problems.append(f"private/ tracked: {ctx.origin_facts['private_tracked'][:2]}")
+    problems += third_party_evidence_problems(c)
     missing = [f for f in REQUIRED_FILES if not (c / f).is_file()]
     if missing:
         problems.append(f"missing {missing}")
@@ -2293,7 +2610,9 @@ def g14_hygiene(ctx: Ctx) -> Result:
     if problems:
         return Result(False, "; ".join(problems))
     return Result(
-        True, f"{tail(scan.out)}; cash_usd = 0, caps kept; private/ untracked; tree clean"
+        True,
+        f"{tail(scan.out)}; cash_usd = 0, caps kept; private/ untracked; "
+        "no third-party evidence under artifacts/; tree clean",
     )
 
 

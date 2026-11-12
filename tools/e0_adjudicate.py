@@ -14,9 +14,20 @@ A task's flag is adjudicated real when at least one of its flagged variants vali
 The rulings and reasons are written to ``artifacts/e0/adjudication.json``, which exists
 even when no flag needs a ruling. The build session does not overrule them.
 
+The provenance block keeps the keys every graderproof artifact carries. They describe the
+checkout the tool runs in and the package it imports (``git_sha``, ``git_dirty``,
+``package_fingerprint``), which for E0 are the frozen worktree's. The tool file itself can
+come from another checkout, so its own source, read as the run starts, is recorded beside
+them: ``tool_git_sha`` (HEAD of the checkout that holds the tool file), ``tool_git_dirty``
+(false only when the tool file is exactly its blob at that commit, with no uncommitted
+change), and ``tool_sha256`` (the SHA-256 of the tool file). When ``tool_git_dirty`` is
+false, ``git cat-file blob <tool_git_sha>:tools/e0_adjudicate.py`` hashes to
+``tool_sha256``. An adjudication written before these keys existed does not have them
+(review of 5677b9f, N2).
+
 Usage (from the frozen E0 worktree, after the audit is complete)::
 
-    python3 tools/e0_adjudicate.py --audit artifacts/e0 --labels toybench/labels.json \
+    python3 <main>/tools/e0_adjudicate.py --audit artifacts/e0 --labels toybench/labels.json \
         --tasks toybench/tasks --store artifacts/model_calls/e0 \
         --ledger <main>/artifacts/usage/ledger.jsonl --out artifacts/e0/adjudication.json
 
@@ -26,12 +37,25 @@ Exit status 0 when the file is written, 3 when model requests are pending.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
+import subprocess
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+TOOL_FILE = Path(__file__).resolve()
+# Variables that point git at another repository, work tree, index, or object store (git
+# sets some of them for hooks, for example); dropped so the tool's own checkout is read.
+GIT_REPO_ENV = (
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_COMMON_DIR",
+    "GIT_INDEX_FILE",
+    "GIT_OBJECT_DIRECTORY",
+)
 PURPOSE = "adjudicate"
 PROMPT_VERSION = "adjudicate/v1"
 PENDING = 3
@@ -163,8 +187,62 @@ def rulings(
     return out
 
 
+def _git(cwd: Path, *args: str) -> subprocess.CompletedProcess[bytes]:
+    """Run git on the checkout that contains ``cwd``, as that checkout really is.
+
+    The variables in ``GIT_REPO_ENV`` are dropped, replacement refs (which can make another
+    commit stand in for HEAD) are not used, and no optional lock is taken, so ``git status``
+    never rewrites the index of a checkout that others are working in.
+    """
+    env = {k: v for k, v in os.environ.items() if k not in GIT_REPO_ENV}
+    return subprocess.run(
+        ["git", "--no-optional-locks", "--no-replace-objects", *args],
+        cwd=cwd,
+        env=env,
+        capture_output=True,
+        check=False,
+    )
+
+
+def tool_provenance(path: Path) -> dict[str, str | bool]:
+    """The source of the tool file at ``path``, whichever checkout the tool runs in.
+
+    ``tool_sha256`` is the SHA-256 of the file's bytes, read once. ``tool_git_sha`` is HEAD
+    of the checkout that holds the file (``unknown`` outside git). ``tool_git_dirty`` is
+    false only when those bytes are the file's blob at that very commit and ``git status``
+    reports no change to the file, staged or not. So a clean record can be checked offline:
+    ``git cat-file blob <tool_git_sha>:<path>`` hashes to ``tool_sha256``. A file that is
+    untracked or ignored, flagged assume-unchanged or skip-worktree, changed by a commit
+    made while this runs, or in no readable checkout is dirty.
+    """
+    tool = path.resolve()
+    data = tool.read_bytes()  # the bytes hashed are the bytes compared
+    head = _git(tool.parent, "rev-parse", "HEAD")
+    sha = head.stdout.decode().strip() if head.returncode == 0 else "unknown"
+    clean = False
+    if head.returncode == 0:
+        # The blob at the commit recorded here, not at wherever HEAD has moved since.
+        blob = _git(tool.parent, "cat-file", "blob", f"{sha}:./{tool.name}")
+        # What the blob cannot show: a staged change undone on disk, or removal from the index.
+        status = _git(tool.parent, "status", "--porcelain", "--", tool.name)
+        clean = (
+            blob.returncode == 0
+            and blob.stdout == data
+            and status.returncode == 0
+            and not status.stdout.strip()
+        )
+    return {
+        "tool_git_sha": sha,
+        "tool_git_dirty": not clean,
+        "tool_sha256": hashlib.sha256(data).hexdigest(),
+    }
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """CLI entry point."""
+    # Before any input is read or model call made, so the record describes the tool file as
+    # this run loaded it, whatever is edited or reverted while the run goes on.
+    tool_source = tool_provenance(TOOL_FILE)
     try:  # the package of the environment it runs in (the frozen worktree's, for E0)
         import graderproof  # noqa: F401
     except ImportError:  # pragma: no cover - only outside an environment with the package
@@ -212,7 +290,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "rule": "real when at least one flagged variant's witness validates (D23)",
         "tasks": rulings(owners, answers),
         "models": client.served_models(),
-        "provenance": provenance(AuditConfig(), {"tool": "tools/e0_adjudicate.py"}),
+        "provenance": provenance(AuditConfig(), {"tool": "tools/e0_adjudicate.py", **tool_source}),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n")
