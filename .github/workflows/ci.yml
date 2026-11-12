@@ -28,11 +28,16 @@ jobs:
         python-version: ["3.11", "3.12"]
     env:
       UV_PYTHON: ${{ matrix.python-version }}
+      # The bubblewrap sandbox hides $HOME, so the interpreter must live outside it:
+      # actions/setup-python installs under /opt, and uv may use only that interpreter.
+      UV_PYTHON_PREFERENCE: only-system
+      UV_PYTHON_DOWNLOADS: never
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - uses: astral-sh/setup-uv@v6
       - name: Setup
         run: make setup
       - name: Lint, typecheck, test, offline demo

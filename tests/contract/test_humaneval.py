@@ -483,8 +483,12 @@ def test_long_results_are_cut_in_the_printed_line(tasks: dict[str, Task]) -> Non
 UPSTREAM_DRIVER = """\
 import importlib
 import json
+import multiprocessing
 import sys
 
+# upstream's check_correctness was written for, and run under, the fork start method
+# (Linux's default before Python 3.14); graderproof's grader pins it the same way.
+multiprocessing.set_start_method("fork")
 for name in sys.argv[4:]:  # modules upstream's caller has imported before any check
     importlib.import_module(name)
 sys.path.insert(0, sys.argv[1])
