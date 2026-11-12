@@ -38,8 +38,8 @@ E1/E2 under prereg 0003 (D38 to D40): HumanEval is complete and confirmatory (`a
 
 ## Usage to date
 
-- cash_usd = 0. Single calls through the client wrapper (ledger): 9 on 2026-10-23 (demo); 60 on 2026-11-04 (demo re-recording and E0); 36 on 2026-11-11 (E0 completion, adjudication, E4 on toybench), all within the daily cap at CAP_SHARE 0.2.
-- Not in the ledger: 17 E1 round-1 extraction answers on 2026-11-11, all from audited model workers (D24) and all superseded by the amendment (D38, D39). Counting them, 2026-11-11 used 53 of the 60 allowed calls.
+- cash_usd = 0. Single calls through the client wrapper (ledger): 9 on 2026-10-23 (demo); 60 on 2026-11-04 (demo re-recording and E0); 41 on 2026-11-11 (36 for E0 completion, adjudication, and E4 on toybench, plus the 5 HumanEval extraction requests of the first prereg 0003 round, which the ledger dates by request time), all within the daily cap at CAP_SHARE 0.2.
+- Not in the ledger: 17 E1 round-1 extraction answers on 2026-11-11, all from audited model workers (D24) and all superseded by the amendment (D38, D39). Counting them, 2026-11-11 used 58 of the 60 allowed calls.
 - 2026-11-12: one review run (of 2d87aaa); 47 single calls in the ledger plus 2 incomplete answers set aside and re-asked, 49 of the 60 allowed.
 - Review runs: one on 2026-11-04 (df55c18) and one on 2026-11-11 (5677b9f), each within the one-a-day cap.
 
