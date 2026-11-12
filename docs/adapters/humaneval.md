@@ -264,5 +264,6 @@ result numbers (non-negotiable 1).
   `solution.py` from the working directory, it works unchanged behind such a wrapper.
 * Only the original HumanEval tests are used. EvalPlus HumanEval+ would be a separate,
   exploratory comparison (D18).
-* Task-level findings for HumanEval stay in `private/` (non-negotiable 14); only
-  aggregates and hashes may be committed.
+* Task-level evidence for HumanEval stays in `private/` (non-negotiable 14). The public
+  audit rows identify their tasks, and their variant rows are published with keyed ids
+  and no operator names through `tools/publish_rows.py` (D43, D44).

@@ -349,5 +349,6 @@ task that does not reach a stable reward of 1.0. Its output is not yet banked un
   the checkout. Lint smells for these tasks therefore describe the driver rather than
   tau2's checks, and the driver's module docstring and this document describe the checks
   for the root-cause step.
-* Task-level findings for tau2-bench stay in `private/` (non-negotiable 14); only
-  aggregates and hashes may be committed.
+* Task-level evidence for tau2-bench stays in `private/` (non-negotiable 14). Public
+  audit rows, which identify their tasks, are published only through
+  `tools/publish_rows.py`, with keyed variant ids and no operator names (D44).

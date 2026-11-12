@@ -4,7 +4,7 @@ Every changed or withdrawn claim gets a dated entry here (non-negotiable 3): wha
 
 ## 2026-11-12: HumanEval variant rows republished with keyed ids
 
-The entry below described the public HumanEval rows as exposing classical variants, including the ones the graders accepted. The public `artifacts/audit/humaneval/variants.jsonl` now carries keyed ids and no operator names (D44), and a regeneration of every classical variant from public data matches none of its rows. The earlier rows remain in the repository's history. README.md, docs/REPORT.md section 7.2, artifacts/README.md, and docs/DATA.md now describe the keyed rows. No number changes.
+The entry below described the public HumanEval rows as exposing classical variants, including the ones the graders accepted. The public `artifacts/audit/humaneval/variants.jsonl` now carries keyed ids and no operator names (D44), and a regeneration of every classical variant from public data matches none of its rows. The earlier rows remain in the repository's history. README.md, docs/REPORT.md section 7.2, artifacts/README.md, docs/DATA.md, SECURITY.md, and the HumanEval and tau2-bench adapter notes now describe the keyed rows; SECURITY.md and the adapter notes had also said that only aggregates and hashes are published. No number changes.
 
 ## 2026-11-12: what the public artifacts reveal about third-party tasks
 

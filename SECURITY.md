@@ -10,4 +10,4 @@ graderproof runs third-party graders, task repositories, and benchmark scripts. 
 
 ## Grader weaknesses found by graderproof
 
-Task-level findings about third-party benchmarks that are not yet fixed upstream are kept out of this repository (they live in a git-ignored `private/` directory). Only aggregate statistics and hashes are published. Disclosure to benchmark maintainers is handled by the repository owner, never automatically.
+Task-level evidence about third-party benchmarks that are not yet fixed upstream (the variants, their witnesses, the grader output, and the model calls) is kept out of this repository; it lives in a git-ignored `private/` directory. What is published is aggregate statistics and one row per audited task, with counts and flags. Variant rows carry keyed ids and no operator names (`tools/publish_rows.py`), and an earlier version of the HumanEval rows, still in the history, used plain content hashes (DECISIONS.md D43 and D44). Disclosure to benchmark maintainers is handled by the repository owner, never automatically.
