@@ -12,6 +12,16 @@ History moved out of STATUS.md, newest first.
 - Release sprint (Raj's message, repeated on 2026-11-12): experiments paused; secrets scan clean; nothing under `private/` or `runs/` tracked now or in history; author and committer identities are Raj's GitHub noreply address, the Anthropic noreply address, and GitHub's; every email address in tracked files and history is a fictitious or benchmark placeholder. A four-lens audit workflow found that the public HumanEval task hashes reverse to task ids (by design, for G7) and that classical variant ids can be matched by regenerating the variants, which exposes the classical survivors (D43). The documents now say so; the sprint ended NOT-READY.
 - D44: `tools/publish_rows.py` republished the HumanEval rows with keyed ids and no operator names, and G14 now checks every third-party audit for keyed rows (fresh clone) and for rows that republish from their private original (original checkout). The regeneration attack matches none of the public rows.
 - SECURITY.md and the HumanEval and tau2-bench adapter notes now match the keyed-rows policy (audit finding PD6). Fast check on b9b3a8d: 9/14. Main updated for the disclosure fix (D45).
+- README lens fixes (D46): `tools/e1_tables.py` banks the preregistered median and IQR of HumanEval's per-task mutation score and exact intervals for the E1 and E2 rates, and a test checks the bank against a recomputation. README.md and docs/REPORT.md section 5.6 report them; the E2 null shows its interval and base, the E4 caveat sits beside its numbers, the review-process claim is accurate, and related work is corrected (CORRECTIONS.md).
+- Release audit, open non-blocking items (verified by its adversarial verifiers):
+  - SEC-1, SEC-2: `make secrets-scan` misses some credential shapes and does not scan commit messages, history file names, binary blobs, or files named by `*_TOKEN_FILE` variables.
+  - SEC-3: the bwrap child runs as root and can read root-only files outside `$HOME`; this is the next action.
+  - PD3: two web-UI commits carry a non-UTC offset.
+  - PD4: D15 and D21 mention plan sharing and Actions minutes.
+  - PD5: no personal-data rule in the scanner.
+  - README F4: D37 covers only the false-accept branch of the adjudication prompt; this is review item N5.
+  - README F9: the Status gate list is template text rather than rendered from a banked fast check.
+  - Refuted: PD1, PD2, and third-party F7.
 - Final README pass for first-time readers (D42): current gate state in the Status section, the HumanEval headline with its mean mutation score and validator agreement, a plain description of what a finding looks like on the synthetic demo, and one repeated limitation merged.
 
 ## 2026-11-11, goal_turn 6: E1 round 1 answered, text clipping found, release sprint

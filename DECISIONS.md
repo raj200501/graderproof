@@ -254,3 +254,13 @@ This carries out D43 point 3, the fix the release sprint found was needed.
 ## D45 (2026-11-12) Update main for the disclosure fix without a gate increase
 
 Raj's standing order says to update main at RELEASE-READY points, "when the branch is worth publishing again (more gates passing, README still honest, make ci green)". The fix in D44 adds no gate: the fast check stays at 9/14. Main's HEAD, however, still exposes the HumanEval classical survivors through plain content hashes, and its README and REPORT still say that only hashes and aggregates are published. The release sprint's own criteria treat both as blocking, and the sprint ended NOT-READY for exactly this reason. Leaving main as it is would keep the exposure in the repository's default branch and the inaccurate statement on its front page. I read the order's purpose as publishing the branch whenever it is better and safe, so main is updated now, after the same checks (make ci on a fresh clone, claimcheck, freshness, a fast ship-check), and the RELEASE-READY line is printed. The earlier rows stay in history; that is Raj's decision (D43).
+
+## D46 (2026-11-12) The preregistered E1 summaries: median and IQR, exact intervals beside the bootstrap
+
+The release-sprint audit (README lens, finding F3) found that the README's confirmatory HumanEval headline gave the mean per-task mutation score (from `summary.json`), a summary prereg 0002 does not name. The prereg fixes it as a distribution, "median and interquartile range". The audit also found that the E2 null result was printed without the interval the prereg asks for, and without how many preserving variants each task had.
+
+- `tools/e1_tables.py` computes, for each confirmatory E1/E2 audit, the median and the first and third quartiles of the per-task mutation score. They are taken over scorable tasks with a defined score, using Python's `statistics.quantiles(n=4, method="inclusive")`. The prereg names no quartile method; this one interpolates between order statistics and stays inside the observed range.
+- The tool also computes exact Clopper-Pearson 95% intervals for the E1 and E2 task rates. They are labeled exploratory and printed beside the preregistered percentile bootstrap intervals, as E0 does (N11). The bootstrap interval of a zero rate is the degenerate [0, 0].
+- The tool records the number of counted preserving variants per scorable task.
+- It writes `artifacts/e1/tables.json`, and `--check` fails when the banked file differs from a recomputation. A test runs the check, so these numbers cannot drift from the rows (the gap N7 describes for E0's tables).
+- The README headline reports the median and IQR. The mean, which is not preregistered, is dropped from it. A CORRECTIONS.md entry records the change.

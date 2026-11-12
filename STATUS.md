@@ -56,6 +56,7 @@ The release sprint's blocker is fixed: public third-party rows carry keyed ids a
 
 - E1/E2 on HumanEval completed under prereg 0003 and reported (README.md, docs/REPORT.md section 5.6); the review of 2d87aaa banked and its two blocking issues fixed (12ea1da).
 - CI on GitHub fixed without skipping a test (D41): the interpreter lives outside the sandbox-hidden $HOME, and the upstream HumanEval driver pins fork. Green on main at 5373797.
+- README and report honesty fixes from the audit's README lens. The HumanEval headline gives the preregistered median and IQR of the per-task mutation score, from `artifacts/e1/tables.json` (`tools/e1_tables.py --check`, D46). It also gives the E2 null with its exact interval and its thin base of preserving variants, the E4 caveat beside the numbers, an accurate review-process claim, and corrected related work (CORRECTIONS.md).
 - Keyed public rows (D44): `tools/publish_rows.py` publishes third-party variant rows with HMAC-keyed ids, no operator names, and a fixed order, and records `PUBLIC_ROWS.json`. G14 now fails on a third-party row published any other way, and in the original checkout it checks that the rows republish from their private original. The HumanEval rows are republished, the original is kept under `private/`, and the regeneration attack now matches none of the public rows.
 - Release sprint of 2026-11-12: a publication-safety audit (secrets, third-party task details, personal data, README honesty) found that the public HumanEval rows identify their tasks and, through reproducible variant ids, the classical variants its graders accepted (D43). README.md, docs/REPORT.md section 7.2, artifacts/README.md, and docs/DATA.md now say so (CORRECTIONS.md). The report's abstract now states the HumanEval finding. Sprint result: NOT-READY until HEAD carries keyed ids.
 - Final README pass (D42): the Status section gives the current gate state, the HumanEval headline carries its mean mutation score and validator agreement, the quickstart describes what a finding looks like on the synthetic demo, and a repeated limitation is merged. No claim, gate, or check changed.
@@ -65,6 +66,8 @@ The release sprint's blocker is fixed: public third-party rows carry keyed ids a
 Nothing.
 
 ## Backlog (suggestions for Raj, not ladder rungs)
+
+- From the release audit (docs/LOG.md, 2026-11-12): widen `make secrets-scan` (more credential shapes, commit messages, history file names, a personal-data rule), and render the README's gate list from a banked fast-check artifact.
 
 - A maintainer-side check for disclosures: with the key for one benchmark (sent privately with a disclosure draft), `tools/publish_rows.py` could confirm that each public keyed row matches the private evidence, so a maintainer can check a finding against this repository without the repository revealing it.
 

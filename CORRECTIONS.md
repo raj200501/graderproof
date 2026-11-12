@@ -2,6 +2,17 @@
 
 Every changed or withdrawn claim gets a dated entry here (non-negotiable 3): what was claimed, where, what changed, why, and the artifact behind the new claim.
 
+## 2026-11-12: the HumanEval headline reports the preregistered summaries
+
+The release-sprint audit's README lens found these statements in README.md and docs/REPORT.md, as pushed in b078d7e and earlier. Each is corrected in the next commit, with new numbers rendered as claims from `artifacts/e1/tables.json` (`tools/e1_tables.py`, D46).
+
+1. **Mutation score.** README.md's confirmatory HumanEval headline gave the mean per-task mutation score, which prereg 0002 does not name. The prereg names the median and interquartile range, which neither document reported. Both now report the median and IQR, and the mean is dropped from the headline.
+2. **The E2 null.** The false-reject result had no interval and no word on how many preserving variants each task had. Both documents now give its exact 95% interval and the per-task range of counted preserving variants; docs/REPORT.md notes that the preregistered bootstrap interval is degenerate at zero.
+3. **Review process.** README.md said that independent adversarial reviews block releases, but two release-ready points passed while the latest review was BLOCK. It now says that the gates cannot all pass until a review returns SHIP, and that the latest returned BLOCK.
+4. **E4 caveat.** README.md's E4 highlight and table row now carry the caveat that the fresh variants are labeled by the same checks the repairs graft.
+5. **Related work.** README.md described Checking the Checkers as an audit; it is a survey of verifier noise and robustness. It also listed Terminal-Bench among the benchmarks audited or adapted; HumanEval stands in for it (D18). A claim about EvalPlus's findings that `artifacts/citecheck.json` does not record is removed.
+6. **What waits for what.** docs/REPORT.md said that E4 waits for survivors on the public benchmarks and that E3 to E6 wait for tau2-bench and BFCL. E3 and E4 on HumanEval wait only for model calls, and the Holm tests, E5, and E6 wait for the other two benchmarks.
+
 ## 2026-11-12: HumanEval variant rows republished with keyed ids
 
 The entry below described the public HumanEval rows as exposing classical variants, including the ones the graders accepted. The public `artifacts/audit/humaneval/variants.jsonl` now carries keyed ids and no operator names (D44), and a regeneration of every classical variant from public data matches none of its rows. The earlier rows remain in the repository's history. README.md, docs/REPORT.md section 7.2, artifacts/README.md, docs/DATA.md, SECURITY.md, and the HumanEval and tau2-bench adapter notes now describe the keyed rows; SECURITY.md and the adapter notes had also said that only aggregates and hashes are published. No number changes.
