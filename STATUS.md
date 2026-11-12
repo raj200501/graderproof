@@ -7,7 +7,7 @@ Updated 2026-11-11. History lives in docs/LOG.md.
 
 ## Gates (from `python tools/ship_check.py --fast`; only a full run counts)
 
-Fast check on 4f53770 (2026-11-11, clean tree): **9/14**. G5, G7, G8, G9, and G12 fail.
+Fast check on 12ea1da (2026-11-12, clean tree; the merge of main that follows changes no file): **9/14**. G5, G7, G8, G9, and G12 fail.
 
 | Gate | State | Evidence or blocker |
 |---|---|---|
@@ -16,9 +16,9 @@ Fast check on 4f53770 (2026-11-11, clean tree): **9/14**. G5, G7, G8, G9, and G1
 | G3 CI parity | PASS | ci.yml runs `make ci` on 3.11 and 3.12; parts pass |
 | G4 Offline demo | PASS | under `unshare -rn`, no ledger change, matches the golden output |
 | G5 Tool validity | FAIL | preregistered negative result: E0 recall is below the 0.90 threshold (H1 not met); precision met it (H2). Only a new planted set under a new preregistration can retest it |
-| G6 Validation integrity | PASS | headline variants all have two agreeing validations and a witness; agreement and exclusions reported |
+| G6 Validation integrity | PASS | every headline variant of E0 and HumanEval has two agreeing validations and a witness; agreement and exclusions reported |
 | G7 Confirmatory audit | FAIL | E1/E2 complete on HumanEval (1 of 3 benchmarks, prereg 0003); BFCL and tau2-bench under way |
-| G8 Repair | FAIL | E4 done on toybench; G8 needs E4 on the audited benchmarks, which waits for E1 |
+| G8 Repair | FAIL | E4 done on toybench; HumanEval has graders with surviving variants and needs E4 (its generalization batch needs more calls than one day's remainder) |
 | G9 Impact and cards | FAIL | E5 runner not built; toybench card only |
 | G10 Claim integrity | PASS | claimcheck and freshness pass on README.md, docs/REPORT.md, and the card |
 | G11 Preregistration | PASS | prereg 0001 and 0002 frozen and chained; confirmatory artifacts follow them |
