@@ -2,6 +2,26 @@
 
 Non-blocking issues raised by independent reviews (gate G12, docs/BUILD_BRIEF.md section 6), with what became of each. Blocking issues and full evidence are in `artifacts/review/history/`.
 
+## Review of 2d87aaa20e8c (2026-11-12, BLOCK)
+
+Blocking issues: B1 (the E4 mutation score before and after repair was not reported) is fixed by claims from artifacts/e0/tables.json in docs/REPORT.md section 5.5, README.md, and the toybench card; B2 (G7 accepted audits that cite any preregistration) is fixed in tools/ship_check.py with falsification tests.
+
+| Id | Issue | Status |
+|---|---|---|
+| N1 | The E4 generalization test is not independent of the repair: both use the same requirement checks | Open (unchanged): disclosed beside the numbers in README.md and docs/REPORT.md section 5.5; the report now calls the batch the stronger test rather than the test that matters. |
+| N2 | Previous N18 is still open: no gate checks artifacts/ for task-level evidence from third-party benchmarks | Open: G14 does not yet fail on third-party model request or response files committed under artifacts/model_calls/<benchmark>-0003/ (only MANIFEST.json belongs there, D35). |
+| N3 | 'Hid every tau2-bench customer request' overstates the clip audit: 27 of 40 tau2 items lost the whole customer request, 13 kept part of it | Fixed: README.md and docs/REPORT.md now say the cut hit every tau2-bench task text and, in most, the customer request. |
+| N4 | prereg 0003 says no grader verdict existed before the amendment, but the prereg 0002 round 1 graded every sampled reference on 2026-11-04 | Acknowledged: prereg 0003 cannot be edited after its freeze; every sampled reference was graded once under prereg 0002 on 2026-11-04, the amendment does not touch reference runs, and the 0003 worktree regraded them in new caches, so nothing was reused. |
+| N5 | D37 reports only the false-accept clause; the adjudication prompt's false-reject branch is also broader than prereg 0001 | Open: D37 covers only the false-accept branch of the adjudication prompt; the false-reject branch is also broader than prereg 0001, and no ruling relied on it. |
+| N6 | The E4 toybench summary cites no preregistration, so prereg-verify does not date it | Open: the E4 toybench summary has no prereg field; its provenance (f63b2d9, clean) matches prereg 0002. |
+| N7 | artifacts/e0/tables.json is never regenerated or compared, so the claims that read it are not re-derived from the rows | Open: no target regenerates artifacts/e0/tables.json and compares it; it regenerates byte-identically today. |
+| N8 | Model calls that are answered but never ingested are outside the ledger and the cap enforced in code | Open: answers made but never ingested sit outside the ledger; STATUS.md counts them, and every day stayed within the cap. |
+| N9 | Docs disagree on whether E1/E2 has started, and the report does not yet label prereg 0003 as a deviation | Fixed: docs/REPORT.md and README.md now say E1/E2 is under way with no results yet. |
+| N10 | The toybench card's plain-language rate labels count the two adjudicated false positives | Open: the toybench card counts the two adjudicated false positives in its plain-language task-level rates. |
+| N11 | G5's 'every miss explained' check is a token match on the task id | Open: G5 checks only that each miss is named in docs/E0_MISSES.md; each miss has its own explained section today. |
+| N12 | The tsv-transpose patch notes do not say its flag was adjudicated a false positive | Open: the tsv-transpose patch notes do not mention the adjudication; README.md and docs/REPORT.md do. |
+| N13 | Checks not completed within the time box | To cover in the next review. |
+
 ## Review of 5677b9f639c9 (2026-11-11, BLOCK)
 
 Blocking issues B1 to B6 are fixed in the commit after 5677b9f: corrected wording and new claims for B1 to B3 and B6, a G5 check of the adjudication against the banked rulings for B4, and D37 with a CORRECTIONS.md entry for B5. Residuals of B4 found later are fixed in c647941: each adjudicated variant must belong to its task and to that task's flag, and each banked adjudicate response must match the ledger's recorded hash.

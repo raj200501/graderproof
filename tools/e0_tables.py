@@ -13,7 +13,9 @@ model store, and the usage ledger, and writes ``artifacts/e0/tables.json``:
   with the label; ``disagreed``: they disagree or one is unsure; ``rejected``: both agree on
   the other label), from ``artifacts/e0/variants.jsonl``;
 * ``e4_toybench``: the E4 repairs on toybench whose task's E0 flag the adjudicator ruled
-  not real (an E0 false positive), from the E4 summary and ``artifacts/e0/adjudication.json``;
+  not real (an E0 false positive), from the E4 summary and ``artifacts/e0/adjudication.json``,
+  and the mean mutation score of the repaired graders before and after repair (the E4
+  outcome prereg 0002 names), from the summary's ``mutation_scores``;
 * ``by_kind``: planted and detected counts and the detection rate for each task kind
   (``kind`` in each task's ``task.toml``), over the counted planted tasks;
 * ``detecting_operators``: for each operator, the number of detected planted tasks with at
@@ -50,10 +52,25 @@ def e4_cross(e4: dict[str, Any], adjudication: dict[str, Any]) -> dict[str, Any]
     names = sorted(Path(str(r["patch"])).stem for r in e4.get("repaired", []))
     rulings = adjudication.get("tasks", {})
     not_real = [n for n in names if n in rulings and rulings[n].get("real") is False]
+    repaired_hashes = {r.get("task_hash") for r in e4.get("repaired", [])}
+    scores = [
+        m
+        for m in e4.get("mutation_scores", [])
+        if m.get("task_hash") in repaired_hashes
+        and m.get("before") is not None
+        and m.get("after") is not None
+    ]
     return {
         "repaired": len(names),
         "repaired_adjudicated_not_real": len(not_real),
         "tasks_adjudicated_not_real": not_real,
+        "mutation_score_n": len(scores),
+        "mutation_score_before_mean": (
+            sum(m["before"] for m in scores) / len(scores) if scores else None
+        ),
+        "mutation_score_after_mean": (
+            sum(m["after"] for m in scores) / len(scores) if scores else None
+        ),
     }
 
 

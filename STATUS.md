@@ -11,36 +11,36 @@ Fast check on 4f53770 (2026-11-11, clean tree): **9/14**. G5, G7, G8, G9, and G1
 
 | Gate | State | Evidence or blocker |
 |---|---|---|
-| G1 Build and tests | PASS | 697 tests pass (8 skipped); core line coverage above the 85% floor |
+| G1 Build and tests | PASS | 714 tests pass (8 skipped); core line coverage above the 85% floor |
 | G2 Static quality | PASS | ruff, ruff format, mypy --strict clean; every ignore has a reason |
 | G3 CI parity | PASS | ci.yml runs `make ci` on 3.11 and 3.12; parts pass |
 | G4 Offline demo | PASS | under `unshare -rn`, no ledger change, matches the golden output |
 | G5 Tool validity | FAIL | preregistered negative result: E0 recall is below the 0.90 threshold (H1 not met); precision met it (H2). Only a new planted set under a new preregistration can retest it |
 | G6 Validation integrity | PASS | headline variants all have two agreeing validations and a witness; agreement and exclusions reported |
-| G7 Confirmatory audit | FAIL | E1/E2 not run; the first extraction round found the frozen code clips long task texts, so prereg 0002 needs an amendment before any E1/E2 data (D38) |
+| G7 Confirmatory audit | FAIL | E1/E2 complete on HumanEval (1 of 3 benchmarks, prereg 0003); BFCL and tau2-bench under way |
 | G8 Repair | FAIL | E4 done on toybench; G8 needs E4 on the audited benchmarks, which waits for E1 |
 | G9 Impact and cards | FAIL | E5 runner not built; toybench card only |
 | G10 Claim integrity | PASS | claimcheck and freshness pass on README.md, docs/REPORT.md, and the card |
 | G11 Preregistration | PASS | prereg 0001 and 0002 frozen and chained; confirmatory artifacts follow them |
-| G12 Independent review | FAIL | review of 5677b9f is REVIEW: BLOCK (B1 to B6), all fixed in 4f53770; the next review run is allowed on 2026-11-12 (cap: one a day) |
+| G12 Independent review | FAIL | review of 2d87aaa (2026-11-12) is REVIEW: BLOCK (B1, B2), both addressed since; next review 2026-11-13 |
 | G13 Documentation | PASS | README.md follows section 11; docs/REPORT.md complete; citecheck verifies every reference |
 | G14 Hygiene | PASS | secrets scan clean, cash 0, private/ untracked, no third-party evidence under artifacts/ (new check, c647941), tree clean |
 
 ## Now
 
-prereg 0003 (D38 to D40) is frozen (22b8832): model requests carry the full task text, with smaller batches for tau2-bench and BFCL. E1/E2 runs from `/home/user/graderproof-e1-0003` with new stores `<benchmark>-0003`. Round 1 is built (24 extraction requests, none with a cut field: `artifacts/e1/clip_audit_0003_round1.json`); HumanEval's 5 are answered tonight within the cap, and BFCL's and tau2-bench's wait for the 2026-11-12 cap. The open findings of the 5677b9f review (N2, N4 in part, N5, N6, and the B4 residuals) are fixed in c647941 and logged in docs/REVIEW_LOG.md. The release sprint is done (RELEASE-READY e4daee8, merged to main by Raj). Raj's standing order: E1/E2 under the cap, then the G12 review on 2026-11-12, then E3, E4 on the audited benchmarks, the E5 runner, and the grader cards.
+E1/E2 under prereg 0003 (D38 to D40): HumanEval is complete and confirmatory (`artifacts/audit/humaneval/`, cites prereg 0003, provenance at the freeze commit 22b8832 with a clean tree); its result is in README.md and docs/REPORT.md section 5.6. BFCL has its round-2 requests built and tau2-bench is running round 2; both continue under the daily cap. The independent review of 2d87aaa (2026-11-12) is BLOCK with two blocking issues, both addressed: the E4 mutation score before and after repair is now reported (B1), and G7 now checks that each audit is the preregistered E1/E2 run (B2). Its non-blocking issues are in docs/REVIEW_LOG.md. The next review run is allowed on 2026-11-13.
 
 ## Next three actions
 
-1. E1/E2 under prereg 0003 with `runs/e1_0003_round.sh <benchmark> <label>`: answer pending requests with model workers within the daily cap, audit their transcripts (`runs/e1_worker_audit.sh`), ingest from the 0003 worktree, refresh the store manifests, and run the next round.
-2. G12: the independent review of the current HEAD on 2026-11-12 (one review run a day), logging its non-blocking issues in docs/REVIEW_LOG.md (D7).
+1. E1/E2 on BFCL and tau2-bench under prereg 0003 with `runs/e1_0003_round.sh <benchmark> <label>`: answer pending requests with model workers within the daily cap, audit their transcripts (`runs/e1_worker_audit.sh`), ingest from the 0003 worktree, refresh the store manifests, and run the next round; then the Holm-corrected tests across the three benchmarks.
+2. G12: the next independent review on 2026-11-13 (one review run a day), after logging every non-blocking issue in docs/REVIEW_LOG.md (D7).
 3. Then E3, E4 on the audited benchmarks, the E5 runner, E6, and the grader cards (Raj's order of 2026-11-11).
 
 ## Usage to date
 
 - cash_usd = 0. Single calls through the client wrapper (ledger): 9 on 2026-10-23 (demo); 60 on 2026-11-04 (demo re-recording and E0); 36 on 2026-11-11 (E0 completion, adjudication, E4 on toybench), all within the daily cap at CAP_SHARE 0.2.
 - Not in the ledger: 17 E1 round-1 extraction answers on 2026-11-11, all from audited model workers (D24) and all superseded by the amendment (D38, D39). Counting them, 2026-11-11 used 53 of the 60 allowed calls.
-- 2026-11-12: one review run (G12) on the current HEAD; E1/E2 calls within the day's 60.
+- 2026-11-12: one review run (of 2d87aaa); 47 single calls in the ledger plus 2 incomplete answers set aside and re-asked, 49 of the 60 allowed.
 - Review runs: one on 2026-11-04 (df55c18) and one on 2026-11-11 (5677b9f), each within the one-a-day cap.
 
 ## Needs Raj

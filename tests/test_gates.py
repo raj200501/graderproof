@@ -1289,32 +1289,66 @@ def audit_rows(
     return trows, vrows
 
 
-def rate(values: Sequence[bool], seed: int) -> dict[str, Any]:
+def rate(values: Sequence[bool], seed: int, reps: int = REPS) -> dict[str, Any]:
     """{point, ci, n} for a share of tasks."""
 
     def share(idx: Sequence[int]) -> float | None:
         return sum(1 for i in idx if values[i]) / len(idx) if idx else None
 
-    ci = sc.bootstrap_ci(len(values), share, seed, REPS)
+    ci = sc.bootstrap_ci(len(values), share, seed, reps)
     return {"point": share(range(len(values))), "ci": list(ci) if ci else [], "n": len(values)}
 
 
-def audit_summary(bench: str, category: str, tasks: Sequence[AuditTask]) -> dict[str, Any]:
-    """summary.json with E1 and E2 over the scorable tasks."""
+# The preregistered E1/E2 run that G7 pins (review B2 of 2d87aaa): prereg 0002 (or an
+# amendment of it), its committed sample, the seeds 2027 (E1) and 2028 (E2) with B = 2000
+# (prereg 0002, Outcomes and definitions), and code at the commit that froze the cited
+# preregistration. FREEZE stands for that commit until g7_build knows it.
+PREREG_AUDIT = "prereg/0002-e1e2-audit.md"
+PREREG_AMEND = "prereg/0003-e1e2-full-task-text.md"
+SAMPLE = "prereg/0002-sample.json"
+FROZEN = "prereg/FROZEN.jsonl"
+E1_SEED, E2_SEED, E1E2_REPS = 2027, 2028, 2000
+FREEZE = "<commit that froze the cited preregistration>"
+AUDIT_PROV = {**PROV, "git_sha": FREEZE, "git_dirty": False}
+AUDIT_PREREG_TEXT = "# 0002 E1 and E2\n"
+AMEND_TEXT = "# Amendment to prereg 0002\n\nAmends: 0002 (prereg/0002-e1e2-audit.md)\n"
+
+
+def frozen_rows(texts: Mapping[str, str]) -> str:
+    """prereg/FROZEN.jsonl rows (file name and SHA-256) for preregistration texts."""
+    names = {rel.rsplit("/", 1)[-1]: text for rel, text in texts.items()}
+    return jsonl([{"file": n, "id": n[:4], "sha256": sha(t)} for n, t in names.items()])
+
+
+def sample_text(tasks: Mapping[str, Sequence[AuditTask]]) -> str:
+    """prereg/0002-sample.json as tools/sample.py writes it: every task of each benchmark."""
+    entries = {
+        bench: {"frame": len(ts), "tasks": sorted(tid for tid, _, _ in ts)}
+        for bench, ts in tasks.items()
+    }
+    return dump({"schema": "graderproof.sample/1", "seed": E1_SEED, "benchmarks": entries})
+
+
+def audit_summary(
+    bench: str, category: str, tasks: Sequence[AuditTask], sample: str, seed: int = E1_SEED
+) -> dict[str, Any]:
+    """summary.json with E1 (``seed``) and E2 (``seed + 1``) over the scorable tasks."""
     flags = [indicators(det, v) for _, det, v in tasks if det == "stable_pass"]
     return {
         "schema": "graderproof.audit/1",
         "benchmark": bench,
         "category": category,
         "confirmatory": True,
-        "prereg": PREREG_E1,
+        "prereg": PREREG_AUDIT,
         "model_store": f"artifacts/model_calls/{bench}",
         "n_tasks_population": len(tasks),
         "n_sampled": len(tasks),
-        "bootstrap": {"seed": SEED, "B": REPS, "alpha": 0.05},
-        "e1": {"false_accept_task_rate": rate([fa for fa, _ in flags], SEED)},
-        "e2": {"false_reject_task_rate": rate([fr for _, fr in flags], SEED + 1)},
-        "provenance": PROV,
+        "sample": SAMPLE,
+        "sample_sha256": sha(sample),
+        "bootstrap": {"seed": seed, "B": E1E2_REPS, "alpha": 0.05},
+        "e1": {"false_accept_task_rate": rate([fa for fa, _ in flags], seed, E1E2_REPS)},
+        "e2": {"false_reject_task_rate": rate([fr for _, fr in flags], seed + 1, E1E2_REPS)},
+        "provenance": AUDIT_PROV,
     }
 
 
@@ -1322,16 +1356,22 @@ def audit_files(
     benches: Sequence[tuple[str, str]] = BENCHES,
     tasks: Mapping[str, Sequence[AuditTask]] | None = None,
 ) -> Files:
-    """Audits of ``benches`` with their model calls and preregistration file."""
-    files: Files = {PREREG_E1: "# E1 and E2\n", "DECISIONS.md": "# Decisions\n"}
+    """Audits of ``benches`` with their model calls, preregistration, and sample."""
+    per = {bench: (tasks or {}).get(bench, AUDIT_TASKS) for bench, _ in benches}
+    sample = sample_text(per)
+    files: Files = {
+        PREREG_AUDIT: AUDIT_PREREG_TEXT,
+        SAMPLE: sample,
+        FROZEN: frozen_rows({PREREG_AUDIT: AUDIT_PREREG_TEXT}),
+        "DECISIONS.md": "# Decisions\n",
+    }
     for bench, category in benches:
-        bench_tasks = (tasks or {}).get(bench, AUDIT_TASKS)
-        trows, vrows = audit_rows(bench, bench_tasks)
+        trows, vrows = audit_rows(bench, per[bench])
         base = f"artifacts/audit/{bench}"
         files[f"artifacts/model_calls/{bench}/requests/r1.json"] = dump({"items": ["opaque"]})
         files[f"{base}/tasks.jsonl"] = jsonl(trows)
         files[f"{base}/variants.jsonl"] = jsonl(vrows)
-        files[f"{base}/summary.json"] = dump(audit_summary(bench, category, bench_tasks))
+        files[f"{base}/summary.json"] = dump(audit_summary(bench, category, per[bench], sample))
     return files
 
 
@@ -1342,8 +1382,28 @@ def summary_of(files: Files, bench: str) -> dict[str, Any]:
     return doc
 
 
+def prereg_part(files: Files) -> Files:
+    """The files under prereg/ (frozen in a commit of their own before the audit)."""
+    return {k: v for k, v in files.items() if k.startswith("prereg/")}
+
+
+def g7_build(tmp: Path, phases: Phases, anchor: str = "freeze") -> sc.Ctx:
+    """Commit each phase in order, with FREEZE replaced by the commit of phase ``anchor``."""
+    repo = Repo(tmp / "repo")
+    commit = FREEZE
+    for name, files in phases:
+        repo.commit(
+            name, {k: None if v is None else v.replace(FREEZE, commit) for k, v in files.items()}
+        )
+        if name == anchor:
+            commit = repo.git("rev-parse", "HEAD")
+    return repo.ctx(tmp / "work")
+
+
 def g7(tmp: Path, files: Files) -> sc.Result:
-    return sc.g7_confirmatory_audit(build(tmp, [("audit", files)]))
+    """G7 on ``files`` after their preregistration files were frozen in a commit of their own."""
+    phases: Phases = [("freeze", prereg_part(files)), ("audit", files)]
+    return sc.g7_confirmatory_audit(g7_build(tmp, phases))
 
 
 def test_g7_passes_on_three_benchmarks(tmp_path: Path) -> None:
@@ -1360,7 +1420,7 @@ def test_g7_reviewer_n10_rejected_reference_is_not_scored(tmp_path: Path) -> Non
     assert g7(tmp_path / "ok", files).ok
     old = [t for t in AUDIT_TASKS if t[1] != "flaky"]  # the old rule kept every non-flaky task
     flags = [indicators("stable_pass", v) for _, _, v in old]
-    s["e2"]["false_reject_task_rate"] = rate([fr for _, fr in flags], SEED + 1)
+    s["e2"]["false_reject_task_rate"] = rate([fr for _, fr in flags], E2_SEED, E1E2_REPS)
     files["artifacts/audit/b1/summary.json"] = dump(s)
     r = g7(tmp_path / "old", files)
     assert not r.ok
@@ -1373,7 +1433,7 @@ def test_g7_counts_only_counted_variants_with_a_stable_verdict(tmp_path: Path) -
     files = audit_files(tasks=tasks)
     assert g7(tmp_path / "ok", files).ok
     s = summary_of(files, "b1")
-    s["e1"]["false_accept_task_rate"] = rate([True, False, True], SEED)  # counted it
+    s["e1"]["false_accept_task_rate"] = rate([True, False, True], E1_SEED, E1E2_REPS)  # counted
     files["artifacts/audit/b1/summary.json"] = dump(s)
     r = g7(tmp_path / "bad", files)
     assert not r.ok
@@ -1392,6 +1452,30 @@ def test_g7_counts_only_counted_variants_with_a_stable_verdict(tmp_path: Path) -
         ({"provenance": {}}, "b1: provenance lacks"),
         ({"bootstrap": {"seed": SEED, "B": REPS, "alpha": 0.1}}, "alpha is not 0.05"),
         ({"e1": {}}, "b1: e1 false_accept_task_rate missing"),
+        ({"provenance": PROV}, "b1: provenance.git_sha 000000000000 is not "),
+        (
+            {"provenance": {**AUDIT_PROV, "git_dirty": True}},
+            "b1: provenance.git_dirty is not false",
+        ),
+        ({"provenance": {**PROV, "git_sha": FREEZE}}, "b1: provenance.git_dirty is not false"),
+        ({"benchmark": "b2"}, "b1: benchmark 'b2' is not the directory name 'b1'"),
+        ({"model_store": "artifacts/model_calls/e0"}, "b1: model_store 'artifacts/model_calls/e0'"),
+        (
+            {"model_store": "artifacts/model_calls/e0/b1"},
+            "b1: model_store 'artifacts/model_calls/e0/",
+        ),
+        ({"model_store": "artifacts/e0"}, "b1: model_store 'artifacts/e0' is not a store under"),
+        (
+            {"model_store": "artifacts/model_calls/none"},
+            "b1: model_store 'artifacts/model_calls/no",
+        ),
+        ({"model_store": None}, "b1: model_store None is not a store under artifacts/model_calls/"),
+        ({"sample_sha256": "0" * 64}, "b1: sample_sha256 is not the SHA-256 of prereg/0002-sample"),
+        ({"sample_sha256": None}, "b1: sample_sha256 is not the SHA-256 of prereg/0002-sample"),
+        (
+            {"bootstrap": {"seed": E1_SEED, "B": 1000, "alpha": 0.05}},
+            "b1: bootstrap seed 2027 and B 1000 are not the preregistered seed 2027",
+        ),
     ],
 )
 def test_g7_fails_on_a_bad_summary(tmp_path: Path, change: dict[str, Any], message: str) -> None:
@@ -1451,7 +1535,7 @@ def test_g7_needs_three_benchmarks_and_a_tool_use_one(tmp_path: Path) -> None:
     r = g7(tmp_path / "notool", audit_files(no_tool))
     assert not r.ok
     assert "no tool-use benchmark" in r.evidence
-    r = g7(tmp_path / "none", {PREREG_E1: "x\n"})
+    r = g7(tmp_path / "none", {PREREG_AUDIT: "x\n"})
     assert not r.ok
     assert "0 benchmarks" in r.evidence
 
@@ -1464,13 +1548,193 @@ def test_g7_substitution_must_be_decided_before_data(tmp_path: Path) -> None:
     assert not r.ok
     assert "substitution not justified in DECISIONS.md" in r.evidence
     decision: Files = {"DECISIONS.md": "# Decisions\n\n## D18 substitute\n"}
-    late = sc.g7_confirmatory_audit(build(tmp_path / "late", [("data", files), ("dec", decision)]))
+    frozen = prereg_part(files)
+    late = sc.g7_confirmatory_audit(
+        g7_build(tmp_path / "late", [("freeze", frozen), ("data", files), ("dec", decision)])
+    )
     assert not late.ok
     assert "substitution decision D18 not committed before data collection" in late.evidence
     early = sc.g7_confirmatory_audit(
-        build(tmp_path / "early", [("dec", decision), ("data", {**files, **decision})])
+        g7_build(
+            tmp_path / "early",
+            [("freeze", frozen), ("dec", decision), ("data", {**files, **decision})],
+        )
     )
     assert early.ok, early.evidence
+
+
+def set_summaries(files: Files, **change: Any) -> Files:
+    """``files`` with ``change`` applied to every audit summary."""
+    out = dict(files)
+    for bench, _ in BENCHES:
+        out[f"artifacts/audit/{bench}/summary.json"] = dump({**summary_of(files, bench), **change})
+    return out
+
+
+def test_g7_reviewer_b2_toybench_rows_citing_prereg_0001(tmp_path: Path) -> None:
+    """Review B2 of 2d87aaa: E0's toybench rows copied into three audit directories, with
+    summaries citing prereg 0001, seed 2026, the E0 model store, and 72 unsampled tasks
+    whose intervals recompute with that seed, passed G7. Each layer now rejects it."""
+    toy: list[AuditTask] = [
+        (f"t{i:02d}", "stable_pass", [("violating", i % 4 == 0, True)]) for i in range(72)
+    ]
+    files = audit_files()
+    e0_text = "# 0001 E0\n"
+    files[PREREG_E0] = e0_text
+    files[FROZEN] = frozen_rows({PREREG_E0: e0_text, PREREG_AUDIT: AUDIT_PREREG_TEXT})
+    trows, vrows = audit_rows("toybench", toy)
+    sample = files[SAMPLE]
+    assert sample is not None
+    for bench, category in BENCHES:
+        base = f"artifacts/audit/{bench}"
+        files[f"{base}/tasks.jsonl"] = jsonl(trows)
+        files[f"{base}/variants.jsonl"] = jsonl(vrows)
+        doc = audit_summary(bench, category, toy, sample, seed=2026)
+        doc.update(prereg=PREREG_E0, model_store="artifacts/model_calls/e0")
+        files[f"{base}/summary.json"] = dump(doc)
+    files["artifacts/model_calls/e0/requests/r1.json"] = dump({"items": ["opaque"]})
+    steps: list[tuple[dict[str, Any], str]] = [
+        ({}, "b1: cites prereg/0001-e0-tool-validity.md, which is neither"),
+        ({"prereg": PREREG_AUDIT}, "b1: model_store 'artifacts/model_calls/e0' is not a store"),
+        ({"model_store": "artifacts/model_calls/b1"}, "b1: n_sampled 72 and n_tasks_population"),
+    ]
+    change: dict[str, Any] = {}
+    for i, (more, message) in enumerate(steps):
+        change.update(more)
+        case = set_summaries(files, **change)
+        if "model_store" in change:  # each audit names its own store
+            for bench, _ in BENCHES:
+                s = summary_of(case, bench)
+                s["model_store"] = f"artifacts/model_calls/{bench}"
+                case[f"artifacts/audit/{bench}/summary.json"] = dump(s)
+        r = g7(tmp_path / str(i), case)
+        assert not r.ok, message
+        assert message in r.evidence, (message, r.evidence)
+
+
+def test_g7_needs_the_preregistered_seeds(tmp_path: Path) -> None:
+    """Intervals that recompute with the summary's own seed do not pass with the wrong seed."""
+    files = audit_files()
+    sample = files[SAMPLE]
+    assert sample is not None
+    for seed in (2026, E2_SEED, SEED):
+        case = dict(files)
+        for bench, category in BENCHES:
+            doc = audit_summary(bench, category, AUDIT_TASKS, sample, seed=seed)
+            case[f"artifacts/audit/{bench}/summary.json"] = dump(doc)
+        r = g7(tmp_path / str(seed), case)
+        assert not r.ok, seed
+        assert f"b1: bootstrap seed {seed} and B 2000 are not the preregistered seed 2027" in (
+            r.evidence
+        )
+
+
+def test_g7_needs_exactly_the_committed_sample(tmp_path: Path) -> None:
+    files = audit_files()
+    swapped = [*AUDIT_TASKS[:4], ("t9", *AUDIT_TASKS[4][1:])]
+    trows, vrows = audit_rows("b1", swapped)
+    other = {**files, "artifacts/audit/b1/tasks.jsonl": jsonl(trows)}
+    other["artifacts/audit/b1/variants.jsonl"] = jsonl(vrows)
+    r = g7(tmp_path / "swap", other)
+    assert not r.ok
+    assert "b1: tasks.jsonl is not the sample of b1 in prereg/0002-sample.json: 1 tasks" in (
+        r.evidence
+    )
+    trows, vrows = audit_rows("b2", AUDIT_TASKS)  # b2's tasks under b1's name
+    moved = {**files, "artifacts/audit/b1/tasks.jsonl": jsonl(trows)}
+    moved["artifacts/audit/b1/variants.jsonl"] = jsonl(vrows)
+    r = g7(tmp_path / "moved", moved)
+    assert not r.ok
+    assert "b1: tasks.jsonl is not the sample of b1" in r.evidence
+    sample = json.loads(str(files[SAMPLE]))
+    for i, (entry, message) in enumerate(
+        [
+            ({"frame": 6, "tasks": [*sample["benchmarks"]["b1"]["tasks"], "t9"]}, "the 6 sampled"),
+            ({"frame": 7, "tasks": sample["benchmarks"]["b1"]["tasks"]}, "tasks and frame 7 of b1"),
+            ({"frame": 5, "tasks": ["t0", "t0", "t1", "t2", "t3"]}, "lacks distinct task ids"),
+            (None, "prereg/0002-sample.json has no sample of benchmark 'b1'"),
+        ]
+    ):
+        benches = {k: v for k, v in sample["benchmarks"].items() if k != "b1"}
+        if entry is not None:
+            benches["b1"] = entry
+        text = dump({**sample, "benchmarks": benches})
+        case = set_summaries({**files, SAMPLE: text}, sample_sha256=sha(text))
+        r = g7(tmp_path / f"sample{i}", case)
+        assert not r.ok, message
+        assert message in r.evidence, (message, r.evidence)
+    edited = dump({**sample, "note": "edited after freezing"})
+    late = set_summaries({**files, SAMPLE: edited}, sample_sha256=sha(edited))
+    r = sc.g7_confirmatory_audit(
+        g7_build(tmp_path / "late", [("freeze", prereg_part(files)), ("audit", late)])
+    )
+    assert not r.ok
+    assert "b1: prereg/0002-sample.json is not committed exactly once, in the commit" in r.evidence
+
+
+def test_g7_needs_the_code_of_the_freeze_commit(tmp_path: Path) -> None:
+    files = audit_files()
+    frozen = prereg_part(files)
+    phases: Phases = [("freeze", frozen), ("later", {"README.md": "x\n"}), ("audit", files)]
+    r = sc.g7_confirmatory_audit(g7_build(tmp_path / "later", phases, anchor="later"))
+    assert not r.ok
+    assert "b1: provenance.git_sha " in r.evidence
+    assert "the commit that froze prereg/0002-e1e2-audit.md" in r.evidence
+    phases = [("before", {"README.md": "x\n"}), ("freeze", frozen), ("audit", files)]
+    r = sc.g7_confirmatory_audit(g7_build(tmp_path / "before", phases, anchor="before"))
+    assert not r.ok
+    assert "b1: provenance.git_sha " in r.evidence
+    r = g7(tmp_path / "dirty", set_summaries(files, provenance={**AUDIT_PROV, "git_dirty": True}))
+    assert not r.ok
+    assert "b1: provenance.git_dirty is not false" in r.evidence
+    edited = {**files, PREREG_AUDIT: AUDIT_PREREG_TEXT + "edited\n"}
+    r = sc.g7_confirmatory_audit(g7_build(tmp_path / "edited", [("freeze", frozen), ("e", edited)]))
+    assert not r.ok
+    assert "b1: prereg/0002-e1e2-audit.md has 2 commits" in r.evidence
+    unfrozen = {**files, FROZEN: ""}
+    r = g7(tmp_path / "unfrozen", unfrozen)
+    assert not r.ok
+    assert "b1: prereg/0002-e1e2-audit.md does not match its prereg/FROZEN.jsonl entry" in (
+        r.evidence
+    )
+
+
+def test_g7_accepts_an_amendment_of_prereg_0002_frozen_later(tmp_path: Path) -> None:
+    files = set_summaries(audit_files(), prereg=PREREG_AMEND)
+    frozen = prereg_part(audit_files())
+    texts = {PREREG_AUDIT: AUDIT_PREREG_TEXT, PREREG_AMEND: AMEND_TEXT}
+    amendment: Files = {PREREG_AMEND: AMEND_TEXT, FROZEN: frozen_rows(texts)}
+    phases: Phases = [("freeze", frozen), ("amend", amendment), ("audit", {**files, **amendment})]
+    r = sc.g7_confirmatory_audit(g7_build(tmp_path / "ok", phases, anchor="amend"))
+    assert r.ok, r.evidence
+    r = sc.g7_confirmatory_audit(g7_build(tmp_path / "old", phases, anchor="freeze"))
+    assert not r.ok
+    assert "the commit that froze prereg/0003-e1e2-full-task-text.md" in r.evidence
+    for i, text in enumerate(
+        ["# Not an amendment\n", "# Amendment\n\nAmends: 0001\n", "\n" * 15 + "Amends: 0002\n"]
+    ):
+        other: Files = {PREREG_AMEND: text, FROZEN: frozen_rows({**texts, PREREG_AMEND: text})}
+        steps: Phases = [("freeze", frozen), ("amend", other), ("audit", {**files, **other})]
+        r = sc.g7_confirmatory_audit(g7_build(tmp_path / str(i), steps, anchor="amend"))
+        assert not r.ok, text
+        assert "b1: cites prereg/0003-e1e2-full-task-text.md, which is neither" in r.evidence
+    early = "prereg/0000-e1e2-early.md"
+    other = {early: AMEND_TEXT, FROZEN: frozen_rows({**texts, early: AMEND_TEXT})}
+    steps = [
+        ("freeze", frozen),
+        ("amend", other),
+        ("audit", {**set_summaries(files, prereg=early), **other}),
+    ]
+    r = sc.g7_confirmatory_audit(g7_build(tmp_path / "early", steps, anchor="amend"))
+    assert not r.ok
+    assert "b1: cites prereg/0000-e1e2-early.md, which is neither" in r.evidence
+    unfrozen: Files = {PREREG_AMEND: AMEND_TEXT}
+    steps = [("freeze", frozen), ("amend", unfrozen), ("audit", {**files, **unfrozen})]
+    r = sc.g7_confirmatory_audit(g7_build(tmp_path / "unfrozen", steps, anchor="amend"))
+    assert not r.ok
+    assert "b1: prereg/0003-e1e2-full-task-text.md does not match its prereg/FROZEN.jsonl" in (
+        r.evidence
+    )
 
 
 # =========================================================================== G8 (E4)

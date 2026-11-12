@@ -6,6 +6,8 @@ History moved out of STATUS.md, newest first.
 
 - The open findings of the 5677b9f review were fixed by a workflow of implementers and adversarial verifiers (c647941): G5 drops reference-level flags and ties each adjudicated variant to its task, its flag, and the ledger's response hash; G14 fails on tracked third-party evidence; the 0.90 allowlist row is narrowed and every threshold comparison is tested against the artifact; adjudication provenance records the tool's own commit.
 - The G12 review of the current HEAD runs on 2026-11-12, the first UTC day with an unused review run.
+- The review of 2d87aaa returned BLOCK: the E4 mutation score before and after repair was not reported (B1), and G7 accepted audits citing any preregistration (B2). Both are addressed; its non-blocking issues are logged.
+- E1/E2: 47 answers by audited model workers were ingested within the cap. HumanEval finished all four rounds and is the first complete confirmatory audit of a public benchmark; BFCL and tau2-bench continue.
 
 ## 2026-11-11, goal_turn 6: E1 round 1 answered, text clipping found, release sprint
 

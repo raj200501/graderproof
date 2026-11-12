@@ -118,10 +118,16 @@ def test_tables(tmp_path: Path) -> None:
         json.dumps(
             {
                 "repaired": [
-                    {"patch": "outbound/patches/toybench/a.patch"},
-                    {"patch": "outbound/patches/toybench/b.patch"},
-                    {"patch": "outbound/patches/toybench/c.patch"},
-                ]
+                    {"patch": "outbound/patches/toybench/a.patch", "task_hash": "ha"},
+                    {"patch": "outbound/patches/toybench/b.patch", "task_hash": "hb"},
+                    {"patch": "outbound/patches/toybench/c.patch", "task_hash": "hc"},
+                ],
+                "mutation_scores": [
+                    {"task_hash": "ha", "before": 0.5, "after": 1.0, "n": 4},
+                    {"task_hash": "hb", "before": 0.75, "after": 1.0, "n": 4},
+                    {"task_hash": "hc", "before": None, "after": None, "n": 0},
+                    {"task_hash": "hz", "before": 1.0, "after": 1.0, "n": 3},
+                ],
             }
         )
     )
@@ -163,6 +169,9 @@ def test_tables(tmp_path: Path) -> None:
         "repaired": 3,
         "repaired_adjudicated_not_real": 1,
         "tasks_adjudicated_not_real": ["a"],
+        "mutation_score_n": 2,
+        "mutation_score_before_mean": 0.625,
+        "mutation_score_after_mean": 1.0,
     }
     assert doc["by_kind"] == {
         "module": {"planted": 1, "detected": 1, "rate": 1.0},
@@ -184,8 +193,8 @@ G5_COMPARISONS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     (
         "README.md",
         "recall {e0.recall} (95% CI {e0.recall_lo} to {e0.recall_hi}), short of its "
-        "preregistered 0.90 target, at precision {e0.precision} (95% CI {e0.precision_lo} to "
-        "{e0.precision_hi}), which met it",
+        "preregistered 0.90 target and reported as a negative result, at precision "
+        "{e0.precision} (95% CI {e0.precision_lo} to {e0.precision_hi}), which met it",
         ("e0.recall < T", "e0.precision >= T"),
     ),
     (

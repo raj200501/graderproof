@@ -94,9 +94,20 @@ Artifact contracts (later iterations may tighten them, never loosen):
   (planted, not detected) appears in ``docs/E0_MISSES.md`` as a whole token.
 * Audits (G7) ``artifacts/audit/<benchmark>/summary.json``: ``benchmark``,
   ``category``, ``confirmatory``, ``prereg``, ``substitute_for``, ``model_store``,
-  ``n_tasks_population``, ``n_sampled``, ``bootstrap``, ``e1.false_accept_task_rate``
-  and ``e2.false_reject_task_rate`` as ``{point, ci, n}`` over the scorable tasks in
-  tasks.jsonl order, ``provenance``.
+  ``n_tasks_population``, ``n_sampled``, ``sample_sha256``, ``bootstrap``,
+  ``e1.false_accept_task_rate`` and ``e2.false_reject_task_rate`` as ``{point, ci, n}``
+  over the scorable tasks in tasks.jsonl order, ``provenance``. Each audit must be the
+  preregistered E1/E2 run (review B2 of 2d87aaa): ``prereg`` is
+  ``prereg/0002-e1e2-audit.md`` or a later preregistration whose first 15 lines say
+  ``Amends: 0002``, and both are frozen; ``provenance.git_sha`` is the commit that added
+  the cited preregistration and ``provenance.git_dirty`` is false; ``benchmark`` is the
+  directory name; ``model_store`` is a directory under ``artifacts/model_calls/`` other
+  than the E0 store; ``prereg/0002-sample.json`` is committed exactly once, in the commit
+  that added prereg 0002, ``sample_sha256`` is its SHA-256, and the ``task_hash`` values
+  of tasks.jsonl are exactly the SHA-256 of ``<benchmark>:<id>`` over that benchmark's
+  sampled ids, with ``n_sampled`` their number and ``n_tasks_population`` its frame; the
+  bootstrap block has the preregistered seed 2027 and B = 2000, so E1 uses seed 2027
+  and E2 seed 2028.
 * E4 (G8) ``artifacts/e4/<benchmark>/summary.json`` (``<benchmark>`` is the audit's
   directory name; schema ``graderproof.e4/1``): ``ran``, ``benchmark`` (the audit's
   ``benchmark``), ``repaired [{task_hash, benchmark, public, patch, validation_log}]``,
@@ -216,6 +227,15 @@ E4_GENERALIZATION = (
 )
 AUDIT_MIN_BENCHMARKS = 3
 AUDIT_MIN_SAMPLE = 40
+E1E2_PREREG = "prereg/0002-e1e2-audit.md"
+E1E2_AMENDS = "0002"
+E1E2_SAMPLE = "prereg/0002-sample.json"
+E1_SEED = 2027  # prereg 0002, Outcomes and definitions: seed 2027 for E1 and 2028 for E2
+E2_SEED = 2028
+E1E2_REPLICATES = 2000  # prereg 0002: B = 2000 bootstrap replicates
+MODEL_CALLS = "artifacts/model_calls/"
+AMENDS_RE = re.compile(r"^\s*Amends:\s*(\d{4})\b", re.I | re.M)  # as tools/prereg.py
+AMENDS_LINES = 15  # tools/prereg.py reads ``Amends:`` from a preregistration's first 15 lines
 DEMO_MAX_S = 180.0
 REPORT_WORDS = (4000, 8000)
 CI_STEPS = ("lint", "typecheck", "test", "demo")
@@ -1763,16 +1783,109 @@ def g7_confirmatory_audit(ctx: Ctx) -> Result:
     )
 
 
+def frozen_commit(c: Path, rel: str, frozen: Mapping[str, str]) -> str:
+    """The one commit that added the preregistration ``rel`` (its freeze commit).
+
+    Raises :class:`GateError` unless ``rel`` exists, is committed exactly once, and
+    matches its ``prereg/FROZEN.jsonl`` entry.
+    """
+    need((c / rel).is_file(), f"{rel} missing")
+    commits = commits_touching(c, rel)
+    need(len(commits) == 1, f"{rel} has {len(commits)} commits (must be committed exactly once)")
+    need(
+        frozen.get(PurePosixPath(rel).name) == sha256_file(c / rel),
+        f"{rel} does not match its prereg/FROZEN.jsonl entry",
+    )
+    return commits[0]
+
+
+def e1e2_prereg(c: Path, cited: Any) -> tuple[str, str]:
+    """(freeze commit of ``cited``, freeze commit of prereg 0002) for an E1/E2 audit.
+
+    ``cited`` must be :data:`E1E2_PREREG` or a later preregistration whose first
+    :data:`AMENDS_LINES` lines say ``Amends: 0002`` (the rule of tools/prereg.py); both
+    must be frozen. Raises :class:`GateError` otherwise.
+    """
+    need(
+        isinstance(cited, str) and PREREG_RE.match(cited) is not None and (c / cited).is_file(),
+        "cites no existing preregistration (prereg/NNNN-<slug>.md)",
+    )
+    assert isinstance(cited, str)
+    lines = (c / cited).read_text(encoding="utf-8").splitlines()[:AMENDS_LINES]
+    m = AMENDS_RE.search("\n".join(lines))
+    amends = (
+        m is not None
+        and m.group(1) == E1E2_AMENDS
+        and PurePosixPath(cited).name > PurePosixPath(E1E2_PREREG).name
+    )
+    need(
+        cited == E1E2_PREREG or amends,
+        f"cites {cited}, which is neither {E1E2_PREREG} nor an amendment of it "
+        f"(Amends: {E1E2_AMENDS} in its first {AMENDS_LINES} lines)",
+    )
+    frozen = frozen_hashes(c)
+    return frozen_commit(c, cited, frozen), frozen_commit(c, E1E2_PREREG, frozen)
+
+
+def e1e2_sample(c: Path, bench: str, base: str) -> tuple[set[str], int]:
+    """(task hashes, frame size) of ``bench`` in the committed sample :data:`E1E2_SAMPLE`.
+
+    The sample must be committed exactly once, in ``base`` (the commit that froze prereg
+    0002), and list distinct task ids; a task's hash is the SHA-256 of
+    ``<benchmark>:<id>``, as graderproof computes it. Raises :class:`GateError` otherwise.
+    """
+    commits = commits_touching(c, E1E2_SAMPLE)
+    need(
+        commits == [base],
+        f"{E1E2_SAMPLE} is not committed exactly once, in the commit that froze {E1E2_PREREG} "
+        f"({len(commits)} commits)",
+    )
+    doc = load_obj(c / E1E2_SAMPLE, E1E2_SAMPLE)
+    benches = doc.get("benchmarks")
+    entry = benches.get(bench) if isinstance(benches, Mapping) else None
+    need(isinstance(entry, Mapping), f"{E1E2_SAMPLE} has no sample of benchmark {bench!r}")
+    assert isinstance(entry, Mapping)
+    tasks: Any = entry.get("tasks")
+    frame: Any = entry.get("frame")
+    need(
+        isinstance(tasks, list)
+        and bool(tasks)
+        and all(isinstance(t, str) and t for t in tasks)
+        and len(set(tasks)) == len(tasks)
+        and is_int(frame),
+        f"{E1E2_SAMPLE}: the sample of {bench!r} lacks distinct task ids or an integer frame",
+    )
+    return {sha256_text(f"{bench}:{t}") for t in tasks}, int(frame)
+
+
 def audit_check(c: Path, d: Path, s: Mapping[str, Any], decisions: str) -> None:
-    """Raise :class:`GateError` unless one benchmark audit meets G7."""
+    """Raise :class:`GateError` unless one benchmark audit is the preregistered E1/E2 run."""
     where = rel_to(c, d)
     missing = provenance_ok(s)
     need(not missing, f"provenance lacks {missing}")
     need(s.get("confirmatory") is True, "not marked confirmatory")
     prereg = s.get("prereg")
+    frozen_at, base = e1e2_prereg(c, prereg)
+    prov: Any = s.get("provenance")
+    sha = prov.get("git_sha")
     need(
-        isinstance(prereg, str) and PREREG_RE.match(prereg) is not None and (c / prereg).is_file(),
-        "cites no existing preregistration (prereg/NNNN-<slug>.md)",
+        sha == frozen_at,
+        f"provenance.git_sha {str(sha)[:12]} is not {frozen_at[:12]}, the commit that froze "
+        f"{prereg}",
+    )
+    need(prov.get("git_dirty") is False, "provenance.git_dirty is not false")
+    bench = s.get("benchmark")
+    need(bench == d.name, f"benchmark {bench!r} is not the directory name {d.name!r}")
+    store = clean_rel(s.get("model_store"), MODEL_CALLS)
+    need(
+        store is not None and not under(store, [E0_MODEL_STORE]) and (c / store).is_dir(),
+        f"model_store {s.get('model_store')!r} is not a store under {MODEL_CALLS} other than "
+        f"the E0 store {E0_MODEL_STORE}",
+    )
+    expected, frame = e1e2_sample(c, d.name, base)
+    need(
+        s.get("sample_sha256") == sha256_file(c / E1E2_SAMPLE),
+        f"sample_sha256 is not the SHA-256 of {E1E2_SAMPLE}",
     )
     pop: Any = s.get("n_tasks_population")
     n: Any = s.get("n_sampled")
@@ -1781,18 +1894,34 @@ def audit_check(c: Path, d: Path, s: Mapping[str, Any], decisions: str) -> None:
         pop > 0 and min(AUDIT_MIN_SAMPLE, pop) <= n <= pop,
         f"sample {n} outside [min({AUDIT_MIN_SAMPLE}, population {pop}), population]",
     )
+    need(
+        n == len(expected) and pop == frame,
+        f"n_sampled {n} and n_tasks_population {pop} are not the {len(expected)} sampled tasks "
+        f"and frame {frame} of {d.name} in {E1E2_SAMPLE}",
+    )
     table = audit_table(d, where)
     need(len(table) == n, f"tasks.jsonl has {len(table)} tasks, summary says {n}")
+    got = {t.task_hash for t in table}
+    need(
+        got == expected,
+        f"tasks.jsonl is not the sample of {d.name} in {E1E2_SAMPLE}: {len(got - expected)} "
+        f"tasks not sampled, {len(expected - got)} sampled tasks missing",
+    )
     scorable = [t for t in table if t.scorable]
     seed, b, alpha = bootstrap_params(s, "summary.json")
-    for key, sub, vals, offset in (
-        ("e1", "false_accept_task_rate", [t.false_accept for t in scorable], 0),
-        ("e2", "false_reject_task_rate", [t.false_reject for t in scorable], 1),
+    need(
+        seed == E1_SEED and b == E1E2_REPLICATES,
+        f"bootstrap seed {seed} and B {b} are not the preregistered seed {E1_SEED} (E1; "
+        f"{E2_SEED} for E2) and B {E1E2_REPLICATES}",
+    )
+    for key, sub, vals, key_seed in (
+        ("e1", "false_accept_task_rate", [t.false_accept for t in scorable], E1_SEED),
+        ("e2", "false_reject_task_rate", [t.false_reject for t in scorable], E2_SEED),
     ):
         point = ratio(sum(vals), len(vals))
         need(point is not None, f"{key} has no scorable tasks")
         assert point is not None
-        ci = bootstrap_ci(len(vals), mean_of(vals), seed + offset, b, alpha)
+        ci = bootstrap_ci(len(vals), mean_of(vals), key_seed, b, alpha)
         block = s.get(key)
         stated = block.get(sub) if isinstance(block, Mapping) else None
         check_estimate(stated, point, ci, len(vals), f"{key} {sub}")
