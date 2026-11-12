@@ -4,9 +4,11 @@
 Procedure (docs/BUILD_BRIEF.md section 10.1 step 9):
 
 1. In the original checkout, check the parts of G14 about the working tree and
-   ``private/``, and verify private hash manifests (``outbound/patches/MANIFEST.json``)
-   against the files under ``private/``. Of a private JSON file only its ``accepted``
-   and ``task_hash`` fields are read (for G8); nothing private is printed.
+   ``private/``, verify private hash manifests (``outbound/patches/MANIFEST.json``)
+   against the files under ``private/``, and check that each third-party audit's
+   public rows republish from their private original with the private key (D44). Of a
+   private JSON file only its ``accepted`` and ``task_hash`` fields are read (for G8);
+   nothing private is printed.
 2. Make a fresh clone of HEAD in a temporary directory and run every other check there.
    Banked artifacts are verified (presence, provenance, hashes, preregistration links,
    thresholds) and statistics are recomputed from them. No experiment is run and no
@@ -50,7 +52,11 @@ Artifact contracts (later iterations may tighten them, never loosen):
   and required for E0, and must equal their recomputation. ``variants.jsonl`` rows:
   ``variant_id``, ``task_hash`` (of a task in tasks.jsonl), ``kind`` (``violating`` or
   ``preserving``), ``counted_in_headline``, ``witness_sha256``, ``validations
-  [{validator, verdict}]``, ``grader_passed``.
+  [{validator, verdict}]``, ``grader_passed``. A third-party audit (``summary.json``
+  ``third_party: true``) publishes them through ``tools/publish_rows.py`` (D44):
+  ``variant_id`` and ``witness_sha256`` are keyed HMAC values, ``operator`` is absent,
+  rows are in tasks.jsonl order and then by ``variant_id``, and ``PUBLIC_ROWS.json``
+  records the scheme and the SHA-256 of the rows and of their private original.
 * E0 (G5) uses pinned paths only; nothing about where things are is read from
   results.json. Labels ``toybench/labels.json`` = ``{"tasks": {<id>: {"planted":
   bool, "slice": "in_list" | "clean" | "extra", "weakness_type": ..., "direction":
@@ -187,6 +193,8 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any
+
+import publish_rows
 
 ORIGIN = Path(__file__).resolve().parent.parent
 EM_DASH = chr(0x2014)
@@ -673,6 +681,7 @@ def check_origin(ctx: Ctx) -> None:
     _, tracked_private = git(ctx.origin, "ls-files", "--", "private")
     ctx.origin_facts["private_tracked"] = [p for p in tracked_private.splitlines() if p]
     ctx.origin_facts["manifest"] = verify_manifest(ctx.origin)
+    ctx.origin_facts["public_rows"] = verify_public_rows(ctx.origin)
 
 
 def verify_manifest(repo: Path) -> dict[str, Any]:
@@ -2709,9 +2718,110 @@ def third_party_evidence_problems(clone: Path) -> list[str]:
     return problems + summaries
 
 
+def third_party_audits(root: Path) -> list[Path]:
+    """Audit directories under ``root`` whose ``summary.json`` says ``third_party: true``."""
+    out: list[Path] = []
+    for adir in audit_dirs(root):
+        try:
+            doc = load_json(adir / "summary.json")
+        except (OSError, ValueError):
+            continue  # G7 and the evidence check report an unreadable summary
+        if isinstance(doc, Mapping) and doc.get("third_party") is True:
+            out.append(adir)
+    return out
+
+
+def is_hex64(value: Any) -> bool:
+    """A 64-character lowercase hex string."""
+    return isinstance(value, str) and HEX64.match(value) is not None
+
+
+def public_rows_problems(clone: Path) -> list[str]:
+    """Third-party audit rows in the clone that are not published with keyed ids (D44).
+
+    Each third-party audit directory with a ``variants.jsonl`` needs ``PUBLIC_ROWS.json``
+    with the schema and scheme of ``tools/publish_rows.py`` and a ``rows_sha256`` equal
+    to the SHA-256 of its ``variants.jsonl``, whose rows carry no ``operator``, have a
+    64-hex ``variant_id`` and a 64-hex or null ``witness_sha256``, and come in
+    tasks.jsonl order, then by ``variant_id``. That the ids are the keyed transform of the private
+    original is checked in the origin (:func:`verify_public_rows`).
+    """
+    problems: list[str] = []
+    for adir in third_party_audits(clone):
+        where = rel_to(clone, adir)
+        if not (adir / "variants.jsonl").is_file():
+            continue  # no rows, nothing to key (G7 reports an audit without rows)
+        mpath = adir / publish_rows.MANIFEST
+        if not mpath.is_file():
+            problems.append(
+                f"{where}: no {publish_rows.MANIFEST}; third-party rows must be published "
+                "with keyed ids (tools/publish_rows.py, D44)"
+            )
+            continue
+        try:
+            doc = load_json(mpath)
+        except (OSError, ValueError) as exc:
+            problems.append(f"{where}/{publish_rows.MANIFEST} unreadable: {one_line(str(exc), 60)}")
+            continue
+        if not (
+            isinstance(doc, Mapping)
+            and doc.get("schema") == publish_rows.SCHEMA
+            and doc.get("scheme") == publish_rows.SCHEME
+        ):
+            problems.append(
+                f"{where}/{publish_rows.MANIFEST}: schema or scheme is not "
+                f"{publish_rows.SCHEMA} {publish_rows.SCHEME}"
+            )
+            continue
+        vpath = adir / "variants.jsonl"
+        data = vpath.read_bytes() if vpath.is_file() else b""
+        if doc.get("rows_sha256") != hashlib.sha256(data).hexdigest():
+            problems.append(
+                f"{where}: rows_sha256 in {publish_rows.MANIFEST} does not match variants.jsonl"
+            )
+            continue
+        try:
+            rows = read_rows(vpath, f"{where}/variants.jsonl")
+            order = publish_rows.task_order(read_rows(adir / "tasks.jsonl", f"{where}/tasks.jsonl"))
+        except (GateError, ValueError) as exc:
+            problems.append(f"{where}: {one_line(str(exc), 80)}")
+            continue
+        if any(name in r for r in rows for name in publish_rows.DROPPED_FIELDS):
+            problems.append(f"{where}/variants.jsonl: rows carry operator names (D44)")
+        bad = [
+            r
+            for r in rows
+            if not is_hex64(r.get("variant_id"))
+            or not (r.get("witness_sha256") is None or is_hex64(r.get("witness_sha256")))
+        ]
+        if bad:
+            problems.append(f"{where}/variants.jsonl: {len(bad)} rows lack 64-hex keyed ids")
+            continue
+        keys = [(order.get(str(r.get("task_hash")), -1), str(r["variant_id"])) for r in rows]
+        if any(k[0] < 0 for k in keys) or keys != sorted(keys):
+            problems.append(
+                f"{where}/variants.jsonl: rows are not in tasks.jsonl order, then by variant_id"
+            )
+    return problems
+
+
+def verify_public_rows(repo: Path) -> list[str]:
+    """In the origin: each published third-party audit republishes from its private original.
+
+    Runs :func:`publish_rows.verify` for every third-party audit directory that has a
+    ``PUBLIC_ROWS.json`` (a missing one is reported by :func:`public_rows_problems`).
+    """
+    problems: list[str] = []
+    key = repo / publish_rows.KEY_PATH
+    for adir in third_party_audits(repo):
+        if (adir / publish_rows.MANIFEST).is_file():
+            problems += publish_rows.verify(repo, adir, key)
+    return problems
+
+
 def g14_hygiene(ctx: Ctx) -> Result:
     """secrets-scan clean, budget cash 0 and caps kept, private/ untracked, no third-party
-    evidence under artifacts/, files, clean tree."""
+    evidence under artifacts/, third-party rows keyed (D44), files, clean tree."""
     c = ctx.clone
     problems = []
     if not ctx.origin_facts.get("tree_clean"):
@@ -2721,6 +2831,8 @@ def g14_hygiene(ctx: Ctx) -> Result:
     if ctx.origin_facts.get("private_tracked"):
         problems.append(f"private/ tracked: {ctx.origin_facts['private_tracked'][:2]}")
     problems += third_party_evidence_problems(c)
+    problems += public_rows_problems(c)
+    problems += [str(p) for p in ctx.origin_facts.get("public_rows") or []]
     missing = [f for f in REQUIRED_FILES if not (c / f).is_file()]
     if missing:
         problems.append(f"missing {missing}")
@@ -2741,7 +2853,7 @@ def g14_hygiene(ctx: Ctx) -> Result:
     return Result(
         True,
         f"{tail(scan.out)}; cash_usd = 0, caps kept; private/ untracked; "
-        "no third-party evidence under artifacts/; tree clean",
+        "no third-party evidence under artifacts/; third-party rows keyed; tree clean",
     )
 
 

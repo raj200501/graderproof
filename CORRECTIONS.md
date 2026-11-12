@@ -2,6 +2,10 @@
 
 Every changed or withdrawn claim gets a dated entry here (non-negotiable 3): what was claimed, where, what changed, why, and the artifact behind the new claim.
 
+## 2026-11-12: HumanEval variant rows republished with keyed ids
+
+The entry below described the public HumanEval rows as exposing classical variants, including the ones the graders accepted. The public `artifacts/audit/humaneval/variants.jsonl` now carries keyed ids and no operator names (D44), and a regeneration of every classical variant from public data matches none of its rows. The earlier rows remain in the repository's history. README.md, docs/REPORT.md section 7.2, artifacts/README.md, and docs/DATA.md now describe the keyed rows. No number changes.
+
 ## 2026-11-12: what the public artifacts reveal about third-party tasks
 
 README.md (Responsible disclosure) said that, for third-party tasks not fixed upstream, this repository publishes only hashes of surviving variants and witnesses, and aggregate statistics. docs/REPORT.md section 7.2 said that task ids stay in `private/` and that public artifacts carry only task hashes and aggregates. artifacts/README.md and docs/DATA.md said the same.

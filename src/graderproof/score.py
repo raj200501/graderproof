@@ -149,7 +149,13 @@ class TaskResult:
 
 
 def variant_record(task_hash: str, vr: VariantResult, witness_sha256: str | None) -> dict[str, Any]:
-    """Variant-level record for variants.jsonl (no solution content)."""
+    """Variant-level record for variants.jsonl.
+
+    It holds no solution content, but ``variant_id`` is a content address: anyone who can
+    regenerate a deterministic variant can match it. Rows of third-party audits are
+    therefore published through ``tools/publish_rows.py``, with keyed ids and no
+    operator (DECISIONS.md D43, D44).
+    """
     v = vr.variant
     return {
         "variant_id": v.id,

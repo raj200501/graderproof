@@ -228,3 +228,25 @@ Negative and null results are not weaknesses to remove. The E0 recall miss (G5),
 1. README.md, docs/REPORT.md section 7.2, artifacts/README.md, and docs/DATA.md say what the public rows reveal, without a recipe, with an entry in CORRECTIONS.md. No number changes.
 2. The rows have been in public history since 12ea1da, and withdrawing them needs a history rewrite, which only Raj can authorize (STATUS.md, Needs Raj). The release line is NOT-READY until HEAD no longer exposes them.
 3. Next step, before any work that commits third-party rows: public rows of third-party benchmarks not fixed upstream carry keyed ids (HMAC-SHA-256 under a key kept in `private/`) in place of `variant_id` and `witness_sha256`, ordered by those ids. A test and a G14 check fail when a public third-party row carries an id that the committed generator reproduces. The HumanEval rows in HEAD get the same treatment, with the original rows kept in `private/` and their SHA-256 committed. That change, and whether public rows keep per-task operator columns, get their own decision entry before they are made.
+
+## D44 (2026-11-12) Keyed ids and no operator names in public third-party rows
+
+This carries out D43 point 3, the fix the release sprint found was needed.
+
+**What the public rows become.** For a third-party audit (a `summary.json` with `third_party: true`), the frozen code's `variants.jsonl` is the private original. `tools/publish_rows.py` writes the public copy:
+
+- `variant_id` and `witness_sha256` become HMAC-SHA-256 values under a 256-bit key kept in `private/keys/public_rows.key`, with distinct domain-separation prefixes. A null stays null.
+- `operator` is dropped. The per-benchmark operator counts in `summary.json` are aggregates and stay.
+- Rows are ordered by task, in the order of `tasks.jsonl`, and then by keyed id, so position no longer reveals generation order.
+- Every other field is copied unchanged. `tasks.jsonl` and `summary.json` stay byte-identical to the frozen output. The task key stays linkable, so that G7 can check the sample.
+- The tool writes `PUBLIC_ROWS.json` beside the rows. It records the scheme, the keyed and dropped fields, the ordering, the SHA-256 of the private original, and the tool's own SHA-256.
+
+**Why these choices.** The gates read only `task_hash`, `kind`, `counted_in_headline`, `grader_passed`, `validations`, and the format of `witness_sha256` from audit rows, and no claim reads `variants.jsonl`, so no statistic changes. Without the key, a reader can no longer match a row to a regenerated variant, by id, by operator, or by position. What stays public per task is what the flags already say: whether some counted variant of each kind passed or failed.
+
+**Checks.**
+
+- *G14, fresh clone.* Every third-party audit directory has a `PUBLIC_ROWS.json` with this scheme, and no row in it carries `operator`.
+- *G14, original checkout.* Where the private original and key exist, the original's SHA-256 matches `PUBLIC_ROWS.json`, and republishing reproduces the public rows byte for byte. A missing original fails, as G8 does for private patches.
+- *Tests.* Tests cover the tool and both checks.
+
+**HumanEval now; tau2-bench and BFCL later.** The HumanEval rows in HEAD are republished this way, with the committed rows moved to `private/audit/humaneval-0003/variants.jsonl` as the original. The same bytes stay in public history since 12ea1da (D43, Needs Raj). tau2-bench and BFCL rows are published only through the tool. Once the republished rows are in HEAD, HEAD no longer exposes the classical survivors, so the release line can again be RELEASE-READY (D43 point 2). Whether to withdraw the earlier rows from history stays with Raj.

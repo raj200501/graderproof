@@ -29,6 +29,7 @@ from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
+import publish_rows
 import pytest
 import ship_check as sc
 
@@ -2572,6 +2573,50 @@ def evidence_doc(key: str, task_hash: str | None = None) -> str:
     )
 
 
+G14_KEY = bytes(range(32))
+BFCL_TASK = "e" * 64
+
+
+def published_bfcl() -> Files:
+    """A third-party BFCL audit table published with keyed ids (D44), and its private side."""
+    raw = [
+        {
+            "counted_in_headline": True,
+            "grader_passed": passed,
+            "grader_runs": 1,
+            "kind": "violating",
+            "operator": "traj-argument",
+            "task_hash": BFCL_TASK,
+            "validation_status": "validated",
+            "validations": [
+                {"validator": "witness:requirements/v1", "verdict": "violating"},
+                {"validator": "model:claude-subagent/review/v1", "verdict": "violating"},
+            ],
+            "variant_id": vid * 64,
+            "witness_sha256": "f" * 64,
+        }
+        for vid, passed in (("1", False), ("2", True))
+    ]
+    tasks = [{"task_hash": BFCL_TASK, "determinism": "stable_pass"}]
+    original = publish_rows.dump_jsonl(raw)
+    public = publish_rows.dump_jsonl(
+        publish_rows.publish(raw, publish_rows.task_order(tasks), G14_KEY)
+    )
+    doc = publish_rows.manifest(
+        original,
+        public,
+        "private/audit/bfcl/variants.jsonl",
+        Path(publish_rows.__file__).read_bytes(),
+    )
+    return {
+        "artifacts/audit/bfcl/tasks.jsonl": jsonl(tasks),
+        "artifacts/audit/bfcl/variants.jsonl": public.decode("utf-8"),
+        f"artifacts/audit/bfcl/{publish_rows.MANIFEST}": dump(doc),
+        "private/audit/bfcl/variants.jsonl": original.decode("utf-8"),
+        publish_rows.KEY_PATH: G14_KEY.hex() + "\n",
+    }
+
+
 def g14_files() -> Files:
     """A clean checkout: toybench evidence public, third-party evidence in private/."""
     files: Files = {rel: f"{rel}\n" for rel in sc.REQUIRED_FILES}
@@ -2593,6 +2638,7 @@ def g14_files() -> Files:
             "artifacts/figures/manifest.json": dump([{"path": "f.svg", "sha256": TOY}]),
         }
     )
+    files.update(published_bfcl())
     return files
 
 
@@ -2616,6 +2662,22 @@ def test_g14_passes_with_toybench_evidence_public_and_third_party_evidence_priva
     r = g14(tmp_path, g14_files())
     assert r.ok, r.evidence
     assert "no third-party evidence under artifacts/" in r.evidence
+
+
+def test_g14_checks_keyed_rows_in_the_clone_and_in_the_origin(tmp_path: Path) -> None:
+    """D44: raw third-party rows fail in the clone; rows that do not republish from the
+    private original fail in the origin."""
+    files = g14_files()
+    raw = files["private/audit/bfcl/variants.jsonl"]
+    assert raw is not None
+    r = g14(tmp_path / "raw", {**files, "artifacts/audit/bfcl/variants.jsonl": raw})
+    assert not r.ok and "rows_sha256" in r.evidence
+    tampered = raw.replace('"grader_runs": 1', '"grader_runs": 3', 1)
+    r = g14(tmp_path / "origin-side", {**files, "private/audit/bfcl/variants.jsonl": tampered})
+    assert not r.ok and "sha256" in r.evidence
+    no_key = {k: v for k, v in files.items() if k != publish_rows.KEY_PATH}
+    r = g14(tmp_path / "no-key", no_key)
+    assert not r.ok and "key" in r.evidence
 
 
 def test_g14_evidence_in_private_accepts_only_the_preregistered_layout() -> None:

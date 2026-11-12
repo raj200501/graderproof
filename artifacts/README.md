@@ -6,4 +6,4 @@ Banked results with provenance (git SHA, config hash, model IDs and revisions, s
 - `review/`: independent reviews (`latest.json` is written only by the reviewer).
 - `citecheck.json`: what the citation checker saw for each reference.
 
-Task-level evidence for third-party tasks not yet fixed upstream (witnesses, grader output, model calls) is not stored here; it lives in the git-ignored `private/` directory. The per-task audit rows here identify their tasks, and their classical variant ids can be matched by regenerating those deterministic variants from public data, so they expose the classical variants a grader accepted (D43, CORRECTIONS.md).
+Task-level evidence for third-party tasks not yet fixed upstream (witnesses, grader output, model calls) is not stored here; it lives in the git-ignored `private/` directory. The per-task audit rows here identify their tasks. Third-party variant rows carry keyed ids and no operator names (`tools/publish_rows.py`, `PUBLIC_ROWS.json`), so they cannot be matched to regenerated variants; an earlier version of the HumanEval rows in the history could be (D43, D44, CORRECTIONS.md).

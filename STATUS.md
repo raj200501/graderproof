@@ -24,17 +24,17 @@ Fast check on 5373797 (2026-11-12, fresh clone): **9/14**. G5, G7, G8, G9, and G
 | G11 Preregistration | PASS | prereg 0001, 0002, and 0003 frozen and chained; confirmatory artifacts follow them |
 | G12 Independent review | FAIL | review of 2d87aaa (2026-11-12) is REVIEW: BLOCK (B1, B2), both fixed in 12ea1da; the gate reads a review of an older commit as INVALID; next review 2026-11-13 |
 | G13 Documentation | PASS | README.md follows section 11; docs/REPORT.md complete; citecheck verifies every reference |
-| G14 Hygiene | PASS | secrets scan clean, cash 0, private/ untracked, no third-party evidence under artifacts/ (new check, c647941), tree clean |
+| G14 Hygiene | PASS | secrets scan clean, cash 0, private/ untracked, no third-party evidence under artifacts/ (c647941), third-party rows keyed (D44), tree clean |
 
 ## Now
 
-E1/E2 under prereg 0003 (D38 to D40): HumanEval is complete and confirmatory (`artifacts/audit/humaneval/`, cites prereg 0003, provenance at the freeze commit 22b8832 with a clean tree); its result is in README.md and docs/REPORT.md section 5.6. BFCL has its round-2 requests built and tau2-bench is running round 2; both continue under the daily cap. The independent review of 2d87aaa (2026-11-12) is BLOCK with two blocking issues, both addressed: the E4 mutation score before and after repair is now reported (B1), and G7 now checks that each audit is the preregistered E1/E2 run (B2). Its non-blocking issues are in docs/REVIEW_LOG.md. The next review run is allowed on 2026-11-13.
+The release sprint's blocker is fixed: public third-party rows carry keyed ids and no operator names (D44), and G14 enforces it. Next is SEC-3 from the sprint audit. The bubblewrap child runs as root, so it can read root-only files outside `$HOME`, such as this cloud session's token files under `/home/claude/.claude/remote/`. The network is unshared, so nothing could leave, but third-party graders and model-proposed variants run there. HumanEval E1/E2 is complete and confirmatory (`artifacts/audit/humaneval/`, prereg 0003); BFCL and tau2-bench continue under the daily cap. The review of 2d87aaa (2026-11-12) is BLOCK with both blocking issues fixed in 12ea1da; the next review run is allowed on 2026-11-13.
 
 ## Next three actions
 
-1. E1/E2 on BFCL and tau2-bench under prereg 0003 with `runs/e1_0003_round.sh <benchmark> <label>`: answer pending requests with model workers within the daily cap, audit their transcripts (`runs/e1_worker_audit.sh`), ingest from the 0003 worktree, refresh the store manifests, and run the next round; then the Holm-corrected tests across the three benchmarks.
-2. G12: the next independent review on 2026-11-13 (one review run a day), after logging every non-blocking issue in docs/REVIEW_LOG.md (D7).
-3. Then E3, E4 on the audited benchmarks, the E5 runner, E6, and the grader cards (Raj's order of 2026-11-11).
+1. SEC-3: run the bwrap child unprivileged and hide `/home`, `/root`, and `/run`, with a test that a root-only file outside `$HOME` is unreadable inside the sandbox, under a decision entry written first. The E1/E2 worktree's code is frozen, so using the hardened sandbox for the remaining E1/E2 executions needs a dated amendment to prereg 0003 before any data it affects.
+2. E1/E2 on BFCL and tau2-bench under prereg 0003 with `runs/e1_0003_round.sh <benchmark> <label>`: answer pending requests with model workers within the daily cap, audit their transcripts (`runs/e1_worker_audit.sh`), ingest from the 0003 worktree, and publish third-party rows only through `tools/publish_rows.py` (D44).
+3. G12: the next independent review on 2026-11-13 (one review run a day), after logging every non-blocking issue in docs/REVIEW_LOG.md; then E3, E4 on the audited benchmarks, the E5 runner, E6, and the grader cards.
 
 ## Usage to date
 
@@ -50,12 +50,13 @@ E1/E2 under prereg 0003 (D38 to D40): HumanEval is complete and confirmatory (`a
 3. **References to check by hand** (scripted access blocked): the OpenAI SWE-bench Verified post (Cloudflare challenge). It is dropped from the docs unless you confirm it opens.
 4. **Daily cap.** At CAP_SHARE 0.2 the wrapper allows 60 single calls a day, and E1/E2 with the amendment needs more than before (smaller batches for tau2-bench and BFCL), so the remaining experiments take several days of calls. Since Raj's message of 2026-11-11, a session heartbeat runs every 30 minutes, within the cap, and pushes verified steps; main is updated at each RELEASE-READY point (fast-forward or plain merge, never force).
 
-5. **Third-party disclosure (D43).** The public HumanEval rows, in history since 12ea1da, identify their tasks and let anyone regenerate the classical variants its graders accepted. Model-proposed variants and witnesses are not exposed. The evidence is in `private/disclosure/2026-11-12-humaneval-ids.md`. Withdrawing the rows needs a history rewrite, which only you can authorize. HEAD will carry keyed ids next; until then the release line is NOT-READY.
+5. **Third-party disclosure history (D43, D44).** HEAD's public HumanEval rows now carry keyed ids and no operator names, so they no longer expose any variant. The earlier rows, in history since 12ea1da, identify their tasks and let anyone regenerate the classical variants the graders accepted (evidence in `private/disclosure/2026-11-12-humaneval-ids.md`); model-proposed variants and witnesses were never exposed. Withdrawing the earlier rows needs a history rewrite, which only you can authorize.
 
 ## Changed this turn
 
 - E1/E2 on HumanEval completed under prereg 0003 and reported (README.md, docs/REPORT.md section 5.6); the review of 2d87aaa banked and its two blocking issues fixed (12ea1da).
 - CI on GitHub fixed without skipping a test (D41): the interpreter lives outside the sandbox-hidden $HOME, and the upstream HumanEval driver pins fork. Green on main at 5373797.
+- Keyed public rows (D44): `tools/publish_rows.py` publishes third-party variant rows with HMAC-keyed ids, no operator names, and a fixed order, and records `PUBLIC_ROWS.json`. G14 now fails on a third-party row published any other way, and in the original checkout it checks that the rows republish from their private original. The HumanEval rows are republished, the original is kept under `private/`, and the regeneration attack now matches none of the public rows.
 - Release sprint of 2026-11-12: a publication-safety audit (secrets, third-party task details, personal data, README honesty) found that the public HumanEval rows identify their tasks and, through reproducible variant ids, the classical variants its graders accepted (D43). README.md, docs/REPORT.md section 7.2, artifacts/README.md, and docs/DATA.md now say so (CORRECTIONS.md). The report's abstract now states the HumanEval finding. Sprint result: NOT-READY until HEAD carries keyed ids.
 - Final README pass (D42): the Status section gives the current gate state, the HumanEval headline carries its mean mutation score and validator agreement, the quickstart describes what a finding looks like on the synthetic demo, and a repeated limitation is merged. No claim, gate, or check changed.
 
@@ -64,5 +65,7 @@ E1/E2 under prereg 0003 (D38 to D40): HumanEval is complete and confirmatory (`a
 Nothing.
 
 ## Backlog (suggestions for Raj, not ladder rungs)
+
+- A maintainer-side check for disclosures: with the key for one benchmark (sent privately with a disclosure draft), `tools/publish_rows.py` could confirm that each public keyed row matches the private evidence, so a maintainer can check a finding against this repository without the repository revealing it.
 
 - A `graderproof check` pre-commit mode that runs only the deterministic operators on a single changed task in under a minute, so benchmark authors get feedback before CI.
