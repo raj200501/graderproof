@@ -3,11 +3,11 @@ STATE: ACTIVE
 
 # graderproof status
 
-Updated 2026-11-11. History lives in docs/LOG.md.
+Updated 2026-11-12. History lives in docs/LOG.md.
 
 ## Gates (from `python tools/ship_check.py --fast`; only a full run counts)
 
-Fast check on 12ea1da (2026-11-12, clean tree; the merge of main that follows changes no file): **9/14**. G5, G7, G8, G9, and G12 fail.
+Fast check on 5373797 (2026-11-12, fresh clone): **9/14**. G5, G7, G8, G9, and G12 fail. GitHub Actions CI is green on main at 5373797 (D41).
 
 | Gate | State | Evidence or blocker |
 |---|---|---|
@@ -21,8 +21,8 @@ Fast check on 12ea1da (2026-11-12, clean tree; the merge of main that follows ch
 | G8 Repair | FAIL | E4 done on toybench; HumanEval has graders with surviving variants and needs E4 (its generalization batch needs more calls than one day's remainder) |
 | G9 Impact and cards | FAIL | E5 runner not built; toybench card only |
 | G10 Claim integrity | PASS | claimcheck and freshness pass on README.md, docs/REPORT.md, and the card |
-| G11 Preregistration | PASS | prereg 0001 and 0002 frozen and chained; confirmatory artifacts follow them |
-| G12 Independent review | FAIL | review of 2d87aaa (2026-11-12) is REVIEW: BLOCK (B1, B2), both addressed since; next review 2026-11-13 |
+| G11 Preregistration | PASS | prereg 0001, 0002, and 0003 frozen and chained; confirmatory artifacts follow them |
+| G12 Independent review | FAIL | review of 2d87aaa (2026-11-12) is REVIEW: BLOCK (B1, B2), both fixed in 12ea1da; the gate reads a review of an older commit as INVALID; next review 2026-11-13 |
 | G13 Documentation | PASS | README.md follows section 11; docs/REPORT.md complete; citecheck verifies every reference |
 | G14 Hygiene | PASS | secrets scan clean, cash 0, private/ untracked, no third-party evidence under artifacts/ (new check, c647941), tree clean |
 
@@ -52,8 +52,9 @@ E1/E2 under prereg 0003 (D38 to D40): HumanEval is complete and confirmatory (`a
 
 ## Changed this turn
 
-- Release sprint: publication checks, README pitch and Status section, STATUS.md.
-- E1/E2 round 1: 17 extraction answers by audited model workers, none ingested; the frozen code's text clipping found and measured (`tools/clip_audit.py`, `artifacts/e1/clip_audit_round1.json`); D38 records the decision to amend before any E1/E2 data.
+- E1/E2 on HumanEval completed under prereg 0003 and reported (README.md, docs/REPORT.md section 5.6); the review of 2d87aaa banked and its two blocking issues fixed (12ea1da).
+- CI on GitHub fixed without skipping a test (D41): the interpreter lives outside the sandbox-hidden $HOME, and the upstream HumanEval driver pins fork. Green on main at 5373797.
+- Final README pass (D42): the Status section gives the current gate state, the HumanEval headline carries its mean mutation score and validator agreement, the quickstart describes what a finding looks like on the synthetic demo, and a repeated limitation is merged. No claim, gate, or check changed.
 
 ## Blocked
 

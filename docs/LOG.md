@@ -8,6 +8,8 @@ History moved out of STATUS.md, newest first.
 - The G12 review of the current HEAD runs on 2026-11-12, the first UTC day with an unused review run.
 - The review of 2d87aaa returned BLOCK: the E4 mutation score before and after repair was not reported (B1), and G7 accepted audits citing any preregistration (B2). Both are addressed; its non-blocking issues are logged.
 - E1/E2: 47 answers by audited model workers were ingested within the cap. HumanEval finished all four rounds and is the first complete confirmatory audit of a public benchmark; BFCL and tau2-bench continue.
+- The first GitHub Actions run on main failed 7 tests that pass locally; D41 fixed the runner's interpreter location and the upstream HumanEval driver's start method without skipping a test (5373797, green on main). Fast check on 5373797: 9/14. RELEASE-READY 5373797.
+- Final README pass for first-time readers (D42): current gate state in the Status section, the HumanEval headline with its mean mutation score and validator agreement, a plain description of what a finding looks like on the synthetic demo, and one repeated limitation merged.
 
 ## 2026-11-11, goal_turn 6: E1 round 1 answered, text clipping found, release sprint
 

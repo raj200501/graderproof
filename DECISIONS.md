@@ -204,3 +204,14 @@ Whole task texts and grader files make the old E3 default of 25 items per reques
 ## D41 (2026-11-12) CI interpreter outside $HOME; the upstream HumanEval driver pins fork
 
 The first CI run on main after the repository went public failed 7 tests that pass locally. Six failed because sandboxed runs could not execute the virtualenv's interpreter: on the GitHub runner, setup-uv installs a uv-managed Python under `$HOME`, which the bubblewrap sandbox hides (D16, D28). CI now installs the matrix Python with actions/setup-python (under /opt) and tells uv to use only that system interpreter; the sandbox is unchanged. The seventh ran HumanEval's upstream `check_correctness` under the runner's system Python 3.14, whose default multiprocessing start method (forkserver) upstream's code does not support; the test's upstream driver now pins the fork start method that upstream ran under, as graderproof's own grader already does (`get_context("fork")`). No test is skipped and no check is weakened.
+
+## D42 (2026-11-12) Final README pass for first-time readers
+
+Raj asked for a last pass before the merge to main that removes weaknesses and highlights strengths for engineers reading the repository for the first time. "Weaknesses" here means defects in how the page reads:
+
+- a Status section that still gave the gate state on 4f53770 and said that E1/E2 had not run;
+- a limitation listed twice;
+- a headline that gave the HumanEval false-accept rate without the mean mutation score that puts it in context;
+- no concrete picture of what a finding looks like.
+
+Negative and null results are not weaknesses to remove. The E0 recall miss (G5), the gates that still fail, and the two E1/E2 benchmarks still under way keep their prominence (non-negotiable 3). Every new number on the page is a registered claim, and no claim, gate, or check changes.
