@@ -4,16 +4,16 @@ Non-blocking issues raised by independent reviews (gate G12, docs/BUILD_BRIEF.md
 
 ## Review of 5677b9f639c9 (2026-11-11, BLOCK)
 
-Blocking issues B1 to B6 are fixed in the commit after 5677b9f: corrected wording and new claims for B1 to B3 and B6, a G5 check of the adjudication against the banked rulings for B4, and D37 with a CORRECTIONS.md entry for B5.
+Blocking issues B1 to B6 are fixed in the commit after 5677b9f: corrected wording and new claims for B1 to B3 and B6, a G5 check of the adjudication against the banked rulings for B4, and D37 with a CORRECTIONS.md entry for B5. Residuals of B4 found later are fixed in c647941: each adjudicated variant must belong to its task and to that task's flag, and each banked adjudicate response must match the ledger's recorded hash.
 
 | Id | Issue | Status |
 |---|---|---|
 | N1 | The E4 generalization test is not independent of the repair: both use the same requirement checks | Disclosed in README.md and docs/REPORT.md section 5.5 (the batch measures coverage of the grafted checks). Open: an independent generalization check needs a judge other than the grafted requirements. |
-| N2 | The adjudication's provenance names the frozen E0 commit, but the adjudication tool did not exist at that commit | Open: future adjudications will record the adjudication tool's own commit and file SHA-256. |
+| N2 | The adjudication's provenance names the frozen E0 commit, but the adjudication tool did not exist at that commit | Fixed in c647941: `tools/e0_adjudicate.py` also records the tool's own commit, whether the tool file differs from its blob at that commit, and its SHA-256. The banked E0 adjudication predates the fix and lacks these keys. |
 | N3 | D36 was committed in the same commit as the E4 data | Acknowledged as a process slip; the copied requests are byte-identical to E0's, so no result changes. |
-| N4 | The claimcheck allowlist for 0.90 accepts comparison words, which let B2 through | Open: narrow the 0.90 contexts to threshold phrases and render met or not-met statements from the artifact. |
-| N5 | G5 e0_scores does not drop flags on tasks whose reference is rejected or flaky | Open: no E0 task has a reference-level flag, so no result changes; to fix in G5 before the next planted set. |
-| N6 | Previous N18 is still open: no gate checks artifacts/ for task-level evidence from third-party benchmarks | Open: a gate that fails on task-level third-party evidence under artifacts/, before E1 runs. |
+| N4 | The claimcheck allowlist for 0.90 accepts comparison words, which let B2 through | Partly fixed in c647941: the 0.90 row accepts only threshold phrases (a strict narrowing), and `tests/test_e0_tables.py` checks every sentence that compares a result with the threshold against the artifact. The comparison words are still typed, because claims render only numbers. |
+| N5 | G5 e0_scores does not drop flags on tasks whose reference is rejected or flaky | Fixed in c647941: G5 drops flags on tasks whose grader rejects or is flaky on the reference, as prereg 0001 says. The audit-table recomputation already excluded them and no E0 task has one, so no result changes. |
+| N6 | Previous N18 is still open: no gate checks artifacts/ for task-level evidence from third-party benchmarks | Fixed in c647941: G14 fails on tracked third-party evidence under artifacts/, found by path and by content, and on audit summaries that record evidence outside private/. |
 | N7 | The materials check ran the toybench adapter and graders before the labels hash was committed | Disclosed in prereg 0001; no action needed. |
 | N8 | Checks not completed within the time box | To cover in the next review. |
 

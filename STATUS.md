@@ -11,7 +11,7 @@ Fast check on 4f53770 (2026-11-11, clean tree): **9/14**. G5, G7, G8, G9, and G1
 
 | Gate | State | Evidence or blocker |
 |---|---|---|
-| G1 Build and tests | PASS | 606 tests pass (8 skipped); core line coverage above the 85% floor |
+| G1 Build and tests | PASS | 697 tests pass (8 skipped); core line coverage above the 85% floor |
 | G2 Static quality | PASS | ruff, ruff format, mypy --strict clean; every ignore has a reason |
 | G3 CI parity | PASS | ci.yml runs `make ci` on 3.11 and 3.12; parts pass |
 | G4 Offline demo | PASS | under `unshare -rn`, no ledger change, matches the golden output |
@@ -24,11 +24,11 @@ Fast check on 4f53770 (2026-11-11, clean tree): **9/14**. G5, G7, G8, G9, and G1
 | G11 Preregistration | PASS | prereg 0001 and 0002 frozen and chained; confirmatory artifacts follow them |
 | G12 Independent review | FAIL | review of 5677b9f is REVIEW: BLOCK (B1 to B6), all fixed in 4f53770; the next review run is allowed on 2026-11-12 (cap: one a day) |
 | G13 Documentation | PASS | README.md follows section 11; docs/REPORT.md complete; citecheck verifies every reference |
-| G14 Hygiene | PASS | secrets scan clean, cash 0, private/ untracked, tree clean |
+| G14 Hygiene | PASS | secrets scan clean, cash 0, private/ untracked, no third-party evidence under artifacts/ (new check, c647941), tree clean |
 
 ## Now
 
-prereg 0003 (D38 to D40) is frozen (22b8832): model requests carry the full task text, with smaller batches for tau2-bench and BFCL. E1/E2 runs from `/home/user/graderproof-e1-0003` with new stores `<benchmark>-0003`. Round 1 is built (24 extraction requests, none with a cut field: `artifacts/e1/clip_audit_0003_round1.json`); HumanEval's 5 are answered tonight within the cap, and BFCL's and tau2-bench's wait for the 2026-11-12 cap. The release sprint is done (RELEASE-READY e4daee8, merged to main by Raj). Raj's standing order: E1/E2 under the cap, then the G12 review on 2026-11-12, then E3, E4 on the audited benchmarks, the E5 runner, and the grader cards.
+prereg 0003 (D38 to D40) is frozen (22b8832): model requests carry the full task text, with smaller batches for tau2-bench and BFCL. E1/E2 runs from `/home/user/graderproof-e1-0003` with new stores `<benchmark>-0003`. Round 1 is built (24 extraction requests, none with a cut field: `artifacts/e1/clip_audit_0003_round1.json`); HumanEval's 5 are answered tonight within the cap, and BFCL's and tau2-bench's wait for the 2026-11-12 cap. The open findings of the 5677b9f review (N2, N4 in part, N5, N6, and the B4 residuals) are fixed in c647941 and logged in docs/REVIEW_LOG.md. The release sprint is done (RELEASE-READY e4daee8, merged to main by Raj). Raj's standing order: E1/E2 under the cap, then the G12 review on 2026-11-12, then E3, E4 on the audited benchmarks, the E5 runner, and the grader cards.
 
 ## Next three actions
 
@@ -40,6 +40,7 @@ prereg 0003 (D38 to D40) is frozen (22b8832): model requests carry the full task
 
 - cash_usd = 0. Single calls through the client wrapper (ledger): 9 on 2026-10-23 (demo); 60 on 2026-11-04 (demo re-recording and E0); 36 on 2026-11-11 (E0 completion, adjudication, E4 on toybench), all within the daily cap at CAP_SHARE 0.2.
 - Not in the ledger: 17 E1 round-1 extraction answers on 2026-11-11, all from audited model workers (D24) and all superseded by the amendment (D38, D39). Counting them, 2026-11-11 used 53 of the 60 allowed calls.
+- 2026-11-12: one review run (G12) on the current HEAD; E1/E2 calls within the day's 60.
 - Review runs: one on 2026-11-04 (df55c18) and one on 2026-11-11 (5677b9f), each within the one-a-day cap.
 
 ## Needs Raj

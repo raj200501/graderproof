@@ -2,6 +2,11 @@
 
 History moved out of STATUS.md, newest first.
 
+## 2026-11-12, goal_turn 6 (continued past midnight UTC)
+
+- The open findings of the 5677b9f review were fixed by a workflow of implementers and adversarial verifiers (c647941): G5 drops reference-level flags and ties each adjudicated variant to its task, its flag, and the ledger's response hash; G14 fails on tracked third-party evidence; the 0.90 allowlist row is narrowed and every threshold comparison is tested against the artifact; adjudication provenance records the tool's own commit.
+- The G12 review of the current HEAD runs on 2026-11-12, the first UTC day with an unused review run.
+
 ## 2026-11-11, goal_turn 6: E1 round 1 answered, text clipping found, release sprint
 
 - Final fast check of goal_turn 5 on 4f53770: 9/14 (G5, G7, G8, G9, G12 fail).
