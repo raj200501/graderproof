@@ -264,3 +264,23 @@ The release-sprint audit (README lens, finding F3) found that the README's confi
 - The tool records the number of counted preserving variants per scorable task.
 - It writes `artifacts/e1/tables.json`, and `--check` fails when the banked file differs from a recomputation. A test runs the check, so these numbers cannot drift from the rows (the gap N7 describes for E0's tables).
 - The README headline reports the median and IQR. The mean, which is not preregistered, is dropped from it. A CORRECTIONS.md entry records the change.
+
+## D47 (2026-11-25) The build container was reclaimed: what was lost, what was restored
+
+Between 2026-11-13 and 2026-11-25 the cloud build container was reclaimed, and the session resumed in a fresh clone of the session branch at e6d5770. Everything git does not track was lost:
+
+- the private model stores of the E1/E2 audits (`private/model_calls/{tau2,bfcl,humaneval}-0003`);
+- the private HumanEval evidence;
+- the key of D44;
+- `runs/` (benchmark checkouts, execution caches, and the E1 round scripts);
+- the frozen E1/E2 worktree.
+
+The model-worker transcripts that held the answers were not restored either. Everything tracked is intact, including every result reported in README.md and docs/REPORT.md, the ledger, the hash manifests of the private stores, and the public E0 and E4 stores.
+
+**Consequences.**
+
+1. HumanEval E1/E2 is complete and its public artifacts stand. Its private original rows are recoverable byte for byte from git history, because they were the public `variants.jsonl` until D44. They are restored under `private/` and match the SHA-256 recorded in `PUBLIC_ROWS.json`.
+2. The D44 key cannot be recovered. The HumanEval public rows are republished under a new key with `tools/publish_rows.py`, which changes only the keyed ids and their order. Rows made with the lost key stay opaque: no one holds that key. The new key is as ephemeral as the old one, so Raj should keep a durable copy of `private/` (STATUS.md, Needs Raj).
+3. The tau2-bench and BFCL audits cannot resume as prereg 0002 requires ("from the banked responses"). The ledger records the answers they ingested, with response hashes, but the answers themselves are gone, and a changed response for a recorded request is refused (D27). No E1/E2 outcome existed for either benchmark: no audit summary, flag, or score was produced. Resuming them needs a dated amendment that restarts both under new stores before any outcome exists. That amendment can also carry the sandbox hardening of SEC-3.
+4. E3 and E4 on HumanEval need its private evidence, which is lost. Rerunning the HumanEval audit from the frozen code would ask the same requests again, and fresh answers would differ from the recorded ones. So E3 and E4 there also need an amendment or Raj's decision.
+5. The E1 round scripts, which lived only in the git-ignored `runs/`, are now committed under `tools/` so that this cannot happen again.

@@ -1,9 +1,9 @@
-goal_turn: 7
+goal_turn: 8
 STATE: ACTIVE
 
 # graderproof status
 
-Updated 2026-11-12. History lives in docs/LOG.md.
+Updated 2026-11-25. History lives in docs/LOG.md.
 
 ## Gates (from `python tools/ship_check.py --fast`; only a full run counts)
 
@@ -28,13 +28,13 @@ Fast check on b9b3a8d (2026-11-12, fresh clone; later commits change docs, the E
 
 ## Now
 
-The release sprint's blocker is fixed: public third-party rows carry keyed ids and no operator names (D44), and G14 enforces it. Next is SEC-3 from the sprint audit. The bubblewrap child runs as root, so it can read root-only files outside `$HOME`, such as this cloud session's token files under `/home/claude/.claude/remote/`. The network is unshared, so nothing could leave, but third-party graders and model-proposed variants run there. HumanEval E1/E2 is complete and confirmatory (`artifacts/audit/humaneval/`, prereg 0003). BFCL round 2 has 16 of 35 requests answered and ingested, all 11 of today's worker transcripts clean; 19 review requests wait for the 2026-11-13 cap. tau2-bench has 94 requests pending. The review of 2d87aaa (2026-11-12) is BLOCK with both blocking issues fixed in 12ea1da; the next review run is allowed on 2026-11-13.
+The cloud build container was reclaimed between 2026-11-13 and 2026-11-25, taking everything git does not track (D47). Every reported result is intact. The HumanEval private original rows are restored from git history, and the HumanEval public rows are republished under a new key, so G14 passes again here. The tau2-bench and BFCL audits cannot resume from their lost banked answers. Neither had produced an outcome, and both restart under a dated amendment with fresh stores, together with the SEC-3 sandbox hardening. The README now has a plain "why this matters" section, a roadmap labeled as plans, and a repository map. The next independent review (G12) can run on any day with an unused review run.
 
 ## Next three actions
 
-1. SEC-3: run the bwrap child unprivileged and hide `/home`, `/root`, and `/run`, with a test that a root-only file outside `$HOME` is unreadable inside the sandbox, under a decision entry written first. The E1/E2 worktree's code is frozen, so using the hardened sandbox for the remaining E1/E2 executions needs a dated amendment to prereg 0003 before any data it affects.
-2. E1/E2 on BFCL and tau2-bench under prereg 0003 with `runs/e1_0003_round.sh <benchmark> <label>`: answer pending requests with model workers within the daily cap, audit their transcripts (`runs/e1_worker_audit.sh`), ingest from the 0003 worktree, and publish third-party rows only through `tools/publish_rows.py` (D44).
-3. G12: the next independent review on 2026-11-13 (one review run a day), after logging every non-blocking issue in docs/REVIEW_LOG.md; then E3, E4 on the audited benchmarks, the E5 runner, E6, and the grader cards.
+1. Write and freeze the amendment that restarts E1/E2 on tau2-bench and BFCL under new stores, with the SEC-3 sandbox change (unprivileged child, home directories and `/run` hidden, tested), before any of their data exists. Then run their rounds under the daily cap with `tools/e1_round.sh` and `tools/e1_worker_audit.sh`.
+2. G12: the next independent review of HEAD, logging every non-blocking issue in docs/REVIEW_LOG.md.
+3. Then E3 and E4 (HumanEval needs a decision, since its private evidence is lost, D47 point 4), the E5 runner, E6, and the grader cards.
 
 ## Usage to date
 
@@ -45,6 +45,7 @@ The release sprint's blocker is fixed: public third-party rows carry keyed ids a
 
 ## Needs Raj
 
+0. **Durable private storage.** Everything under `private/` and `runs/` is lost whenever the cloud container is reclaimed. That is how the E1/E2 model stores of tau2-bench and BFCL and the HumanEval evidence were lost (D47). A durable copy kept outside the container, or an environment with persistent storage, would prevent it.
 1. **Claude backend.** The cloud environment sets `ANTHROPIC_BASE_URL` and `CLAUDE_CODE_USE_CCR_V2`, which trip the billing guard, so no headless Claude subject or review runs can happen here (D2). Model work uses subagents instead (D17).
 2. **Docker.** No Docker daemon here, so Terminal-Bench 2.0 is replaced by HumanEval (D18).
 3. **References to check by hand** (scripted access blocked): the OpenAI SWE-bench Verified post (Cloudflare challenge). It is dropped from the docs unless you confirm it opens.
@@ -53,6 +54,8 @@ The release sprint's blocker is fixed: public third-party rows carry keyed ids a
 5. **Third-party disclosure history (D43, D44).** HEAD's public HumanEval rows now carry keyed ids and no operator names, so they no longer expose any variant. The earlier rows, in history since 12ea1da, identify their tasks and let anyone regenerate the classical variants the graders accepted (evidence in `private/disclosure/2026-11-12-humaneval-ids.md`); model-proposed variants and witnesses were never exposed. Withdrawing the earlier rows needs a history rewrite, which only you can authorize.
 
 ## Changed this turn
+
+- Fresh container (D47): bubblewrap reinstalled; HumanEval private original restored from history and its public rows republished under a new key; the E1 round scripts committed under `tools/`; README.md, docs/REPORT.md, and CORRECTIONS.md say that tau2-bench and BFCL are paused; README.md gained "Why this matters", "Roadmap", and "Repository map".
 
 - E1/E2 on HumanEval completed under prereg 0003 and reported (README.md, docs/REPORT.md section 5.6); the review of 2d87aaa banked and its two blocking issues fixed (12ea1da).
 - CI on GitHub fixed without skipping a test (D41): the interpreter lives outside the sandbox-hidden $HOME, and the upstream HumanEval driver pins fork. Green on main at 5373797.

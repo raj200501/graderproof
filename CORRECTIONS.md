@@ -2,6 +2,10 @@
 
 Every changed or withdrawn claim gets a dated entry here (non-negotiable 3): what was claimed, where, what changed, why, and the artifact behind the new claim.
 
+## 2026-11-25: tau2-bench and BFCL paused
+
+README.md and docs/REPORT.md said that E1/E2 on tau2-bench and BFCL was under way under the daily call cap, and that E3 and E4 on HumanEval waited only for model calls. The cloud build container was reclaimed with the private model stores and evidence those steps depended on (D47). The documents now say that both audits are paused until they restart under a new amendment, and that E3 and E4 on HumanEval need the lost evidence. No number changes.
+
 ## 2026-11-12: the HumanEval headline reports the preregistered summaries
 
 The release-sprint audit's README lens found these statements in README.md and docs/REPORT.md, as pushed in b078d7e and earlier. Each is corrected in the next commit, with new numbers rendered as claims from `artifacts/e1/tables.json` (`tools/e1_tables.py`, D46).

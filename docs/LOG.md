@@ -2,6 +2,13 @@
 
 History moved out of STATUS.md, newest first.
 
+## 2026-11-25, goal_turn 8: fresh container, recovery, front-page upgrade
+
+- The session resumed in a fresh clone at e6d5770: `private/`, `runs/`, the E1/E2 worktree, and the D44 key were gone (D47). bubblewrap 0.9.0 was reinstalled, the version the banked artifacts record.
+- HumanEval: the private original rows were restored from git history (SHA-256 matches `PUBLIC_ROWS.json`), and the public rows were republished under a new key; G14's checks pass and the flags recompute unchanged.
+- tau2-bench and BFCL: paused; they restart under a dated amendment with fresh stores (D47). The E1 round scripts, which lived only in `runs/`, are committed under `tools/`.
+- README.md: "Why this matters", "Roadmap" (plans, not results), and "Repository map"; the paused audits are stated plainly in README.md and docs/REPORT.md (CORRECTIONS.md).
+
 ## 2026-11-12, goal_turn 7: release sprint, keyed public rows, preregistered E1 summaries
 
 - BFCL E1/E2: 11 requests (6 proposals, 5 reviews) answered by model-worker subagents. All 11 transcripts passed the D24 audit and all 11 responses validated; they were ingested from the 0003 worktree. The audit round then paused with 19 review requests pending. 2026-11-12 is at the cap of 60 single calls.
