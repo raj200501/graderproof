@@ -207,8 +207,7 @@ G5_COMPARISONS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     ("README.md", "Recall, {e0.recall}, missed the preregistered 0.90 target", ("e0.recall < T",)),
     (
         "README.md",
-        "G5 tool validity, because E0 recall, {e0.recall}, is below its preregistered 0.90 "
-        "threshold",
+        "G5 records that E0 recall, {e0.recall}, is below its preregistered 0.90 threshold",
         ("e0.recall < T",),
     ),
     ("README.md", "recall, {e0.recall}, missed its 0.90 target", ("e0.recall < T",)),

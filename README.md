@@ -79,13 +79,13 @@ It is not an adversarial agent and it does not search for exploits: variants com
 
 ## Status
 
-Gate state from `python tools/ship_check.py --fast` on commit `654a849` (a fast check; only a full `make ship-check` counts):
+From `python tools/ship_check.py --fast` on commit `654a849` (only a full `make ship-check` counts):
 
 - **Passing:** G1 build and tests, G2 static quality, G3 CI parity, G4 offline demo, G6 validation integrity, G10 claim integrity, G11 preregistration, G13 documentation, G14 hygiene.
-- **Failing, a negative result:** G5 tool validity, because E0 recall, 0.81<!--claim:e0.recall-->, is below its preregistered 0.90 threshold. It is reported as it is; an improved tool will be tested on a newly planted set under a new preregistration, never by re-running this one.
-- **Failing until the experiments finish:** G7 needs E1/E2 on all three preregistered benchmarks (HumanEval is done; tau2-bench and BFCL are paused), G8 needs repairs on those benchmarks (E4), and G9 needs the impact study (E5), whose runner is not built yet, and a grader card for each audited benchmark (HumanEval has none yet).
-- **Failing until the next review:** G12 needs an independent review of the current code. The last review, of 2d87aaa, blocked on two issues, both fixed in 12ea1da ([docs/REVIEW_LOG.md](docs/REVIEW_LOG.md)); the reviewer runs at most once a day under the usage cap, and the next run is due on 2026-11-13.
-- **Paused:** E1/E2 on tau2-bench and BFCL. The cloud build container was reclaimed, and with it the private model stores these two audits were resuming from ([D47](DECISIONS.md)); no outcome had been produced for either. They restart under a dated amendment with fresh stores, the same way [`prereg/0003`](prereg/0003-e1e2-full-task-text.md) was frozen before any E1/E2 data after the project's own audit found clipped task texts ([D38 to D40](DECISIONS.md)). Until then this repository makes no claim about the graders of tau2-bench or BFCL, and no cross-benchmark claim.
+- **Next:** G7 to G9 need the rest of the experiment plan. E1/E2 on tau2-bench and BFCL restarts under a dated amendment with fresh private stores, because the cloud build container was reclaimed before either audit produced an outcome ([D47](DECISIONS.md)). Repairs on the public benchmarks (E4), the impact study (E5), and a grader card per benchmark follow. G12 needs the next independent review; the last one blocked on two issues, both since fixed ([docs/REVIEW_LOG.md](docs/REVIEW_LOG.md)).
+- **Preregistered negative result:** G5 records that E0 recall, 0.81<!--claim:e0.recall-->, is below its preregistered 0.90 threshold. It stays as reported; an improved tool will be tested on a newly planted set under a new preregistration, never by re-running this one.
+
+Until tau2-bench and BFCL finish, this repository makes no claim about their graders, and no cross-benchmark claim.
 
 ## How it works
 

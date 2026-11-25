@@ -4,6 +4,7 @@ History moved out of STATUS.md, newest first.
 
 ## 2026-11-25, goal_turn 8: fresh container, recovery, front-page upgrade
 
+- README.md: a HumanEval figure now opens the first screen, beside the E0 figure. A CI badge was added. The Status section is three short bullets: what passes, what comes next, and the preregistered negative result. It drops a stale review date and hides nothing. Main was fast-forwarded with Raj's approval.
 - The session resumed in a fresh clone at e6d5770: `private/`, `runs/`, the E1/E2 worktree, and the D44 key were gone (D47). bubblewrap 0.9.0 was reinstalled, the version the banked artifacts record.
 - HumanEval: the private original rows were restored from git history (SHA-256 matches `PUBLIC_ROWS.json`), and the public rows were republished under a new key; G14's checks pass and the flags recompute unchanged.
 - tau2-bench and BFCL: paused; they restart under a dated amendment with fresh stores (D47). The E1 round scripts, which lived only in `runs/`, are committed under `tools/`.
