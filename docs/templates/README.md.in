@@ -1,5 +1,7 @@
 # graderproof
 
+[![ci](https://github.com/raj200501/graderproof/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/raj200501/graderproof/actions/workflows/ci.yml)
+
 **Mutation and metamorphic testing for agent-benchmark graders: how often does a grader accept a broken solution, or reject a correct one?**
 
 Agent benchmarks and RL environments trust their graders. A grader that accepts a broken solution inflates scores and rewards a loophole; one that rejects a correct solution deflates scores and punishes correct behavior. graderproof measures both errors for any task with a reference solution and a grading command: it edits the reference into variants that break a stated requirement (mutation testing) and variants that keep every requirement (metamorphic testing), counts a variant only when a deterministic requirement witness and an independent model review agree on its label, runs the grader on each variant in a network-free sandbox, reports task-level false-accept and false-reject rates with task-clustered intervals, and synthesizes grader repairs that are kept only if they pass validation. Hypotheses are preregistered before their data exist, and every number in this README is rendered from a banked artifact.
@@ -10,6 +12,8 @@ Agent benchmarks and RL environments trust their graders. A grader that accepts 
 - **The tool was tested before it was trusted (E0).** On a preregistered planted-ground-truth test (synthetic, project-written tasks), graderproof detected {{claim:e0.n_detected}} of {{claim:e0.n_planted}} planted grader weaknesses: recall {{claim:e0.recall}} (95% CI {{claim:e0.recall_lo}} to {{claim:e0.recall_hi}}), short of its preregistered 0.90 target and reported as a negative result, at precision {{claim:e0.precision}} (95% CI {{claim:e0.precision_lo}} to {{claim:e0.precision_hi}}), which met it. An independent adjudicator also confirmed real weaknesses in graders that were written to be clean.
 - **Repairs, validated by execution (E4).** Synthesized repairs were accepted for {{claim:e4.tb.repaired}} of the {{claim:e4.tb.with_survivors}} toybench graders with a surviving violating variant ({{claim:e4.tb.adjudicated_not_real}} of them an adjudicated false positive); on a fresh batch of variants they had never seen, they caught {{claim:e4.tb.caught}} of {{claim:e4.tb.survivors_original}} new survivors and rejected {{claim:e4.tb.induced_fr}} of the correct solutions the original graders accepted. The fresh variants are labeled by the same requirement checks the repairs graft, so this measures how far those checks reach, not an independent judgment, and zero induced false rejects follows by construction.
 - **Built to be checked, not believed.** Hypotheses are frozen in a hash-chained preregistration before their data exist, and the one amendment was made before any E1/E2 data, after the project's own audit of its model requests found that long task texts were being cut ([D38](DECISIONS.md)). Every number on this page is rendered from a banked artifact and checked by `make claimcheck`; fourteen release gates are recomputed from banked rows by `make ship-check`, and they cannot all pass until an independent adversarial review returns SHIP. The latest review returned BLOCK ([Status](#status)), and every finding is fixed or logged in [docs/REVIEW_LOG.md](docs/REVIEW_LOG.md).
+
+{{figure:e1-humaneval}}
 
 {{figure:e0-headline}}
 
@@ -37,7 +41,7 @@ The demo builds requirements, generates violating and preserving variants, runs 
 Every benchmark score and every RL reward passes through a grader, so a grader's errors become the score's errors and, in training, the policy's incentives.
 
 - **For RL training.** A grader that accepts a broken solution pays reward for not solving the task; one that rejects a correct solution teaches the policy to avoid correct behavior. graderproof finds both kinds of error from the task alone, before a training run finds them, and backs each one with a validated counterexample.
-- **For benchmark maintainers.** Each flag names the stated requirement the grader misses. The repair it comes with is kept only if it rejects the counterexamples, still accepts every validated correct variant, and passes the reference repeatedly. Task-level evidence stays private until the maintainer has seen it.
+- **For benchmark maintainers.** Each flag names the stated requirement the grader misses. graderproof can also synthesize a repair, kept only if it rejects the counterexamples, still accepts every validated correct variant, and passes the reference repeatedly (so far on the synthetic tasks, E4). Task-level evidence is kept out of the public rows and meant for the maintainer first ([Responsible disclosure](#responsible-disclosure)).
 - **For evaluation.** Grader error rates come per benchmark with task-clustered intervals, so a reader can ask how much a published score rests on grader quality. How rankings move once graders are repaired is the preregistered impact study (E5), which has not run yet.
 - **For anyone who has to trust the result.** Variants come only from the reference and the task text, never from an agent searching for exploits, so every finding is attributable and nothing here is a kit for gaming benchmarks.
 
@@ -75,7 +79,7 @@ It is not an adversarial agent and it does not search for exploits: variants com
 
 ## Status
 
-Gate state from `python tools/ship_check.py --fast` on commit `5373797` (a fast check; only a full `make ship-check` counts):
+Gate state from `python tools/ship_check.py --fast` on commit `654a849` (a fast check; only a full `make ship-check` counts):
 
 - **Passing:** G1 build and tests, G2 static quality, G3 CI parity, G4 offline demo, G6 validation integrity, G10 claim integrity, G11 preregistration, G13 documentation, G14 hygiene.
 - **Failing, a negative result:** G5 tool validity, because E0 recall, {{claim:e0.recall}}, is below its preregistered 0.90 threshold. It is reported as it is; an improved tool will be tested on a newly planted set under a new preregistration, never by re-running this one.
